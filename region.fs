@@ -148,7 +148,7 @@ region-state-0 cell+ constant region-state-1
     \ Setup for bit-position loop.
     dup  region-get-state-1
     swap region-get-state-0
-    domain-ms-bit   ( st2 st1 ms-bit)
+    domain-ms-bit           \ st2 st1 ms-bit
     
     \ Process each bit.
     begin
@@ -210,11 +210,6 @@ region-state-0 cell+ constant region-state-1
 
     dup struct-get-use-count      \ reg0 count
 
-\    dup 0=
-\    if
-\        cr ." region-deallocate: use-count zero?"
-\        abort
-\    then
     2 <
     if 
         \ Clear fields.
@@ -451,8 +446,6 @@ region-state-0 cell+ constant region-state-1
         2drop
         false
     then
-    \ dup ."  = " .
-    \ cr ." region-superset-of: end: " .s
 ;
 
 \ Return true if a region (TOS) is a subset of the next region on the stack.
@@ -460,8 +453,6 @@ region-state-0 cell+ constant region-state-1
     \ Check args.
     assert-arg0-is-region
     assert-arg1-is-region
-
-    \ cr ." region-subset-of: start: " .s
 
     2dup region-intersects          \ reg1 reg0 flag
     if
@@ -484,8 +475,6 @@ region-state-0 cell+ constant region-state-1
         2drop
         false
     then
-    \ dup ."  = " .
-    \ cr ." region-subset-of: end: " .s
 ;
 
 \ Return true if a region (TOS) is a superset of the next state on stack.

@@ -32,35 +32,27 @@
 
 \ Print a region-list
 : .region-list ( list0 -- )
-    \ Check list0 ID
-    dup is-not-allocated-list
-    if
-        ." .region-list: list0 is not an allocated list."
-        abort
-    then
+    \ Check args.
+    assert-arg0-is-list
     [ ' .region ] literal swap .list
 ;
 
 \ Push a region to a region-list.
 : _region-list-push ( reg1 list0 -- )
-    \ Check list0 ID
-    dup is-not-allocated-list
-    if
-        ." region-list-push: list0 is not an allocated list."
-        abort
-    then
-    over is-not-allocated-region
-    if
-        ." region-list-push: reg1 is not an allocated region."
-        abort
-    then
-    
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
     over struct-inc-use-count
     list-push
 ;
 
 \ Remove a region from a region-list, and deallocate.
 : region-list-remove ( xt reg list | item true | false )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
     list-remove
     if
         region-deallocate
@@ -73,19 +65,9 @@
 \ Push a region onto a list, if there are no supersets in the list.
 \ If there are no supersets in the list, delete any subsets.
 : region-list-push-nosubs ( reg1 list0 -- )
-    \ Check list0 ID
-    dup is-not-allocated-list
-    if
-        ." region-list-push-nosubs: list0 is not an allocated list."
-        abort
-    then
-    \ Check reg1 ID
-    over is-not-allocated-region
-    if
-        ." region-list-push-nosubs: reg1 is not an allocated region."
-        abort
-    then
-    \ cr ." region-list-push-nosubs: " over .region
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
 
     \ Return if any region in the list is a superset of reg1.
     2dup                                    \ reg1 list0 reg1 list0
@@ -113,18 +95,9 @@
 
 \ Return a list of region intersections with a region-list, no subsets.
 : region-list-region-intersections ( list1 list0 -- list-result )
-    \ Check list0 ID
-    dup is-not-allocated-list
-    if
-        ." region-list-region-intersections: list0 is not an allocated list."
-        abort
-    then
-     \ Check list1 ID
-    dup is-not-allocated-list
-    if
-        ." region-list-region-intersections: list1 is not an allocated list."
-        abort
-    then
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-list
 
     \ list1 list0
     list-get-links                  \ list1 link0

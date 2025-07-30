@@ -93,11 +93,31 @@ cs
 ;
 
 : test-square
-    cr
+    cr ." test pn 1" cr
     4 5 square-new
     cr ." square: " dup .square  ."  stack " .s cr
 
-    5 over square-add-result        \ sqr0 flag
+    4 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+    4 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+    4 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+    cr ." test pn 1 to U" cr
+
+    3 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+    cr ." test pn U to 1" cr
+
+    3 over square-add-result        \ sqr0 flag
     over
     cr ." square: " .square ." cng " .bool ."  stack " .s cr
 
@@ -105,7 +125,21 @@ cs
     over
     cr ." square: " .square ." cng " .bool ."  stack " .s cr
 
-    2 over square-add-result        \ sqr0 flag
+    3 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+
+    cr ." test pn 2" cr
+
+    4 5 square-new
+    cr ." square: " dup .square  ."  stack " .s cr
+
+    3 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+    4 over square-add-result        \ sqr0 flag
     over
     cr ." square: " .square ." cng " .bool ."  stack " .s cr
 
@@ -113,16 +147,29 @@ cs
     over
     cr ." square: " .square ." cng " .bool ."  stack " .s cr
 
-    2 over square-add-result        \ sqr0 flag
+    cr ." test pn 2 to U" cr
+
+    3 over square-add-result        \ sqr0 flag
     over
     cr ." square: " .square ." cng " .bool ."  stack " .s cr
 
-\    5 over square-add-result        \ sqr0 flag
-\    over
-\    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+     cr ." test pn U to 2" cr
+
+     4 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+    3 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
+
+    4 over square-add-result        \ sqr0 flag
+    over
+    cr ." square: " .square ." cng " .bool ."  stack " .s cr
 
     cr memory-use cr
     cr ." Deallocating ..."
+    square-deallocate
     square-deallocate
 
     cr memory-use

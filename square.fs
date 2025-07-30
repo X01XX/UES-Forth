@@ -290,7 +290,9 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     case
         1 of ." 1" endof
         2 of ." 2" endof
-        ." U"
+        3 of ." U" endof
+        ." Unexpected pn value"
+        abort
     endcase
     ."  "
     dup square-get-rules
@@ -335,9 +337,10 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     \ rc must be > 2, check r0 = r2
     2 pick                          \ sqr0 rc r0 sqr0
     2 swap square-get-result        \ sqr0 rc r0 r2
-    over <>                         \ sqr0 rc r0 flag
+    over
+    <>                         \ sqr0 rc r0 flag
     if
-        2drop drop true exit
+        2drop drop false exit
     then
 
     \ Exit if no more checks can be made.
@@ -353,7 +356,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     =                               \ flag
 ;
 
-\ Return true if pn = 2.
+\ Return true if pn = 2, 2 different results in alternate order.
 \ r0 <> r1, r0 = r2.
 \ r1 <> r2, r1 = r3.
 : _square-check-pn-2 ( sqr0 -- flag )
@@ -413,6 +416,8 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 ;
 
 \ Return current pn number.
+\ The most recent four consecutive samples is the whole sample Universe.
+\ Four is the minimum number for seeing 2 different results, twice.
 : square-calc-pn ( sqr0 -- u )
     \ Check arg.
     assert-arg0-is-square
@@ -426,11 +431,13 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     if
         2
     else
-        3
+        3                           \ GT 2 different results, or two results in wrong order, s/b 1, 2, 1, 2.
     then
 ;
 
 \ Calc a pnc value for a square.
+\ The most recent four consecutive samples is the whole sample Universe.
+\ Four is the minimum number for seeing 2 different results, twice.
 : square-calc-pnc ( sqr0 -- bool )
     \ Check arg.
     assert-arg0-is-square
@@ -440,15 +447,20 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 
     case
         1 of
-            2 >
+            \ If GT 1 sample, its not pn 2, but could be pn 3/U if LT 4 samples.
+            3 >
         endof
         2 of
+            \ Its not pn 1. It could be pn 3/U, if LT 4 samples.
             3 >
         endof
         3 of
+            \ At 3 samples, must be 3/U. The 4th sample cannot change it to 1 or 2.
             drop
             true
         endof
+        ." Unexpected pn value"
+        abort
     endcase
 ;
 
@@ -493,6 +505,8 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
             drop
             rulestore-new-0             \ sqr0 rulstr
         endof
+        ." Unexpected pn value"
+        abort
     endcase
 ;
 
@@ -555,4 +569,44 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     else
         2drop
     then
+;
+
+\ Return true if two squares ar equal.
+: square-eq ( sqr1 sqr0 -- flag )
+    \ Check args.
+    assert-arg0-is-square
+    assert-arg1-is-square
+
+    square-get-state
+    swap
+    square-get-state
+    =
+;
+
+\ Return char C = Compatible, I = Incompatible, M = More samples needed.
+: square-compare ( sqr1 sqr0 -- char )
+    \ Check args.
+    assert-arg0-is-square
+    assert-arg1-is-square
+    2dup square-eq 0=
+    if
+        ." squares eq?"
+        abort
+    then
+
+    dup square-get-pn
+    case
+        1 of
+        endof
+        2 of
+        endof
+        2 of
+        endof
+        ." Unexpected pn value"
+        abort
+    endcase
+
+
+
+
 ;
