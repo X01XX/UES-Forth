@@ -34,6 +34,7 @@ include mm_array.fs
 include link.fs
 include list.fs
 
+
 \ Application.
 include domain.fs
 include region.fs
@@ -42,6 +43,7 @@ include rule.fs
 include state.fs
 include rulestore.fs
 include square.fs
+
 cs
 
 : memory-use ( -- )
@@ -55,6 +57,8 @@ cs
     cr 4 spaces ." dstack: " .s
 ;
 
+include square_t.fs
+
 : test-state-not-a-or-not-b
     cr
     4 5 state-not-a-or-not-b    \ list
@@ -67,8 +71,7 @@ cs
     dup cr ." Possible regions = (~4 + ~5) & (~3 + ~6) = " .region-list
     cr
     memory-use
-    cr
-    
+
     \ Deallocate remaining struct instances.
     cr ." Deallocating ..."
     region-list-deallocate
@@ -92,89 +95,6 @@ cs
     cr memory-use cr
 ;
 
-: test-square
-    cr ." test pn 1" cr
-    4 5 square-new
-    cr ." square: " dup .square  ."  stack " .s cr
-
-    4 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    4 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    4 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    cr ." test pn 1 to U" cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    cr ." test pn U to 1" cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-
-    cr ." test pn 2" cr
-
-    4 5 square-new
-    cr ." square: " dup .square  ."  stack " .s cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    4 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    cr ." test pn 2 to U" cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-     cr ." test pn U to 2" cr
-
-     4 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    3 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    4 over square-add-result        \ sqr0 flag
-    over
-    cr ." square: " .square ." cng " .bool ."  stack " .s cr
-
-    cr memory-use cr
-    cr ." Deallocating ..."
-    square-deallocate
-    square-deallocate
-
-    cr memory-use
-;
-
 cr ." main.fs"
 
 \ Init array-stacks.
@@ -186,9 +106,9 @@ cr ." main.fs"
 106 square-mma-init
 
 \ tests
-\ test-state-not-a-or-not-b
+test-state-not-a-or-not-b
 \ test-rulestore
-test-square
+\ test-square
 
 \ Free heap memory before exiting.
 \ cr ." Freeing heap memory"

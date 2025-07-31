@@ -18,6 +18,15 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     rulestore-struct-number-cells swap mma-new to rulestore-mma
 ;
 
+\ Check rulestore mma usage.
+: assert-rulestore-mma-none-in-use ( -- )
+    rulestore-mma mma-in-use 0<>
+    if
+        ." rulestore-mma use GT 0"
+        abort
+    then
+;
+
 \ Check instance type.
 : is-allocated-rulestore ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.

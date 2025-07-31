@@ -24,6 +24,15 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     square-struct-number-cells swap mma-new to square-mma
 ;
 
+\ Check square mma usage.
+: assert-square-mma-none-in-use ( -- )
+    square-mma mma-in-use 0<>
+    if
+        ." square-mma use GT 0"
+        abort
+    then
+;
+
 \ Check instance type.
 : is-allocated-square ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.

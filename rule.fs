@@ -23,6 +23,15 @@ rule-m11    cell+ constant rule-m10
     rule-struct-number-cells swap mma-new to rule-mma
 ;
 
+\ Check rule mma usage.
+: assert-rule-mma-none-in-use ( -- )
+    rule-mma mma-in-use 0<>
+    if
+        ." rule-mma use GT 0"
+        abort
+    then
+;
+
 \ Start accessors.
 
 \ Return the m00 field of a rule instance.
