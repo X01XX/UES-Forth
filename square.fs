@@ -539,9 +539,9 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 
 \ Compare two squares, TOS has pn 1, second has pn 1. 
 : _square-compare-pn-1-1 ( sqr1 sqr0 -- char )
-    square-get-rules rulstore-get-rule-0    \ sqr1 rul0
+    square-get-rules rulestore-get-rule-0   \ sqr1 rul0
     swap                                    \ rul0 sqr1
-    square-get-rules rulstore-get-rule-0    \ rul0 rul1
+    square-get-rules rulestore-get-rule-0   \ rul0 rul1
     rule-union                              \ rul-u true | false
     if
         rule-deallocate
