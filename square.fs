@@ -69,18 +69,12 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 ;
 
 \ Set square result count, use only in this file.
-: _square-set-result-count ( length-value square-addr -- )
-    \ Check arg.
-    assert-arg0-is-square
-
+: _square-set-result-count ( length-value sqr0 -- )
     2w! 
 ;
 
 \ Increment square result count, use only in this file.
-: _square-inc-result-count ( struct-addr -- )
-    \ Check arg.
-    assert-arg0-is-square
-
+: _square-inc-result-count ( sqr0 -- )
     dup square-get-result-count      \ struct-addr result-count
     1+
     swap _square-set-result-count
@@ -97,10 +91,6 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
  
 \ Set the state of a square instance, use only in this file.
 : _square-set-state ( u1 addr -- )
-    \ Check args.
-    assert-arg0-is-square
-    assert-arg1-is-value
-
     square-state +      \ Add offset.
     !                   \ Set first field.
 ;
@@ -113,9 +103,6 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 ;
 
 : _square-set-pn ( pn1 sqr0 -- )
-    \ Check args.
-    assert-arg0-is-square
-
     over 1 <
     if
         ." _square-set-pn: invalid pn value"
@@ -141,10 +128,6 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 ;
 
 : _square-set-pnc ( pnc sqr -- )
-    \ Check arg.
-    assert-arg0-is-square
-    assert-arg1-is-bool
-
     7c!
 ;
 
@@ -156,10 +139,6 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 ;
 
 : _square-set-rules ( rulstr1 sqr0 -- )
-    \ Check args.
-    assert-arg0-is-square
-    assert-arg1-is-rulestore
-
     over struct-inc-use-count
 
     square-rules + !
@@ -187,10 +166,6 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 
 \ Set results item, given index and result, use only in this file.
 : _square-set-result ( result2 index1 sqr0 -- )
-    \ Check arg.
-    assert-arg0-is-square
-    assert-arg2-is-value
-
     over dup                    \ r2 i1 s0 i i
     0< swap 3 > or              \ r2 i1 s0 flag
     if
@@ -306,9 +281,6 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 \ Return true if pn = 1.
 \ All results must be equal.
 : _square-check-pn-1 ( sqr0 -- flag )
-    \ Check args.
-    assert-arg0-is-square
-
     \ Get results count, must be at least 1.
     dup square-get-result-count     \ sqr0 rc
 
@@ -360,9 +332,6 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 \ r0 <> r1, r0 = r2.
 \ r1 <> r2, r1 = r3.
 : _square-check-pn-2 ( sqr0 -- flag )
-    \ Check args.
-    assert-arg0-is-square
-
     \ Get results count, must be at least 1.
     dup square-get-result-count     \ sqr0 rc
 
@@ -418,10 +387,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 \ Return current pn number.
 \ The most recent four consecutive samples is the whole sample Universe.
 \ Four is the minimum number for seeing 2 different results, twice.
-: square-calc-pn ( sqr0 -- u )
-    \ Check arg.
-    assert-arg0-is-square
-
+: _square-calc-pn ( sqr0 -- u )
     dup _square-check-pn-1         \ sqr0 flag
     if
         drop 1 exit
@@ -438,10 +404,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 \ Calc a pnc value for a square.
 \ The most recent four consecutive samples is the whole sample Universe.
 \ Four is the minimum number for seeing 2 different results, twice.
-: square-calc-pnc ( sqr0 -- bool )
-    \ Check arg.
-    assert-arg0-is-square
-
+: _square-calc-pnc ( sqr0 -- bool )
     dup square-get-result-count     \ sqr0 count
     swap square-get-pn              \ count pn
 
@@ -465,40 +428,31 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 ;
 
 \ Return a rule constructed a square state and the first result.
-: square-calc-rule-0 ( sqr0 -- rul )
-    \ Check arg.
-    assert-arg0-is-square
-
+: _square-calc-rule-0 ( sqr0 -- rul )
     0 over square-get-result    \ sqr0 r0
     swap square-get-state       \ r0 sta
     rule-new
 ;
 
 \ Return a rule constructed a square state and second result.
-: square-calc-rule-1 ( sqr0 -- rul )
-    \ Check arg.
-    assert-arg0-is-square
-
+: _square-calc-rule-1 ( sqr0 -- rul )
     1 over square-get-result    \ sqr0 r1
     swap square-get-state       \ r1 sta
     rule-new
 ;
 
 \ Return rules for a square.
-: square-calc-rules ( sqr0 -- rulestore )
-    \ Check arg.
-    assert-arg0-is-square
-
+: _square-calc-rules ( sqr0 -- rulestore )
     dup square-get-pn                   \ sqr0 pn
 
     case                                \ sqr0
         1 of
-            square-calc-rule-0          \ rul0
+            _square-calc-rule-0         \ rul0
             rulestore-new-1             \ rulstr
         endof
         2 of
-            dup square-calc-rule-0      \ sqr0 rul0
-            swap square-calc-rule-1     \ rul0 rul1
+            dup _square-calc-rule-0     \ sqr0 rul0
+            swap _square-calc-rule-1    \ rul0 rul1
             rulestore-new-2             \ rulstr
         endof
         3 of
@@ -540,7 +494,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     dup square-get-pn                   \ rf sqr0 pn
 
     \ Get new value
-    over square-calc-pn                 \ rf sqr0 pn pn-new
+    over _square-calc-pn                \ rf sqr0 pn pn-new
     \ cr ." pn check " .s cr
 
     \ Check for change
@@ -552,7 +506,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
         dup square-get-rules            \ rf sqr0 rules
         rulestore-deallocate            \ rf sqr0
 
-        dup square-calc-rules           \ rf sqr0 ruls
+        dup _square-calc-rules          \ rf sqr0 ruls
         over _square-set-rules          \ rf sqr0
         nip true swap                   \ rf sqr0
     else
@@ -560,7 +514,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     then
 
     dup square-get-pnc                  \ rf sqr0 pnc
-    over square-calc-pnc                \ rf sqr0 pnc pnc-new
+    over _square-calc-pnc               \ rf sqr0 pnc pnc-new
     swap over                           \ rf sqr0 pnc-new pnc pnc-new
 
     xor if
@@ -583,6 +537,136 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     =
 ;
 
+\ Compare two squares, TOS has pn 1, second has pn 1. 
+: _square-compare-pn-1-1 ( sqr1 sqr0 -- char )
+    square-get-rules rulstore-get-rule-0    \ sqr1 rul0
+    swap                                    \ rul0 sqr1
+    square-get-rules rulstore-get-rule-0    \ rul0 rul1
+    rule-union                              \ rul-u true | false
+    if
+        rule-deallocate
+        [char] C
+    else
+        [char] I
+    then
+;
+
+\ Compare two squares, TOS has pn 2, second has pn 1.
+: _square-compare-pn-2-1 ( sqr1 sqr0 -- char )
+    over square-get-result-count        \ sqr1 sqr0 uc1
+    1 >
+    if
+        2drop
+        false
+        exit
+    then
+
+    \ Get rule from pn 1 square.
+    swap square-get-rules rulestore-get-rule-0  \ sqr0 rul1
+
+    \ Check first rule of pn-2 square.
+    over square-get-rules rulestore-get-rule-0  \ sqr0 rul1 rul0
+    over rule-union                             \ sqr0 rul1 [ rul3 true | false ]
+    if
+        rule-deallocate
+        2drop
+        [char] M
+        exit
+    then
+                                                \ sqr0 rul1
+    \ Check second rule of pn-2 square.
+    swap square-get-rules rulestore-get-rule-1  \ rul1 rul0
+    rule-union                                  \ [ rul3 true | false ]
+    if
+        rule-deallocate
+        [char] M
+    else
+        [char] I
+    then
+;
+
+\ Return true if two pn-2 squares can be combinde in a 0-0, 1-1 order.
+: _square-union-order-1-ok ( sqr1 sqr0 -- bool )
+    \ Check 0-0 union.
+    over square-get-rules rulestore-get-rule-0      \ sqr1 sqr0 s1rul0
+    over square-get-rules rulestore-get-rule-0      \ sqr1 sqr0 s1rul0 s0rul0
+    rule-union                                      \ sqr1 sqr0 ! rul-u-00 true | false
+    0= if
+        2drop
+        false
+        exit
+    else
+        rule-deallocate
+    then
+
+    \ Check 1-1 union.                              \ sqr1 sqr0 
+    square-get-rules rulestore-get-rule-1           \ sqr1 s0rul1
+    swap                                            \ s0rul1 sqr1
+    square-get-rules rulestore-get-rule-1           \ s0rul1 s1rul1
+    rule-union                                      \ rul-u true | false
+    if
+        rule-deallocate
+        true
+    else
+        false
+    then
+;
+
+\ Return true if two pn-2 squares can be combinde in a 0-1, 1-0 order.
+: _square-union-order-2-ok ( sqr1 sqr0 -- bool )
+    \ Check 0-1 union.
+    over square-get-rules rulestore-get-rule-1      \ sqr1 sqr0 s1rul1
+    over square-get-rules rulestore-get-rule-0      \ sqr1 sqr0 s1rul1 s0rul0
+    rule-union                                      \ sqr1 sqr0 ! rul-u-10 true | false
+    0= if
+        2drop
+        false
+        exit
+    else
+        rule-deallocate
+    then
+
+    \ Check 1-0 union.                              \ sqr1 sqr0
+    square-get-rules rulestore-get-rule-1           \ sqr1 s0rul1
+    swap
+    square-get-rules rulestore-get-rule-0           \ s0rul1 s1rul0
+    rule-union                                      \ rul-u true | false
+    if
+        rule-deallocate
+        true
+    else
+        false
+    then
+;
+
+\ Compare two squares, TOS has pn 2, second has pn 2.
+: _square-compare-pn-2-2 ( sqr1 sqr0 -- char )
+    \ Get union OK by two different orders.
+    2dup _square-union-order-1-ok   \ sqr1 sqr2 bool
+    -rot                            \ bool sqr1 sqr2
+    _square-union-order-2-ok        \ bool bool
+
+    \ Calc result
+    xor
+    if
+        [char] C
+    else
+        [char] I
+    then
+;
+
+\ Compare two squares, TOS has pn 3/U, second has pn 1 or 2.
+: _square-compare-pn-3-1or2 ( sqr1 sqr0 -- char )
+    drop
+    square-get-result-count         \ u
+    4 <
+    if
+        [char] M
+    else
+        [char] F
+    then
+;
+
 \ Return char C = Compatible, I = Incompatible, M = More samples needed.
 : square-compare ( sqr1 sqr0 -- char )
     \ Check args.
@@ -594,13 +678,54 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
         abort
     then
 
-    dup square-get-pn
+    over square-get-pn      \ sqr1 sqr0 pn1
+    over square-get-pn      \ sqr1 sqr0 pn1 pn0
+
     case
         1 of
+            case
+                1 of
+                    _square-compare-pn-1-1
+                endof
+                2 of
+                    swap _square-compare-pn-2-1
+                endof
+                3 of
+                    swap _square-compare-pn-3-1or2
+                endof
+                ." Unexpected pn value"
+                abort
+            endcase
         endof
         2 of
+            case
+                1 of
+                    _square-compare-pn-2-1
+                endof
+                2 of
+                    _square-compare-pn-2-2
+                endof
+                3 of
+                    swap _square-compare-pn-3-1or2
+                endof
+                ." Unexpected pn value"
+                abort
+            endcase
         endof
-        2 of
+        3 of
+            case
+                1 of
+                    _square-compare-pn-3-1or2
+                endof
+                2 of
+                    _square-compare-pn-3-1or2
+                endof
+                3 of
+                    [char] C
+                endof
+                ." Unexpected pn value"
+                abort
+            endcase
         endof
         ." Unexpected pn value"
         abort
