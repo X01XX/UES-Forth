@@ -566,7 +566,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     1 >
     if
         2drop
-        false
+        [char] I
         exit
     then
 
@@ -653,13 +653,24 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     \ Get union OK by two different orders.
     2dup _square-union-order-1-ok   \ sqr1 sqr2 bool
     -rot                            \ bool sqr1 sqr2
-    _square-union-order-2-ok        \ bool bool
+    2dup _square-union-order-2-ok   \ bool sqr1 sqr2 bool
+    -rot                            \ bool bool sqr1 sqr2
+    2swap                           \ sqr1 sqr2 bool bool
 
     \ Calc result
-    xor
+    xor                             \ sqr1 sqr2 bool
     if
-        [char] C
+        square-get-pnc              \ sqr1 pnc0
+        swap                        \ pnc0 sqr1
+        square-get-pnc              \ pnc0 pnc1
+        and                         \ bool
+        if
+            [char] C
+        else
+            [char] M
+        then
     else
+        2drop
         [char] I
     then
 ;
@@ -672,7 +683,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     if
         [char] M
     else
-        [char] F
+        [char] I
     then
 ;
 
@@ -681,7 +692,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
     \ Check args.
     assert-arg0-is-square
     assert-arg1-is-square
-    2dup square-eq 0=
+    2dup square-eq
     if
         ." squares eq?"
         abort
@@ -689,6 +700,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
 
     over square-get-pn      \ sqr1 sqr0 pn1
     over square-get-pn      \ sqr1 sqr0 pn1 pn0
+    \ cr ." at 0 " .s cr
 
     case
         1 of
@@ -730,6 +742,7 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
                     _square-compare-pn-3-1or2
                 endof
                 3 of
+                    2drop
                     [char] C
                 endof
                 ." Unexpected pn value"
@@ -739,8 +752,4 @@ square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, sta
         ." Unexpected pn value"
         abort
     endcase
-
-
-
-
 ;

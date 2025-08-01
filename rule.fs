@@ -317,23 +317,18 @@ rule-m11    cell+ constant rule-m10
 
     dup struct-get-use-count      \ rule-addr count
 
-    dup 1 <
-    if 
-        ." rule-deallocate: invalid use count" abort
-    else
-        1 =
-        if
-            \ Clear fields.
-            0 over _rule-set-m00
-            0 over _rule-set-m01
-            0 over _rule-set-m11
-            0 over _rule-set-m10
+    2 <
+    if
+        \ Clear fields.
+        0 over _rule-set-m00
+        0 over _rule-set-m01
+        0 over _rule-set-m11
+        0 over _rule-set-m10
 
-            \ Deallocate instance.
-            rule-mma mma-deallocate
-        else
-            struct-dec-use-count
-        then
+        \ Deallocate instance.
+        rule-mma mma-deallocate
+    else
+        struct-dec-use-count
     then
 ;
 
