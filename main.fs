@@ -43,6 +43,8 @@ include rule.fs
 include state.fs
 include rulestore.fs
 include square.fs
+include squarelist.fs
+
 
 cs
 

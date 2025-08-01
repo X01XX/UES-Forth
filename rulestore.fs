@@ -217,7 +217,8 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     else
         rulestore-get-rule-1
         if
-            1
+            ." Invalid rulestore configuration"
+            abort
         else
             0
         then

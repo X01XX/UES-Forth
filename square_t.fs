@@ -221,23 +221,25 @@
 
     square-test-none-in-use
 
-    cr ."    pn 1 to 1 compatible"
+    cr ."    pn 1 to 1 compatible:"
     4 5 square-new
     5 6 square-new
     2dup square-compare
+    space dup emit
     assert-char-C
     square-deallocate
     square-deallocate
 
-    cr ."    pn 1 to 1 incompatible"
+    cr ."    pn 1 to 1 incompatible:"
     4 5 square-new
     1 6 square-new
     2dup square-compare
+    space dup emit
     assert-char-I
     square-deallocate
     square-deallocate
 
-    cr ."    pn 2 to 2 more samples needed"
+    cr ."    pn 2 to 2 more samples needed:"
     \ Try pnc f, pnc f
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
@@ -245,7 +247,7 @@
     14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
     \ 2dup ." sqr " .square cr ." sqr " .square
     2dup square-compare
-    \ cr ." result " dup emit
+    space dup emit
     assert-char-M
 
     square-deallocate
@@ -264,25 +266,26 @@
     
     \ 2dup ." sqr " .square cr ." sqr " .square
     2dup square-compare
-    \ cr ." result " dup emit
+    space dup emit
     assert-char-M
 
     \ Try different order.
     swap
     2dup square-compare
+    space dup emit
     assert-char-M
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn 2 to 2 incompatible"
+    cr ."    pn 2 to 2 incompatible:"
     \ Try incompatible.
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
     1 1 square-new
     0 over square-add-result drop  \ sqr1-1-0
     2dup square-compare
-    \ cr ." result " dup emit
+    space dup emit
     assert-char-I
 
     square-deallocate
@@ -294,13 +297,13 @@
     9 9 square-new
     1 over square-add-result drop  \ sqr9-9-1
     2dup square-compare
-    \ cr ." result " dup emit
+    space dup emit
     assert-char-I
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn 2 to 2 compatible"
+    cr ."    pn 2 to 2 compatible:"
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
      5 over square-add-result drop  \ sqr5-5-a
@@ -314,13 +317,13 @@
     assert-square-pnc-t
 
     2dup square-compare
-    \ cr ." result " dup emit
+    space dup emit
     assert-char-C
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn 2 to 1 incompatible, GT 1 sample"
+    cr ."    pn 2 to 1 incompatible, GT 1 sample:"
     \ Try order 1.
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
@@ -332,19 +335,19 @@
     1 over square-add-result drop  \ sqr5-5-a sqr-1-1
 
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-I
 
     \ Try order 2.
     swap
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-I
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn 2 to 1 sample, incompatible"
+    cr ."    pn 2 to 1 sample, incompatible:"
     \ Try order 1.
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
@@ -355,19 +358,19 @@
     9 1 square-new                  \ sqr-5-a sqr-1-9
 
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-I
     
     \ Try order 2.
     swap
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-I
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn 2 to 1 sample, more samples needed"
+    cr ."    pn 2 to 1 sample, more samples needed:"
     \ Try order 1.
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
@@ -378,19 +381,19 @@
     1 1 square-new                  \ sqr-5-a sqr-1-1
 
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-M
     
     \ Try order 2.
     swap
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-M
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn U to U compatible"
+    cr ."    pn U to U compatible:"
     1 1 square-new
     2 over square-add-result drop
     3 over square-add-result drop
@@ -402,13 +405,13 @@
     assert-square-pn-3
 
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-C
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn U to 1 more samples needed"
+    cr ."    pn U to 1 more samples needed:"
 
     \ Try order 1.
     1 1 square-new
@@ -419,19 +422,19 @@
     1 2 square-new
 
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-M
     
     \ Try order 2.
     swap
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-M
 
     square-deallocate
     square-deallocate
 
-    cr ."    pn U to 1 incompatible"
+    cr ."    pn U to 1 incompatible:"
 
     \ Try order 1.
     1 1 square-new
@@ -446,13 +449,13 @@
     assert-square-pnc-t
 
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-I
     
     \ Try order 2.
     swap
     2dup square-compare
-    \ cr ." result " dup emit cr
+    space dup emit
     assert-char-I
 
     square-deallocate
