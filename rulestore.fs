@@ -124,6 +124,14 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Init use count.
     0 over                      \ addr 0 addr
     struct-set-use-count        \ addr
+
+    \ Init rule 0
+    0 over                      \ addr 0 addr
+    _rulestore-set-rule-0       \ addr
+
+    \ Init rule 1
+    0 over                      \ addr 0 addr
+    _rulestore-set-rule-1       \ addr
 ;
 
 \ Return a new rulestore instance, with one rule.
@@ -194,6 +202,26 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
     swap dup struct-inc-use-count   \ addr rul1
     over _rulestore-set-rule-1      \ addr
+;
+
+\ Return number of rules in a RuleStore.
+: rulestore-number-rules ( rulstr0 -- u )
+    dup rulestore-get-rule-0
+    if
+        rulestore-get-rule-1
+        if
+            2
+        else
+            1
+        then
+    else
+        rulestore-get-rule-1
+        if
+            1
+        else
+            0
+        then
+    then
 ;
 
 \ Deallocate a rulestore.
