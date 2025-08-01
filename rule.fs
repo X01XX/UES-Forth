@@ -447,73 +447,73 @@ rule-m11    cell+ constant rule-m10
     then
 ;
 
-\ Prune 0->X and 1->X positions in a rule, use only in this file.
-\ Then call rule-all-bits-set to see if the result is valid.
-: _rule-prune ( rul0 - rul0 )
-    \ Check arg.
-    assert-arg0-is-rule
-
-    dup rule-get-masks          \ rul0 m00 m01 m11 m10
-
-    \ Get 1->X and 0->X positions.
-    and -rot and                \ rul0 m1X m0X
-
-    dup if                      \ rul0 m1X m0X
-        \ m0x is not zero.
-
-        \ Get bits that are not 0X.
-        !not                    \ rul0 m1x n0x
-
-        \ Adjust m00.
-        2 pick                  \ rul0 m1x n0x rul0
-        rule-get-m00            \ rul0 m1x n0x m00
-        over and                \ rul0 m1x n0x new-m00
-        3 pick                  \ rul0 m1x n0x new-m00 rul0
-        _rule-set-m00           \ rul0 m1x n0x
-         
-        \ Adjust m01.
-        2 pick                  \ rul0 m1x n0x rul0
-        rule-get-m01            \ rul0 m1x n0x m01
-        and                     \ rul0 m1x new-m01
-        2 pick                  \ rul0 m1x new-m01 rul0
-        _rule-set-m01           \ rul0 m1x
-
-    else                        \ rul0 m1x 0
-        drop                    \ rul0 m1x
-    then
-    
-    dup if                      \ rul0 m1X
-        \ m1x is not zero.
-
-        \ Get bits that are not 1X.
-        !not                    \ rul0 n1x
-
-        \ Adjust m11.
-        over                    \ rul0 n1x rul0
-        rule-get-m11            \ rul0 n1x m11
-        over and                \ rul0 n1x new-m11
-        2 pick                  \ rul0 n1x new-m11 rul0
-        _rule-set-m11           \ rul0 n1x 
-         
-        \ Adjust m10.
-        over                    \ rul0 n1x rul0
-        rule-get-m10            \ rul0 n1x m10
-        and                     \ rul0 new-m10
-        over                    \ rul0 new-m10 rul0
-        _rule-set-m10           \ rul0
-
-    else                        \ rul0 0
-        drop                    \ rul0
-    then
-;
-
-\ Return the valid result of a rule union, or false.
-\ A valid union may not have the same initial region as the union
-\ of the two rules initial region.
-\ As X1 + XX = 11 (discard 0X)
+\ Prune 0->X and 1->X positions in a rule.
+\
+\ An invalid union may be partially valid with additional massaging:
+\    X1 + XX = 11 (discard 0X)
 \    X1 + Xx = 01 (discard 1X)
 \    X0 + XX = 00 (discard 1X)
 \    X0 + Xx = 10 (discard 0X)
+\ Then call rule-all-bits-set, to see if the result is valid.
+\ : _rule-prune ( rul0 - rul0 )
+\    \ Check arg.
+\    assert-arg0-is-rule
+\
+\    dup rule-get-masks          \ rul0 m00 m01 m11 m10
+\
+\    \ Get 1->X and 0->X positions.
+\    and -rot and                \ rul0 m1X m0X
+\
+\    dup if                      \ rul0 m1X m0X
+\        \ m0x is not zero.
+\
+\        \ Get bits that are not 0X.
+\        !not                    \ rul0 m1x n0x
+\
+\        \ Adjust m00.
+\        2 pick                  \ rul0 m1x n0x rul0
+\        rule-get-m00            \ rul0 m1x n0x m00
+\        over and                \ rul0 m1x n0x new-m00
+\        3 pick                  \ rul0 m1x n0x new-m00 rul0
+\        _rule-set-m00           \ rul0 m1x n0x
+\         
+\        \ Adjust m01.
+\        2 pick                  \ rul0 m1x n0x rul0
+\        rule-get-m01            \ rul0 m1x n0x m01
+\        and                     \ rul0 m1x new-m01
+\        2 pick                  \ rul0 m1x new-m01 rul0
+\        _rule-set-m01           \ rul0 m1x
+\
+\    else                        \ rul0 m1x 0
+\        drop                    \ rul0 m1x
+\    then
+\    
+\    dup if                      \ rul0 m1X
+\        \ m1x is not zero.
+\
+\        \ Get bits that are not 1X.
+\        !not                    \ rul0 n1x
+\
+\        \ Adjust m11.
+\        over                    \ rul0 n1x rul0
+\        rule-get-m11            \ rul0 n1x m11
+\        over and                \ rul0 n1x new-m11
+\        2 pick                  \ rul0 n1x new-m11 rul0
+\        _rule-set-m11           \ rul0 n1x 
+\         
+\        \ Adjust m10.
+\        over                    \ rul0 n1x rul0
+\        rule-get-m10            \ rul0 n1x m10
+\        and                     \ rul0 new-m10
+\        over                    \ rul0 new-m10 rul0
+\        _rule-set-m10           \ rul0
+\
+\    else                        \ rul0 0
+\        drop                    \ rul0
+\    then
+\ ;
+
+\ Return the valid result of a rule union, or false.
 : rule-union ( rul1 rul0 -- result true | false )
     \ Check args.
     assert-arg0-is-rule
@@ -552,15 +552,35 @@ rule-m11    cell+ constant rule-m10
     swap over _rule-set-m00 \ rul
 
     \ Check rule.
-     _rule-prune             \ rul
 
-    dup rule-all-bits-set   \ rul flag
+    \ _rule-prune             \ rul
+    \ dup rule-all-bits-set   \ rul flag
+    \ if
+    \    true                 \ rul flag
+    \ else
+    \     rule-deallocate
+    \     false
+    \ then
 
+    \ Check for 0->X.
+    dup rule-get-m00
+    over rule-get-m01
+    and
     if
-        true                    \ rul flag
-    else
         rule-deallocate
         false
+        exit
+    then
+
+    \ Check for 1->X.
+    dup rule-get-m11
+    over rule-get-m10
+    and
+    if
+        rule-deallocate
+        false
+    else
+        true
     then
 ;
 
