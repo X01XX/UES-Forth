@@ -55,6 +55,7 @@
 ;
 
 \ Remove the first square, idetified by xt, from a square-list, and deallocate.
+\ xt signature is ( item list-data -- flag )
 \ Return true if an square was removed.
 : square-list-remove ( xt val list -- bool )
     \ Check args.
@@ -70,8 +71,27 @@
     then
 ;
 
+\ Return true if a square-state is a subset of a region.
+: square-state-in-region ( reg1 sqr0 -- flag )
+    square-get-state
+    swap
+    region-superset-of-state
+;
+
 \ Return squares in a given region.
 : square-list-in-region ( reg1 list0 -- list )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
+    [ ' square-state-in-region ] literal -rot       \ xt reg1 list0
+    list-find-all                                   \ ret-list
+    [ ' struct-inc-use-count ] literal over         \ ret-list xt ret-list
+    list-apply                                      \ ret-list
+;
+
+\ Return squares in a given region.
+: square-list-in-region2 ( reg1 list0 -- list )
     \ Check args.
     assert-arg0-is-list
     assert-arg1-is-region
@@ -106,7 +126,7 @@
 ;
 
 \ Find a square in a list, if any.
-: square-list-find ( list0 -- sqr true | false )
+: square-list-find ( val1 list0 -- sqr true | false )
     [ ' square-match ] literal -rot list-find
 ;
 
