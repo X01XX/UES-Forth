@@ -45,10 +45,9 @@ include rulestore.fs
 include square.fs
 include squarelist.fs
 
-
 cs
 
-: memory-use ( -- )
+: memory-use
     cr ." Memory use:"
     cr 4 spaces ." Link mma:         " link-mma .mma-usage
     cr 4 spaces ." List mma:         " list-mma .mma-usage
@@ -60,6 +59,7 @@ cs
 ;
 
 include square_t.fs
+include squarelist_t.fs
 
 : test-state-not-a-or-not-b
     cr
