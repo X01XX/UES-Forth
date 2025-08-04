@@ -90,7 +90,7 @@ action-header  cell+ constant action-squares
 : _action-set-squares ( u1 addr -- )
     \ Check args.
     assert-arg0-is-action
-    assert-arg1-is-value
+    assert-arg1-is-list
 
     action-squares +    \ Add offset.
     !                   \ Set first field.
@@ -125,6 +125,13 @@ action-header  cell+ constant action-squares
 : .action ( act0 -- )
     \ Check arg.
     assert-arg0-is-action
+
+    dup action-get-inst-id
+    ." act: " .
+
+    action-get-squares
+    list-get-length
+    ."  num sqrs: " .
 ;
 
 \ Deallocate a action.
@@ -138,7 +145,6 @@ action-header  cell+ constant action-squares
     if 
         \ Clear fields.
         dup action-get-squares square-list-deallocate
-        0 over _action-set-squares
 
         \ Deallocate instance.
         action-mma mma-deallocate

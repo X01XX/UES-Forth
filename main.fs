@@ -118,9 +118,19 @@ cr ." main.fs"
  20 action-mma-init
 
 \ tests
-test-state-not-a-or-not-b
+\ test-state-not-a-or-not-b
 \ test-rulestore
 \ test-square
+
+cr memory-use cr
+5 action-new
+cr dup .action cr
+
+cr memory-use cr
+cr ." Deallocating.."
+
+action-deallocate
+cr memory-use cr
 
 \ Free heap memory before exiting.
 \ cr ." Freeing heap memory"

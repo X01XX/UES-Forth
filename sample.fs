@@ -103,7 +103,7 @@ sample-initial cell+ constant sample-result
 \ If you want to keep the sample on the stack, or in a value, or variable,
 \ run dup struct-inc-use-count, then deallocate it from there when done using it.
 \ If you want to push the sample onto a list, sample-list-push will increment the use count.
-: sample-new ( u1 u0 -- addr)
+: sample-new ( r1 i0 -- addr)
     \ Check args.
     assert-arg0-is-value
     assert-arg1-is-value
@@ -118,14 +118,9 @@ sample-initial cell+ constant sample-result
     \ Init use count.
     0 over struct-set-use-count
 
-    \ Prepare to store states.
-    -rot            \ addr u1 u2
-    2 pick          \ addr u1 u2 addr
-    swap over       \ addr u1 addr u2 addr
-
     \ Store states
-    _sample-set-result     \ addr u1 addr
-    _sample-set-initial     \ addr
+    swap over _sample-set-initial   \ r1  addr
+    swap over _sample-set-result    \ addr
 ;
 
 \ Print a sample.
