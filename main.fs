@@ -123,12 +123,13 @@ cr ." main.fs"
 \ test-square
 
 cr memory-use cr
-5 action-new
+5 action-new                    \ act
 cr dup .action cr
 
-4 5 sample-new
-2dup swap action-add-sample drop \ drop flag
-cr .s cr
+4 5 sample-new                  \ act smpl
+cr ." adding sample" cr
+2dup swap action-add-sample     \ act smpl flag
+drop                            \ act smpl
 
 cr over .action cr
 

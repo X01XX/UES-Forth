@@ -55,9 +55,9 @@
     list-find
     if
         drop 2drop
-        cr ." sp: dropping" cr
+        cr ." square-list-push: dropping" cr
     else
-        cr ." sp: adding" cr
+        over struct-inc-use-count
         list-push
     then
 ;

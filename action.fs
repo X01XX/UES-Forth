@@ -169,7 +169,6 @@ action-header  cell+ constant action-squares
         rot
         swap
         square-add-sample
-        cr ." at 1" cr
     else
         \ Add new square.
         swap                    \ act0 smpl
@@ -177,7 +176,6 @@ action-header  cell+ constant action-squares
         over                    \ act0 sqr act0
         action-get-squares      \ act0 sqr sqrlst
         square-list-push        \ act0
-        cr ." at 2" cr
         true
     then
     nip
