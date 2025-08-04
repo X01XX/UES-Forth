@@ -130,8 +130,9 @@ action-header  cell+ constant action-squares
     ." act: " .
 
     action-get-squares
-    list-get-length
+    dup list-get-length
     ."  num sqrs: " .
+    ." sqrs " .square-list-states 
 ;
 
 \ Deallocate a action.
@@ -151,5 +152,34 @@ action-header  cell+ constant action-squares
     else
         struct-dec-use-count
     then
+;
+
+\ Add a sample.
+\ Caller to deallocate sample.
+: action-add-sample ( smpl1 act0 -- )
+    \ Check args.
+    assert-arg0-is-action
+    assert-arg1-is-sample
+
+    over sample-get-initial
+    over action-get-squares
+    square-list-find            \ smpl1 act0 : sqr true | false
+    if
+        \ Update existing square
+        rot
+        swap
+        square-add-sample
+        cr ." at 1" cr
+    else
+        \ Add new square.
+        swap                    \ act0 smpl
+        square-from-sample      \ act0 sqr
+        over                    \ act0 sqr act0
+        action-get-squares      \ act0 sqr sqrlst
+        square-list-push        \ act0
+        cr ." at 2" cr
+        true
+    then
+    nip
 ;
 

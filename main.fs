@@ -40,6 +40,7 @@ include list.fs
 
 \ Application.
 include domain.fs
+include sample.fs
 include region.fs
 include regionlist.fs
 include region2.fs
@@ -48,7 +49,6 @@ include state.fs
 include rulestore.fs
 include square.fs
 include squarelist.fs
-include sample.fs
 include action.fs
 
 cs
@@ -126,9 +126,16 @@ cr memory-use cr
 5 action-new
 cr dup .action cr
 
+4 5 sample-new
+2dup swap action-add-sample drop \ drop flag
+cr .s cr
+
+cr over .action cr
+
 cr memory-use cr
 cr ." Deallocating.."
 
+sample-deallocate
 action-deallocate
 cr memory-use cr
 

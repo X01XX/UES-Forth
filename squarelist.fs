@@ -37,6 +37,13 @@
     [ ' .square ] literal swap .list
 ;
 
+\ Print a list of square states.
+: .square-list-states ( sqrlst0 -- )
+    ." ("
+    [ ' .square-state ] literal swap list-apply
+    ." )"
+;
+
 \ Push a square to a square-list, unless it is already in the list.
 : square-list-push ( sqr1 list0 -- )
     \ Check args.
@@ -47,9 +54,10 @@
     [ ' square-eq ] literal -rot
     list-find
     if
-        drop
+        drop 2drop
+        cr ." sp: dropping" cr
     else
-        over struct-inc-use-count
+        cr ." sp: adding" cr
         list-push
     then
 ;

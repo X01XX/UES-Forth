@@ -238,6 +238,15 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     0 over _square-set-pnc      \ addr
 ;
 
+: square-from-sample ( smpl -- sqr )
+    \ Check arg.
+    assert-arg0-is-sample
+
+    dup sample-get-result
+    swap sample-get-initial
+    square-new
+;
+
 : square-deallocate ( sqr0 -- )
     \ Check arg.
     assert-arg0-is-square
@@ -286,6 +295,13 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     \ sqr0
     ."  rc "
     square-get-result-count .
+;
+
+: .square-state ( sqr -- )
+    \ Check arg.
+    assert-arg0-is-square
+
+    square-get-state .value space
 ;
 
 \ Return true if pn = 1.
@@ -533,6 +549,26 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     else
         2drop
     then
+;
+
+\ Add a result from a sample.
+\ Return true if pn, or pnc changed.
+: square-add-sample ( smpl1 sqr0 -- flag )
+    \ Check args.
+    assert-arg0-is-square
+    assert-arg1-is-sample
+
+    over sample-get-initial
+    over square-get-state
+    <>
+    if
+        ." Sample initial does not match square state"
+        abort
+    then
+
+    swap sample-get-result
+    swap
+    square-add-result
 ;
 
 \ Return true if two squares ar equal.
