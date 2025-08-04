@@ -2,7 +2,7 @@
     3 constant link-struct-number-cells
 
 \ Link struct fields.
-0 constant  link-header         \ 16-bits [0] id [1] use count.
+0 constant  link-header         \ 16-bits [0] struct id [1] use count.
 link-header cell+ constant link-next
 link-next   cell+ constant link-data
 

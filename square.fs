@@ -4,11 +4,12 @@
     7 constant square-struct-number-cells
 
 \ Struct fields
-0 constant square-header
-square-header   cell+ constant square-state    \ id (16) use count (16) result count (16) pn (8) pnc (8)
-                                               \ The result count, mod 4, will be the next element to use for a new result.
-square-state    cell+ constant square-rules      
-square-rules    cell+ constant square-results  \ Circular buffer of 4 cells, starting here.
+0 constant square-header                        \ id (16) use count (16) result count (16) pn (8) pnc (8)
+square-header   cell+ constant square-state
+square-state    cell+ constant square-rules     \ A Rulestore.
+square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, starting here.
+                                                \ The result count, mod 4, will be the next element to use
+                                                \ for a new result.
 
 0 value square-mma \ Storage for square mma instance.
 

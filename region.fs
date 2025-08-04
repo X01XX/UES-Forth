@@ -1,10 +1,10 @@
 \ Implement a region struct and functions.
 
 19317 constant region-id
-   3 constant region-struct-number-cells
+    3 constant region-struct-number-cells
 
 \ Struct fields
-0 constant region-header
+0 constant region-header        \ 16-bits [0] struct id [1] use count.
 region-header  cell+ constant region-state-0
 region-state-0 cell+ constant region-state-1
 
@@ -56,7 +56,6 @@ region-state-0 cell+ constant region-state-1
     then
 ;
 
-
 \ Start accessors.
 
 \ Return the first field from a region instance.
@@ -99,16 +98,6 @@ region-state-0 cell+ constant region-state-1
 ;
 
 \ End accessors.
-
-\ Push a region to a region-list.
-: region-list-push ( reg1 list0 -- )
-    \ Check args.
-    assert-arg0-is-list
-    assert-arg1-is-region
-
-    over struct-inc-use-count
-    list-push
-;
 
 \ Create a region from two numbers on the stack.
 \ The numbers may be the same.
@@ -431,12 +420,9 @@ region-state-0 cell+ constant region-state-1
         \ Regions intersect.
         over region-intersection    \ reg1 reg-int flag
         if
-            dup struct-inc-use-count
                                     \ reg1 reg-int
             swap over region-eq     \ reg-int flag
             swap region-deallocate  \ flag
-            \ dup ."  = " .
-            \ exit
         else
             ." region-superset-of: reg0 and reg1 should intersect"
             abort
@@ -460,12 +446,9 @@ region-state-0 cell+ constant region-state-1
         swap                        \ reg0 reg1
         over region-intersection    \ reg0 reg-int flag
         if
-            dup struct-inc-use-count
                                     \ reg0 reg-int
             swap over region-eq     \ reg-int flag
             swap region-deallocate  \ flag
-            \ dup ."  = " .
-            \ exit
         else
             ." region-subset-of: reg0 and reg1 should intersect"
             abort
@@ -491,128 +474,4 @@ region-state-0 cell+ constant region-state-1
     xor                         \ diff2 diff1
     and                         \ both-diff
     0=                          \ flag
-;
-
-\ Return a region-list from a region (TOS) minus a second region.
-: region-subtract ( reg1 reg0 -- region-list )
-    \ Check args.
-    assert-arg0-is-region
-    assert-arg1-is-region
-
-    \ Check if any subtraction is needed.
-    2dup region-intersects 0=       \ reg1 reg0 flag
-    if
-        list-new swap over          \ reg1 list reg0 list
-        region-list-push            \ reg1 list
-        nip                         \ list
-        exit
-    then
-
-    \ Check if the result is nothing.
-    2dup swap                       \ reg1 reg0 reg0 reg1
-    region-superset-of              \ reg1 reg0 flag
-    if
-        2drop
-        list-new
-        exit
-    then
-
-    \ Init return list
-    list-new                        \ reg1 reg0 list
-
-    \ Change x over 1 positions to 0 over 1, one position at a time.
-                                    \ reg1 reg0 list
-    over region-x-mask              \ reg1 reg0 list | xmask
-    3 pick region-1-mask            \ reg1 reg0 list | xmask 1mask
-    and                             \ reg1 reg0 list | x1mask
-
-    begin
-        dup
-    while
-        isolate-a-bit               \ reg1 reg0 list | x1mask' one-bit
-        3 pick                      \ reg1 reg0 list | x1mask' one-bit reg0
-        region-x-to-0               \ reg1 reg0 list | x1mask' reg0'
-        2 pick region-list-push     \ reg1 reg0 list | x1mask'
-    repeat
-    drop                            \ reg1 reg0 list
-
-    \ Change x over 0 positions to 1 over 0, one position at a time.
-                                    \ reg1 reg0 list
-    over region-x-mask              \ reg1 reg0 list | xmask
-    3 pick region-0-mask            \ reg1 reg0 list | xmask 0mask
-    and                             \ reg1 reg0 list | x0mask
-    begin
-        dup
-    while
-        isolate-a-bit               \ reg1 reg0 list | x0mask' one-bit
-        3 pick                      \ reg1 reg0 list | x0mask' one-bit reg0
-        region-x-to-1               \ reg1 reg0 list | x0mask' reg0'
-        2 pick region-list-push     \ reg1 reg0 list | x0mask'
-    repeat
-    drop                            \ reg1 reg0 list
-
-    nip nip                         \ list
-;
-
-\ Return a region-list from a region (TOS) minus a state.
-: region-subtract-state ( sta1 reg0 -- region-list )
-    \ Check args.
-    assert-arg0-is-region
-    assert-arg1-is-value
-
-    \ Check if any subtraction is needed.
-    2dup region-superset-of-state 0=    \ sta1 reg0 flag
-    if
-        list-new swap over          \ sta1 list reg0 list
-        region-list-push            \ sta1 list
-        nip                         \ list
-        exit
-    then
-
-    \ Init return list
-    list-new                        \ sta1 reg0 list
-
-    \ Change x over 1 positions to 0 over 1, one position at a time.
-                                    \ sta1 reg0 list
-    over region-x-mask              \ sta1 reg0 list | xmask
-
-    \ Check if the result is nothing.
-    dup 0=                          \ sta1 reg0 list | xmask
-    if
-        drop
-        swap drop
-        swap drop
-        exit
-    then
-
-    3 pick                          \ sta1 reg0 list | xmask 1mask
-    and                             \ sta1 reg0 list | x1mask
-
-    begin
-        dup
-    while
-        isolate-a-bit               \ sta1 reg0 list | x1mask' one-bit
-        3 pick                      \ sta1 reg0 list | x1mask' one-bit reg0
-        region-x-to-0               \ sta1 reg0 list | x1mask' reg0'
-        2 pick                      \ sta1 reg0 list | x1mask' reg0 list
-        region-list-push            \ sta1 reg0 list | x1mask'
-    repeat
-    drop                            \ sta1 reg0 list
-
-    \ Change x over 0 positions to 1 over 0, one position at a time.
-                                    \ sta1 reg0 list
-    over region-x-mask              \ sta1 reg0 list | xmask
-    3 pick !not                     \ sta1 reg0 list | xmask 0mask
-    and                             \ sta1 reg0 list | x0mask
-    begin
-        dup
-    while
-        isolate-a-bit               \ sta1 reg0 list | x0mask' one-bit
-        3 pick                      \ sta1 reg0 list | x0mask' one-bit reg0
-        region-x-to-1               \ sta1 reg0 list | x0mask' reg0'
-        2 pick region-list-push     \ sta1 reg0 list | x0mask'
-    repeat
-    drop                            \ sta1 reg0 list
-
-    nip nip                         \ list
 ;

@@ -6,7 +6,7 @@
     2 constant list-struct-number-cells
 
 \ List struct fields.
-0 constant  list-header             \ 16-bits [0] id [1] use count [2] length.
+0 constant  list-header             \ 16-bits [0] struct id [1] use count [2] length.
 list-header cell+ constant list-links
 
 0 value list-mma  \ Storage for list mma struct instance.
@@ -349,6 +349,8 @@ list-header cell+ constant list-links
 \ xt signature is ( item link-data -- flag )
 \
 \ If the data is a struct instance with a use count, that should be adjusted by the caller.
+\
+\ I like this one. Standard tradecraft, as L. Ron Hubbard once wrote.
 : list-remove ( xt item list -- data true | false )
     \ Check arg.
     assert-arg0-is-list
@@ -393,19 +395,17 @@ list-header cell+ constant list-links
         true                \ data true
         exit
     else                    \ xt item list | link data
-        2drop               \ xt item list
+        drop                \ xt item list | link
     then
 
     \ Check subsequent links.
-    dup list-get-links      \ xt item list | last-link
-
     begin
         dup link-get-next   \ xt item list | last-link cur-link
         dup
     while                   \ xt item list | last-link cur-link
-        dup link-get-data   \ xt item list | last-link cur-link | data
-        4 pick              \ xt item list | last-link cur-link | data item
-        6 pick              \ xt item list | last-link cur-link | data item xt
+        3 pick              \ xt item list | last-link cur-link | item
+        over link-get-data  \ xt item list | last-link cur-link | item data
+        6 pick              \ xt item list | last-link cur-link | item data xt
         execute             \ xt item list | last-link cur-link | flag
 
         if                  \ xt item list | last-link cur-link
@@ -435,6 +435,7 @@ list-header cell+ constant list-links
         nip                 \ xt item list | cur-link
     repeat
     \ xt item list | last-link 0 ( last link-next field value )
+    
     2drop 2drop drop
     false
 ;

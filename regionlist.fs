@@ -38,7 +38,7 @@
 ;
 
 \ Push a region to a region-list.
-: _region-list-push ( reg1 list0 -- )
+: region-list-push ( reg1 list0 -- )
     \ Check args.
     assert-arg0-is-list
     assert-arg1-is-region
@@ -55,8 +55,8 @@
     assert-arg0-is-list
     assert-arg1-is-region
 
-    list-remove
-    if
+    list-remove         \ reg flag
+    if  
         region-deallocate
         true
     else
@@ -84,8 +84,8 @@
                                             \ reg1 list0
 
     begin
-        2dup
-        [ ' region-superset-of ] literal -rot \ reg1 list0 xt reg1 list0
+        2dup                                \ reg1 list0 reg1 list0
+        [ ' region-subset-of ] literal -rot \ reg1 list0 xt reg1 list0
         region-list-remove                  \ reg1 list0 | flag
     while
     repeat

@@ -6,7 +6,7 @@
     3 constant rulestore-struct-number-cells
 
 \ Struct fields
-0 constant rulestore-header
+0 constant rulestore-header     \ 16-bits [0] struct id [1] use count.
 rulestore-header cell+ constant rulestore-rule-0
 rulestore-rule-0 cell+ constant rulestore-rule-1
 

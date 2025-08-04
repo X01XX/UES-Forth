@@ -3,7 +3,7 @@
     5 constant rule-struct-number-cells
 
 \ Struct fields.
-0 constant rule-header
+0 constant rule-header      \ 16-bits [0] struct id [1] use count.
 rule-header cell+ constant rule-m00
 rule-m00    cell+ constant rule-m01
 rule-m01    cell+ constant rule-m11
