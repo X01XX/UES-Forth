@@ -40,8 +40,9 @@ include list.fs
 
 \ Application.
 include domain.fs
-include sample.fs
 include region.fs
+include domain2.fs
+include sample.fs
 include regionlist.fs
 include region2.fs
 include rule.fs
@@ -127,15 +128,19 @@ cr memory-use cr
 cr dup .action cr
 
 4 5 sample-new                  \ act smpl
-cr ." adding sample" cr
 2dup swap action-add-sample     \ act smpl flag
 drop                            \ act smpl
 
-cr over .action cr
+15 15 sample-new                \ act smpl smpl2
+dup 3 pick action-add-sample    \ act smpl smpl2 flag
+drop                            \ act smpl smpl2
+
+cr 2 pick .action cr
 
 cr memory-use cr
 cr ." Deallocating.."
 
+sample-deallocate
 sample-deallocate
 action-deallocate
 cr memory-use cr

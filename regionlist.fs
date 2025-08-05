@@ -65,7 +65,7 @@
 ;
 
 \ Push a region onto a list, if there are no supersets in the list.
-\ If there are no supersets in the list, delete any subsets.
+\ If there are no supersets in the list, delete any subsets and push the region.
 : region-list-push-nosubs ( reg1 list0 -- )
     \ Check args.
     assert-arg0-is-list
@@ -86,6 +86,37 @@
     begin
         2dup                                \ reg1 list0 reg1 list0
         [ ' region-subset-of ] literal -rot \ reg1 list0 xt reg1 list0
+        region-list-remove                  \ reg1 list0 | flag
+    while
+    repeat
+
+    \ reg1 list0
+    region-list-push
+    true
+;
+
+\ Push a region onto a list, if there are no subsets in the list.
+\ If there are no subsets in the list, delete any supersets and push the region.
+: region-list-push-nosups ( reg1 list0 -- )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
+    \ Return if any region in the list is a superset of reg1.
+    2dup                                    \ reg1 list0 reg1 list0
+    [ ' region-subset-of ] literal          \ reg1 list0 reg1 list0 xt
+    -rot                                    \ reg1 list0 xt reg1 list0
+    list-member                             \ reg1 list0 flag
+    if
+        2drop
+        false
+        exit
+    then
+                                            \ reg1 list0
+
+    begin
+        2dup                                \ reg1 list0 reg1 list0
+        [ ' region-superset-of ] literal -rot \ reg1 list0 xt reg1 list0
         region-list-remove                  \ reg1 list0 | flag
     while
     repeat

@@ -1,12 +1,13 @@
 \ Implement a Action struct and functions.                                                          
 
 29717 constant action-id
-    2 constant action-struct-number-cells
+    4 constant action-struct-number-cells
 
 \ Struct fields
 0 constant action-header    \ 16-bits [0] struct id [1] use count [2] instance id 
-action-header  cell+ constant action-squares
-\ action-state-0 cell+ constant action-state-1
+action-header               cell+ constant action-squares               \ A square-list
+action-squares              cell+ constant action-incompatible-pairs    \ A region-list
+action-incompatible-pairs   cell+ constant action-logical-structure     \ A region-list
 
 0 value action-mma \ Storage for action mma instance.
 
@@ -58,8 +59,8 @@ action-header  cell+ constant action-squares
 
 \ Start accessors.
 
-\ Return the second field from a action instance.
-: action-get-inst-id ( addr -- u)
+\ Return the instance ID from an action instance.
+: action-get-inst-id ( sqr0 -- u)
     \ Check arg.
     assert-arg0-is-action
 
@@ -67,8 +68,8 @@ action-header  cell+ constant action-squares
     2w@
 ;
  
-\ Set the second field from a action instance, use only in this file.
-: _action-set-inst-id ( u1 addr -- )
+\ Set the instance ID of an action instance, use only in this file.
+: _action-set-inst-id ( u1 sqr0 -- )
     \ Check args.
     assert-arg0-is-action
     assert-arg1-is-value
@@ -77,8 +78,8 @@ action-header  cell+ constant action-squares
     2w!
 ;
 
-\ Return the first field from a action instance.
-: action-get-squares ( addr -- u)
+\ Return the square-list from an action instance.
+: action-get-squares ( sqr0 -- lst )
     \ Check arg.
     assert-arg0-is-action
 
@@ -86,14 +87,53 @@ action-header  cell+ constant action-squares
     @                   \ Fetch the field.
 ;
  
-\ Set the first field from a action instance, use only in this file.
-: _action-set-squares ( u1 addr -- )
+\ Set the square-list of an action instance, use only in this file.
+: _action-set-squares ( lst1 act0 -- )
     \ Check args.
     assert-arg0-is-action
     assert-arg1-is-list
 
     action-squares +    \ Add offset.
-    !                   \ Set first field.
+    !                   \ Set the field.
+;
+
+
+\ Return the incompatible-pairs region-list from an action instance.
+: action-get-incompatible-pairs ( addr -- lst )
+    \ Check arg.
+    assert-arg0-is-action
+
+    action-incompatible-pairs + \ Add offset.
+    @                           \ Fetch the field.
+;
+ 
+\ Set the incompatible-pairs region-list of an action instance, use only in this file.
+: _action-set-incompatible-pairs ( u1 addr -- )
+    \ Check args.
+    assert-arg0-is-action
+    assert-arg1-is-list
+
+    action-incompatible-pairs + \ Add offset.
+    !                           \ Store it.
+;
+
+\ Return the logical-structure region-list from an action instance.
+: action-get-logical-structure ( addr -- lst )
+    \ Check arg.
+    assert-arg0-is-action
+
+    action-logical-structure +  \ Add offset.
+    @                           \ Fetch the field.
+;
+ 
+\ Set the logical-structure region-list of an action instance, use only in this file.
+: _action-set-logical-structure ( u1 addr -- )
+    \ Check args.
+    assert-arg0-is-action
+    assert-arg1-is-list
+
+    action-logical-structure +  \ Add offset.
+    !                           \ Store it.
 ;
  
 \ End accessors.
@@ -119,6 +159,18 @@ action-header  cell+ constant action-squares
     list-new                        \ act lst
     dup struct-inc-use-count        \ act lst
     over _action-set-squares        \ act
+
+    \ Set incompatible-pairs list.
+    list-new                            \ act lst
+    dup struct-inc-use-count            \ act lst
+    over _action-set-incompatible-pairs \ act
+
+    \ Set logical-structure list.
+    list-new                            \ act lst
+    dup struct-inc-use-count            \ act lst
+    domain-max-region                   \ act lst mxreg
+    over list-push                      \ act lst
+    over _action-set-logical-structure  \ act
 ;
 
 \ Print a action.
@@ -146,6 +198,8 @@ action-header  cell+ constant action-squares
     if 
         \ Clear fields.
         dup action-get-squares square-list-deallocate
+        dup action-get-incompatible-pairs region-list-deallocate
+        dup action-get-logical-structure region-list-deallocate
 
         \ Deallocate instance.
         action-mma mma-deallocate
@@ -160,6 +214,8 @@ action-header  cell+ constant action-squares
     \ Check args.
     assert-arg0-is-action
     assert-arg1-is-sample
+
+    cr ." Act: " dup action-get-inst-id . space ." adding sample: " over .sample cr
 
     over sample-get-initial
     over action-get-squares
