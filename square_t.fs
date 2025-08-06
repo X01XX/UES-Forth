@@ -321,13 +321,30 @@
     square-deallocate
     square-deallocate
 
+    cr ."    pn 2 to 1 compatible, 1 sample:"
+    \ Try order 1.
+    5 5 square-new
+    10 over square-add-result drop  \ sqr5-5-a
+
+    1 1 square-new
+
+    2dup square-compare
+    space dup emit
+    assert-char-M
+
+    \ Try order 2.
+    swap
+    2dup square-compare
+    space dup emit
+    assert-char-M
+
+    square-deallocate
+    square-deallocate
+
     cr ."    pn 2 to 1 sample, incompatible:"
     \ Try order 1.
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
-     5 over square-add-result drop  \ sqr5-5-a
-    10 over square-add-result drop  \ sqr5-5-a
-    assert-square-pnc-t
 
     9 1 square-new                  \ sqr-5-a sqr-1-9
 
@@ -343,6 +360,27 @@
 
     square-deallocate
     square-deallocate
+
+    cr ."    pn 2 to 1 sample, too compatible:"
+    \ Try order 1
+    5 5 square-new
+    4 over square-add-result drop  \ sqr5-5-4
+
+    2 2 square-new                  \ sqr-5-a sqr-2-2
+
+    2dup square-compare
+    space dup emit
+    assert-char-I
+
+    \ Try order 2
+    swap
+    2dup square-compare
+    space dup emit
+    assert-char-I
+
+    square-deallocate
+    square-deallocate
+
 
     cr ."    pn 2 to 1 sample, more samples needed:"
     \ Try order 1.

@@ -130,6 +130,8 @@ cr dup .action cr
 4 5 sample-new                  \ act smpl
 2dup swap action-add-sample     \ act smpl
 
+cr over .action cr
+
 15 15 sample-new                \ act smpl smpl2
 dup 3 pick action-add-sample    \ act smpl smpl2
 
