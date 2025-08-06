@@ -208,6 +208,10 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     then
 ;
 
+: _action-check-square ( sqr1 act0 -- )
+    2drop
+;
+
 \ Add a sample.
 \ Caller to deallocate sample.
 : action-add-sample ( smpl1 act0 -- )
@@ -222,18 +226,24 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     square-list-find            \ smpl1 act0 : sqr true | false
     if
         \ Update existing square
-        rot
-        swap
-        square-add-sample
+        rot                     \ act0 sqr smpl
+        over                    \ act sqr smpl sqr
+        square-add-sample       \ act sqr flag
+        if
+            swap _action-check-square
+        else
+            2drop
+        then
     else
         \ Add new square.
         swap                    \ act0 smpl
         square-from-sample      \ act0 sqr
-        over                    \ act0 sqr act0
-        action-get-squares      \ act0 sqr sqrlst
-        square-list-push        \ act0
-        true
+        dup                     \ act0 sqr sqr
+        2 pick                  \ act0 sqr sqr act0
+        action-get-squares      \ act0 sqr sqr sqrlst
+        square-list-push        \ act0 sqr
+        swap
+        _action-check-square
     then
-    nip
 ;
 

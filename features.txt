@@ -1,0 +1,13 @@
+Uses home-grown memory management.
+
+Bits value is a number, not a struct.  No difference between state or mask.
+Limited by cell size, use of the sign bit may be tricky.
+
+square pnc calc a little different.
+
+square compare: pn 1 square rule cannot be compatible with both rules in a pn 2 square. And num results must be 1.
+                2 X 2 can be compatible but not yet pnc.
+
+Action logical structure, dissimilar square pairs, is paramount.
+
+

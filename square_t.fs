@@ -239,8 +239,7 @@
     square-deallocate
     square-deallocate
 
-    cr ."    pn 2 to 2 more samples needed:"
-    \ Try pnc f, pnc f
+    cr ."    pn 2 to 2 compatible:"
     5 5 square-new
     10 over square-add-result drop  \ sqr5-5-a
     1 1 square-new
@@ -248,32 +247,7 @@
     \ 2dup ." sqr " .square cr ." sqr " .square
     2dup square-compare
     space dup emit
-    assert-char-M
-
-    square-deallocate
-    square-deallocate
-
-    \ Try pnc t, pnc f
-    5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
-     5 over square-add-result drop  \ sqr5-5-a
-    10 over square-add-result drop  \ sqr5-5-a
-    assert-square-pnc-t
-
-    1 1 square-new
-    14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
-    assert-square-pnc-f
-    
-    \ 2dup ." sqr " .square cr ." sqr " .square
-    2dup square-compare
-    space dup emit
-    assert-char-M
-
-    \ Try different order.
-    swap
-    2dup square-compare
-    space dup emit
-    assert-char-M
+    assert-char-C
 
     square-deallocate
     square-deallocate

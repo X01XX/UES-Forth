@@ -128,12 +128,10 @@ cr memory-use cr
 cr dup .action cr
 
 4 5 sample-new                  \ act smpl
-2dup swap action-add-sample     \ act smpl flag
-drop                            \ act smpl
+2dup swap action-add-sample     \ act smpl
 
 15 15 sample-new                \ act smpl smpl2
-dup 3 pick action-add-sample    \ act smpl smpl2 flag
-drop                            \ act smpl smpl2
+dup 3 pick action-add-sample    \ act smpl smpl2
 
 cr 2 pick .action cr
 

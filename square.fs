@@ -434,23 +434,13 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     dup square-get-result-count     \ sqr0 count
     swap square-get-pn              \ count pn
 
-    case
-        1 of
-            \ If GT 1 sample, its not pn 2, but could be pn 3/U if LT 4 samples.
-            3 >
-        endof
-        2 of
-            \ Its not pn 1. It could be pn 3/U, if LT 4 samples.
-            3 >
-        endof
-        3 of
-            \ At 3 samples, must be 3/U. The 4th sample cannot change it to 1 or 2.
-            drop
-            true
-        endof
-        ." Unexpected pn value"
-        abort
-    endcase
+    3 =
+    if
+        drop
+        true
+    else
+        3 >
+    then
 ;
 
 \ Return a rule constructed a square state and the first result.
@@ -599,6 +589,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
 \ Compare two squares, TOS has pn 2, second has pn 1.
 : _square-compare-pn-2-1 ( sqr1 sqr0 -- char )
+    \ If pn 1 and results GT 1, then it is not pn 2.
     over square-get-result-count        \ sqr1 sqr0 uc1
     1 >
     if
@@ -615,19 +606,25 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     over rule-union                             \ sqr0 rul1 [ rul3 true | false ]
     if
         rule-deallocate
-        2drop
-        [char] M
-        exit
-    then
-                                                \ sqr0 rul1
-    \ Check second rule of pn-2 square.
-    swap square-get-rules rulestore-get-rule-1  \ rul1 rul0
-    rule-union                                  \ [ rul3 true | false ]
-    if
-        rule-deallocate
-        [char] M
+        \ Check second rule of pn-2 square.
+        swap square-get-rules rulestore-get-rule-1  \ rul1 rul0
+        rule-union                                  \ [ rul3 true | false ]
+        if
+            rule-deallocate
+            [char] I            \ pn 1 square compatible with both rules of pn 2 square, too compatible.
+        else
+            [char] M            \ pn 1 square compatible with one pn 2 rule.
+        then
     else
-        [char] I
+        \ Check second rule of pn-2 square.
+        swap square-get-rules rulestore-get-rule-1  \ rul1 rul0
+        rule-union                                  \ [ rul3 true | false ]
+        if
+            rule-deallocate
+            [char] M            \ pn 1 square compatible with one rule of pn 2 square.
+        else
+            [char] I            \ pn 1 square incompatible with both pn 2 rules.
+        then
     then
 ;
 
@@ -690,24 +687,13 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     \ Get union OK by two different orders.
     2dup _square-union-order-1-ok   \ sqr1 sqr2 bool
     -rot                            \ bool sqr1 sqr2
-    2dup _square-union-order-2-ok   \ bool sqr1 sqr2 bool
-    -rot                            \ bool bool sqr1 sqr2
-    2swap                           \ sqr1 sqr2 bool bool
+    _square-union-order-2-ok        \ bool bool
 
     \ Calc result
     xor                             \ sqr1 sqr2 bool
     if
-        square-get-pnc              \ sqr1 pnc0
-        swap                        \ pnc0 sqr1
-        square-get-pnc              \ pnc0 pnc1
-        and                         \ bool
-        if
-            [char] C
-        else
-            [char] M
-        then
+        [char] C
     else
-        2drop
         [char] I
     then
 ;
@@ -715,12 +701,11 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 \ Compare two squares, TOS has pn 3/U, second has pn 1 or 2.
 : _square-compare-pn-3-1or2 ( sqr1 sqr0 -- char )
     drop
-    square-get-result-count         \ u
-    4 <
+    _square-calc-pnc    \ bool
     if
-        [char] M
-    else
         [char] I
+    else
+        [char] M
     then
 ;
 
