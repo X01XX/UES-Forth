@@ -11,6 +11,6 @@ square compare: pn 1 square rule cannot be compatible with both rules in a pn 2 
                 Change 9 possible pn comparisons into 4 functions, 1-1, 2-1, 2-2, 3-to-not-3.
                                                                    3-3 is Compatible without further tests.
 
-Action logical structure, dissimilar square pairs, is paramount.
+Action logical structure, dissimilar square pairs, is the startitg point.
 
 

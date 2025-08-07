@@ -181,10 +181,13 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     dup action-get-inst-id
     ." act: " .
 
-    action-get-squares
+    dup action-get-squares
     dup list-get-length
     ."  num sqrs: " .
-    ." sqrs " .square-list-states 
+    ." sqrs " .square-list-states
+
+    dup action-get-logical-structure space ." LS: " .region-list
+    action-get-incompatible-pairs space ." IP: " .region-list
 ;
 
 \ Deallocate a action.
@@ -313,6 +316,16 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
                 drop                                \ act0 inclst link
             else
                 cr ." no subset found" cr           \ act0 inclst link regx
+
+                \ Add region to the action-incompatible-pairs  list.
+                dup 4 pick                          \ act0 inclst link regx regx act0
+                action-get-incompatible-pairs       \ act0 inclst link regx regx incpairs
+                region-list-push-nosups             \ act0 inclst link regx flag
+                drop
+
+                \ Adjust action-logical-structure.
+                \ TODO
+                
                 drop                                \ act0 inclst link
             then
         then

@@ -97,7 +97,7 @@
 
 \ Push a region onto a list, if there are no subsets in the list.
 \ If there are no subsets in the list, delete any supersets and push the region.
-: region-list-push-nosups ( reg1 list0 -- )
+: region-list-push-nosups ( reg1 list0 -- flag )
     \ Check args.
     assert-arg0-is-list
     assert-arg1-is-region
