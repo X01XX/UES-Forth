@@ -169,3 +169,13 @@
     \ ret-list list1 0
     2drop                           \ ret-list
 ;
+
+\ Return true if a region is in a region-list.
+: region-list-member ( reg1 list0 -- flag )
+    [ ' region-eq ] literal -rot list-member
+;
+
+\ Return true if a region-list contains a superset, or equal, region.
+: region-list-any-superset-of ( reg1 list0 -- flag )
+    [ ' region-superset-of ] literal -rot list-member
+;

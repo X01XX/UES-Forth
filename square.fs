@@ -775,3 +775,19 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
         abort
     endcase
 ;
+
+\ Return true if two squares are incompatible.
+: square-incompatible ( sqr1 sqr0 -- flag )
+    \ Check args.
+    assert-arg0-is-square
+    assert-arg1-is-square
+
+    2dup square-eq
+    if
+        2drop
+        false
+        exit
+    then
+
+    square-compare [char] I =
+;

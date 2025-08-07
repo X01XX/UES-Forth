@@ -138,6 +138,5 @@
     [ ' square-match ] literal -rot list-find
 ;
 
-\ Return squares with a given use count.
-\ The number of lists the square is in.
+
 

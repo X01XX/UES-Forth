@@ -381,7 +381,6 @@
     square-deallocate
     square-deallocate
 
-
     cr ."    pn 2 to 1 sample, more samples needed:"
     \ Try order 1.
     5 5 square-new

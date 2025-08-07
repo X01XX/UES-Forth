@@ -5,8 +5,11 @@ Limited by cell size, use of the sign bit may be tricky.
 
 square pnc calc a little different.
 
-square compare: pn 1 square rule cannot be compatible with both rules in a pn 2 square. And num results must be 1.
+square compare: pn 1 square rule cannot be compatible with both rules in a pn 2 square. 
+                pn 1 square can be compatible to one rule in a pn-2 square, if num results are 1.
                 2 X 2 can be compatible but not yet pnc.
+                Change 9 possible pn comparisons into 4 functions, 1-1, 2-1, 2-2, 3-to-not-3.
+                                                                   3-3 is Compatible without further tests.
 
 Action logical structure, dissimilar square pairs, is paramount.
 

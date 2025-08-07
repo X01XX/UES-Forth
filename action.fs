@@ -208,13 +208,129 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     then
 ;
 
+\ Get a list of incompatible pairs, no supersets, given a square.
+: action-find-incompatible-pairs-nosups ( sqr1 act0 -- square-list )
+    \ Check args.
+    assert-arg0-is-action
+    assert-arg1-is-square
+
+    list-new -rot                               \ retlst sqr1 act0
+    2dup action-get-squares                     \ retlst sqr1 act0 sqr1 square-list
+    [ ' square-incompatible ] literal -rot      \ retlst sqr1 act0 xt sqr1 sqr-list
+    list-find-all                               \ retlst sqr1 act0 incompat-list
+
+    dup list-is-empty
+    if
+        cr ." list is empty" cr
+        list-deallocate                         \ retlst sqr1 act0
+        2drop                                   \ retlst
+        exit
+    then
+
+    cr ." list is NOT empty "
+    dup .square-list-states
+
+    2 pick square-get-state                 \ retlst sqr1 act0 inclst sta1
+    over list-get-links                     \ retlst sqr1 act0 inclst sta1 link
+    begin
+        dup 0<>                             \ retlst sqr1 act0 inclst sta1 link flag
+    while
+        dup link-get-data square-get-state  \ retlst sqr1 act0 inclst sta1 link sta2
+        2 pick                              \ retlst sqr1 act0 inclst sta1 link sta2 sta1
+        region-new                          \ retlst sqr1 act0 inclst sta1 link regx
+        cr ." reg: " dup .region cr
+        dup                                 \ retlst sqr1 act0 inclst sta1 link regx regx
+        7 pick                              \ retlst sqr1 act0 inclst sta1 link regx regx retlst
+        region-list-push-nosups             \ retlst sqr1 act0 inclst sta1 link regx flag
+        if
+            drop
+        else
+            region-deallocate
+        then
+                                            \ retlst sqr1 act0 inclst sta1 link
+
+        link-get-next                       \ retlst sqr1 act0 inclst sta1 link-next
+    repeat
+                                            \ retlst sqr1 act0 inclst sta1 0
+    2drop                                   \ retlst sqr1 act0 inclst
+    list-deallocate                         \ retlst sqr1 act0
+    2drop                                   \ retlst
+;
+ 
+\ Check a new, or changed square.
+\ Could affect action-incompatible-pairs and action-logical-structure.
 : _action-check-square ( sqr1 act0 -- )
-    2drop
+    \ Check args.
+    assert-arg0-is-action
+    assert-arg1-is-square
+
+    cr ." at 0 " .s cr
+    \ Check action-incompatible-pairs for pairs that are no longer incompatible.
+    \ If any are found, remove them and recalculate everything.
+
+    \ Form regions with incompatible squares, no supersets.
+    swap over                               \ act0 sqr1 act0
+    cr ." at 1 " .s cr
+    action-find-incompatible-pairs-nosups   \ act0 inc-lst
+    dup list-is-empty
+    if
+        cr ." list is empty" cr
+        list-deallocate
+        drop
+        exit
+    then
+
+    \ If there is no proper subset region in action-incompatible-pairs,
+    \ push nosups, calc ~A + ~B, intersect with action-logical-structure.
+
+    cr ." list is NOT empty " dup .region-list cr
+
+                                            \ act0 inclst
+    dup list-get-links                      \ act0 inclst link
+    begin
+        dup 0<>                             \ act0 inclst link flag
+    while
+        dup link-get-data                   \ act0 inclst link regx
+        cr ." reg: " dup .region cr
+        cr ." at 1 " .s cr
+
+        \ Check if dup in action-incompatible-pairs
+        dup                                         \ act0 inclst link regx regx
+        4 pick action-get-incompatible-pairs        \ act0 inclst link regx regx pair-lst
+        [ ' region-eq ] literal -rot                \ act0 inclst link regx xt regx pair-lst
+        list-member                                 \ act0 inclst link regx flag
+        cr ." at 2 " .s cr
+        if
+            cr ." dup in list" cr
+        else
+            cr ." no dup in list"
+            dup                                     \ act0 inclst link regx regx
+            4 pick action-get-incompatible-pairs    \ act0 inclst link regx regx pair-lst
+            [ ' region-subset-of ] literal -rot     \ act0 inclst link regx xt regx pair-lst
+            list-member                             \ act0 inclst link regx flag
+            if
+                cr ." subset found" cr
+                drop                                \ act0 inclst link
+            else
+                cr ." no subset found" cr           \ act0 inclst link regx
+                drop                                \ act0 inclst link
+            then
+        then
+        cr ." at 9 " .s cr
+
+        link-get-next                       \ act0 inclst sta1 link-next
+    repeat
+                                            \ act0 inclst 0
+    drop                                    \ act0 inclst
+
+    region-list-deallocate
+    drop
 ;
 
 \ Add a sample.
 \ Caller to deallocate sample.
 : action-add-sample ( smpl1 act0 -- )
+    \ cr ." at 0: " .s cr
     \ Check args.
     assert-arg0-is-action
     assert-arg1-is-sample
@@ -230,7 +346,9 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         over                    \ act sqr smpl sqr
         square-add-sample       \ act sqr flag
         if
-            swap _action-check-square
+            swap
+            \ cr ." at 1: " .s cr
+            _action-check-square
         else
             2drop
         then
@@ -242,8 +360,10 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         2 pick                  \ act0 sqr sqr act0
         action-get-squares      \ act0 sqr sqr sqrlst
         square-list-push        \ act0 sqr
-        swap
+        swap                    \ sqr act0
+        \ cr ." at 2: " .s cr
         _action-check-square
     then
+    \ cr ." at 3: " .s cr
 ;
 
