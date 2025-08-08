@@ -21,12 +21,11 @@
 \ link   list   region struct-xts Rule  RuleStore square
 \ 17137, 17971, 19317, 19717,     23131 23173     23197
 \
-\ Sample Action 
-\ 23719, 29717
+\ Sample Action Session Domain
+\ 23719, 29717  31319   31379
 
 \ Struct ids not yet used:
-\ 31319,
-\ 31379, 31973, 37171, 37379, 41719,
+\ 31973, 37171, 37379, 41719,
 \ 41737, 43717, 47137, 47317, 53171,
 \ 53173, 53197, 53717, 53719, 53731,
 \ 59797, 61379, 61717, 61979.
@@ -39,6 +38,8 @@ include list.fs
 
 
 \ Application.
+include actionlist.fs
+include domainlist.fs
 include domain.fs
 include region.fs
 include domain2.fs
@@ -51,6 +52,7 @@ include rulestore.fs
 include square.fs
 include squarelist.fs
 include action.fs
+include session.fs
 
 cs
 
@@ -64,6 +66,8 @@ cs
     cr 4 spaces ." Square mma:       " square-mma .mma-usage
     cr 4 spaces ." Sample mma:       " sample-mma .mma-usage
     cr 4 spaces ." Action mma:       " action-mma .mma-usage
+    cr 4 spaces ." Session mma:      " session-mma .mma-usage
+    cr 4 spaces ." Domain mma:       " domain-mma .mma-usage
     cr 4 spaces ." dstack: " .s
 ;
 
@@ -117,6 +121,8 @@ cr ." main.fs"
 106 square-mma-init
  20 sample-mma-init
  20 action-mma-init
+  1 session-mma-init
+  5 domain-mma-init
 
 \ tests
 \ test-state-not-a-or-not-b

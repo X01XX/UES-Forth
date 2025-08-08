@@ -60,7 +60,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Start accessors.
 
 \ Return the instance ID from an action instance.
-: action-get-inst-id ( sqr0 -- u)
+: action-get-inst-id ( act0 -- u)
     \ Check arg.
     assert-arg0-is-action
 
@@ -69,7 +69,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 ;
  
 \ Set the instance ID of an action instance, use only in this file.
-: _action-set-inst-id ( u1 sqr0 -- )
+: _action-set-inst-id ( u1 act0 -- )
     \ Check args.
     assert-arg0-is-action
     assert-arg1-is-value
@@ -79,7 +79,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 ;
 
 \ Return the square-list from an action instance.
-: action-get-squares ( sqr0 -- lst )
+: action-get-squares ( act0 -- lst )
     \ Check arg.
     assert-arg0-is-action
 
@@ -137,6 +137,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 ;
  
 \ End accessors.
+
 \ Create an action, given an instance ID.
 : action-new ( val0 -- addr)
     \ Check args.
@@ -179,7 +180,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     assert-arg0-is-action
 
     dup action-get-inst-id
-    ." act: " .
+    ." Act: " .
 
     dup action-get-squares
     dup list-get-length
@@ -267,7 +268,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     assert-arg0-is-action
     assert-arg1-is-square
 
-    \ cr ." at 0 " .s cr
+    \ cr ." at 0 " cr
     \ Check action-incompatible-pairs for pairs that are no longer incompatible.
     \ If any are found, remove them and recalculate everything.
 
@@ -275,6 +276,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     swap over                               \ act0 sqr1 act0
     \ cr ." at 1 " .s cr
     action-find-incompatible-pairs-nosups   \ act0 inc-lst
+    \ cr ." at 1 " cr
     dup list-is-empty
     if
         \ cr ." _action-check-square: list is empty" cr
@@ -293,9 +295,9 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     begin
         dup 0<>                             \ act0 inclst link flag
     while
-        \ cr ." at while " .s cr
+       \  cr ." at while " cr
         dup link-get-data                   \ act0 inclst link regx
-        cr ." incompatible reg: " dup .region cr
+        \ cr ." incompatible reg: " dup .region cr
 
         \ Check if dup in action-incompatible-pairs
         dup                                         \ act0 inclst link regx regx
@@ -319,6 +321,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
                 \ cr ." no subset found" cr           \ act0 inclst link regx
 
                 \ Add region to the action-incompatible-pairs  list.
+                cr ." Act: " 3 pick action-get-inst-id . space ." Adding incompatible pair: " dup region-get-states .value space .value cr
                 dup 4 pick                          \ act0 inclst link regx regx act0
                 action-get-incompatible-pairs       \ act0 inclst link regx regx incpairs
                 region-list-push-nosups             \ act0 inclst link regx flag
@@ -330,16 +333,17 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
                 \ Calc new action-logical-structure.
                 3 pick action-get-logical-structure \ act0 inclst link reg-lst lsl-lst
-                over                                \ act0 inclst link reg-lst lsl-lst reg-lst
-                region-list-region-intersections    \ act0 inclst link old-reg-lst new-reg-lst
+                2dup                                \ act0 inclst link reg-lst lsl-lst reg-lst lsl-lsn
+                region-list-region-intersections    \ act0 inclst link reg-lst lsl-lst new-reg-lst
 
                 \ Set new action-logical-structure.
-                4 pick                              \ act0 inclst link old-reg-lst new-reg-lst act0
-                _action-set-logical-structure       \ act0 inclst link old-reg-lst
+                5 pick                              \ act0 inclst link reg-lst lsl-lst new-reg-lst act0
+                _action-set-logical-structure       \ act0 inclst link reg-lst lsl-lst
+                region-list-deallocate              \ act0 inclst link reg-lst
                 region-list-deallocate              \ act0 inclst link
             then
         then
-        \ cr ." at repeat " .s cr
+        \ cr ." at repeat " cr
 
         link-get-next                       \ act0 inclst sta1 link-next
     repeat
