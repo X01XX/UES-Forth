@@ -169,7 +169,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     \ Set logical-structure list.
     list-new                            \ act lst
     dup struct-inc-use-count            \ act lst
-    domain-max-region                   \ act lst mxreg
+    domain-max-region-xt execute                   \ act lst mxreg
     over list-push                      \ act lst
     over _action-set-logical-structure  \ act
 ;

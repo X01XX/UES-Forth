@@ -6,6 +6,8 @@
     list-deallocate                                 \ Deallocate list and links.
 ;
 
+' region-list-deallocate to region-list-deallocate-xt
+
 \ Return the intersection of two region lists.
 : region-list-set-intersection ( list1 list0 -- list-result )
     [ ' region-eq ] literal -rot        \ xt list1 list0
@@ -21,6 +23,8 @@
     [ ' struct-inc-use-count ] literal  \ list-result xt
     over list-apply                     \ list-result
 ;
+
+' region-list-set-union to region-list-set-union-xt
 
 \ Return the difference of two region lists.
 : region-list-set-difference ( list1 list0 -- list-result )
@@ -46,6 +50,8 @@
     over struct-inc-use-count
     list-push
 ;
+
+' region-list-push to region-list-push-xt
 
 \ Remove a region from a region-list, and deallocate.
 \ xt signature is ( item list-data -- flag )

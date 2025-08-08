@@ -1,11 +1,14 @@
 
 
-: .domain-list ( act0 -- )
+: .domain-list ( domlst0 -- )
     drop
 ;
 
-: domain-list-deallocate ( act0 -- )
-    drop
+: domain-list-deallocate ( domlst0 -- )
+     [ ' domain-deallocate ] literal over list-apply    \ Deallocate domain instances in the list.
+    list-deallocate                                     \ Deallocate list and links.
 ;
+
+
 
 

@@ -38,20 +38,29 @@ include list.fs
 
 
 \ Application.
-include actionlist.fs
-include domainlist.fs
-include domain.fs
-include region.fs
-include domain2.fs
-include sample.fs
-include regionlist.fs
-include region2.fs
-include rule.fs
+include xtindirect.fs
+
+include value.fs
+include bool.fs
+
 include state.fs
+
+include sample.fs
+include region.fs
+include regionlist.fs
+
+include rule.fs
 include rulestore.fs
+
 include square.fs
 include squarelist.fs
+
 include action.fs
+include actionlist.fs
+
+include domain.fs
+include domainlist.fs
+
 include session.fs
 
 cs

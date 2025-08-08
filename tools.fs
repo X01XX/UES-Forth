@@ -288,39 +288,4 @@ decimal
     swap struct-set-use-count
 ;
 
-\ Check arg0 for bool, unconventional, leaves stack unchanged. 
-: assert-arg0-is-bool ( u -- )
-    dup 0=
-    over -1 =
-    or
-    if
-    else
-        ." arg0 is not bool"
-        abort
-    then
-;
-
-\ Check arg1 for bool, unconventional, leaves stack unchanged. 
-: assert-arg1-is-bool ( u ?? -- )
-    over dup 0=
-    swap -1 =
-    or
-    if
-    else
-        ." arg1 is not bool"
-        abort
-    then
-;
-
-: .bool ( b -- )
-    \ Check arg.
-    assert-arg0-is-bool
-
-    0=
-    if
-        ." f"
-    else
-        ." t"
-    then
-;
 
