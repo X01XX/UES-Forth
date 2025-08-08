@@ -17,7 +17,7 @@ domain-header               cell+ constant domain-actions               \ A acti
         abort
     then
 
-    cr ." Initializing Action store."
+    cr ." Initializing Domain store."
     domain-struct-number-cells swap mma-new to domain-mma
 ;
 

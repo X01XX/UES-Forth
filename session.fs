@@ -17,7 +17,7 @@ session-header               cell+ constant session-domains               \ A do
         abort
     then
 
-    cr ." Initializing Action store."
+    cr ." Initializing Session store."
     session-struct-number-cells swap mma-new to session-mma
 ;
 
