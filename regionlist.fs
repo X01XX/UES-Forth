@@ -178,10 +178,28 @@
 
 \ Return true if a region is in a region-list.
 : region-list-member ( reg1 list0 -- flag )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
     [ ' region-eq ] literal -rot list-member
 ;
 
 \ Return true if a region-list contains a superset, or equal, region.
 : region-list-any-superset-of ( reg1 list0 -- flag )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
     [ ' region-superset-of ] literal -rot list-member
+;
+
+\ Return a list of regions that use a given state.
+: region-list-uses-state ( sta1 reg-lst0 -- list )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-value
+
+   [ ' region-uses-state ] literal -rot list-find-all       \ lst
+   [ ' struct-inc-use-count ] literal over list-apply       \ lst
 ;

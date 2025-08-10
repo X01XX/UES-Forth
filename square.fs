@@ -264,6 +264,26 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     then
 ;
 
+\ Print a pn value.
+: .pn ( pn -- )
+    case
+        1 of ." 1" endof
+        2 of ." 2" endof
+        3 of ." U" endof
+        ." Unexpected pn value"
+        abort
+    endcase
+;
+
+\ Print a pnc value.
+: .pnc ( pnc -- )
+    if
+        ." T"
+    else
+        ." F"
+    then
+;
+
 \ Print a square.
 : .square ( sqr0 -- )
     \ Check arg.
@@ -272,22 +292,11 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     dup square-get-state .value
 
     ."  pnc: "
-    dup square-get-pnc
-    if
-        ." t"
-    else
-        ." f"
-    then
+    dup square-get-pnc .pnc
 
     ."  pn: "
-    dup square-get-pn
-    case
-        1 of ." 1" endof
-        2 of ." 2" endof
-        3 of ." U" endof
-        ." Unexpected pn value"
-        abort
-    endcase
+    dup square-get-pn .pn
+
     ."  "
     dup square-get-rules
     .rulestore
@@ -513,9 +522,14 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     over _square-calc-pn                \ rf sqr0 pn pn-new
     \ cr ." pn check " .s cr
 
-    \ Check for change
-    swap over <>                        \ rf sqr0 pn-new flag
-    if
+    2dup <>                             \ rf sqr0 pn pn-new flag
+
+    \ Handle pn change.
+    if                                  \ rf sqr0 pn pn-new
+        swap                            \ rf sqr0 pn-new pn
+        2 pick square-get-state         \ rf sqr0 pn-new pn sta
+        cr ." square " .value space ." pn changed from " .pn space ." to " dup .pn cr
+                                        \ rf sqr0 pn-new
         \ Save new pn
         over _square-set-pn             \ rf sqr0
 
@@ -524,20 +538,33 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
         dup _square-calc-rules          \ rf sqr0 ruls
         over _square-set-rules          \ rf sqr0
+
+        \ Set return flag to true
         nip true swap                   \ rf sqr0
     else
-        drop                            \ rf sqr0
+        2drop                           \ rf sqr0
     then
 
+    \ Check if pnc value changed.
     dup square-get-pnc                  \ rf sqr0 pnc
     over _square-calc-pnc               \ rf sqr0 pnc pnc-new
-    swap over                           \ rf sqr0 pnc-new pnc pnc-new
 
-    xor if
+    swap                                \ rf sqr0 pnc-new pnc
+    2dup                                \ rf sqr0 pnc-new pnc pnc-new pnc
+
+    \ Handle changed pnc.
+    xor if                              \ rf sqr0 pnc-new pnc
+        2 pick square-get-state         \ rf sqr0 pnc-new pnc sta
+        cr ." square " .value space ." pnc changed from " .pnc space ." to " dup .pnc cr
+                                        \ rf sqr0 pnc-new
+
         swap _square-set-pnc            \ rf
-        drop true                       \ rf
+
+        \ Return pnc change flag, true.
+        drop true                       \ true
     else
-        2drop
+        \ pnc flag is false, default to pn change flag.
+        2drop drop                      \ rf
     then
 ;
 

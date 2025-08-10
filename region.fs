@@ -217,14 +217,14 @@ region-state-0 cell+ constant region-state-1
 ' region-deallocate to region-deallocate-xt
 
 \ Return the two states that make a region.
-: region-get-states ( reg0 -- state1 state2 )
+: region-get-states ( reg0 -- s1 s0 )
     \ Check arg.
     assert-arg0-is-region
 
     \ Calc result.
-    dup region-get-state-0
+    dup region-get-state-1
     swap
-    region-get-state-1
+    region-get-state-0
 ;
 
 \ Return a regions edge mask.
@@ -233,7 +233,7 @@ region-state-0 cell+ constant region-state-1
     assert-arg0-is-region
 
     \ Calc result.
-    region-get-states
+    region-get-states       \ s1 s0
     !nxor
 ;
 
@@ -334,7 +334,7 @@ region-state-0 cell+ constant region-state-1
     assert-arg0-is-region
 
     \ Calc result.
-    region-get-states
+    region-get-states   \ s1 s0
     xor
 ;
 
@@ -344,7 +344,7 @@ region-state-0 cell+ constant region-state-1
     assert-arg0-is-region
 
     \ Calc result.
-    region-get-states
+    region-get-states   \ s1 s0
     and
 ;
 
@@ -354,7 +354,7 @@ region-state-0 cell+ constant region-state-1
     assert-arg0-is-region
 
     \ Calc result.
-    region-get-states
+    region-get-states   \ s1 s0
     !nor
 ;
 
@@ -366,7 +366,7 @@ region-state-0 cell+ constant region-state-1
     assert-arg0-is-region
     assert-arg1-is-value
 
-    region-get-states           \ to-0-mask state1 state2
+    region-get-states       \ to-0-mask s1 s0
     rot !not                \ state1 state2 keep-mask
     swap over               \ state1 keep state2 keep
     and                     \ state1 keep state2'
@@ -383,12 +383,12 @@ region-state-0 cell+ constant region-state-1
     assert-arg0-is-region
     assert-arg1-is-value
 
-    region-get-states           \ to-1 state1 state2
-    rot                     \ state1 state2 to-1 
-    swap over               \ state1 to-1 state2 to-1
-    or                      \ state1 to-1 state2'
-    -rot                    \ state2' state1 to-1
-    or                      \ state2' state1'
+    region-get-states       \ to-1 s1 s0
+    rot                     \ s1 s0 to-1 
+    swap over               \ s1 to-1 s0 to-1
+    or                      \ s1 to-1 s0'
+    -rot                    \ s0' s1 to-1
+    or                      \ s0' s1'
     region-new              \ reg
 ;
 
@@ -470,11 +470,11 @@ region-state-0 cell+ constant region-state-1
     assert-arg0-is-region
     assert-arg1-is-value
 
-    region-get-states           \ sta1 rsta1 rsta2
-    rot                         \ rsta1 rsta2 sta1
-    swap over                   \ rsta1 sta1 rsta2 sta1
-    xor                         \ rsta1 sta1 diff2
-    -rot                        \ diff2 rsta1 sta1
+    region-get-states           \ sta1 s1 s0
+    rot                         \ s1 s0 sta1
+    swap over                   \ s1 sta1 s0 sta1
+    xor                         \ rs1 sta1 diff2
+    -rot                        \ diff2 s1 sta1
     xor                         \ diff2 diff1
     and                         \ both-diff
     0=                          \ flag
@@ -605,3 +605,22 @@ region-state-0 cell+ constant region-state-1
 ;
 
 ' region-subtract-state to region-subtract-state-xt
+
+\ Return true if a region uses a given state.
+: region-uses-state ( sta1 reg0 -- flag )
+    \ Check args.
+    assert-arg0-is-region
+    assert-arg1-is-value
+
+    region-get-states           \ sta1 s1 s0
+    2 pick                      \ sta1 s1 s0 sta1
+    =                           \ sta1 s0 flag
+    if                          \ sta1 s0
+        2drop
+        true
+        exit
+    then
+
+    \ sta1 s0
+    =                           \ flag
+;

@@ -2,14 +2,6 @@
 \ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs,
 \ contact the Wisconsin Alumni Research Foundation (WARF).
 
-\ Constants.
-\ 4  constant num-bits
-\ 15 constant all-bits
-\ 8  constant ms-bit
-
-\ Init value names.
-0  value mask-mma
-
 \ Struct IDs.
 \
 \ Each number is prime, 5 digits, and fits within 16 bits.
@@ -18,21 +10,21 @@
 \ No digit appears consecutively.   (avoids 11)
 \
 \ Struct ids in use.
-\ link   list   region struct-xts Rule  RuleStore square
-\ 17137, 17971, 19317, 19717,     23131 23173     23197
+\ link   list   region Rule  RuleStore square
+\ 17137, 17971, 19317, 23131 23173     23197
 \
 \ Sample Action Session Domain
 \ 23719, 29717  31319   31379
 
 \ Struct ids not yet used:
-\ 31973, 37171, 37379, 41719,
+\ 19717, 31973, 37171, 37379, 41719,
 \ 41737, 43717, 47137, 47317, 53171,
 \ 53173, 53197, 53717, 53719, 53731,
 \ 59797, 61379, 61717, 61979.
 
 \ Foundational.
 include tools.fs
-include mm_array.fs
+include mm_array.fs     \ includes stack.fs
 include link.fs
 include list.fs
 
@@ -124,7 +116,7 @@ cr ." main.fs"
 \ Init array-stacks.
 101 link-mma-init
 102 list-mma-init
-103 region-mma-init
+ 30 region-mma-init
 104 rule-mma-init
 105 rulestore-mma-init
 106 square-mma-init
@@ -143,18 +135,32 @@ cr memory-use cr
 cr dup .action cr
 
 4 5 sample-new                  \ act smpl
-2dup swap action-add-sample     \ act smpl
+dup 2 pick action-add-sample    \ act smpl
 
-cr over .action cr
-
-15 15 sample-new                \ act smpl smpl2
+0 6 sample-new                  \ act smpl smpl2
 dup 3 pick action-add-sample    \ act smpl smpl2
 
 cr 2 pick .action cr
 
-cr memory-use cr
-cr ." Deallocating.."
+2 15 sample-new                 \ act smpl smpl2 smpl3
+dup 4 pick action-add-sample    \ act smpl smpl2 smpl3
 
+cr 3 pick .action cr
+
+3 15 sample-new                 \ act smpl smpl2 smpl3 smpl4
+dup 5 pick action-add-sample    \ act smpl smpl2 smpl3 smpl4
+
+4 15 sample-new                 \ act smpl smpl2 smpl3 smpl4 smpl5
+dup 6 pick action-add-sample    \ act smpl smpl2 smpl3 smpl4 smpl5
+
+cr 5 pick .action cr
+
+cr memory-use cr
+cr ." Deallocating ..."
+
+sample-deallocate
+sample-deallocate
+sample-deallocate
 sample-deallocate
 sample-deallocate
 action-deallocate
