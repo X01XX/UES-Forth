@@ -8,3 +8,4 @@ To run:
 
 > include main.fs
 
+> all-tests
