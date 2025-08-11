@@ -72,7 +72,8 @@
 
 \ Push a region onto a list, if there are no supersets in the list.
 \ If there are no supersets in the list, delete any subsets and push the region.
-: region-list-push-nosubs ( reg1 list0 -- )
+\ Return true if the region is added to the list.
+: region-list-push-nosubs ( reg1 list0 -- flag )
     \ Check args.
     assert-arg0-is-list
     assert-arg1-is-region
@@ -103,6 +104,7 @@
 
 \ Push a region onto a list, if there are no subsets in the list.
 \ If there are no subsets in the list, delete any supersets and push the region.
+\ Return true if the region is added to the list.
 : region-list-push-nosups ( reg1 list0 -- flag )
     \ Check args.
     assert-arg0-is-list
@@ -132,7 +134,147 @@
     true
 ;
 
+\ Return a copy of a region-list.
+: region-list-copy ( lst0 -- lst-copy )
+    \ Check arg.
+    assert-arg0-is-list
+
+    list-new swap           \ lst-n lst0
+
+    list-get-links          \ lst-n link
+
+    begin
+        dup
+    while
+        dup link-get-data   \ lst-n link region
+        2 pick              \ lst-n link region lst-n
+        region-list-push    \ lst-n link
+        
+        link-get-next       \ lst-n link
+    repeat
+    \ lst-n 0
+    drop
+;
+
+\ Return a region-list (TOS) minus a region.
+\ In many cases, you should run region-list-subtract-region-n instead.
+\ Or do intersections\subtractions, followed by region-list-normalize.
+: region-list-subtract-region ( reg1 lst0 -- lst )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
+    \ Init return list.
+    list-new -rot                   \ ret-lst reg1 lst0
+
+    \ Scan through the given list.
+    list-get-links                  \ ret-lst reg1 link
+    begin
+        dup
+    while
+        over                        \ ret-lst reg1 link reg1
+        over link-get-data          \ ret-lst reg1 link reg1 reg2
+
+        \ Test if equal
+        2dup region-eq              \ ret-lst reg1 link reg1 reg2 flag
+        if
+           2drop
+            \ Skip, region does not appear in the result.
+        else
+            \ Check if they intersect
+            2dup region-intersects  \ ret-lst reg1 link reg1 reg2 flag
+            if
+                \ They intersect, there will be same remainder.
+                region-subtract     \ ret-lst reg1 link remainder-lst
+                \ Add remainders to the return list
+                dup list-get-links  \ ret-lst reg1 link r-lst link
+                begin
+                    dup
+                while
+                    \ cr ." at 2" cr
+                    dup link-get-data       \ ret-lst reg1 link r-lst link reg2
+                    5 pick                  \ ret-lst reg1 link r-lst link reg2 ret-lst
+                    region-list-push-nosubs \ ret-lst reg1 link r-lst link flag
+                    drop                    \ ret-lst reg1 link r-lst link
+                    link-get-next
+                repeat
+                                            \ ret-lst reg1 link r-lst 0
+                drop region-list-deallocate \ ret-lst reg1 link
+            else
+                \ Add whole region to the result.
+                nip                         \ ret-lst reg1 link reg2
+                3 pick                      \ ret-lst reg1 link reg2 ret-lst
+                region-list-push-nosubs     \ ret-lst reg1 link flag
+                drop                        \ ret-lst reg1 link
+            then
+        then
+
+        link-get-next           \ ret-lst reg1 next-link-or-0
+    repeat
+                                \ ret-lst reg1 0
+    2drop                       \ ret-lst
+;
+
+\ From the TOS region-list, subtract a second region-list.
+\ In many cases, you should run region-list-subtract-n instead.
+\ Or do intersections\subtractions, followed by region-list-normalize.
+: region-list-subtract ( lst1 lst0 -- lst )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-list
+
+    \ Make a list that way be returned empty, or deallocated.
+    region-list-copy                \ lst1 lst0
+
+    swap                            \ lst0 lst1
+
+    \ Process each region in lst1.
+    list-get-links                  \ lst0 link
+    begin
+        dup
+    while
+        dup link-get-data           \ lst0 link region
+        rot                         \ link region lst0
+        swap                        \ link lst0 region
+        over                        \ link lst0 region lst0
+        region-list-subtract-region \ link lst0 lst0-new
+        -rot                        \ lst0-new link lst0
+        region-list-deallocate      \ lst0-new link
+        link-get-next
+    repeat
+    \ lst0-new link(0)
+    drop
+;
+
+\ Return a region-list complement, that is max-region minus region-list.
+: region-list-complement ( lst0 -- lst1 )
+    \ Check arg.
+    assert-arg0-is-list
+
+    list-new                    \ lst0 lst1
+    domain-max-region-xt execute           \ lst0 lst1 regM
+    over region-list-push       \ lst0 lst1
+    2dup                        \ lst0 lst1 lst0 lst1
+    region-list-subtract        \ lst0 lst1 lst2
+    swap region-list-deallocate \ lst0 lst2
+    nip                         \ lst2
+;
+
+\ Return a nomalized list.
+\ That is with maximum unions and overlaps.
+: region-list-normalize ( lst0 -- lst )
+    \ Check arg.
+    assert-arg0-is-list
+
+    region-list-complement      \ lst1
+    dup region-list-complement  \ lst1 lst2
+    swap                        \ lst2 lst1
+    region-list-deallocate      \ lst2
+;
+
 \ Return a list of region intersections with a region-list, no subsets.
+\ In many cases, you should run region-list-region-intersections-n instead.
+\ Or do intersections\subtractions, followed by region-list-normalize.
 : region-list-region-intersections ( list1 list0 -- list-result )
     \ Check args.
     assert-arg0-is-list
@@ -203,3 +345,34 @@
    [ ' region-uses-state ] literal -rot list-find-all       \ lst
    [ ' struct-inc-use-count ] literal over list-apply       \ lst
 ;
+
+: region-list-region-intersections-n ( lst1 lst0 -- lst )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-list
+
+    region-list-region-intersections    \ ret0
+    dup region-list-normalize           \ ret1 ret2
+    swap region-list-deallocate         \ ret2
+;
+
+: region-list-subtract-region-n ( reg1 lst0 -- lst )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-region
+
+    region-list-subtract-region     \ ret0
+    dup region-list-normalize       \ ret1 ret2
+    swap region-list-deallocate     \ ret2
+;
+
+: region-list-subtract-n ( lst1 lst0 -- lst )
+    \ Check args.
+    assert-arg0-is-list
+    assert-arg1-is-list
+
+    region-list-subtract            \ ret0
+    dup region-list-normalize       \ ret1 ret2
+    swap region-list-deallocate     \ ret2
+;
+

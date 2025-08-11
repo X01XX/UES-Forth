@@ -1,21 +1,9 @@
 \ Tests for the square-list struct functions.
 
-: square-list-test-none-in-use
-    assert-square-mma-none-in-use
-    assert-rulestore-mma-none-in-use
-    assert-rule-mma-none-in-use
-    assert-list-mma-none-in-use
-    assert-link-mma-none-in-use
-    depth 0<>
-    if
-        cr ." stack not empty " .s cr
-    then
-;
-
 : square-list-test-in-region
     cr ." square-test-in-region - start"
 
-    square-list-test-none-in-use
+    test-none-in-use
 
     5 15 region-new                         \ reg
     list-new                                \ reg sqrs
@@ -61,7 +49,7 @@
     square-list-deallocate
     region-deallocate
 
-    square-list-test-none-in-use
+    test-none-in-use
 
     cr ." square-test-in-region - Ok" cr
 ;

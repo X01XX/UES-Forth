@@ -22,6 +22,15 @@ region-state-0 cell+ constant region-state-1
     region-struct-number-cells swap mma-new to region-mma
 ;
 
+\ Check region mma usage.
+: assert-region-mma-none-in-use ( -- )
+    region-mma mma-in-use 0<>
+    if
+        ." region-mma use GT 0"
+        abort
+    then
+;
+
 \ Check instance type.
 : is-allocated-region ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.

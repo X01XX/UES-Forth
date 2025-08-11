@@ -1,15 +1,5 @@
 \ Tests for the square struct functions.
 
-: square-test-none-in-use
-    assert-square-mma-none-in-use
-    assert-rulestore-mma-none-in-use
-    assert-rule-mma-none-in-use
-    depth 0<>
-    if
-        cr ." stack not empty " .s cr
-    then
-;
-
 : assert-square-pn-1 ( sqr0 -- sqr0 )
     dup square-get-pn
     1 <>
@@ -75,7 +65,7 @@
 : square-test-add-result
     cr ." square-test-add-result - start"
 
-    square-test-none-in-use
+    test-none-in-use
 
     cr ."    pn 1 to pnc = t"
 
@@ -187,7 +177,7 @@
     square-deallocate
 
     \ cr memory-use
-    square-test-none-in-use
+    test-none-in-use
 
     cr ." square-test-add-result - Ok" cr
 ;
@@ -219,7 +209,7 @@
 : square-test-compare
     cr ." square-test-compare - start"
 
-    square-test-none-in-use
+    test-none-in-use
 
     cr ."    pn 1 to 1 compatible:"
     4 5 square-new
@@ -473,7 +463,7 @@
     square-deallocate
 
     \ Last check.
-    square-test-none-in-use
+    test-none-in-use
 
     cr ." square-test-compare - Ok" cr
 ;

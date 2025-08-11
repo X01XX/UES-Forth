@@ -72,8 +72,29 @@ cs
     cr 4 spaces ." dstack: " .s
 ;
 
+\ Check that no struct instances are in use, stack is clear.
+: test-none-in-use
+    assert-link-mma-none-in-use
+    assert-list-mma-none-in-use
+    assert-region-mma-none-in-use
+    assert-rule-mma-none-in-use
+    assert-rulestore-mma-none-in-use
+    assert-square-mma-none-in-use
+    assert-sample-mma-none-in-use
+    assert-action-mma-none-in-use
+
+    depth 0<> 
+    if  
+        cr ." stack not empty " .s cr
+    then
+;
+
 include square_t.fs
 include squarelist_t.fs
+include region_t.fs
+include regionlist_t.fs
+include rule_t.fs
+include action_t.fs
 
 : test-state-not-a-or-not-b
     cr
@@ -116,7 +137,7 @@ cr ." main.fs"
 \ Init array-stacks.
 101 link-mma-init
 102 list-mma-init
- 30 region-mma-init
+103 region-mma-init
 104 rule-mma-init
 105 rulestore-mma-init
 106 square-mma-init
@@ -125,46 +146,15 @@ cr ." main.fs"
   1 session-mma-init
   5 domain-mma-init
 
+
 \ tests
 \ test-state-not-a-or-not-b
 \ test-rulestore
 \ test-square
 
-cr memory-use cr
-5 action-new                    \ act
-cr dup .action cr
+\ cr memory-use cr
 
-4 5 sample-new                  \ act smpl
-dup 2 pick action-add-sample    \ act smpl
-
-0 6 sample-new                  \ act smpl smpl2
-dup 3 pick action-add-sample    \ act smpl smpl2
-
-cr 2 pick .action cr
-
-2 15 sample-new                 \ act smpl smpl2 smpl3
-dup 4 pick action-add-sample    \ act smpl smpl2 smpl3
-
-cr 3 pick .action cr
-
-3 15 sample-new                 \ act smpl smpl2 smpl3 smpl4
-dup 5 pick action-add-sample    \ act smpl smpl2 smpl3 smpl4
-
-4 15 sample-new                 \ act smpl smpl2 smpl3 smpl4 smpl5
-dup 6 pick action-add-sample    \ act smpl smpl2 smpl3 smpl4 smpl5
-
-cr 5 pick .action cr
-
-cr memory-use cr
-cr ." Deallocating ..."
-
-sample-deallocate
-sample-deallocate
-sample-deallocate
-sample-deallocate
-sample-deallocate
-action-deallocate
-cr memory-use cr
+\ cr memory-use cr
 
 \ Free heap memory before exiting.
 \ cr ." Freeing heap memory"
@@ -175,4 +165,11 @@ cr memory-use cr
 \ rulestore-mma mma-free
 \ square-mma mma-free
 
-
+: all-tests
+    square-tests
+    square-list-tests
+    region-tests
+    region-list-tests
+    rule-tests
+    action-tests
+;

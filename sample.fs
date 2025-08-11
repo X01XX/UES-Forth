@@ -22,6 +22,15 @@ sample-initial cell+ constant sample-result
     sample-struct-number-cells swap mma-new to sample-mma
 ;
 
+\ Check sample mma usage.
+: assert-sample-mma-none-in-use ( -- )
+    sample-mma mma-in-use 0<>
+    if
+        ." sample-mma use GT 0"
+        abort
+    then
+;
+
 \ Check instance type.
 : is-allocated-sample ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.

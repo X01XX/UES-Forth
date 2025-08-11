@@ -23,6 +23,15 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     action-struct-number-cells swap mma-new to action-mma
 ;
 
+\ Check action mma usage.
+: assert-action-mma-none-in-use ( -- )
+    action-mma mma-in-use 0<>
+    if
+        ." action-mma use GT 0"
+        abort
+    then
+;
+
 \ Check instance type.
 : is-allocated-action ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
