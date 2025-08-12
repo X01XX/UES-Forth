@@ -2,8 +2,6 @@
 
 : region-list-test-region-intersections-n
 
-    test-none-in-use
-
     list-new                                \ lst1
      4 13 region-new over region-list-push  \ lst1
     list-new                                \ lst1 lst2
@@ -32,14 +30,10 @@
     region-list-deallocate
     region-list-deallocate
 
-    test-none-in-use
-
     cr ." region-test-region-intersections-n - Ok"
 ;
 
 : region-list-test-subtract-n
-
-    test-none-in-use
 
     \ Make subtrahend list.
     list-new                                \ lst1
@@ -85,14 +79,11 @@
     region-list-deallocate
     region-list-deallocate
 
-    test-none-in-use
-
     cr ." region-list-test-subtract-n - Ok"
 ;
 
 : region-list-tests
     region-list-test-region-intersections-n
     region-list-test-subtract-n
-    cr
 ;
 

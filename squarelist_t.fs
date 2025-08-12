@@ -3,8 +3,6 @@
 : square-list-test-in-region
     cr ." square-test-in-region - start"
 
-    test-none-in-use
-
     5 15 region-new                         \ reg
     list-new                                \ reg sqrs
     
@@ -48,8 +46,6 @@
     square-list-deallocate
     square-list-deallocate
     region-deallocate
-
-    test-none-in-use
 
     cr ." square-test-in-region - Ok" cr
 ;

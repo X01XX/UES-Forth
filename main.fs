@@ -30,6 +30,7 @@ include list.fs
 
 
 \ Application.
+include globals.fs
 include xtindirect.fs
 
 include value.fs
@@ -95,42 +96,9 @@ include region_t.fs
 include regionlist_t.fs
 include rule_t.fs
 include action_t.fs
+include rulestore_t.fs
+include state_t.fs
 
-: test-state-not-a-or-not-b
-    cr
-    4 5 state-not-a-or-not-b    \ list
-    cr ." ~4 + ~5: " dup .region-list cr
-
-    3 6 state-not-a-or-not-b    \ list45 list36
-    cr ." ~3 + ~6: " dup .region-list cr
-
-    2dup region-list-region-intersections   \ list45 list36 ints
-    dup cr ." Possible regions = (~4 + ~5) & (~3 + ~6) = " .region-list
-    cr
-    memory-use
-
-    \ Deallocate remaining struct instances.
-    cr ." Deallocating ..."
-    region-list-deallocate
-    region-list-deallocate
-    region-list-deallocate
-    cr memory-use
-;
-
-: test-rulestore
-    4 5 rule-new        \ rul1  5->4
-    3 5 rule-new        \ rul2  5->3
-
-    rulestore-new-2     \ rs2
-    cr cr ." rulestore: " dup .rulestore
-
-    cr memory-use cr
-
-    cr ." Deallocating ..."
-    rulestore-deallocate
-
-    cr memory-use cr
-;
 
 cr ." main.fs"
 
@@ -166,10 +134,23 @@ cr ." main.fs"
 \ square-mma mma-free
 
 : all-tests
+    test-none-in-use
+
+    \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
+    4 0 domain-new to current-domain
+    0 action-new dup to current-action
+    current-domain domain-add-action
+
     square-tests
     square-list-tests
     region-tests
     region-list-tests
     rule-tests
     action-tests
+    rulestore-tests
+    state-tests
+
+    current-domain domain-deallocate
+
+    test-none-in-use
 ;

@@ -528,7 +528,9 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     if                                  \ rf sqr0 pn pn-new
         swap                            \ rf sqr0 pn-new pn
         2 pick square-get-state         \ rf sqr0 pn-new pn sta
-        cr ." square " .value space ." pn changed from " .pn space ." to " dup .pn cr
+        cr ." Dom: " domain-inst-id-xt execute . space
+           ." Act: " action-inst-id-xt execute . space
+        ." square " .value space ." pn changed from " .pn space ." to " dup .pn cr
                                         \ rf sqr0 pn-new
         \ Save new pn
         over _square-set-pn             \ rf sqr0

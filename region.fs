@@ -633,3 +633,48 @@ region-state-0 cell+ constant region-state-1
     \ sta1 s0
     =                           \ flag
 ;
+
+\ Get a region from a string.
+\ Valid chars are 0, 1, X, x, and underscore as separator.
+: region-from-string ( addr n --  reg )
+    cr
+    0 0 0                   \ addr n (limit) 0 (counter) 0 (state0) 0 (state1)
+    begin                   \ addr n c s0 s1
+        3 pick 3 pick <>
+    while
+        4 pick              \ addr n c s0 s1 addr
+        3 pick              \ addr n c s0 s1 addr c
+        +                   \ addr n c s0 s1 addr+
+        c@                  \ addr n c s0 s1 char
+        dup [char] _ =
+        if
+            drop            \ addr n c s0 s1
+        else
+            \ Save char.    \ addr n c s0 s1 char
+            -rot            \ addr n c char s0 s1
+            \ Shift each region state.
+            swap 1 lshift swap 1 lshift
+            \ Get char back to TOS.
+            rot             \ addr n c s0 s1 char
+            \ Process character.
+            case
+                [char] 0 of endof
+                [char] 1 of swap 1+ swap 1+ endof
+                [char] X of swap 1+ swap endof
+                [char] x of 1+ endof
+                cr ." unexpected char" abort
+            endcase
+        then
+        \ Inc char counter.
+        rot
+        1+
+        -rot
+    repeat                  \ addr n c s0 s1
+
+    rot drop
+    rot drop
+    rot drop
+    assert-arg0-is-value
+    assert-arg1-is-value
+    region-new
+;

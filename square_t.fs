@@ -65,8 +65,6 @@
 : square-test-add-result
     cr ." square-test-add-result - start"
 
-    test-none-in-use
-
     cr ."    pn 1 to pnc = t"
 
     4 5 square-new
@@ -171,13 +169,8 @@
     assert-square-pnc-t
     assert-square-pn-2
 
-    \ cr memory-use cr
-    \ cr ."     Deallocating ..."
     square-deallocate
     square-deallocate
-
-    \ cr memory-use
-    test-none-in-use
 
     cr ." square-test-add-result - Ok" cr
 ;
@@ -208,8 +201,6 @@
 
 : square-test-compare
     cr ." square-test-compare - start"
-
-    test-none-in-use
 
     cr ."    pn 1 to 1 compatible:"
     4 5 square-new
@@ -461,9 +452,6 @@
 
     square-deallocate
     square-deallocate
-
-    \ Last check.
-    test-none-in-use
 
     cr ." square-test-compare - Ok" cr
 ;

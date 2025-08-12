@@ -2,7 +2,6 @@
 
 \ Test adding samples and changing the logical structure, incompatible pairs.
 : action-test-add-sample
-    test-none-in-use
 
     5 action-new                    \ act
     cr dup .action cr
@@ -61,8 +60,6 @@
     sample-deallocate
     sample-deallocate
     action-deallocate
-
-    test-none-in-use
 ;
 
 : action-tests

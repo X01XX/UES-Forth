@@ -118,6 +118,8 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ End accessors.
 
 \ Create an domain, given an instance ID and number of bits to be used.
+\ The instance ID will likely be reset to match its position in a list,
+\ which avoids duplicates and may be useful as an index into the list.
 : domain-new ( nb1 id0  -- addr)
     
     \ Allocate space.
@@ -143,14 +145,15 @@ domain-header               cell+ constant domain-actions               \ A acti
 ;
 
 \ Print a domain.
-: .domain ( act0 -- )
+: .domain ( dom0 -- )
     \ Check arg.
     assert-arg0-is-domain
 
     dup domain-get-inst-id
     ." Sess: " .
 
-    dup domain-get-actions
+    dup domain-get-num-bits ." num-bits: " . space
+    domain-get-actions
     dup list-get-length
     ."  num actions: " .
     ." actions " .action-list
@@ -175,19 +178,28 @@ domain-header               cell+ constant domain-actions               \ A acti
     then
 ;
 
-0 value current-domain      \ Address of the current domain.
-4 value num-bits            \ Number bits used by current domain.
+: domain-add-action ( act1 dom0 -- )
+    \ Check args.
+    assert-arg0-is-domain
+    assert-arg1-is-action
+
+    domain-get-actions
+    action-list-push
+;
 
 \ Functions that will eventually use current-domain value.
 
 \ Return the number of bits used by the domain.
 : domain-num-bits ( -- u )
-    num-bits
+    current-domain
+    domain-get-num-bits
 ;
 
 \ Return most significant bit mask for a domain.
 : domain-ms-bit ( -- u )
-    1 num-bits 1- lshift
+    1
+    current-domain
+    domain-get-num-bits 1- lshift
 ;
 
 ' domain-ms-bit to domain-ms-bit-xt
@@ -205,3 +217,11 @@ domain-header               cell+ constant domain-actions               \ A acti
 ;
 
 ' domain-max-region to domain-max-region-xt
+
+: domain-inst-id ( dom0 -- id )
+    current-domain
+    domain-get-inst-id
+;
+
+' domain-inst-id to domain-inst-id-xt
+

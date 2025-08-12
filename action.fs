@@ -144,10 +144,19 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     action-logical-structure +  \ Add offset.
     !                           \ Store it.
 ;
- 
+
+: action-inst-id ( act0 -- id )
+    current-action
+    action-get-inst-id
+;
+
+' action-inst-id to action-inst-id-xt
+
 \ End accessors.
 
 \ Create an action, given an instance ID.
+\ The instance ID will likely be reset to match its position in a list,
+\ which avoids duplicates and may be useful as an index into the list.
 : action-new ( val0 -- addr)
     \ Check args.
     assert-arg0-is-value

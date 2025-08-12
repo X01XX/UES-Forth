@@ -3,8 +3,6 @@
 : region-test-region-subtract
     \ cr ." region-test-region-subtract - start"
 
-    test-none-in-use
-
      4 13 region-new    \ reg1
     10 12 region-new    \ reg1 reg2
     2dup                \ reg1 reg2 reg1 reg2
@@ -42,8 +40,6 @@
     region-deallocate               \ reg-lst
     
     region-list-deallocate
-
-    test-none-in-use
 
     cr ." region-test-region-subtract - Ok" cr
 ;

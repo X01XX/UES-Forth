@@ -16,6 +16,9 @@
 
 ' abort value domain-max-region-xt
 
+' abort value domain-inst-id-xt
+
+' abort value action-inst-id-xt
 
 ' abort value region-new-xt
 
