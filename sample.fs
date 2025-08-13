@@ -13,10 +13,7 @@ sample-initial cell+ constant sample-result
 \ Init sample mma, return the addr of allocated memory.
 : sample-mma-init ( num-items -- ) \ sets sample-mma.
     dup 1 < 
-    if  
-        ." sample-mma-init: Invalid number of items."
-        abort
-    then
+    abort" sample-mma-init: Invalid number of items."
 
     cr ." Initializing Sample store."
     sample-struct-number-cells swap mma-new to sample-mma
@@ -25,10 +22,7 @@ sample-initial cell+ constant sample-result
 \ Check sample mma usage.
 : assert-sample-mma-none-in-use ( -- )
     sample-mma mma-in-use 0<>
-    if
-        ." sample-mma use GT 0"
-        abort
-    then
+    abort" sample-mma use GT 0"
 ;
 
 \ Check instance type.
@@ -47,22 +41,16 @@ sample-initial cell+ constant sample-result
     is-allocated-sample 0=
 ;
 
-\ Check arg0 for sample, unconventional, leaves stack unchanged. 
-: assert-arg0-is-sample ( arg0 -- arg0 )
+\ Check TOS for sample, unconventional, leaves stack unchanged. 
+: assert-tos-is-sample ( arg0 -- arg0 )
     dup is-allocated-sample 0=
-    if
-        cr ." arg0 is not an allocated sample"
-        abort
-    then
+    abort" TOS is not an allocated sample"
 ;
 
-\ Check arg1 for sample, unconventional, leaves stack unchanged. 
-: assert-arg1-is-sample ( arg1 arg0 -- arg1 arg0 )
+\ Check NOS for sample, unconventional, leaves stack unchanged. 
+: assert-nos-is-sample ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-sample 0=
-    if
-        cr ." arg1 is not an allocated sample"
-        abort
-    then
+    abort" NOS is not an allocated sample"
 ;
 
 \ Start accessors.
@@ -70,7 +58,7 @@ sample-initial cell+ constant sample-result
 \ Return the first field from a sample instance.
 : sample-get-initial ( addr -- u)
     \ Check arg.
-    assert-arg0-is-sample
+    assert-tos-is-sample
 
     sample-initial +    \ Add offset.
     @                   \ Fetch the field.
@@ -79,7 +67,7 @@ sample-initial cell+ constant sample-result
 \ Return the second field from a sample instance.
 : sample-get-result ( addr -- u)
     \ Check arg.
-    assert-arg0-is-sample
+    assert-tos-is-sample
 
     \ Get second state.
     sample-result +    \ Add offset.
@@ -88,8 +76,8 @@ sample-initial cell+ constant sample-result
 \ Set the first field from a sample instance, use only in this file.
 : _sample-set-initial ( u1 addr -- )
     \ Check args.
-    assert-arg0-is-sample
-    assert-arg1-is-value
+    assert-tos-is-sample
+    assert-nos-is-value
 
     sample-initial +    \ Add offset.
     !                   \ Set first field.
@@ -98,8 +86,8 @@ sample-initial cell+ constant sample-result
 \ Set the second field from a sample instance, use only in this file.
 : _sample-set-result ( u1 addr -- )
     \ Check args.
-    assert-arg0-is-sample
-    assert-arg1-is-value
+    assert-tos-is-sample
+    assert-nos-is-value
 
     sample-result +    \ Add offset.
     !                   \ Set second field.
@@ -114,8 +102,8 @@ sample-initial cell+ constant sample-result
 \ If you want to push the sample onto a list, sample-list-push will increment the use count.
 : sample-new ( r1 i0 -- addr)
     \ Check args.
-    assert-arg0-is-value
-    assert-arg1-is-value
+    assert-tos-is-value
+    assert-nos-is-value
 
     \ Allocate space.
     sample-mma mma-allocate     \ u1 u2 addr
@@ -128,14 +116,14 @@ sample-initial cell+ constant sample-result
     0 over struct-set-use-count
 
     \ Store states
-    swap over _sample-set-initial   \ r1  addr
-    swap over _sample-set-result    \ addr
+    tuck _sample-set-initial   \ r1  addr
+    tuck _sample-set-result    \ addr
 ;
 
 \ Print a sample.
 : .sample ( smp0 -- )
     \ Check arg.
-    assert-arg0-is-sample
+    assert-tos-is-sample
 
     ." ("
     dup sample-get-initial .value
@@ -147,7 +135,7 @@ sample-initial cell+ constant sample-result
 \ Deallocate a sample.
 : sample-deallocate ( smp0 -- )
     \ Check arg.
-    assert-arg0-is-sample
+    assert-tos-is-sample
 
     dup struct-get-use-count      \ smp0 count
 

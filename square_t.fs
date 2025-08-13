@@ -3,25 +3,18 @@
 : assert-square-pn-1 ( sqr0 -- sqr0 )
     dup square-get-pn
     1 <>
-    if
-        ." square pn not 1"
-        abort
-    then
+    abort" square pn not 1"
+
     dup square-get-rules rulestore-number-rules
     1 <>
-    if
-        ." square rulestore does not have 1 rule."
-        abort
-    then
+    abort" square rulestore does not have 1 rule."
 ;
 
 : assert-square-pn-2 ( sqr0 -- sqr0 )
     dup square-get-pn
     2 <>
-    if
-        ." square pn not 2"
-        abort
-    then
+    abort" square pn not 2"
+
     dup square-get-rules rulestore-number-rules
     2 <>
     if
@@ -33,33 +26,21 @@
 : assert-square-pn-3 ( sqr0 -- sqr0 )
     dup square-get-pn
     3 <>
-    if
-        ." square pn not 3"
-        abort
-    then
+    abort" square pn not 3"
+
         dup square-get-rules rulestore-number-rules
     0<>
-    if
-        ." square rulestore does not have 0 rules."
-        abort
-    then
+    abort" square rulestore does not have 0 rules."
 ;
 
 : assert-square-pnc-t ( sqr0 -- sqr0 )
     dup square-get-pnc
-    if
-    else
-        ." square pnc is not true"
-        abort
-    then
+    0= abort" square pnc is not true"
 ;
 
 : assert-square-pnc-f ( sqr0 -- sqr0 )
     dup square-get-pnc
-    if
-        ." square pnc is not false"
-        abort
-    then
+    abort" square pnc is not false"
 ;
 
 : square-test-add-result
@@ -74,19 +55,19 @@
 
     4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if ." flag true?" abort then
+    abort" flag true?"
     assert-square-pnc-f
     assert-square-pn-1
 
     4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if ." flag true?" abort then
+    abort" flag true?"
     assert-square-pnc-f
     assert-square-pn-1
 
     4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if else ." flag not true?" abort then
+    0= abort" flag not true?"
     assert-square-pnc-t
     assert-square-pn-1
 
@@ -94,7 +75,7 @@
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if else ." flag not true?" abort then
+    0= abort" flag not true?"
     assert-square-pnc-t
     assert-square-pn-3
 
@@ -102,19 +83,19 @@
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if ." flag true?" abort then
+    abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if ." flag true?" abort then
+    abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if else ." flag not true?" abort then
+    0= abort" flag not true?"
     assert-square-pnc-t
     assert-square-pn-1
 
@@ -125,19 +106,19 @@
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if else ." flag not true?" abort then
+    0= abort" flag not true?"
     assert-square-pnc-f
     assert-square-pn-2
 
     4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if ." flag true?" abort then
+    abort" flag true?"
     assert-square-pnc-f
     assert-square-pn-2
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if else ." flag not true?" abort then
+    0= abort" flag not true?"
     assert-square-pnc-t
     assert-square-pn-2
 
@@ -145,7 +126,7 @@
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if else ." flag not true?" abort then
+    0= abort" flag not true?"
     assert-square-pnc-t
     assert-square-pn-3
 
@@ -153,19 +134,19 @@
 
     4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if ." flag true?" abort then
+    abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
     3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if ." flag true?" abort then
+    abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
     4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
-    if else ." flag not true?" abort then
+    0= abort" flag not true?"
     assert-square-pnc-t
     assert-square-pn-2
 
@@ -177,26 +158,17 @@
 
 : assert-char-C ( char -- )
     [char] C <>
-    if
-        ." Returned char not C"
-        abort
-    then
+    abort" Returned char not C"
 ;
 
 : assert-char-I ( char -- )
     [char] I <>
-    if
-        ." Returned char not I"
-        abort
-    then
+    abort" Returned char not I"
 ;
 
 : assert-char-M ( char -- )
     [char] M <>
-    if
-        ." Returned char not M"
-        abort
-    then
+    abort" Returned char not M"
 ;
 
 : square-test-compare

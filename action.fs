@@ -14,10 +14,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Init action mma, return the addr of allocated memory.
 : action-mma-init ( num-items -- ) \ sets action-mma.
     dup 1 < 
-    if  
-        ." action-mma-init: Invalid number of items."
-        abort
-    then
+    abort" action-mma-init: Invalid number of items."
 
     cr ." Initializing Action store."
     action-struct-number-cells swap mma-new to action-mma
@@ -26,10 +23,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Check action mma usage.
 : assert-action-mma-none-in-use ( -- )
     action-mma mma-in-use 0<>
-    if
-        ." action-mma use GT 0"
-        abort
-    then
+    abort" action-mma use GT 0"
 ;
 
 \ Check instance type.
@@ -48,22 +42,16 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     is-allocated-action 0=
 ;
 
-\ Check arg0 for action, unconventional, leaves stack unchanged. 
-: assert-arg0-is-action ( arg0 -- arg0 )
+\ Check TOS for action, unconventional, leaves stack unchanged. 
+: assert-tos-is-action ( arg0 -- arg0 )
     dup is-allocated-action 0=
-    if
-        cr ." arg0 is not an allocated action"
-        abort
-    then
+    abort" TOS is not an allocated action"
 ;
 
-\ Check arg1 for action, unconventional, leaves stack unchanged. 
-: assert-arg1-is-action ( arg1 arg0 -- arg1 arg0 )
+\ Check NOS for action, unconventional, leaves stack unchanged. 
+: assert-nos-is-action ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-action 0=
-    if
-        cr ." arg1 is not an allocated action"
-        abort
-    then
+    abort" NOS is not an allocated action"
 ;
 
 \ Start accessors.
@@ -71,7 +59,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Return the instance ID from an action instance.
 : action-get-inst-id ( act0 -- u)
     \ Check arg.
-    assert-arg0-is-action
+    assert-tos-is-action
 
     \ Get intst ID.
     2w@
@@ -80,8 +68,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Set the instance ID of an action instance, use only in this file.
 : _action-set-inst-id ( u1 act0 -- )
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-value
+    assert-tos-is-action
+    assert-nos-is-value
 
     \ Set inst id.
     2w!
@@ -90,7 +78,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Return the square-list from an action instance.
 : action-get-squares ( act0 -- lst )
     \ Check arg.
-    assert-arg0-is-action
+    assert-tos-is-action
 
     action-squares +    \ Add offset.
     @                   \ Fetch the field.
@@ -99,8 +87,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Set the square-list of an action instance, use only in this file.
 : _action-set-squares ( lst1 act0 -- )
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-list
+    assert-tos-is-action
+    assert-nos-is-list
 
     action-squares +    \ Add offset.
     !                   \ Set the field.
@@ -110,7 +98,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Return the incompatible-pairs region-list from an action instance.
 : action-get-incompatible-pairs ( addr -- lst )
     \ Check arg.
-    assert-arg0-is-action
+    assert-tos-is-action
 
     action-incompatible-pairs + \ Add offset.
     @                           \ Fetch the field.
@@ -119,8 +107,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Set the incompatible-pairs region-list of an action instance, use only in this file.
 : _action-set-incompatible-pairs ( u1 addr -- )
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-list
+    assert-tos-is-action
+    assert-nos-is-list
 
     action-incompatible-pairs + \ Add offset.
     !                           \ Store it.
@@ -129,7 +117,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Return the logical-structure region-list from an action instance.
 : action-get-logical-structure ( addr -- lst )
     \ Check arg.
-    assert-arg0-is-action
+    assert-tos-is-action
 
     action-logical-structure +  \ Add offset.
     @                           \ Fetch the field.
@@ -138,8 +126,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Set the logical-structure region-list of an action instance, use only in this file.
 : _action-set-logical-structure ( u1 addr -- )
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-list
+    assert-tos-is-action
+    assert-nos-is-list
 
     action-logical-structure +  \ Add offset.
     !                           \ Store it.
@@ -159,7 +147,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ which avoids duplicates and may be useful as an index into the list.
 : action-new ( val0 -- addr)
     \ Check args.
-    assert-arg0-is-value
+    assert-tos-is-value
 
     \ Allocate space.
     action-mma mma-allocate     \ val0 actr
@@ -172,7 +160,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     0 over struct-set-use-count \ val0 act
 
     \ Set intance ID.
-    swap over _action-set-inst-id  \ act
+    tuck _action-set-inst-id    \ act
 
     \ Set squares list.
     list-new                        \ act lst
@@ -195,7 +183,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Print a action.
 : .action ( act0 -- )
     \ Check arg.
-    assert-arg0-is-action
+    assert-tos-is-action
 
     dup action-get-inst-id
     ." Act: " .
@@ -212,7 +200,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Deallocate a action.
 : action-deallocate ( act0 -- )
     \ Check arg.
-    assert-arg0-is-action
+    assert-tos-is-action
 
     dup struct-get-use-count      \ act0 count
 
@@ -233,8 +221,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Get a list of incompatible pairs, no supersets, given a square.
 : action-find-incompatible-pairs-nosups ( sqr1 act0 -- square-list )
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-square
+    assert-tos-is-action
+    assert-nos-is-square
 
     list-new -rot                               \ retlst sqr1 act0
     2dup action-get-squares                     \ retlst sqr1 act0 sqr1 square-list
@@ -255,7 +243,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     2 pick square-get-state                 \ retlst sqr1 act0 inclst sta1
     over list-get-links                     \ retlst sqr1 act0 inclst sta1 link
     begin
-        dup 0<>                             \ retlst sqr1 act0 inclst sta1 link flag
+        dup                                 \ retlst sqr1 act0 inclst sta1 link link
     while
         dup link-get-data square-get-state  \ retlst sqr1 act0 inclst sta1 link sta2
         2 pick                              \ retlst sqr1 act0 inclst sta1 link sta2 sta1
@@ -283,15 +271,15 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Could affect action-incompatible-pairs and action-logical-structure.
 : _action-check-square ( sqr1 act0 -- )
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-square
+    assert-tos-is-action
+    assert-nos-is-square
 
     \ cr ." at 0 " cr
     \ Check action-incompatible-pairs for pairs that are no longer incompatible.
     \ If any are found, remove them and recalculate everything.
 
     \ Form regions with incompatible squares, no supersets.
-    swap over                               \ act0 sqr1 act0
+    tuck                                    \ act0 sqr1 act0
     \ cr ." at 1 " .s cr
     action-find-incompatible-pairs-nosups   \ act0 inc-lst
     \ cr ." at 1 " cr
@@ -311,7 +299,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
                                             \ act0 inclst
     dup list-get-links                      \ act0 inclst link
     begin
-        dup 0<>                             \ act0 inclst link flag
+        dup                                 \ act0 inclst link link
     while
        \  cr ." at while " cr
         dup link-get-data                   \ act0 inclst link regx
@@ -376,8 +364,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 : action-find-square ( sta1 act0 -- sqr true | false )
     cr ." action-find-square" cr
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-value
+    assert-tos-is-action
+    assert-nos-is-value
 
     action-get-squares          \ sta1 sqr-lst
     square-list-find
@@ -388,14 +376,11 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 : _action-not-incompatble-pairs ( reg-lst1 act0 -- reg-lst2 )
     cr ." _action-not-incompatble-pairs" cr
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-list
+    assert-tos-is-action
+    assert-nos-is-list
 
     over list-is-empty
-    if
-        cr ." list is empty?" cr
-        abort
-    then
+    abort" list is empty?"
 
     \ Create return list.
     list-new -rot               \ ret-lst reg-lst1 act0
@@ -415,22 +400,16 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         \ Get square 0.
         4 pick                  \ ret-lst act0 link region s1 s0 act0
         action-find-square      \ ret-lst act0 link region s1 result
-        if                      \ ret-lst act0 link region s1 sqr0
-        else
-            cr ." square not found?" cr
-            abort
-        then
+        0=
+        abort" square not found?"
 
         swap                    \ ret-lst act0 link region sqr0 s1
 
         \ Get square 1.
         4 pick                  \ ret-lst act0 link region sqr0 s1 act0
         action-find-square      \ ret-lst act0 link region sqr0 result
-        if                      \ ret-lst act0 link region sqr0 sqr1
-        else
-            cr ." square not found?" cr
-            abort
-        then
+        0=
+        abort" square not found?"
 
         cr dup .square cr
         cr over .square cr
@@ -455,7 +434,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 :  _action-recalc-logical-structure ( act0 -- )
     cr ." _action-recalc-logical-structure" cr
     \ Check args.
-    assert-arg0-is-action
+    assert-tos-is-action
 
     \ Save current logicl structure, to deallocate later, so the action field will never be invalid.
     dup action-get-logical-structure        \ act0 ls-old
@@ -509,8 +488,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 : _action-check-incompatible-pairs ( sqr1 act0 -- )
     cr ." _action-check-incompatible-pairs" cr
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-square
+    assert-tos-is-action
+    assert-nos-is-square
 
     \ Get regions that use the state
     swap square-get-state               \ act0 sta
@@ -554,12 +533,10 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         4 pick                          \ act0 reg-lst-not-i link xt region act0
         action-get-incompatible-pairs   \ act0 reg-lst-not-i link xt region pair-list
         list-remove                     \ act0 reg-lst-not-i link reg? flag
-        if
-            region-deallocate
-        else
-            cr ." Region not found?"
-            abort
-        then
+        0=
+        abort" Region not found?"
+
+        region-deallocate
 
         link-get-next
     repeat
@@ -584,8 +561,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 : action-add-sample ( smpl1 act0 -- )
     \ cr ." at 0: " .s cr
     \ Check args.
-    assert-arg0-is-action
-    assert-arg1-is-sample
+    assert-tos-is-action
+    assert-nos-is-sample
 
     cr ." Act: " dup action-get-inst-id . space ." adding sample: " over .sample cr
 

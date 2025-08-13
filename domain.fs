@@ -1,4 +1,4 @@
-\ Implement a Domain struct and functions.                                                                                             
+\ Implement a Domain struct and functions.
 
 31379 constant domain-id
     2 constant domain-struct-number-cells
@@ -12,10 +12,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Init domain mma, return the addr of allocated memory.
 : domain-mma-init ( num-items -- ) \ sets domain-mma.
     dup 1 < 
-    if  
-        ." domain-mma-init: Invalid number of items."
-        abort
-    then
+    abort" domain-mma-init: Invalid number of items."
 
     cr ." Initializing Domain store."
     domain-struct-number-cells swap mma-new to domain-mma
@@ -37,13 +34,10 @@ domain-header               cell+ constant domain-actions               \ A acti
     is-allocated-domain 0=
 ;
 
-\ Check arg0 for domain, unconventional, leaves stack unchanged. 
-: assert-arg0-is-domain ( arg0 -- arg0 )
+\ Check TOS for domain, unconventional, leaves stack unchanged. 
+: assert-tos-is-domain ( arg0 -- arg0 )
     dup is-allocated-domain 0=
-    if  
-        cr ." arg0 is not an allocated domain"
-        abort
-    then
+    abort" TOS is not an allocated domain"
 ;
 
 \ Start accessors.
@@ -51,7 +45,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Return the action-list from an domain instance.
 : domain-get-actions ( dom0 -- lst )
     \ Check arg.
-    assert-arg0-is-domain
+    assert-tos-is-domain
 
     domain-actions +    \ Add offset.
     @                   \ Fetch the field.
@@ -60,8 +54,8 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Return the action-list from an domain instance.
 : _domain-set-actions ( lst dom0 -- )
     \ Check arg.
-    assert-arg0-is-domain
-    assert-arg1-is-list
+    assert-tos-is-domain
+    assert-nos-is-list
 
     domain-actions +    \ Add offset.
     !                   \ Set the field.
@@ -70,7 +64,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Return the instance ID from an domain instance.
 : domain-get-inst-id ( dom0 -- u)
     \ Check arg.
-    assert-arg0-is-domain
+    assert-tos-is-domain
 
     \ Get intst ID.
     2w@
@@ -79,7 +73,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Set the instance ID of an domain instance, use only in this file.
 : _domain-set-inst-id ( u1 dom0 -- )
     \ Check args.
-    assert-arg0-is-domain
+    assert-tos-is-domain
 
     \ Set inst id.
     2w!
@@ -88,7 +82,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Return the number bits used by a domain instance.
 : domain-get-num-bits ( dom0 -- u)
     \ Check arg.
-    assert-arg0-is-domain
+    assert-tos-is-domain
 
     \ Get intst ID.
     3w@
@@ -97,19 +91,13 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Set the number bits used by a domain instance, use only in this file.
 : _domain-set-num-bits ( u1 dom0 -- )
     \ Check args.
-    assert-arg0-is-domain
+    assert-tos-is-domain
 
     over 1 <
-    if
-        ." Invalid number of bits."
-        abort
-    then
+    abort" Invalid number of bits."
 
     over 64 >
-    if
-        ." Invalid number of bits."
-        abort
-    then
+    abort" Invalid number of bits."
 
     \ Set inst id.
     3w!
@@ -133,10 +121,10 @@ domain-header               cell+ constant domain-actions               \ A acti
     0 over struct-set-use-count     \ nb1 id0 dom
 
     \ Set intance ID.
-    swap over _domain-set-inst-id   \ nb1 dom
+    tuck _domain-set-inst-id        \ nb1 dom
 
     \ Set num bits.
-    swap over _domain-set-num-bits   \ dom
+    tuck _domain-set-num-bits       \ dom
 
     \ Set actions list.             
     list-new                        \ dom lst
@@ -147,7 +135,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Print a domain.
 : .domain ( dom0 -- )
     \ Check arg.
-    assert-arg0-is-domain
+    assert-tos-is-domain
 
     dup domain-get-inst-id
     ." Sess: " .
@@ -162,7 +150,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 \ Deallocate a domain.
 : domain-deallocate ( act0 -- )
     \ Check arg.
-    assert-arg0-is-domain
+    assert-tos-is-domain
 
     dup struct-get-use-count      \ act0 count
 
@@ -180,8 +168,8 @@ domain-header               cell+ constant domain-actions               \ A acti
 
 : domain-add-action ( act1 dom0 -- )
     \ Check args.
-    assert-arg0-is-domain
-    assert-arg1-is-action
+    assert-tos-is-domain
+    assert-nos-is-action
 
     domain-get-actions
     action-list-push

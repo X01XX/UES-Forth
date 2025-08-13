@@ -11,8 +11,8 @@
 
 : action-list-push ( actx act-lst -- )
     \ Check args.
-    assert-arg0-is-list
-    assert-arg1-is-action
+    assert-tos-is-list
+    assert-nos-is-action
 
     dup list-get-length     \ act act-lst len
     2 pick                  \ act act-lst len act

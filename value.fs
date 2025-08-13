@@ -10,37 +10,28 @@
     <>
 ;
 
-\ Check arg0 for value, unconventional, leaves stack unchanged. 
-: assert-arg0-is-value ( u -- u )
+\ Check TOS for value, unconventional, leaves stack unchanged. 
+: assert-tos-is-value ( u -- u )
     dup is-not-value
-    if
-        ." arg0 is not a valid value."
-        abort
-    then
+    abort" TOS is not a valid value."
 ;
 
-\ Check arg1 for value, unconventional, leaves stack unchanged. 
-: assert-arg1-is-value ( u ?? -- u ??)
+\ Check NOS for value, unconventional, leaves stack unchanged. 
+: assert-nos-is-value ( u ?? -- u ??)
     over is-not-value
-    if
-        ." arg1 is not a valid value."
-        abort
-    then
+    abort" NOS is not a valid value."
 ;
 
-\ Check arg2 for value, unconventional, leaves stack unchanged. 
-: assert-arg2-is-value ( u ?? ?? -- u ?? ??)
+\ Check 3OS for value, unconventional, leaves stack unchanged. 
+: assert-3OS-is-value ( u ?? ?? -- u ?? ??)
     2 pick is-not-value
-    if
-        ." arg2 is not a valid value."
-        abort
-    then
+    abort" 3OS is not a valid value."
 ;
 
 \ Print a value.
 : .value ( val0 -- )
     \ Check arg.
-    assert-arg0-is-value
+    assert-tos-is-value
 
     \ Setup for bit-position loop.
     domain-ms-bit-xt execute   ( val0 ms-bit)

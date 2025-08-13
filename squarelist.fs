@@ -33,7 +33,7 @@
 \ Print a square-list
 : .square-list ( list0 -- )
     \ Check args.
-    assert-arg0-is-list
+    assert-tos-is-list
     [ ' .square ] literal swap .list
 ;
 
@@ -47,8 +47,8 @@
 \ Push a square to a square-list, unless it is already in the list.
 : square-list-push ( sqr1 list0 -- )
     \ Check args.
-    assert-arg0-is-list
-    assert-arg1-is-square
+    assert-tos-is-list
+    assert-nos-is-square
 
     2dup
     [ ' square-eq ] literal -rot
@@ -67,8 +67,8 @@
 \ Return true if an square was removed.
 : square-list-remove ( xt val list -- bool )
     \ Check args.
-    assert-arg0-is-list
-    assert-arg1-is-square
+    assert-tos-is-list
+    assert-nos-is-square
 
     list-remove
     if
@@ -89,8 +89,8 @@
 \ Return squares in a given region.
 : square-list-in-region ( reg1 list0 -- list )
     \ Check args.
-    assert-arg0-is-list
-    assert-arg1-is-region
+    assert-tos-is-list
+    assert-nos-is-region
 
     [ ' square-state-in-region ] literal -rot       \ xt reg1 list0
     list-find-all                                   \ ret-list
@@ -101,8 +101,8 @@
 \ Return squares in a given region.
 : square-list-in-region2 ( reg1 list0 -- list )
     \ Check args.
-    assert-arg0-is-list
-    assert-arg1-is-region
+    assert-tos-is-list
+    assert-nos-is-region
 
     list-get-links                  \ reg1 link0
     list-new -rot                   \ ret-list reg1 link0

@@ -18,29 +18,18 @@
     \ Check list length.
     dup list-get-length
     2 <>
-    if
-        ." list length not 2?"
-        abort
-    then
+    abort" list length not 2?"
 
     \ Check the correct squares were returned.
     7 over square-list-find
-    if
-\        cr ." 7 found" cr
-        drop
-    else
-        cr ." 7 NOT found" cr
-        abort
-    then
+    0= abort" 7 NOT found"
+
+    drop
 
     13 over square-list-find
-    if
-\        cr ." 13 found" cr
-        drop
-    else
-        cr ." 13 NOT found" cr
-        abort
-    then
+    0= abort" 13 NOT found"
+
+    drop
 
     \ Deallocate
     square-list-deallocate

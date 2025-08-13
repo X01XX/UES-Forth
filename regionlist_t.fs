@@ -11,19 +11,13 @@
     2dup region-list-region-intersections-n \ lst1 lst2 lst3
 
     dup list-get-length 1 <>
-    if
-        cr ." Result length invalid " .region-list cr
-        abort
-    then
+    abort" Result length invalid "
 
      5 13 region-new            \ lst1 lst2 lst3 region
      over                       \ lst1 lst2 lst3 region lst3
      over swap                  \ lst1 lst2 lst3 region region lst3
      region-list-member         \ lst1 lst2 lst3 region flag
-     0= if
-        cr ." X101 not found in " drop .region-list cr
-        abort
-    then
+     0= abort" X101 not found"
 
     region-deallocate
     region-list-deallocate
@@ -51,28 +45,21 @@
     \ Check results.
 
     dup list-get-length 2 <>
-    if
-        cr ." list length invalid " .region-list cr
-        abort
-    then
+    abort" list length invalid"
 
     0 4 region-new over             \ lst1 lst2 lst3 reg lst3
     over swap                       \ lst1 lst2 lst3 reg reg lst3
     region-list-member              \ lst1 lst2 lst3 reg flag
-    0= if
-        cr ." 0x00 not found in " drop .region-list cr
-        abort
-    then                            \ lst1 lst2 lst3 reg
-    region-deallocate
+    0= abort" 0x00 not found"
+                                    \ lst1 lst2 lst3 reg
+    region-deallocate               \ lst1 lst2 lst3
 
     12 4 region-new over            \ lst1 lst2 lst3 reg lst3
     over swap                       \ lst1 lst2 lst3 reg reg lst3
     region-list-member              \ lst1 lst2 lst3 reg flag
-    0= if
-        cr ." x100 not found in " drop .region-list cr
-        abort
-    then                            \ lst1 lst2 lst3 reg
-    region-deallocate
+    0= abort" x100 not found in "
+                                    \ lst1 lst2 lst3 reg
+    region-deallocate               \ lst1 lst2 lst3
 
     \ Finish.
     region-list-deallocate

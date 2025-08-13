@@ -21,10 +21,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 \ Check rulestore mma usage.
 : assert-rulestore-mma-none-in-use ( -- )
     rulestore-mma mma-in-use 0<>
-    if
-        ." rulestore-mma use GT 0"
-        abort
-    then
+    abort" rulestore-mma use GT 0"
 ;
 
 \ Check instance type.
@@ -43,22 +40,16 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     is-allocated-rulestore 0=
 ;
 
-\ Check arg0 for rulestore, unconventional, leaves stack unchanged. 
-: assert-arg0-is-rulestore ( arg0 -- arg0 )
+\ Check TOS for rulestore, unconventional, leaves stack unchanged. 
+: assert-tos-is-rulestore ( arg0 -- arg0 )
     dup is-allocated-rulestore 0=
-    if
-        cr ." arg0 is not an allocated rulestore."
-        abort
-    then
+    abort" TOS is not an allocated rulestore."
 ;
 
-\ Check arg1 for rulestore, unconventional, leaves stack unchanged. 
-: assert-arg1-is-rulestore ( arg1 arg0 -- arg1 arg0 )
+\ Check NOS for rulestore, unconventional, leaves stack unchanged. 
+: assert-nos-is-rulestore ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-rulestore 0=
-    if
-        cr ." arg1 is not an allocated rulestore."
-        abort
-    then
+    abort" NOS is not an allocated rulestore."
 ;
 
 \ Start accessors.
@@ -66,7 +57,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 \ Return the first field from a rulestore instance.
 : rulestore-get-rule-0 ( addr -- u)
     \ Check arg
-    assert-arg0-is-rulestore
+    assert-tos-is-rulestore
 
     rulestore-rule-0 +  \ Add offset.
     @                   \ Fetch the field.
@@ -75,7 +66,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 \ Return the second field from a rulestore instance.
 : rulestore-get-rule-1 ( addr -- u)
     \ Check arg
-    assert-arg0-is-rulestore
+    assert-tos-is-rulestore
 
     \ Get second rule.
     rulestore-rule-1 +  \ Add offset.
@@ -86,10 +77,10 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 \ The second arg can be zero, or a rule.
 : _rulestore-set-rule-0 ( rul0 addr -- )
     \ Check args
-    assert-arg0-is-rulestore
+    assert-tos-is-rulestore
     over 0<>
     if
-        assert-arg1-is-rule
+        assert-nos-is-rule
     then
 
     rulestore-rule-0 +  \ Add offset.
@@ -100,10 +91,10 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 \ The second arg can be zero, or a rule. 
 : _rulestore-set-rule-1 ( rul0 addr -- )
     \ Check args
-    assert-arg0-is-rulestore
+    assert-tos-is-rulestore
     over 0<>
     if
-        assert-arg1-is-rule
+        assert-nos-is-rule
     then
 
     rulestore-rule-1 +  \ Add offset.
@@ -137,7 +128,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 \ Return a new rulestore instance, with one rule.
 : rulestore-new-1  ( rul0 -- rulestore )
     \ Check arg.
-    assert-arg0-is-rule
+    assert-tos-is-rule
 
     \ Allocate space.                                                                         
     rulestore-mma mma-allocate  \ rul0 addr
@@ -153,7 +144,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Store rule 0
     over                        \ rul0 addr rul0
     struct-inc-use-count        \ rul0 addr
-    swap over                   \ addr rul0 addr
+    tuck                        \ addr rul0 addr
     _rulestore-set-rule-0       \ addr
 
     \ Init rule 1
@@ -164,27 +155,21 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 \ Return a new rulestore instance, with two rules.
 : rulestore-new-2  ( rul1 rul0 -- rulestore )
     \ Check args.
-    assert-arg0-is-rule
-    assert-arg1-is-rule
+    assert-tos-is-rule
+    assert-nos-is-rule
 
     \ Check that the rules are not equal.
     2dup rule-eq
-    if
-        ." rulestore-new-2: rules cannot be equal."
-        abort
-    then
+    abort" rulestore-new-2: rules cannot be equal."
 
     \ Check that the rule initial regions are equal.
     over rule-initial-region    \ rul1 rul0 reg1
     over rule-initial-region    \ rul1 rul0 reg1 reg0
     2dup region-eq 0=           \ rul1 rul0 reg1 reg0 flag
-    if
-        ." rulestore-new-2: Rules must have the same initial region."
-        abort
-    else
-        region-deallocate
-        region-deallocate
-    then
+    abort" rulestore-new-2: Rules must have the same initial region."
+
+    region-deallocate
+    region-deallocate
 
     \ Allocate space.                                                                         
     rulestore-mma mma-allocate  \ rul1 rul0 addr
@@ -216,19 +201,15 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         then
     else
         rulestore-get-rule-1
-        if
-            ." Invalid rulestore configuration"
-            abort
-        else
-            0
-        then
+        abort" Invalid rulestore configuration"
+        0
     then
 ;
 
 \ Deallocate a rulestore.
 : rulestore-deallocate ( rs0 -- )
     \ Check args.
-    assert-arg0-is-rulestore
+    assert-tos-is-rulestore
 
     dup struct-get-use-count      \ reg0 count
 
@@ -262,7 +243,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
 : .rulestore ( rul0 -- )
     \ Check arg.
-    assert-arg0-is-rulestore
+    assert-tos-is-rulestore
 
     ." ["
     dup rulestore-get-rule-0

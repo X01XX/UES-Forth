@@ -23,33 +23,27 @@
     xor !not
 ;
 
-\ Check arg0 for bool, unconventional, leaves stack unchanged. 
-: assert-arg0-is-bool ( u -- )
+\ Check TOS for bool, unconventional, leaves stack unchanged. 
+: assert-tos-is-bool ( u -- )
     dup 0=
     over -1 =
     or
-    if
-    else
-        ." arg0 is not bool"
-        abort
-    then
+    0=
+    abort" TOS is not bool"
 ;
 
-\ Check arg1 for bool, unconventional, leaves stack unchanged. 
-: assert-arg1-is-bool ( u ?? -- )
+\ Check NOS for bool, unconventional, leaves stack unchanged. 
+: assert-nos-is-bool ( u ?? -- )
     over dup 0=
     swap -1 =
     or
-    if
-    else
-        ." arg1 is not bool"
-        abort
-    then
+    0=
+    abort" NOS is not bool"
 ;
 
 : .bool ( b -- )
     \ Check arg.
-    assert-arg0-is-bool
+    assert-tos-is-bool
 
     0=
     if

@@ -22,6 +22,13 @@
 \ 53173, 53197, 53717, 53719, 53731,
 \ 59797, 61379, 61717, 61979.
 
+\ Start a clean vocabulary.
+cr ." Starting vocabulary UES," cr
+vocabulary UES
+
+\ Put new words into the UES vocabulary.
+UES definitions
+
 \ Foundational.
 include tools.fs
 include mm_array.fs     \ includes stack.fs

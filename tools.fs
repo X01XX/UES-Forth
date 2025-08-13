@@ -4,22 +4,16 @@ decimal
 \ If at the limit, 2 ^ 63, use "u." instead of "." to see the number.
 : exp ( n u -- u2 ) \ u3 = u1^u2,
     dup 0<
-    if
-        ." exp: exponent is negative"
-        abort
-    else
-        1 swap 0
-        ?do 
-            cr .s
-            over * 
-            dup 0=
-            if
-                ." exp: overflow"
-                abort
-            then
-        loop 
-        nip \ Do exponentiation.
-    then
+    abort" exp: exponent is negative"
+
+    1 swap 0
+    ?do 
+        cr .s
+        over * 
+        dup 0=
+        abort" exp: overflow"
+    loop 
+    nip \ Do exponentiation.
 ;
 
 \ A shorter version of clearstack.
@@ -70,20 +64,16 @@ decimal
 \ Return changed number and a single-bit number.
 : isolate-a-bit ( u1 -- u2 u3 )
     depth
-    0= if
-       ." isolate-a-bin: no argument on stack"
-       abort
-    then
+    0= abort" isolate-a-bin: no argument on stack"
+
     dup 0=
-    if
-       ." isolate-a-bit: argument is zero"
-       abort
-    then
+    abort" isolate-a-bit: argument is zero"
+
     \ Remove lsb.
     dup 1- over and     \ u u-lsb 
 
     \ Isolate lsb.
-    swap over xor       \ u-lsb lsb
+    tuck xor            \ u-lsb lsb
 ;
 
 : 3drop ( x y z -- )
@@ -273,10 +263,8 @@ decimal
 : struct-dec-use-count ( struct-addr -- )
     dup struct-get-use-count      \ struct-addr use-count
     dup 0 <
-    if
-        ." use count cannot be negative."
-        abort
-    then
+    abort" use count cannot be negative."
+
     1-
     swap struct-set-use-count
 ;

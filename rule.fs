@@ -14,10 +14,7 @@ rule-m11    cell+ constant rule-m10
 \ Init rule mma, return the addr of allocated memory.
 : rule-mma-init ( num-items -- ) \ sets rule-mma.
     dup 1 < 
-    if  
-        ." rule-mma-init: Invalid number of items."
-        abort
-    then
+    abort" rule-mma-init: Invalid number of items."
 
     cr ." Initializing Rule store."
     rule-struct-number-cells swap mma-new to rule-mma
@@ -26,10 +23,7 @@ rule-m11    cell+ constant rule-m10
 \ Check rule mma usage.
 : assert-rule-mma-none-in-use ( -- )
     rule-mma mma-in-use 0<>
-    if
-        ." rule-mma use GT 0"
-        abort
-    then
+    abort" rule-mma use GT 0"
 ;
 
 \ Start accessors.
@@ -101,22 +95,16 @@ rule-m11    cell+ constant rule-m10
     is-allocated-rule 0=
 ;
 
-\ Check arg0 for rule, unconventional, leaves stack unchanged. 
-: assert-arg0-is-rule ( rul0 -- )
+\ Check TOS for rule, unconventional, leaves stack unchanged. 
+: assert-tos-is-rule ( rul0 -- )
     dup is-allocated-rule 0=
-    if  
-        cr ." arg0 is not an allocated rule."
-        abort
-    then
+    abort" TOS is not an allocated rule."
 ;
 
-\ Check arg1 for rule, unconventional, leaves stack unchanged. 
-: assert-arg1-is-rule ( rul1 ??? -- )
+\ Check NOS for rule, unconventional, leaves stack unchanged. 
+: assert-nos-is-rule ( rul1 ??? -- )
     over is-allocated-rule 0=
-    if  
-        cr ." arg1 is not an allocated rule."
-        abort
-    then
+    abort" NOS is not an allocated rule."
 ;
 
 \ Allocate a rule, setting id and use count only, use only in this file. 
@@ -138,17 +126,11 @@ rule-m11    cell+ constant rule-m10
 : rule-new ( u-result u-initial -- addr)
     \ Check u-initial.
     dup is-not-value
-    if
-        ." rule-new: u-initial is invalid"
-        abort
-    then
+    abort" rule-new: u-initial is invalid"
 
     \ Check u-result.
     over is-not-value
-    if
-        ." rule-new: u-result is invalid"
-        abort
-    then
+    abort" rule-new: u-result is invalid"
 
     _rule-allocate          \ u-r u-i addr
 
@@ -180,7 +162,7 @@ rule-m11    cell+ constant rule-m10
 \ Push all masks onto stack.
 : rule-get-masks ( rul0 -- m00 m01 m11 m10 )
     \ Check arg.
-    assert-arg0-is-rule
+    assert-tos-is-rule
 
     dup rule-get-m00 swap   \ m00 rule
     dup rule-get-m01 swap   \ m00 m01 rule
@@ -191,8 +173,8 @@ rule-m11    cell+ constant rule-m10
 \ Return true if two rules are equal.
 : rule-eq ( rul1 rul0 -- flag )
     \ Check arg.
-    assert-arg0-is-rule
-    assert-arg1-is-rule
+    assert-tos-is-rule
+    assert-nos-is-rule
 
     \ Check m00grep "^: " *.fs | grep -- none-in-use
     2dup rule-get-m00           \ rul1 rul0 rul1 0m00
@@ -234,7 +216,7 @@ rule-m11    cell+ constant rule-m10
 \ Print a rule.
 : .rule ( rul0 -- )
     \ Check arg.
-    assert-arg0-is-rule
+    assert-tos-is-rule
 
     \ Set up masks and most-significant-bit,
     \ the basis of each cycle.
@@ -313,7 +295,7 @@ rule-m11    cell+ constant rule-m10
 \ Deallocate a rule.
 : rule-deallocate ( rul0 -- )
     \ Check arg.
-    assert-arg0-is-rule
+    assert-tos-is-rule
 
     dup struct-get-use-count      \ rule-addr count
 
@@ -335,7 +317,7 @@ rule-m11    cell+ constant rule-m10
 \ Return rule initial region.
 : rule-initial-region ( rul0 -- reg0 )
     \ Check arg.
-    assert-arg0-is-rule
+    assert-tos-is-rule
 
     rule-get-masks      \ m00 m01 m11 m10
     or -rot             \ most-ones m00 m01
@@ -346,7 +328,7 @@ rule-m11    cell+ constant rule-m10
 \ Return rule result region.
 : rule-result-region ( rul0 -- reg0 )
     \ Check arg.
-    assert-arg0-is-rule
+    assert-tos-is-rule
 
     rule-get-masks      \ m00 m01 m11 m10
     -rot                \ m00 m10 m01 m11
@@ -358,8 +340,8 @@ rule-m11    cell+ constant rule-m10
 \ Return true if two rules intersect.
 : rule-intersects ( rul1 rul0 -- flag )
     \ Check arg.
-    assert-arg0-is-rule
-    assert-arg1-is-rule
+    assert-tos-is-rule
+    assert-nos-is-rule
 
     \ Get rules initial regions.
     rule-initial-region swap    \ initial-0 rul1
@@ -377,7 +359,7 @@ rule-m11    cell+ constant rule-m10
 \ Return true if all bit positions in a rule are represented.
 : rule-all-bits-set ( rul0 -- flag )
     \ Check arg.
-    assert-arg0-is-rule
+    assert-tos-is-rule
 
     \ Or all mask bits.
     rule-get-masks          \ m00 m01 m11 m10
@@ -393,8 +375,8 @@ rule-m11    cell+ constant rule-m10
 \ As X1 & Xx = 01, X1 & XX = 11, X0 & Xx = 10, X0 & XX = 00.
 : rule-intersection ( rul1 rul0 -- result true | false )
     \ Check arg.
-    assert-arg0-is-rule
-    assert-arg1-is-rule
+    assert-tos-is-rule
+    assert-nos-is-rule
 
     \ Check for non-intersection of initial regions.
     2dup rule-intersects    \ rul1 rul0 flag
@@ -431,10 +413,10 @@ rule-m11    cell+ constant rule-m10
     _rule-allocate          \ m00 m01 m11 m10 rul
 
     \ Set each field.
-    swap over _rule-set-m10 \ m00 m01 m11 rul
-    swap over _rule-set-m11 \ m00 m01 rul
-    swap over _rule-set-m01 \ m00 rul
-    swap over _rule-set-m00 \ rul
+    tuck _rule-set-m10      \ m00 m01 m11 rul
+    tuck _rule-set-m11      \ m00 m01 rul
+    tuck _rule-set-m01      \ m00 rul
+    tuck _rule-set-m00      \ rul
 
     \ Check rule.
     dup rule-all-bits-set       \ rul flag
@@ -457,7 +439,7 @@ rule-m11    cell+ constant rule-m10
 \ Then call rule-all-bits-set, to see if the result is valid.
 \ : _rule-prune ( rul0 - rul0 )
 \    \ Check arg.
-\    assert-arg0-is-rule
+\    assert-tos-is-rule
 \
 \    dup rule-get-masks          \ rul0 m00 m01 m11 m10
 \
@@ -516,8 +498,8 @@ rule-m11    cell+ constant rule-m10
 \ Return the valid result of a rule union, or false.
 : rule-union ( rul1 rul0 -- result true | false )
     \ Check args.
-    assert-arg0-is-rule
-    assert-arg1-is-rule
+    assert-tos-is-rule
+    assert-nos-is-rule
 
     \ Combine m00           \ rul1 rul0
     over rule-get-m00       \ rul1 rul0 | 1m00
@@ -546,10 +528,10 @@ rule-m11    cell+ constant rule-m10
     _rule-allocate          \ m00 m01 m11 m10 rul
 
     \ Set each field.
-    swap over _rule-set-m10 \ m00 m01 m11 rul
-    swap over _rule-set-m11 \ m00 m01 rul
-    swap over _rule-set-m01 \ m00 rul
-    swap over _rule-set-m00 \ rul
+    tuck _rule-set-m10      \ m00 m01 m11 rul
+    tuck _rule-set-m11      \ m00 m01 rul
+    tuck _rule-set-m01      \ m00 rul
+    tuck _rule-set-m00      \ rul
 
     \ Check rule.
 
@@ -587,17 +569,15 @@ rule-m11    cell+ constant rule-m10
 \ Return a rule restricted to an intersecting initial region.
 : rule-restrict-initial-region ( reg1 rul0 -- rul )
     \ Check args.
-    assert-arg0-is-rule
-    assert-arg1-is-rule
+    assert-tos-is-rule
+    assert-nos-is-rule
 
-    swap                        \ rul0 reg1
-    over rule-initial-region    \ rul0 reg1 reg-initial
+    tuck                        \ rul0 reg1 rul0
+    rule-initial-region         \ rul0 reg1 reg-initial
     2dup                        \ rul0 reg1 reg-initial reg1 reg-initial
     region-intersects           \ rul0 reg1 reg-initial flag
-    0= if
-        ." rule-restrict-initial-region: Region does not intersect?"
-        abort
-    then
+    0= abort" rule-restrict-initial-region: Region does not intersect?"
+
                                 \ rul0 reg1 reg-initial
     region-deallocate           \ rul0 reg1
     
@@ -624,34 +604,31 @@ rule-m11    cell+ constant rule-m10
 
     _rule-allocate              \ n00 n01 n11 n10 rul
 
-    swap over                   \ n00 n01 n11 rul r10 rul
+    tuck                        \ n00 n01 n11 rul r10 rul
     _rule-set-m10               \ n00 n01 n11 rul
 
-    swap over                   \ n00 n01 rul n11 rul
+    tuck                        \ n00 n01 rul n11 rul
     _rule-set-m11               \ n00 n01 rul
 
-    swap over                   \ n00 rul n01 rul
+    tuck                        \ n00 rul n01 rul
     _rule-set-m01               \ n00 rul
 
-    swap over                   \ rul n00 rul
+    tuck                        \ rul n00 rul
     _rule-set-m00               \ rul
 ;
 
 \ Return a rule restricted to an intersecting result region.
 : rule-restrict-result-region ( reg1 rul0 -- rul )
     \ Check args.
-    assert-arg0-is-rule
-    assert-arg1-is-rule
+    assert-tos-is-rule
+    assert-nos-is-rule
 
-    swap                        \ rul0 reg1
-    over rule-result-region     \ rul0 reg1 reg-result
+    tuck                        \ rul0 reg1 reg0
+    rule-result-region          \ rul0 reg1 reg-result
     2dup                        \ rul0 reg1 reg-result reg1 reg-result 
     
     region-intersects           \ rul0 reg1 reg-result flag
-    0= if
-        ." rule-restrict-result-region: Region does not intersect?"
-        abort
-    then
+    0= abort" rule-restrict-result-region: Region does not intersect?"
                                 \ rul0 reg1 reg-result
     region-deallocate           \ rul0 reg1
 
@@ -674,16 +651,16 @@ rule-m11    cell+ constant rule-m10
 
     _rule-allocate              \ n00 n10 n11 n01 rul
 
-    swap over                   \ n00 n10 n11 rul r01 rul
+    tuck                        \ n00 n10 n11 rul r01 rul
     _rule-set-m01               \ n00 n10 n11 rul
 
-    swap over                   \ n00 n10 rul n11 rul
+    tuck                        \ n00 n10 rul n11 rul
     _rule-set-m11               \ n00 n10 rul
 
-    swap over                   \ n00 rul n10 rul
+    tuck                        \ n00 rul n10 rul
     _rule-set-m10               \ n00 rul
 
-    swap over                   \ rul n00 rul
+    tuck                        \ rul n00 rul
     _rule-set-m00               \ rul
 ;
 

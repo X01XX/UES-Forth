@@ -12,10 +12,7 @@ session-header               cell+ constant session-domains               \ A do
 \ Init session mma, return the addr of allocated memory.
 : session-mma-init ( num-items -- ) \ sets session-mma.
     dup 1 < 
-    if  
-        ." session-mma-init: Invalid number of items."
-        abort
-    then
+    abort" session-mma-init: Invalid number of items."
 
     cr ." Initializing Session store."
     session-struct-number-cells swap mma-new to session-mma
@@ -37,13 +34,10 @@ session-header               cell+ constant session-domains               \ A do
     is-allocated-session 0=
 ;
 
-\ Check arg0 for session, unconventional, leaves stack unchanged. 
-: assert-arg0-is-session ( arg0 -- arg0 )
+\ Check TOS for session, unconventional, leaves stack unchanged. 
+: assert-tos-is-session ( arg0 -- arg0 )
     dup is-allocated-session 0=
-    if  
-        cr ." arg0 is not an allocated session"
-        abort
-    then
+    abort" TOS is not an allocated session"
 ;
 
 \ Start accessors.
@@ -51,7 +45,7 @@ session-header               cell+ constant session-domains               \ A do
 \ Return the domain-list from an session instance.
 : session-get-domains ( ses0 -- lst )
     \ Check arg.
-    assert-arg0-is-session
+    assert-tos-is-session
 
     session-domains +   \ Add offset.
     @                   \ Fetch the field.
@@ -60,8 +54,8 @@ session-header               cell+ constant session-domains               \ A do
 \ Return the action-list from an session instance.
 : _session-set-domains ( lst ses0 -- )
     \ Check arg.
-    assert-arg0-is-session
-    assert-arg1-is-list
+    assert-tos-is-session
+    assert-nos-is-list
 
     session-domains +   \ Add offset.
     !                   \ Set the field.
@@ -91,7 +85,7 @@ session-header               cell+ constant session-domains               \ A do
 \ Print a session.
 : .session ( act0 -- )
     \ Check arg.
-    assert-arg0-is-session
+    assert-tos-is-session
 
     ." Sess: "
 
@@ -104,7 +98,7 @@ session-header               cell+ constant session-domains               \ A do
 \ Deallocate a session.
 : session-deallocate ( act0 -- )
     \ Check arg.
-    assert-arg0-is-session
+    assert-tos-is-session
 
     dup struct-get-use-count      \ act0 count
 

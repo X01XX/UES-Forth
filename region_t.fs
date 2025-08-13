@@ -12,19 +12,14 @@
     swap region-deallocate  \ reg-lst
 
     dup list-get-length 2 <>
-    if
-        ." List length not 2?"
-        abort
-    then
+    abort" List length not 2?"
 
     8 10 region-new                 \ reg-lst reg3
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
     region-list-member              \ reg-lst reg3 flag
-    0= if
-        ." Region 10X0 not found?"
-        abort
-    then
+    0= abort" Region 10X0 not found?"
+
                                     \ reg-lst reg3
     region-deallocate               \ reg-lst
     
@@ -32,10 +27,8 @@
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
     region-list-member              \ reg-lst reg3 flag
-    0= if
-        ." Region 1X10 not found?"
-        abort
-    then
+    0= abort" Region 1X10 not found?"
+
                                     \ reg-lst reg3
     region-deallocate               \ reg-lst
     
