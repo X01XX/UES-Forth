@@ -215,6 +215,8 @@
     2drop                       \ ret-lst
 ;
 
+' region-list-subtract-region to region-list-subtract-region-xt
+
 \ From the TOS region-list, subtract the NOS region-list.
 \ In many cases, you should run region-list-subtract-n instead.
 \ Or do intersections\subtractions, followed by region-list-normalize.
@@ -356,6 +358,7 @@
     swap region-list-deallocate         \ ret2
 ;
 
+\ Subtract NOS region from TOS list.
 : region-list-subtract-region-n ( reg1 lst0 -- lst )
     \ Check args.
     assert-tos-is-list
@@ -366,6 +369,8 @@
     swap region-list-deallocate     \ ret2
 ;
 
+
+\ Subtract the NOS list from the TOS list, with normalization.
 : region-list-subtract-n ( lst1 lst0 -- lst )
     \ Check args.
     assert-tos-is-list
@@ -375,4 +380,150 @@
     dup region-list-normalize       \ ret1 ret2
     swap region-list-deallocate     \ ret2
 ;
+
+\ Return a list of states, no dups, used to form regions in a list.
+: region-list-states ( reg-lst0 -- list )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Init return list
+    list-new swap               \ ret-lst reg-lst
+
+    \ Scan region list
+    list-get-links              \ ret-lst link
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret-lst link reg
+
+        \ Check region-state-0.
+        dup region-get-state-0  \ ret-lst link reg sta0
+        3 pick                  \ ret-lst link reg sta0 ret-lst
+        [ ' = ] literal -rot    \ ret-lst link reg xt sta0 ret-lst
+        list-member             \ ret-lst link reg flag
+        0= if
+            dup                 \ ret-lst link reg reg
+            region-get-state-0  \ ret-lst link reg sta0
+            3 pick              \ ret-lst link reg sta0 ret-lst
+            list-push           \ ret-lst link reg
+        then
+
+        \ Check region-state-1.
+        dup region-get-state-1  \ ret-lst link reg sta1
+        3 pick                  \ ret-lst link reg sta1 ret-lst
+        [ ' = ] literal -rot    \ ret-lst link reg xt sta0 ret-lst
+        list-member             \ ret-lst link reg flag
+        0= if
+            region-get-state-1  \ ret-lst link sta1
+            2 pick              \ ret-lst link sta1 ret-lst
+            list-push           \ ret-lst link
+        else
+            drop                \ ret-lst link
+        then
+
+        link-get-next
+    repeat
+                                \ ret-lst
+;
+
+\ Return true if a square is in exactly one region.
+: region-list-state-in-one-region ( sta1 reg-lst0 -- flag )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-value
+
+    \ Get first link of list.
+    list-get-links              \ sta0 link
+
+    \ Init counter.
+    0 -rot                      \ ctr sta0 link
+
+    \ Scan list.
+    begin
+        ?dup
+    while
+        \ Check if the current list item is a superset of the state.
+        2dup                        \ ctr sta lnk sta lnk
+        link-get-data               \ ctr sta lnk sta region
+        region-superset-of-state    \ ctr sta lnk flag
+        if
+            \ Get counter.
+            rot             \ sta lnk ctr
+
+            \ Check if counter is already 1.
+            dup 0<>
+            if
+                \ Counter is 1, return false.
+                2drop drop false
+                exit
+            then
+
+            \ Increment the counter.
+            1+              \ sta lnk ctr
+            \ Store counter.
+            -rot            \ ctr sta lnk
+        then
+        
+        link-get-next       \ ctr sta lnk
+    repeat
+                            \ ctr sta
+    drop                    \ ctr  s/b 0 or 1.
+    0<>                     \ flag
+;
+
+\ Return a list of states only in one region of a region-list.
+: region-list-states-in-one-region ( sta-lst1 reg-lst0 -- sta-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    \ State list to TOS, to scan through.
+    swap                        \ reg-lst0 sta-lst1
+
+    \ Init return list.
+    list-new swap               \ reg-lst1 ret-lst sta-lst
+
+    \ Get first link.
+    list-get-links              \ reg-lst1 ret-lst link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ reg-lst1 ret-lst link data
+        3 pick                          \ reg-lst1 ret-lst link data reg-lst
+        region-list-state-in-one-region \ reg-lst1 ret-lst link flag
+        if
+            dup link-get-data           \ reg-lst1 ret-lst link data
+            2 pick                      \ reg-lst1 ret-lst link data ret-lst
+            list-push                   \ reg-lst1 ret-lst link
+        then
+
+        link-get-next                   \ reg-lst1 ret-lst link
+    repeat
+                                        \ reg-lst1 ret-lst
+    nip                                 \ ret-lst
+;
+
+\ Return a list of defining regions, that is
+\ regions that are not completely overlapped by other regions.
+\ : region-list-defining-regions ( lst0 -- lst )
+\    \ Check arg.
+\    assert-tos-is-list
+
+\    lst-new swap                \ lst-n lst0
+\    dup list-get-links          \ lst-n lst0 link0
+    \ Check each region.
+\    begin
+\        ?dup
+\    while
+\        dup link-get-data       \ lst-n lst0 link0 data0
+
+        \ Check against other regions.
+\        dup                     \ lst-n lst0 link0 data0 data0
+\        list-new tuck list-push \ lst-n lst0 link0 data0 lst1
+
+\        link-get-next
+\    repeat                      \ lst-n lst0
+\    drop
+\ ;
 

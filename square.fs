@@ -136,6 +136,25 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     square-rules + !
 ;
 
+\ Replace old rules with new rules.
+\ Deallocate old rules last, so the square instance field
+\ is never invalid.
+: _square-update-rules ( new-ruls1 sqr0 -- )
+    \ Check arg.
+    assert-tos-is-square
+    assert-nos-is-rulestore
+
+    \ Get\save old rules.
+    dup square-get-rules        \ new-ruls1 sqr0 old-ruls
+    -rot                        \ old-ruls new-rels1 sqr0
+
+    \ Set new-rules
+    _square-set-rules           \ old-ruls
+
+    \ Dealloc old rules.
+    rulestore-deallocate        \
+;
+
 \ Get results item, given index.
 : square-get-result ( index1 sqr0 -- result )
     \ Check arg.
@@ -511,11 +530,8 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
         \ Save new pn
         over _square-set-pn             \ rf sqr0
 
-        dup square-get-rules            \ rf sqr0 rules
-        rulestore-deallocate            \ rf sqr0
-
         dup _square-calc-rules          \ rf sqr0 ruls
-        over _square-set-rules          \ rf sqr0
+        over _square-update-rules       \ rf sqr0
 
         \ Set return flag to true
         nip true swap                   \ rf sqr0
@@ -790,3 +806,4 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
     square-compare [char] I =
 ;
+

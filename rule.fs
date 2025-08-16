@@ -570,7 +570,7 @@ rule-m11    cell+ constant rule-m10
 : rule-restrict-initial-region ( reg1 rul0 -- rul )
     \ Check args.
     assert-tos-is-rule
-    assert-nos-is-rule
+    assert-nos-is-region
 
     tuck                        \ rul0 reg1 rul0
     rule-initial-region         \ rul0 reg1 reg-initial
@@ -585,10 +585,8 @@ rule-m11    cell+ constant rule-m10
     region-low-state            \ rul0 high low
 
     !not                        \ rul0 ones zeros
-    binary
-    ." ones: " over . cr
-    ." zereos: " dup . cr
-    decimal
+    \ cr ." ones: " over .value cr
+    \ cr ." zereos: " dup .value cr
 
     2 pick rule-get-m00         \ rul0 ones zeros | m00
     over and                    \ rul0 ones zeros | n00
@@ -621,7 +619,7 @@ rule-m11    cell+ constant rule-m10
 : rule-restrict-result-region ( reg1 rul0 -- rul )
     \ Check args.
     assert-tos-is-rule
-    assert-nos-is-rule
+    assert-nos-is-region
 
     tuck                        \ rul0 reg1 reg0
     rule-result-region          \ rul0 reg1 reg-result

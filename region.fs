@@ -646,3 +646,37 @@ region-state-0 cell+ constant region-state-1
     region-new
     nip
 ;
+
+\ Return states that are in a region.
+: region-states-in ( sta-lst1 reg1 -- sta-lst )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-list
+
+    \ Change order to scan state list.
+    swap                            \ reg0 sta-lst1
+
+    \ Init return list.
+    list-new swap                   \ reg0 ret-lst sta-lst
+
+    \ Scan through the state-list.
+    list-get-links                  \ reg0 ret-lst link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ reg0 ret-lst link data
+        3 pick                      \ reg0 ret-lst link data reg0
+        region-superset-of-state    \ reg0 ret-lst link flag
+        if
+            \ Store the state into the return list.
+            dup link-get-data       \ reg0 ret-lst link data
+            2 pick                  \ reg0 ret-lst link data ret-lst
+            list-push               \ reg0 ret-lst link
+        then
+    
+        link-get-next               \ reg0 ret-lst link
+    repeat
+                                    \ reg0 ret-lst
+    nip                             \ ret-lst
+;

@@ -87,7 +87,7 @@
 ;
 
 \ Return squares in a given region.
-: square-list-in-region ( reg1 list0 -- list )
+: square-list-in-region ( reg1 list0 -- sqr-lst )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-region
@@ -98,33 +98,34 @@
     list-apply                                      \ ret-list
 ;
 
-\ Return squares in a given region.
-: square-list-in-region2 ( reg1 list0 -- list )
+\ Return square states in a region.
+: square-list-states-in-region ( reg1 sqr-lst0 -- ret-sta-lst )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-region
 
-    list-get-links                  \ reg1 link0
-    list-new -rot                   \ ret-list reg1 link0
+    \ Init return list.
+    list-new -rot                   \ ret-lst reg1 sqr-lst0
+    list-get-links                  \ ret-lst reg1 link
     begin
-        dup
+        ?dup
     while
-        dup link-get-data           \ ret-list reg1 link data
-        dup square-get-state        \ ret-list reg1 link data sta
-        3 pick                      \ ret-list reg1 link data sta reg1
-        region-superset-of-state    \ ret-list reg1 link data flag
+        dup link-get-data           \ ret-lst reg1 link sqrx
+        square-get-state            \ ret-lst reg1 link stax
+        2 pick                      \ ret-lst reg1 link stax reg1
+        region-superset-of-state    \ ret-lst reg1 link flag
         if
-            3 pick                  \ ret-list reg1 link data ret-list
-            over struct-inc-use-count
-            list-push               \ ret-list reg1 link
-        else
-            drop                    \ ret-list reg1 link
+            \ Add state to return list.
+            dup link-get-data       \ ret-lst reg1 link sqrxgrep 
+            square-get-state        \ ret-lst reg1 link stax
+            3 pick                  \ ret-lst reg1 link stax ret-lst
+            list-push               \ ret-lst reg1 link
         then
-        
-        link-get-next               \ ret-list reg1 link-next
+
+        link-get-next
     repeat
-    \ ret-list reg1 0
-    2drop                           \ ret-list
+                                    \ ret-lst reg1
+    drop                            \ ret-lst
 ;
 
 \ Return true if a square state matches a value.
@@ -133,10 +134,16 @@
     =
 ;
 
-\ Find a square in a list, if any.
+\ Find a square in a list, by state, if any.
 : square-list-find ( val1 list0 -- sqr true | false )
     [ ' square-match ] literal -rot list-find
 ;
+
+\ Return true if a square with a given state is a member..
+: square-list-member ( val1 list0 -- flag )
+    [ ' square-match ] literal -rot list-member
+;
+
 
 
 

@@ -124,11 +124,12 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 ;
  
 \ Set the logical-structure region-list of an action instance, use only in this file.
-: _action-set-logical-structure ( u1 addr -- )
+: _action-set-logical-structure ( new-ls addr -- )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
 
+    \ Set new LS.
     action-logical-structure +  \ Add offset.
     !                           \ Store it.
 ;
@@ -139,6 +140,35 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 ;
 
 ' action-inst-id to action-inst-id-xt
+
+\ Update the logical-structure region-list of an action instance, use only in this file.
+\ Deallocate the old list last, so the instance field is never invalid.
+: _action-update-logical-structure ( new-ls act0 -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-list
+    cr ." new list " over .region-list cr
+
+    \ Get current LS.
+    dup action-get-logical-structure    \ new-ls act0 old-ls
+    cr ." old list " dup .region-list cr
+    dup                                 \ new-ls act0 old-ls old-ls
+
+    3 pick                              \ new-ls act0 old-ls old-ls new-ls
+    2dup swap                           \ new-ls act0 old-ls old-ls new-ls new-ls old-ls
+    region-list-set-difference          \ new-ls act0 old-ls old-ls new-ls old-gone
+    cr ." New LS regions added: " dup .region-list cr
+    region-list-deallocate              \ new-ls act0 old-ls old-ls new-ls
+
+    region-list-set-difference          \ new-ls act0 old-ls new-add
+    cr ." Old LS regions deleted: " dup .region-list cr
+    region-list-deallocate              \ new-ls act0 old-ls
+    -rot                                \ old-ls new-ls act0
+
+    \ Set new LS.
+    _action-set-logical-structure       \ old-ls
+    region-list-deallocate              \ Save to last so the struct field will never be invalid.
+;
 
 \ End accessors.
 
@@ -175,8 +205,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     \ Set logical-structure list.
     list-new                            \ act lst
     dup struct-inc-use-count            \ act lst
-    domain-max-region-xt execute                   \ act lst mxreg
-    over list-push                      \ act lst
+    domain-max-region-xt execute        \ act lst mxreg
+    over region-list-push               \ act lst
     over _action-set-logical-structure  \ act
 ;
 
@@ -344,8 +374,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
                 \ Set new action-logical-structure.
                 5 pick                              \ act0 inclst link reg-lst lsl-lst new-reg-lst act0
-                _action-set-logical-structure       \ act0 inclst link reg-lst lsl-lst
-                region-list-deallocate              \ act0 inclst link reg-lst
+                _action-update-logical-structure    \ act0 inclst link reg-lst lsl-lst
+                drop                                \ act0 inclst link reg-lst
                 region-list-deallocate              \ act0 inclst link
             then
         then
@@ -362,7 +392,6 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
 \ Return a square given a state.
 : action-find-square ( sta1 act0 -- sqr true | false )
-    cr ." action-find-square" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-value
@@ -374,7 +403,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ Check a given region-list, where the region states represent incompatible pairs,
 \ returning regions where the represented squares are no longer incompatible.
 : _action-not-incompatble-pairs ( reg-lst1 act0 -- reg-lst2 )
-    cr ." _action-not-incompatble-pairs" cr
+    \ cr ." _action-not-incompatble-pairs" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
@@ -414,7 +443,6 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         cr dup .square cr
         cr over .square cr
         square-compare          \ ret-lst act0 link region compare-result
-        cr 4 spaces ." result " dup emit cr
 
         [char] I =              \ ret-lst act0 link region flag
         if                      \ ret-lst act0 link region
@@ -432,61 +460,55 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
 \ Recalc action-logical-structure from action-incompatible-pairs.
 :  _action-recalc-logical-structure ( act0 -- )
-    cr ." _action-recalc-logical-structure" cr
+    \ cr ." _action-recalc-logical-structure" cr
     \ Check args.
     assert-tos-is-action
 
-    \ Save current logicl structure, to deallocate later, so the action field will never be invalid.
-    dup action-get-logical-structure        \ act0 ls-old
-
     \ Init new logical-structure region list.
-    list-new                                \ act0 ls-old ls-new
-    domain-max-region-xt execute            \ act0 ls-old ls-new max-reg
-    over region-list-push                   \ act0 ls-old ls-new
+    list-new                                \ act0 ls-new
+    domain-max-region-xt execute            \ act0 ls-new max-reg
+    over region-list-push                   \ act0 ls-new
     
-    2 pick                                  \ act0 ls-old ls-new act0
-    action-get-incompatible-pairs           \ act0 ls-old ls-new i-pairs
+    2 pick                                  \ act0 ls-new act0
+    action-get-incompatible-pairs           \ act0 ls-new i-pairs
 
-    list-get-links                          \ act0 ls-old ls-new link
+    list-get-links                          \ act0 ls-new link
     begin
         dup
     while
         \ Get next ~A + ~B region list.
-        dup link-get-data                   \ act0 ls-old ls-new link region
-        region-get-states                   \ act0 ls-old ls-new link s1 s0
-        state-not-a-or-not-b                \ act0 ls-old ls-new link nanb-lst
+        dup link-get-data                   \ act0 ls-new link region
+        region-get-states                   \ act0 ls-new link s1 s0
+        state-not-a-or-not-b                \ act0 ls-new link nanb-lst
 
         \ Intersect with most recent logical-structure region list.
-        rot                                 \ act0 ls-old link nanb-lst ls-new
-        2dup                                \ act0 ls-old link nanb-lst ls-new nanb-lst ls-new
-        region-list-region-intersections    \ act0 ls-old link nanb-lst ls-new ls-new-new
+        rot                                 \ act0 link nanb-lst ls-new
+        2dup                                \ act0 link nanb-lst ls-new nanb-lst ls-new
+        region-list-region-intersections    \ act0 link nanb-lst ls-new ls-new-new
 
         \ Deallocate previous region lists.
-        swap                                \ act0 ls-old link nanb-lst ls-new-new ls-new
-        region-list-deallocate              \ act0 ls-old link nanb-lst ls-new-new
-        swap                                \ act0 ls-old link ls-new-new nanb-lst
-        region-list-deallocate              \ act0 ls-old link ls-new-new
+        swap                                \ act0 link nanb-lst ls-new-new ls-new
+        region-list-deallocate              \ act0 link nanb-lst ls-new-new
+        swap                                \ act0 link ls-new-new nanb-lst
+        region-list-deallocate              \ act0 link ls-new-new
 
         \ Prep for next cycle.
-        swap                                \ act0 ls-old ls-new-new link
+        swap                                \ act0 ls-new-new link
 
         link-get-next
     repeat
-                                            \ act0 ls-old ls-new 0
-    drop                                    \ act0 ls-old ls-new
+                                            \ act0 ls-new 0
+    drop                                    \ act0 ls-new
 
     \ Store new LS.
-    rot                                     \ ls-old ls-new act0
-    _action-set-logical-structure           \ ls-old
-
-    \ Dealloc old LS.
-    region-list-deallocate                  \
+    rot                                     \ ls-new act0
+    _action-update-logical-structure        \
 ;
 
 \ Check incompatble pairs are still incompatible,
 \ given a squrare that has recently changed pn or pnc.
 : _action-check-incompatible-pairs ( sqr1 act0 -- )
-    cr ." _action-check-incompatible-pairs" cr
+    \ cr ." _action-check-incompatible-pairs" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
@@ -559,7 +581,6 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 \ its ~A + ~B can be calculated and intersected with action-logical-structure.
 \
 : action-add-sample ( smpl1 act0 -- )
-    \ cr ." at 0: " .s cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-sample
@@ -591,9 +612,31 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         action-get-squares      \ act0 sqr sqr sqrlst
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
-        \ cr ." at 2: " .s cr
         _action-check-square
     then
-    \ cr ." at 3: " .s cr
+;
+
+\ Return true if a region, in the logical structure, is a defining region.
+: action-region-is-defining ( reg1 act0 -- flag )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+
+    2dup                            \ reg1 act0 reg1 act0
+    action-get-logical-structure    \ reg1 act0 reg1 LS
+    tuck                            \ reg1 act0 LS reg1 LS
+    region-list-member              \ reg1 act0 LS flag
+    0= abort" Region not in logical structure"
+
+    rot                             \ act0 LS reg1
+    2 pick                          \ act0 LS reg1 act0
+    action-get-squares              \ act0 LS reg1 sqr-lst
+    square-list-states-in-region    \ act0 LS reg1 sta-lst
+
+
+    
+
+    
+
 ;
 

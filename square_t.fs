@@ -178,7 +178,6 @@
     4 5 square-new
     5 6 square-new
     2dup square-compare
-    space dup emit
     assert-char-C
     square-deallocate
     square-deallocate
@@ -187,7 +186,6 @@
     4 5 square-new
     1 6 square-new
     2dup square-compare
-    space dup emit
     assert-char-I
     square-deallocate
     square-deallocate
@@ -199,7 +197,6 @@
     14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
     \ 2dup ." sqr " .square cr ." sqr " .square
     2dup square-compare
-    space dup emit
     assert-char-C
 
     square-deallocate
@@ -212,7 +209,6 @@
     1 1 square-new
     0 over square-add-result drop  \ sqr1-1-0
     2dup square-compare
-    space dup emit
     assert-char-I
 
     square-deallocate
@@ -224,7 +220,6 @@
     9 9 square-new
     1 over square-add-result drop  \ sqr9-9-1
     2dup square-compare
-    space dup emit
     assert-char-I
 
     square-deallocate
@@ -244,7 +239,6 @@
     assert-square-pnc-t
 
     2dup square-compare
-    space dup emit
     assert-char-C
 
     square-deallocate
@@ -262,13 +256,11 @@
     1 over square-add-result drop  \ sqr5-5-a sqr-1-1
 
     2dup square-compare
-    space dup emit
     assert-char-I
 
     \ Try order 2.
     swap
     2dup square-compare
-    space dup emit
     assert-char-I
 
     square-deallocate
@@ -282,13 +274,11 @@
     1 1 square-new
 
     2dup square-compare
-    space dup emit
     assert-char-M
 
     \ Try order 2.
     swap
     2dup square-compare
-    space dup emit
     assert-char-M
 
     square-deallocate
@@ -302,13 +292,11 @@
     9 1 square-new                  \ sqr-5-a sqr-1-9
 
     2dup square-compare
-    space dup emit
     assert-char-I
     
     \ Try order 2.
     swap
     2dup square-compare
-    space dup emit
     assert-char-I
 
     square-deallocate
@@ -322,13 +310,11 @@
     2 2 square-new                  \ sqr-5-a sqr-2-2
 
     2dup square-compare
-    space dup emit
     assert-char-I
 
     \ Try order 2
     swap
     2dup square-compare
-    space dup emit
     assert-char-I
 
     square-deallocate
@@ -345,13 +331,11 @@
     1 1 square-new                  \ sqr-5-a sqr-1-1
 
     2dup square-compare
-    space dup emit
     assert-char-M
     
     \ Try order 2.
     swap
     2dup square-compare
-    space dup emit
     assert-char-M
 
     square-deallocate
@@ -369,7 +353,6 @@
     assert-square-pn-3
 
     2dup square-compare
-    space dup emit
     assert-char-C
 
     square-deallocate
@@ -386,13 +369,11 @@
     1 2 square-new
 
     2dup square-compare
-    space dup emit
     assert-char-M
     
     \ Try order 2.
     swap
     2dup square-compare
-    space dup emit
     assert-char-M
 
     square-deallocate
@@ -413,13 +394,11 @@
     assert-square-pnc-t
 
     2dup square-compare
-    space dup emit
     assert-char-I
     
     \ Try order 2.
     swap
     2dup square-compare
-    space dup emit
     assert-char-I
 
     square-deallocate

@@ -35,7 +35,7 @@
 
     \ Setup for bit-position loop.
     domain-ms-bit-xt execute   ( val0 ms-bit)
-    
+
     \ Process each bit.
     begin
       dup       \ val0 ms-bit ms-bit

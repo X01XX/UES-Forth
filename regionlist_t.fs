@@ -32,7 +32,7 @@
     \ Make subtrahend list.
     list-new                                \ lst1
       1  7 region-new over region-list-push \ lst1
-     13 11 region-new over region-list-push \ lst
+     13 11 region-new over region-list-push \ lst1
 
     \ Make minuend list.
     list-new                                \ lst1 lst2
@@ -69,8 +69,129 @@
     cr ." region-list-test-subtract-n - Ok"
 ;
 
+: region-list-test-states
+    \ Make region-list list.
+    list-new                                \ lst1
+    4  7 region-new over region-list-push   \ lst1
+    4 13 region-new over region-list-push   \ lst1
+    7 13 region-new over region-list-push   \ lst1
+
+    dup region-list-states                  \ lst1 lst2
+    \ cr ." states: " dup .list-raw cr
+
+    dup list-get-length
+    3 <>
+    abort" List length not 3?"
+
+    [ ' = ] literal 4 2 pick list-member
+    0= abort" 4 not in list?"
+
+    [ ' = ] literal 7 2 pick list-member
+    0= abort" 7 not in list?"
+
+    [ ' = ] literal 13 2 pick list-member
+    0= abort" 13 not in list?"
+
+    list-deallocate
+    region-list-deallocate
+    
+    cr ." region-list-test-states - Ok"
+;
+
+: region-list-test-state-in-one-region
+
+    \ Make a region-list.
+    list-new                                \ lst1
+    4  7 region-new over region-list-push   \ lst1
+    4 13 region-new over region-list-push   \ lst1
+    7 13 region-new over region-list-push   \ lst1
+
+    2 over                                  \ lst1 2 lst1
+    region-list-state-in-one-region         \ lst1 flag
+    abort" 2 in one region?"
+    \ cr space ." 2 not in one region."
+
+    4 over                                  \ lst1 4 lst1
+    region-list-state-in-one-region         \ lst1 | flag
+    abort" 4 in one region?"
+    \ cr space ." 4 not in one region."
+
+    6 over                                  \ lst1 6 lst1
+    region-list-state-in-one-region         \ lst1 flag
+    0= abort" 6 not in one region?"
+    \ cr space ." 6 in one region "
+
+    7 over                                  \ lst1 7 lst1
+    region-list-state-in-one-region         \ lst1 | flag
+    abort" 7 in one region?"
+    \ cr space ." 7 not in one region."
+
+    12 over                                 \ lst1 12 lst1
+    region-list-state-in-one-region         \ lst1 flag
+    0= abort" 12 not in one region?"
+    \ cr ." 12 in one region "
+
+    13 over                                 \ lst1 13 lst1
+    region-list-state-in-one-region         \ lst1 flag
+    abort" 13 in one region?"
+    \ cr ." 13 not in one region."
+
+    15 over                                 \ lst1 15 lst1
+    region-list-state-in-one-region         \ lst1 | flag
+    0= abort" 15 not in one region?"
+    \ cr ." 15 in one region "
+
+    region-list-deallocate
+    
+    cr ." region-list-test-state-in-one-region - Ok"
+;
+
+: region-list-test-states-in-one-region
+
+    \ Make state list.
+    list-new                                \ sta-lst
+    2 over list-push
+    4 over list-push
+    6 over list-push
+    7 over list-push
+    12 over list-push
+    13 over list-push
+    15 over list-push
+
+    \ Make a region-list.
+    list-new                                \ sta-lst reg-lst
+    4  7 region-new over region-list-push   \ sta-lst reg-lst
+    4 13 region-new over region-list-push   \ sta-lst reg-lst
+    7 13 region-new over region-list-push   \ sta-lst reg-lst
+
+    2dup region-list-states-in-one-region   \ sta-lst reg-lst sta-lst2
+
+    \ cr ." states in one region: " dup .list-raw cr
+
+    dup list-get-length
+    3 <>
+    abort" List length not 3?"
+
+    [ ' = ] literal 6 2 pick list-member
+    0= abort" 6 not in list?"
+
+    [ ' = ] literal 12 2 pick list-member
+    0= abort" 12 not in list?"
+
+    [ ' = ] literal 15 2 pick list-member
+    0= abort" 15 not in list?"
+
+    list-deallocate
+    region-list-deallocate
+    list-deallocate
+
+    cr ." region-list-test-states-in-one-region - Ok"
+;
+
 : region-list-tests
     region-list-test-region-intersections-n
     region-list-test-subtract-n
+    region-list-test-states
+    region-list-test-states-in-one-region
 ;
 

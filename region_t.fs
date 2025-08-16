@@ -37,7 +37,47 @@
     cr ." region-test-region-subtract - Ok" cr
 ;
 
+: region-test-states-in
+    \ Make state list.
+    list-new                                \ sta-lst
+     2 over list-push
+     4 over list-push
+     6 over list-push
+     7 over list-push
+    12 over list-push
+    13 over list-push
+    15 over list-push
+
+    \ Make region
+    1 15 region-new                         \ sta-lst reg
+
+    \ Get states in region
+    2dup region-states-in                   \ sta-lst reg sta-lst2
+
+    \ cr ." states in: " dup .list-raw cr
+
+    dup list-get-length
+    3 <>
+    abort" List length not 3?"
+
+    [ ' = ] literal 7 2 pick list-member
+    0= abort" 7 not in list?"
+
+    [ ' = ] literal 13 2 pick list-member
+    0= abort" 13 not in list?"
+
+    [ ' = ] literal 15 2 pick list-member
+    0= abort" 15 not in list?"
+
+    list-deallocate
+    region-deallocate
+    list-deallocate
+
+    cr ." region-test-states-in - Ok" cr
+;
+
 : region-tests
     region-test-region-subtract
+    region-test-states-in
 ;
 

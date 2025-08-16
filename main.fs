@@ -28,6 +28,7 @@ vocabulary UES
 
 \ Put new words into the UES vocabulary.
 UES definitions
+decimal
 
 \ Foundational.
 include tools.fs
@@ -47,12 +48,13 @@ include state.fs
 
 include sample.fs
 include region.fs
-include regionlist.fs
 
 include rule.fs
 include rulestore.fs
-
 include square.fs
+
+include valuelist.fs
+include regionlist.fs
 include squarelist.fs
 
 include action.fs
@@ -147,6 +149,7 @@ cr ." main.fs"
     4 0 domain-new to current-domain
     0 action-new dup to current-action
     current-domain domain-add-action
+    \ To run tests outside of this function, you may need to create the domain, and maybe the action, as above.
 
     square-tests
     square-list-tests

@@ -1,9 +1,9 @@
 
 Start forth: > gforth
 
-Load program: include main.fs
+then: include main.fs
 
-exit: bye
+then: all-tests
 
 Build one thing upon another:
 
@@ -24,8 +24,8 @@ Features.
 
     A Region is an array of two cells, instead of a list\vector.
 
-    States and masks are just a number.
+    States and masks are just an unsigned number, with an upper limit based on the number of bits in use.
 
     A RegionStore is an array of two cells, instead of a list/vector.
-    The second cell bmay be zeroed out.
+    The second cell may be zeroed out.
 
