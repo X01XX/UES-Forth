@@ -3,17 +3,23 @@
 : region-list-test-region-intersections-n
 
     list-new                                \ lst1
-     4 13 region-new over region-list-push  \ lst1
+     s" X10X" region-from-string            \ lst1 regx
+    over region-list-push                   \ lst1
+    
     list-new                                \ lst1 lst2
-     1  7 region-new over region-list-push  \ lst1 lst2
-    13 11 region-new over region-list-push  \ lst1 lst2
+    s" 0XX1" region-from-string             \ lst1 lst2 regx
+    over region-list-push                   \ lst1 lst2
+
+    s" 1XX1" region-from-string             \ lst1 lst2 regx
+    over region-list-push                   \ lst1 lst2
 
     2dup region-list-region-intersections-n \ lst1 lst2 lst3
 
     dup list-get-length 1 <>
     abort" Result length invalid "
 
-     5 13 region-new            \ lst1 lst2 lst3 region
+     s" X101" region-from-string    \ lst1 lst2 lst3 region
+
      over                       \ lst1 lst2 lst3 region lst3
      over swap                  \ lst1 lst2 lst3 region region lst3
      region-list-member         \ lst1 lst2 lst3 region flag
@@ -31,13 +37,19 @@
 
     \ Make subtrahend list.
     list-new                                \ lst1
-      1  7 region-new over region-list-push \ lst1
-     13 11 region-new over region-list-push \ lst1
+    s" 0XX1" region-from-string             \ lst1 regx
+    over region-list-push                   \ lst1
+
+    s" 1XX1" region-from-string             \ lst1 regx
+    over region-list-push                   \ lst1
 
     \ Make minuend list.
     list-new                                \ lst1 lst2
-      4 13 region-new over region-list-push \ lst1 lst2
-      0  0 region-new over region-list-push \ lst1 lst2
+    s" X10X" region-from-string             \ lst1 lst2 regx
+    over region-list-push                   \ lst1 lst2
+
+    s" 0000" region-from-string             \ lst1 lst2 regx
+    over region-list-push                   \ lst1 lst2
 
     \ Subtract regions.
     2dup region-list-subtract-n               \ lst1 lst2 lst3
@@ -47,14 +59,18 @@
     dup list-get-length 2 <>
     abort" list length invalid"
 
-    0 4 region-new over             \ lst1 lst2 lst3 reg lst3
+    s" 0X00" region-from-string     \ lst1 lst2 lst3 reg
+    over                            \ lst1 lst2 lst3 reg lst3
+    
     over swap                       \ lst1 lst2 lst3 reg reg lst3
     region-list-member              \ lst1 lst2 lst3 reg flag
     0= abort" 0x00 not found"
                                     \ lst1 lst2 lst3 reg
     region-deallocate               \ lst1 lst2 lst3
 
-    12 4 region-new over            \ lst1 lst2 lst3 reg lst3
+    s" X100" region-from-string     \ lst1 lst2 lst3 reg
+    over                            \ lst1 lst2 lst3 reg lst3
+    
     over swap                       \ lst1 lst2 lst3 reg reg lst3
     region-list-member              \ lst1 lst2 lst3 reg flag
     0= abort" x100 not found in "
@@ -70,14 +86,13 @@
 ;
 
 : region-list-test-states
-    \ Make region-list list.
+    \ Make region-list list, using regions made with duplicate states.
     list-new                                \ lst1
     4  7 region-new over region-list-push   \ lst1
     4 13 region-new over region-list-push   \ lst1
     7 13 region-new over region-list-push   \ lst1
 
     dup region-list-states                  \ lst1 lst2
-    \ cr ." states: " dup .list-raw cr
 
     dup list-get-length
     3 <>
@@ -102,44 +117,42 @@
 
     \ Make a region-list.
     list-new                                \ lst1
-    4  7 region-new over region-list-push   \ lst1
-    4 13 region-new over region-list-push   \ lst1
-    7 13 region-new over region-list-push   \ lst1
+    s" 01XX" region-from-string             \ lst1 regx
+    over region-list-push                   \ lst1
+
+    s" X10X" region-from-string             \ lst1 regx
+    over region-list-push                   \ lst1
+
+    s" X1X1" region-from-string             \ lst1 regx
+    over region-list-push                   \ lst1
 
     2 over                                  \ lst1 2 lst1
     region-list-state-in-one-region         \ lst1 flag
     abort" 2 in one region?"
-    \ cr space ." 2 not in one region."
 
     4 over                                  \ lst1 4 lst1
     region-list-state-in-one-region         \ lst1 | flag
     abort" 4 in one region?"
-    \ cr space ." 4 not in one region."
 
     6 over                                  \ lst1 6 lst1
     region-list-state-in-one-region         \ lst1 flag
     0= abort" 6 not in one region?"
-    \ cr space ." 6 in one region "
 
     7 over                                  \ lst1 7 lst1
     region-list-state-in-one-region         \ lst1 | flag
     abort" 7 in one region?"
-    \ cr space ." 7 not in one region."
 
     12 over                                 \ lst1 12 lst1
     region-list-state-in-one-region         \ lst1 flag
     0= abort" 12 not in one region?"
-    \ cr ." 12 in one region "
 
     13 over                                 \ lst1 13 lst1
     region-list-state-in-one-region         \ lst1 flag
     abort" 13 in one region?"
-    \ cr ." 13 not in one region."
 
     15 over                                 \ lst1 15 lst1
     region-list-state-in-one-region         \ lst1 | flag
     0= abort" 15 not in one region?"
-    \ cr ." 15 in one region "
 
     region-list-deallocate
     
@@ -160,9 +173,14 @@
 
     \ Make a region-list.
     list-new                                \ sta-lst reg-lst
-    4  7 region-new over region-list-push   \ sta-lst reg-lst
-    4 13 region-new over region-list-push   \ sta-lst reg-lst
-    7 13 region-new over region-list-push   \ sta-lst reg-lst
+    s" 01XX" region-from-string             \ sta-lst reg-lst regx
+    over region-list-push                   \ sta-lst reg-lst
+
+    s" X10X" region-from-string             \ sta-lst reg-lst regx
+    over region-list-push                   \ sta-lst reg-lst
+
+    s" X1X1" region-from-string             \ sta-lst reg-lst regx
+    over region-list-push                   \ sta-lst reg-lst
 
     2dup region-list-states-in-one-region   \ sta-lst reg-lst sta-lst2
 

@@ -1,20 +1,15 @@
 \ Tests for the rule struct functions.
 
 : rule-test-restrict-initial-region
-    7 6 region-new                  \ reg67
+    s" 011X" region-from-string     \ reg1
 
-    4 5 rule-new                    \ reg67 rul5
-    12 15 rule-new                  \ reg67 rul5 rulf
-    2dup rule-union                 \ reg67 rul5 rul15 rulu
-    0= abort" rule union failed?"
+    s" XX/11/X0/10/" rule-from-string  \ reg1 rul1 
 
-    swap    rule-deallocate         \ reg67 rul5 rulu
-    swap    rule-deallocate         \ reg67 rulu
+    2dup                            \ reg1 rul1 reg1 rul1
+    rule-restrict-initial-region    \ reg1 rul1 rul2
 
-    2dup                            \ reg67 rulu reg67 rulu
-    rule-restrict-initial-region    \ reg67 rulu rulr
-
-    4 7 rule-new                    \ reg67 rulu rulr rul74
+    s" 00/11/10/10/" rule-from-string 
+    
     2dup rule-eq
     0= abort" rules ne?"
 
@@ -27,27 +22,19 @@
 ;
 
 : rule-test-restrict-result-region
-    4 0 region-new                  \ reg40
+    s" 0X00" region-from-string         \ reg1
 
-    4 5 rule-new                    \ reg40 rul5
-    12 15 rule-new                  \ reg40 rul5 rulf
-    2dup rule-union                 \ reg40 rul5 rul15 rulu
-    0= abort" rule union failed?"
+    s" XX/11/X0/10/" rule-from-string   \ reg1 rul1
 
-    swap    rule-deallocate         \ reg40 rul5 rulu
-    swap    rule-deallocate         \ reg40 rulu
+    2dup                                \ reg1 rul1 reg1 rul1
+    rule-restrict-result-region         \ reg1 rul1 rul2
 
-    2dup                            \ reg40 rulu reg40 rulu
-    rule-restrict-result-region     \ reg40 rulu rulr
+    s" 00/11/X0/10/" rule-from-string   \ reg1 rul1 rul2 rul3
+    2dup rule-eq                        \ reg1 rul1 rul2 rul3 flag
 
-    dup rule-initial-region         \ reg40 rulu rulr regri
-    
-    5 7 region-new                  \ reg40 rulu rulr regri reg57
-    2dup region-eq
     0= abort" rule initial region ne?"
 
-    region-deallocate
-    region-deallocate
+    rule-deallocate
     rule-deallocate
     rule-deallocate
     region-deallocate

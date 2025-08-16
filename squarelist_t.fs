@@ -1,7 +1,8 @@
 \ Tests for the square-list struct functions.
 
 : square-list-test-in-region
-    5 15 region-new                         \ reg
+    s" X1X1" region-from-string             \ reg
+
     list-new                                \ reg sqrs
 
      3  3 square-new over square-list-push  \ reg sqrs
@@ -32,7 +33,7 @@
 ;
 
 : square-list-test-states-in-region
-    5 15 region-new                         \ reg
+    s" X1X1" region-from-string             \ reg
     list-new                                \ reg sqrs
 
      3  3 square-new over square-list-push  \ reg sqrs
