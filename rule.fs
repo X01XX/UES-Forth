@@ -284,9 +284,7 @@ rule-m11    cell+ constant rule-m10
         endcase
 
         1 rshift        \ shift ms bit right one position.
-        dup if
-            ." /"
-        then
+        ." /"
     repeat
     \ m00 m01 m11 m10 0
     2drop 2drop drop

@@ -141,6 +141,34 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
 ' action-inst-id to action-inst-id-xt
 
+\ Return true if a region, in the logical structure, is a defining region.
+: action-region-is-defining ( reg1 act0 -- flag )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+
+    2dup                            \ reg1 act0 reg1 act0
+    action-get-logical-structure    \ reg1 act0 reg1 LS
+    tuck                            \ reg1 act0 LS reg1 LS
+    region-list-member              \ reg1 act0 LS flag
+    0= abort" Region not in logical structure"
+
+    -rot                            \ LS reg1 act0
+    action-get-squares              \ LS reg1 sqr-lst
+    square-list-states-in-region    \ LS sta-lst
+    swap                            \ sta-lst LS
+
+    region-list-states-in-one-region    \ sta-lst2
+
+    dup list-is-empty
+    if
+        list-deallocate
+        false
+    else
+        true
+    then
+;
+
 \ Update the logical-structure region-list of an action instance, use only in this file.
 \ Deallocate the old list last, so the instance field is never invalid.
 : _action-update-logical-structure ( new-ls act0 -- )
@@ -149,25 +177,117 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     assert-nos-is-list
     cr ." new list " over .region-list cr
 
-    \ Get current LS.
+\    dup                                 \ new-ls act0 old-ls old-ls
+\
+\    3 pick                              \ new-ls act0 old-ls old-ls new-ls
+\    2dup swap                           \ new-ls act0 old-ls old-ls new-ls new-ls old-ls
+\    region-list-set-difference          \ new-ls act0 old-ls old-ls new-ls new-added
+\
+\    cr ." New LS regions added: " dup .region-list cr
+\    dup list-get-links
+\    begin
+\        ?dup
+\    while
+\        dup link-get-data               \ new-ls act0 old-ls old-ls new-ls new-added link regx
+\        cr dup .region cr
+\
+\        6 pick                          \ new-ls act0 old-ls old-ls new-ls new-added link regx act0
+\        action-region-is-defining       \ new-ls act0 old-ls old-ls new-ls new-added link ( states true | false )
+\        if
+\            cr ." states: " dup .value-list cr
+\            list-deallocate
+\        then
+\
+\        link-get-next
+\    repeat
+\
+\    region-list-deallocate              \ new-ls act0 old-ls old-ls new-ls
+
+    
+                                        \ new-ls act0
+    \ Get/save current LS.
     dup action-get-logical-structure    \ new-ls act0 old-ls
     cr ." old list " dup .region-list cr
-    dup                                 \ new-ls act0 old-ls old-ls
-
-    3 pick                              \ new-ls act0 old-ls old-ls new-ls
-    2dup swap                           \ new-ls act0 old-ls old-ls new-ls new-ls old-ls
-    region-list-set-difference          \ new-ls act0 old-ls old-ls new-ls old-gone
-    cr ." New LS regions added: " dup .region-list cr
-    region-list-deallocate              \ new-ls act0 old-ls old-ls new-ls
-
-    region-list-set-difference          \ new-ls act0 old-ls new-add
-    cr ." Old LS regions deleted: " dup .region-list cr
-    region-list-deallocate              \ new-ls act0 old-ls
     -rot                                \ old-ls new-ls act0
 
-    \ Set new LS.
-    _action-set-logical-structure       \ old-ls
-    region-list-deallocate              \ Save to last so the struct field will never be invalid.
+    \ Store new structure.
+    2dup                                \ old-ls new-ls act0 new-ls act0
+    _action-set-logical-structure       \ old-ls new-ls act0
+
+    \ Sav action, for now..
+    -rot                                \ act0 old-ls new-ls
+
+    \ Get old regions that are deleted.
+    2dup                                \ act0 old-ls new-ls old-ls new-ls
+    region-list-set-difference          \ act0 old-ls new-ls old-gone
+    cr ." Old LS regions deleted: " dup .region-list cr
+
+    \ Scan deleted regions.
+    dup list-get-links                   \ act0 old-ls new-ls old-gone link
+    begin
+        ?dup
+    while
+        dup link-get-data               \ act0 old-ls new-ls old-gone link region
+
+        cr 4 spaces .region
+        \ TODO If group exists, delete it.
+
+        link-get-next                   \ act0 old-ls new-ls old-gone link
+    repeat
+    cr
+                                        \ act0 old-ls new-ls old-gone
+    region-list-deallocate              \ act0 old-ls new-ls
+
+    \ Get new regions.
+    dup                                 \ act0 old-ls new-ls new-ls
+    2 pick                              \ act0 old-ls new-ls new-ls old-os
+    
+    region-list-set-difference          \ act0 old-ls new-ls new-added
+    cr ." New LS regions added: " dup .region-list cr
+    region-list-deallocate              \ act0 old-ls new-ls 
+
+    \ Scan new regions.
+    dup list-get-links                      \ act0 old-ls new-ls link
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ act0 old-ls new-ls link region
+
+        cr 4 spaces dup .region
+
+        \ Get states in region.
+        4 pick action-get-squares           \ act0 old-ls new-ls link region sqr-lst
+        square-list-states-in-region        \ act0 old-ls new-ls link sta-lst1
+
+        \ Get states only is one region.
+        dup                                 \ act0 old-ls new-ls link sta-lst1 sta-lst1
+        3 pick                              \ act0 old-ls new-ls link sta-lst1 sta-lst1 new-ls
+        region-list-states-in-one-region    \ act0 old-ls new-ls link sta-lst1 sta-lst2
+        swap list-deallocate                \ act0 old-ls new-ls link sta-lst2
+
+        dup
+        list-is-empty
+        if
+            list-deallocate                 \ act0 old-ls new-ls link
+            space ." region is NOT defining"
+            \ TODO If group exists, delete it.
+        else
+            space ." region is defining " dup .value-list
+            list-deallocate                 \ act0 old-ls new-ls link
+            \ TODO If group does not exist, add it.
+        then
+
+        link-get-next                   \ act0 old-ls new-ls link
+    repeat
+    cr
+                                        \ act0 old-ls new-ls
+
+    \ Deallocate
+    drop                                \ act0 old-ls
+
+    region-list-deallocate              \ act0
+
+    drop                                \
 ;
 
 \ End accessors.
@@ -614,29 +734,5 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         swap                    \ sqr act0
         _action-check-square
     then
-;
-
-\ Return true if a region, in the logical structure, is a defining region.
-: action-region-is-defining ( reg1 act0 -- flag )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-
-    2dup                            \ reg1 act0 reg1 act0
-    action-get-logical-structure    \ reg1 act0 reg1 LS
-    tuck                            \ reg1 act0 LS reg1 LS
-    region-list-member              \ reg1 act0 LS flag
-    0= abort" Region not in logical structure"
-
-    rot                             \ act0 LS reg1
-    2 pick                          \ act0 LS reg1 act0
-    action-get-squares              \ act0 LS reg1 sqr-lst
-    square-list-states-in-region    \ act0 LS reg1 sta-lst
-
-
-    
-
-    
-
 ;
 

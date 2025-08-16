@@ -9,7 +9,7 @@
     4 5 sample-new                  \ act smpl
     dup 2 pick action-add-sample    \ act smpl
 
-    0 6 sample-new                  \ act smpl smpl2
+    1 1 sample-new                  \ act smpl smpl2
     dup 3 pick action-add-sample    \ act smpl smpl2
 
     cr 2 pick .action cr
@@ -18,17 +18,19 @@
     dup 4 pick action-add-sample    \ act smpl smpl2 smpl3
 
     cr 3 pick .action cr
-    3 pick action-get-incompatible-pairs list-get-length
-    3 <>
+    3 pick action-get-incompatible-pairs
+    \ cr ." incompat pairs " dup .region-list
+     list-get-length
+    2 <>
     if
-        cr ." list length not 3?"
+        cr ." list length not 2?"
         abort
     then
 
     3 pick action-get-logical-structure list-get-length
-    7 <>
+    6 <>
     if
-        cr ." list length not 7?" 3 pick action-get-logical-structure .region-list
+        cr ." list length not 6?" 3 pick action-get-logical-structure .region-list
         abort
     then
 
@@ -47,10 +49,12 @@
         abort
     then
 
-    5 pick action-get-logical-structure list-get-length
-    6 <>
+    5 pick action-get-logical-structure
+    \ cr ." ls: " dup .region-list
+    list-get-length
+    5 <>
     if
-        cr ." list length not 6?"
+        cr ." list length not 5?"
         abort
     then
 
