@@ -1,13 +1,14 @@
 \ Implement a Action struct and functions.                                                          
 
 29717 constant action-id
-    4 constant action-struct-number-cells
+    5 constant action-struct-number-cells
 
 \ Struct fields
-0 constant action-header    \ 16-bits [0] struct id [1] use count [2] instance id 
+0 constant action-header    \ (16) struct id (16) use count (8) instance id 
 action-header               cell+ constant action-squares               \ A square-list
 action-squares              cell+ constant action-incompatible-pairs    \ A region-list
 action-incompatible-pairs   cell+ constant action-logical-structure     \ A region-list
+action-logical-structure    cell+ constant action-groups                \ A group-list.
 
 0 value action-mma \ Storage for action mma instance.
 
@@ -62,7 +63,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     assert-tos-is-action
 
     \ Get intst ID.
-    2w@
+    4c@
 ;
  
 \ Set the instance ID of an action instance, use only in this file.
@@ -71,8 +72,14 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     assert-tos-is-action
     assert-nos-is-value
 
+    over 0<
+    abort" Invalid instance id"
+
+    over 255 >
+    abort" Invalid instance id"
+
     \ Set inst id.
-    2w!
+    4c!
 ;
 
 \ Return the square-list from an action instance.
@@ -134,7 +141,27 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     !                           \ Store it.
 ;
 
-: action-inst-id ( act0 -- id )
+
+\ Return the group-list from an action instance.
+: action-get-groups ( act0 -- lst )
+    \ Check arg.
+    assert-tos-is-action
+
+    action-groups +     \ Add offset.
+    @                   \ Fetch the field.
+;
+ 
+\ Set the group-list of an action instance, use only in this file.
+: _action-set-groups ( lst1 act0 -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-list
+
+    action-groups +     \ Add offset.
+    !                   \ Set the field.
+;
+
+: action-inst-id ( -- id )
     current-action
     action-get-inst-id
 ;
@@ -169,45 +196,73 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     then
 ;
 
+: _action-delete-group-if-exists ( reg1 act0 -- flag )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+
+    \ If group exists, delete it.
+    2dup                                \ reg1 act0 reg1 act0
+    action-get-groups                   \ reg1 act0 reg1 grp-lst
+    group-list-member                   \ reg1 act0 flag
+    if
+        action-get-groups               \ reg1 grp-lst
+        group-list-remove               \ flag
+        0= abort" Group remove failed?"
+        true
+    else
+        2drop
+        false
+    then
+;
+
+\ Add a guoup, if it does not already exist.
+: _action-add-group-if-not-exists ( reg1 act0 -- flag )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+
+    \ Return if the group already exits.
+    2dup                                \ reg1 act0 reg1 act0
+    action-get-groups                   \ reg1 act0 reg1 grp-lst
+    group-list-member                   \ reg1 act0 flag
+    if
+        2drop
+        false
+        exit
+    then
+
+    \ Add the group.
+    over                                \ reg1 act0 reg1
+    over action-get-squares             \ reg1 act0 reg1 sqr-lst1
+    square-list-in-region               \ reg1 act0 sqr-lst2
+    rot                                 \ act0 sqr-lst2 reg1
+    group-new                           \ act0 grp
+    swap                                \ grp act0
+    action-get-groups                   \ grp grp-lst
+    group-list-push                     \
+    true
+;
+
 \ Update the logical-structure region-list of an action instance, use only in this file.
 \ Deallocate the old list last, so the instance field is never invalid.
 : _action-update-logical-structure ( new-ls act0 -- )
+    \ cr ." _action-update-logical-structure: " .s cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
     cr ." new list " over .region-list cr
 
-\    dup                                 \ new-ls act0 old-ls old-ls
-\
-\    3 pick                              \ new-ls act0 old-ls old-ls new-ls
-\    2dup swap                           \ new-ls act0 old-ls old-ls new-ls new-ls old-ls
-\    region-list-set-difference          \ new-ls act0 old-ls old-ls new-ls new-added
-\
-\    cr ." New LS regions added: " dup .region-list cr
-\    dup list-get-links
-\    begin
-\        ?dup
-\    while
-\        dup link-get-data               \ new-ls act0 old-ls old-ls new-ls new-added link regx
-\        cr dup .region cr
-\
-\        6 pick                          \ new-ls act0 old-ls old-ls new-ls new-added link regx act0
-\        action-region-is-defining       \ new-ls act0 old-ls old-ls new-ls new-added link ( states true | false )
-\        if
-\            cr ." states: " dup .value-list cr
-\            list-deallocate
-\        then
-\
-\        link-get-next
-\    repeat
-\
-\    region-list-deallocate              \ new-ls act0 old-ls old-ls new-ls
+    \ Check the new list is different from the old list.
+    over                                \ new-lst act0 new-lst
+    over action-get-logical-structure   \ new-lst act0 new-lst old-lst
+    2dup region-list-eq                 \ new-lst act0 new-lst old-lst flag
+    abort" region lists equal?"
+    nip                                 \ new-lst act0 old-lst
 
-    
-                                        \ new-ls act0
     \ Get/save current LS.
-    dup action-get-logical-structure    \ new-ls act0 old-ls
     cr ." old list " dup .region-list cr
+
     -rot                                \ old-ls new-ls act0
 
     \ Store new structure.
@@ -229,8 +284,13 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     while
         dup link-get-data               \ act0 old-ls new-ls old-gone link region
 
-        cr 4 spaces .region
-        \ TODO If group exists, delete it.
+        \ If group exists, delete it.
+        5 pick                          \ act0 old-ls new-ls old-gone link region act0
+        _action-delete-group-if-exists  \ act0 old-ls new-ls old-gone link flag
+        if
+            cr 4 spaces dup link-get-data .region
+            space ." deleted group"
+        then
 
         link-get-next                   \ act0 old-ls new-ls old-gone link
     repeat
@@ -270,11 +330,26 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         if
             list-deallocate                 \ act0 old-ls new-ls link
             space ." region is NOT defining"
-            \ TODO If group exists, delete it.
+
+            \ If group exists, delete it.
+            dup link-get-data               \ act0 old-ls new-ls link region
+            4 pick                          \ act0 old-ls new-ls link region act0
+            _action-delete-group-if-exists  \ flag
+            if
+                space ." deleted group"
+            then
         else
+                                                \ act0 old-ls new-ls link sta-lst2
             space ." region is defining " dup .value-list
-            list-deallocate                 \ act0 old-ls new-ls link
-            \ TODO If group does not exist, add it.
+            list-deallocate                     \ act0 old-ls new-ls link
+
+            \ If group does not exist, add it.
+            dup link-get-data                   \ act0 old-ls new-ls link region
+            4 pick                              \ act0 old-ls new-ls link region act0
+            _action-add-group-if-not-exists     \ act0 old-ls new-ls link flag
+            if
+                 space ." added group"
+            then
         then
 
         link-get-next                   \ act0 old-ls new-ls link
@@ -328,6 +403,11 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     domain-max-region-xt execute        \ act lst mxreg
     over region-list-push               \ act lst
     over _action-set-logical-structure  \ act
+
+    \ Set group list.
+    list-new                            \ act lst
+    dup struct-inc-use-count            \ act lst
+    over _action-set-groups             \ act
 ;
 
 \ Print a action.
@@ -344,7 +424,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     ." sqrs " .square-list-states
 
     dup action-get-logical-structure space ." LS: " .region-list
-    action-get-incompatible-pairs space ." IP: " .region-list
+    dup action-get-incompatible-pairs space ." IP: " .region-list
+    action-get-groups space ." Grps: " .group-list-regions
 ;
 
 \ Deallocate a action.
@@ -360,6 +441,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         dup action-get-squares square-list-deallocate
         dup action-get-incompatible-pairs region-list-deallocate
         dup action-get-logical-structure region-list-deallocate
+        dup action-get-groups group-list-deallocate
 
         \ Deallocate instance.
         action-mma mma-deallocate
@@ -381,14 +463,10 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
     dup list-is-empty
     if
-        \ cr ." list is empty" cr
         list-deallocate                         \ retlst sqr1 act0
         2drop                                   \ retlst
         exit
     then
-
-    \ cr ." list is NOT empty "
-    \ dup .square-list-states
 
     2 pick square-get-state                 \ retlst sqr1 act0 inclst sta1
     over list-get-links                     \ retlst sqr1 act0 inclst sta1 link
@@ -398,7 +476,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
         dup link-get-data square-get-state  \ retlst sqr1 act0 inclst sta1 link sta2
         2 pick                              \ retlst sqr1 act0 inclst sta1 link sta2 sta1
         region-new                          \ retlst sqr1 act0 inclst sta1 link regx
-        \ cr ." reg: " dup .region cr
+
         dup                                 \ retlst sqr1 act0 inclst sta1 link regx regx
         7 pick                              \ retlst sqr1 act0 inclst sta1 link regx regx retlst
         region-list-push-nosups             \ retlst sqr1 act0 inclst sta1 link regx flag
@@ -424,15 +502,12 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     assert-tos-is-action
     assert-nos-is-square
 
-    \ cr ." at 0 " cr
     \ Check action-incompatible-pairs for pairs that are no longer incompatible.
     \ If any are found, remove them and recalculate everything.
 
     \ Form regions with incompatible squares, no supersets.
     tuck                                    \ act0 sqr1 act0
-    \ cr ." at 1 " .s cr
     action-find-incompatible-pairs-nosups   \ act0 inc-lst
-    \ cr ." at 1 " cr
     dup list-is-empty
     if
         \ cr ." _action-check-square: list is empty" cr
@@ -444,38 +519,28 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
     \ If there is no proper subset region in action-incompatible-pairs,
     \ push nosups, calc ~A + ~B, intersect with action-logical-structure.
 
-    \ cr ." list is NOT empty " dup .region-list cr
-
                                             \ act0 inclst
     dup list-get-links                      \ act0 inclst link
     begin
         dup                                 \ act0 inclst link link
     while
-       \  cr ." at while " cr
         dup link-get-data                   \ act0 inclst link regx
-        \ cr ." incompatible reg: " dup .region cr
 
         \ Check if dup in action-incompatible-pairs
         dup                                         \ act0 inclst link regx regx
         4 pick action-get-incompatible-pairs        \ act0 inclst link regx regx pair-lst
         [ ' region-eq ] literal -rot                \ act0 inclst link regx xt regx pair-lst
         list-member                                 \ act0 inclst link regx flag
-        \ cr ." at 2 " .s cr
         if
-            \ cr ." dup in list" cr
             drop
         else
-            \ cr ." no dup in list"
             dup                                     \ act0 inclst link regx regx
             4 pick action-get-incompatible-pairs    \ act0 inclst link regx regx pair-lst
             [ ' region-subset-of ] literal -rot     \ act0 inclst link regx xt regx pair-lst
             list-member                             \ act0 inclst link regx flag
             if
-                \ cr ." subset found" cr
                 drop                                \ act0 inclst link
             else
-                \ cr ." no subset found" cr           \ act0 inclst link regx
-
                 \ Add region to the action-incompatible-pairs  list.
                 cr ." Act: " 3 pick action-get-inst-id . space ." Adding incompatible pair: " dup region-get-states .value space .value cr
                 dup 4 pick                          \ act0 inclst link regx regx act0
@@ -499,7 +564,6 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
                 region-list-deallocate              \ act0 inclst link
             then
         then
-        \ cr ." at repeat " cr
 
         link-get-next                       \ act0 inclst sta1 link-next
     repeat
@@ -635,10 +699,8 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
     \ Get regions that use the state
     swap square-get-state               \ act0 sta
-   \ cr ." Regions that use state " dup .value
     over action-get-incompatible-pairs  \ act0 sta reg-lst
     region-list-uses-state              \ act0 reg-lst-in
-   \ space ." are " dup .region-list cr
 
     dup list-is-empty                   \ act0 reg-lst-in flag
     if
@@ -709,7 +771,7 @@ action-incompatible-pairs   cell+ constant action-logical-structure     \ A regi
 
     over sample-get-initial
     over action-get-squares
-    square-list-find            \ smpl1 act0 : sqr true | false
+    square-list-find            \ smpl1 act0, sqr true | false
     if
         \ Update existing square
         rot                     \ act0 sqr smpl

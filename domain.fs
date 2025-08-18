@@ -4,7 +4,7 @@
     2 constant domain-struct-number-cells
 
 \ Struct fields
-0 constant domain-header    \ 16-bits [0] struct id [1] use count [2] instance id [3] num-bits
+0 constant domain-header    \ 16-bits (16) struct id (16) use count (8) instance id (8) num-bits
 domain-header               cell+ constant domain-actions               \ A action-list
 
 0 value domain-mma \ Storage for domain mma instance.
@@ -67,7 +67,7 @@ domain-header               cell+ constant domain-actions               \ A acti
     assert-tos-is-domain
 
     \ Get intst ID.
-    2w@
+    4c@
 ;
  
 \ Set the instance ID of an domain instance, use only in this file.
@@ -75,8 +75,14 @@ domain-header               cell+ constant domain-actions               \ A acti
     \ Check args.
     assert-tos-is-domain
 
+    over 0<
+    abort" Invalid instance id"
+
+    over 255 >
+    abort" Invalid instance id"
+
     \ Set inst id.
-    2w!
+    4c!
 ;
 
 \ Return the number bits used by a domain instance.
@@ -85,7 +91,7 @@ domain-header               cell+ constant domain-actions               \ A acti
     assert-tos-is-domain
 
     \ Get intst ID.
-    3w@
+    5c@
 ;
  
 \ Set the number bits used by a domain instance, use only in this file.
@@ -100,7 +106,7 @@ domain-header               cell+ constant domain-actions               \ A acti
     abort" Invalid number of bits."
 
     \ Set inst id.
-    3w!
+    5c!
 ;
 
 \ End accessors.
@@ -117,7 +123,7 @@ domain-header               cell+ constant domain-actions               \ A acti
     domain-id over                  \ nb1 id0 dom id dom
     struct-set-id                   \ nb1 id0 dom
 
-    \ Init use count.
+    \ Init use count.current-domain domain-add-action
     0 over struct-set-use-count     \ nb1 id0 dom
 
     \ Set intance ID.
@@ -206,7 +212,7 @@ domain-header               cell+ constant domain-actions               \ A acti
 
 ' domain-max-region to domain-max-region-xt
 
-: domain-inst-id ( dom0 -- id )
+: domain-inst-id ( -- id )
     current-domain
     domain-get-inst-id
 ;

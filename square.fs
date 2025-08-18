@@ -569,14 +569,14 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     assert-tos-is-square
     assert-nos-is-sample
 
-    over sample-get-initial
-    over square-get-state
+    over sample-get-initial     \ smpl1 sqr0 initial
+    over square-get-state       \ smpl1 sqr0 initial state
     <>
     abort" Sample initial does not match square state"
 
-    swap sample-get-result
-    swap
-    square-add-result
+    swap sample-get-result      \ sqr0 result
+    swap                        \ result sqr0
+    square-add-result           \
 ;
 
 \ Return true if two squares ar equal.
@@ -621,12 +621,12 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
     \ Check first rule of pn-2 square.
     over square-get-rules rulestore-get-rule-0  \ sqr0 rul1 rul0
-    over rule-union                             \ sqr0 rul1 [ rul3 true | false ]
+    over rule-union                             \ sqr0 rul1' rul3 true | false
     if
         rule-deallocate
         \ Check second rule of pn-2 square.
         swap square-get-rules rulestore-get-rule-1  \ rul1 rul0
-        rule-union                                  \ [ rul3 true | false ]
+        rule-union                                  \ rul3 true | false
         if
             rule-deallocate
             [char] I            \ pn 1 square compatible with both rules of pn 2 square, too compatible.
@@ -636,7 +636,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     else
         \ Check second rule of pn-2 square.
         swap square-get-rules rulestore-get-rule-1  \ rul1 rul0
-        rule-union                                  \ [ rul3 true | false ]
+        rule-union                                  \ rul3 true | false
         if
             rule-deallocate
             [char] M            \ pn 1 square compatible with one rule of pn 2 square.
@@ -651,7 +651,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     \ Check 0-0 union.
     over square-get-rules rulestore-get-rule-0      \ sqr1 sqr0 s1rul0
     over square-get-rules rulestore-get-rule-0      \ sqr1 sqr0 s1rul0 s0rul0
-    rule-union                                      \ sqr1 sqr0 ! rul-u-00 true | false
+    rule-union                                      \ sqr1 sqr0, rul-u-00 true | false
     0= if
         2drop
         false
@@ -678,7 +678,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     \ Check 0-1 union.
     over square-get-rules rulestore-get-rule-1      \ sqr1 sqr0 s1rul1
     over square-get-rules rulestore-get-rule-0      \ sqr1 sqr0 s1rul1 s0rul0
-    rule-union                                      \ sqr1 sqr0 ! rul-u-10 true | false
+    rule-union                                      \ sqr1 sqr0, rul-u-10 true | false
     0= if
         2drop
         false
@@ -807,3 +807,19 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     square-compare [char] I =
 ;
 
+\ Return true if a square state matches a value.
+: square-state-eq ( val1 sqr0 -- flag )
+    \ Check args.
+    assert-tos-is-square
+    assert-nos-is-value
+
+    square-get-state
+    =
+;
+
+\ Return true if a square-state is a subset of a region.
+: square-state-in-region ( reg1 sqr0 -- flag )
+    square-get-state
+    swap
+    region-superset-of-state
+;

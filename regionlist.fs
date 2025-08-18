@@ -56,12 +56,55 @@
 \ Remove a region from a region-list, and deallocate.
 \ xt signature is ( item list-data -- flag )
 \ Return true if a region was removed.
-: region-list-remove ( xt reg list -- bool )
+: region-list-remove ( reg list -- bool )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-region
 
-    list-remove         \ reg flag
+    [ ' region-eq ] literal     \ reg1 list0  xt
+    -rot                        \ xt reg1 list0
+
+    list-remove                 \ reg2 true | false
+    if  
+        region-deallocate
+        true
+    else
+        false
+    then
+;
+
+\ Remove the first subset region from a region-list, and deallocate.
+\ xt signature is ( item list-data -- flag )
+\ Return true if a region was removed.
+: region-list-remove-subset ( reg list -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-region
+
+    [ ' region-subset-of ] literal      \ reg1 list0  xt
+    -rot                                \ xt reg1 list0
+
+    list-remove                         \ reg2 true | false
+    if  
+        region-deallocate
+        true
+    else
+        false
+    then
+;
+
+\ Remove the first subset region from a region-list, and deallocate.
+\ xt signature is ( item list-data -- flag )
+\ Return true if a region was removed.
+: region-list-remove-superset ( reg list -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-region
+
+    [ ' region-superset-of ] literal    \ reg1 list0  xt
+    -rot                                \ xt reg1 list0
+
+    list-remove                         \ reg2 true | false
     if  
         region-deallocate
         true
@@ -92,8 +135,7 @@
 
     begin
         2dup                                \ reg1 list0 reg1 list0
-        [ ' region-subset-of ] literal -rot \ reg1 list0 xt reg1 list0
-        region-list-remove                  \ reg1 list0 | flag
+        region-list-remove-subset           \ reg1 list0 | flag
     while
     repeat
 
@@ -124,8 +166,7 @@
 
     begin
         2dup                                \ reg1 list0 reg1 list0
-        [ ' region-superset-of ] literal -rot \ reg1 list0 xt reg1 list0
-        region-list-remove                  \ reg1 list0 | flag
+        region-list-remove-superset         \ reg1 list0 | flag
     while
     repeat
 
@@ -297,12 +338,12 @@
         while
             dup link-get-data       \ ret-list list1 link0 data0 link1 data1
             2 pick                  \ ret-list list1 link0 data0 link1 data1 data0
-            region-intersection     \ ret-list list1 link0 data0 link1 | reg-int true | false
+            region-intersection     \ ret-list list1 link0 data0 link1, reg-int true | false
             if
-                                        \ ret-list list1 link0 data0 link1 | reg-int
-                dup                     \ ret-list list1 link0 data0 link1 | reg-int reg-int
-                6 pick                  \ ret-list list1 link0 data0 link1 | reg-int reg-int ret-list
-                region-list-push-nosubs \ ret-list list1 link0 data0 link1 | reg-int flag
+                                        \ ret-list list1 link0 data0 link1 reg-int
+                dup                     \ ret-list list1 link0 data0 link1 reg-int reg-int
+                6 pick                  \ ret-list list1 link0 data0 link1 reg-int reg-int ret-list
+                region-list-push-nosubs \ ret-list list1 link0 data0 link1 reg-int flag
                 if
                     drop
                 else
@@ -504,26 +545,44 @@
     nip                                 \ ret-lst
 ;
 
-\ Return a list of defining regions, that is
-\ regions that are not completely overlapped by other regions.
-\ : region-list-defining-regions ( lst0 -- lst )
-\    \ Check arg.
-\    assert-tos-is-list
+\ Return true if to region-lists are equal.
+: region-list-eq ( lst1 lst0 -- flag )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
 
-\    lst-new swap                \ lst-n lst0
-\    dup list-get-links          \ lst-n lst0 link0
-    \ Check each region.
-\    begin
-\        ?dup
-\    while
-\        dup link-get-data       \ lst-n lst0 link0 data0
+    \ Check list lengths.
+    over list-get-length
+    over list-get-length                \ lst1 lst0 len1 len0
+    <>
+    if
+        2drop
+        false
+        exit
+    then
 
-        \ Check against other regions.
-\        dup                     \ lst-n lst0 link0 data0 data0
-\        list-new tuck list-push \ lst-n lst0 link0 data0 lst1
+    \  Check list contents.
+    list-get-links                      \ lst1 link
+    begin
+        ?dup
+    while
+        \ Get current region.
+        dup link-get-data               \ lst1 link data
 
-\        link-get-next
-\    repeat                      \ lst-n lst0
-\    drop
-\ ;
+        \ Check if its in the other list.
+        [ ' region-eq ] literal swap    \ lst1 link xt data
+        3 pick                          \ lst1 link xt data lst1
+        list-member                     \ lst1 link flag
 
+        0= if
+            2drop
+            false
+            exit
+        then
+
+        link-get-next                   \ lst1 link
+    repeat
+                                        \ lst1
+    drop
+    true
+;

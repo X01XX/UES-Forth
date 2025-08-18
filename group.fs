@@ -1,0 +1,275 @@
+\ Implement a group struct and functions.
+
+23197 constant group-id                                                                                  
+    4 constant group-struct-number-cells
+
+\ Struct fields
+0 constant group-header                         \ id (16) use count (16) instance id (8) pn (8) pnc (8)
+group-header   cell+ constant group-region      \ The group region.
+group-region   cell+ constant group-squares     \ A square list.
+group-squares  cell+ constant group-rules       \ A RuleStore.
+
+0 value group-mma \ Storage for group mma instance.
+
+\ Init group mma, return the addr of allocated memory.
+: group-mma-init ( num-items -- ) \ sets group-mma.
+    dup 1 < 
+    if  
+        ." group-mma-init: Invalid number of items."
+        abort
+    then
+
+    cr ." Initializing Group store."
+    group-struct-number-cells swap mma-new to group-mma
+;
+
+\ Check group mma usage.
+: assert-group-mma-none-in-use ( -- )
+    group-mma mma-in-use 0<>
+    if
+        ." group-mma use GT 0"
+        abort
+    then
+;
+
+\ Check instance type.
+: is-allocated-group ( addr -- flag )
+    \ Insure the given addr cannot be an invalid addr.
+    dup group-mma mma-within-array 0=
+    if  
+        drop false exit
+    then
+
+    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+    group-id =    
+;
+
+: is-not-allocated-group ( addr -- flag )
+    is-allocated-group 0=
+;
+
+\ Check TOS for group, unconventional, leaves stack unchanged. 
+: assert-tos-is-group ( arg0 -- arg0 )
+    dup is-allocated-group 0=
+    if  
+        cr ." TOS is not an allocated group"
+        abort
+    then
+;
+
+\ Check NOS for group, unconventional, leaves stack unchanged. 
+: assert-nos-is-group ( arg1 arg0 -- arg1 arg0 )
+    over is-allocated-group 0=
+    if  
+        cr ." NOS is not an allocated group"
+        abort
+    then
+;
+
+\ Start accessors.
+
+\ Return the group region. 
+: group-get-region ( addr -- reg )
+    \ Check arg.
+    assert-tos-is-group
+
+    group-region +      \ Add offset.
+    @                   \ Fetch the field.
+;
+ 
+\ Set the region of a group instance, use only in this file.
+: _group-set-region ( reg1 addr -- )
+    over struct-inc-use-count
+    group-region +      \ Add offset.
+    !                   \ Set field.
+;
+
+: group-get-pn ( sqr0 -- pn )
+    \ Check arg.
+    assert-tos-is-group
+
+    5c@
+;
+
+\ Return the instance ID from an group instance.
+: group-get-inst-id ( grp0 -- u)
+    \ Check arg.
+    assert-tos-is-group
+
+    \ Get intst ID.
+    4c@ 
+;
+ 
+\ Set the instance ID of an group instance, use only in this file.
+: _group-set-inst-id ( u1 grp0 -- )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-value
+
+    over 0<
+    abort" Invalid instance id"
+
+    over 255 >
+    abort" Invalid instance id"
+    
+    \ Set inst id.
+    4c! 
+;
+
+: _group-set-pn ( pn1 sqr0 -- )
+    over 1 <
+    if
+        ." _group-set-pn: invalid pn value"
+        abort
+    then
+
+    over 3 >
+    if
+        ." _group-set-pn: invalid pn value"
+        abort
+    then
+
+    5c!
+;
+
+\ Return group 8-bit pnc value, as a bool.
+: group-get-pnc ( sqr0 -- bool )
+    \ Check arg.
+    assert-tos-is-group
+
+    6c@
+    0<>     \ Change 255 to -1
+;
+
+: _group-set-pnc ( pnc sqr -- )
+    6c!
+;
+
+: group-get-rules ( sqr0 -- rulstr )
+    \ Check arg.
+    assert-tos-is-group
+
+    group-rules + @
+;
+
+: _group-set-rules ( rulstr1 sqr0 -- )
+    over struct-inc-use-count
+
+    group-rules + !
+;
+
+\ Return the group squares. 
+: group-get-squares ( addr -- reg )
+    \ Check arg.
+    assert-tos-is-group
+
+    group-squares +     \ Add offset.
+    @                   \ Fetch the field.
+;
+ 
+\ Set the squares field of a group instance, use only in this file.
+: _group-set-squares ( sqr-lst addr -- )
+    group-squares +     \ Add offset.
+    !                   \ Set field.
+;
+
+\ End accessors.
+
+\ Return a new group, given a state and result.
+: group-new    ( sqrs1 reg0 -- group )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-list
+
+    over list-is-empty
+    if
+        ." empty square list?"
+        abort
+    then
+
+   \ Allocate space.
+    group-mma mma-allocate      \ s r addr
+
+    \ Store id.
+    group-id over               \ s r addr id addr
+    struct-set-id               \ s r addr
+        
+    \ Init use count.
+    0 over                      \ s r addr 0 addr
+    struct-set-use-count        \ s r addr
+
+    \ Set region.
+    tuck                        \ s addr r addr
+    _group-set-region           \ s addr
+
+    \ Set rules
+    over square-list-get-rules  \ s addr result flag
+    0=
+    if
+        ." Group squares cannot form rules."
+        abort
+    then
+                                \ s addr rules
+    over _group-set-rules       \ s addr
+
+    \ Set pn
+    over square-list-highest-pn \ s addr pn
+    over _group-set-pn          \ s addr
+
+    \ Set pnc
+    \ over square-list-pnc        \ s addr pnc
+    false
+    over _group-set-pnc         \ s addr
+
+    \ Set squares
+    tuck                        \ addr s addr
+    _group-set-squares          \ addr
+;
+
+: group-from-sample ( smpl -- sqr )
+    \ Check arg.
+    assert-tos-is-sample
+
+    dup sample-get-result
+    swap sample-get-initial
+    group-new
+;
+
+: group-deallocate ( sqr0 -- )
+    \ Check arg.
+    assert-tos-is-group
+
+    dup struct-get-use-count      \ sqr0 count
+
+    2 <
+    if
+        \ Deallocate instance.
+        dup group-get-region region-deallocate
+        dup group-get-rules rulestore-deallocate
+        dup group-get-squares square-list-deallocate
+        group-mma mma-deallocate
+    else
+        struct-dec-use-count
+    then
+;
+
+\ Return true if a group region is equal to a given region.
+: group-region-eq ( reg1 grp0 -- flag )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-region
+
+    group-get-region
+    region-eq
+;
+
+: .group ( grp -- )
+    ." Grp: "
+    dup group-get-inst-id .
+    space
+    group-get-region .region
+;
+
+: .group-region ( grp -- )
+    group-get-region .region
+;

@@ -2,6 +2,7 @@
 
 : .domain-list ( domlst0 -- )
     drop
+    cr ." TODO" cr  
 ;
 
 : domain-list-deallocate ( domlst0 -- )

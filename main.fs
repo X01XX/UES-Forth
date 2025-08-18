@@ -57,6 +57,9 @@ include valuelist.fs
 include regionlist.fs
 include squarelist.fs
 
+include group.fs
+include grouplist.fs
+
 include action.fs
 include actionlist.fs
 
@@ -76,6 +79,7 @@ cs
     cr 4 spaces ." RuleStore mma:    " rulestore-mma .mma-usage
     cr 4 spaces ." Square mma:       " square-mma .mma-usage
     cr 4 spaces ." Sample mma:       " sample-mma .mma-usage
+    cr 4 spaces ." Group mma:        " group-mma .mma-usage
     cr 4 spaces ." Action mma:       " action-mma .mma-usage
     cr 4 spaces ." Session mma:      " session-mma .mma-usage
     cr 4 spaces ." Domain mma:       " domain-mma .mma-usage
@@ -90,6 +94,7 @@ cs
     assert-rule-mma-none-in-use
     assert-rulestore-mma-none-in-use
     assert-square-mma-none-in-use
+    assert-group-mma-none-in-use
     assert-sample-mma-none-in-use
     assert-action-mma-none-in-use
 
@@ -119,6 +124,7 @@ cr ." main.fs"
 105 rulestore-mma-init
 106 square-mma-init
  20 sample-mma-init
+ 30 group-mma-init
  20 action-mma-init
   1 session-mma-init
   5 domain-mma-init
@@ -142,14 +148,26 @@ cr ." main.fs"
 \ rulestore-mma mma-free
 \ square-mma mma-free
 
+\ Set up a test domain and action.
+\ To supply number bits, max region, ms-bit, all-bits, domain-id, action-id.
+\ To run tests outside of all-tests, run this first.
+
+: test-init
+    \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
+    4 0 domain-new                  \ dom
+    dup struct-inc-use-count        \ dom
+    to current-domain
+    
+    0 action-new                    \ act
+    dup to current-action           \ act
+    current-domain                  \ act dom
+    domain-add-action               \ 
+;
+
 : all-tests
     test-none-in-use
 
-    \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
-    4 0 domain-new to current-domain
-    0 action-new dup to current-action
-    current-domain domain-add-action
-    \ To run tests outside of this function, you may need to create the domain, and maybe the action, as above.
+    test-init
 
     square-tests
     square-list-tests
@@ -162,5 +180,6 @@ cr ." main.fs"
 
     current-domain domain-deallocate
 
+    \ memory-use
     test-none-in-use
 ;

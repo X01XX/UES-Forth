@@ -34,11 +34,15 @@
 : .square-list ( list0 -- )
     \ Check args.
     assert-tos-is-list
+
     [ ' .square ] literal swap .list
 ;
 
 \ Print a list of square states.
 : .square-list-states ( sqrlst0 -- )
+    \ Check args.
+    assert-tos-is-list
+
     ." ("
     [ ' .square-state ] literal swap list-apply
     ." )"
@@ -65,12 +69,15 @@
 \ Remove the first square, idetified by xt, from a square-list, and deallocate.
 \ xt signature is ( item list-data -- flag )
 \ Return true if an square was removed.
-: square-list-remove ( xt val list -- bool )
+: square-list-remove ( sta1 list0 -- bool )
     \ Check args.
     assert-tos-is-list
-    assert-nos-is-square
+    assert-nos-is-value
 
-    list-remove
+    [ ' square-state-eq ] literal   \ sta1 lst0 xt
+    -rot                            \ xt sta1 lst0
+
+    list-remove                     \ sqr true | false
     if
         square-deallocate
         true
@@ -79,12 +86,6 @@
     then
 ;
 
-\ Return true if a square-state is a subset of a region.
-: square-state-in-region ( reg1 sqr0 -- flag )
-    square-get-state
-    swap
-    region-superset-of-state
-;
 
 \ Return squares in a given region.
 : square-list-in-region ( reg1 list0 -- sqr-lst )
@@ -128,22 +129,122 @@
     drop                            \ ret-lst
 ;
 
-\ Return true if a square state matches a value.
-: square-match ( val1 sqr0 -- flag )
-    square-get-state
-    =
-;
-
 \ Find a square in a list, by state, if any.
 : square-list-find ( val1 list0 -- sqr true | false )
-    [ ' square-match ] literal -rot list-find
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-value
+
+    [ ' square-state-eq ] literal -rot list-find
 ;
 
-\ Return true if a square with a given state is a member..
+\ Return true if a square with a given state is a member.
 : square-list-member ( val1 list0 -- flag )
-    [ ' square-match ] literal -rot list-member
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-value
+
+    [ ' square-state-eq ] literal -rot list-member
 ;
 
+: square-list-highest-pn ( list0 -- pn )
+    \ Check arg.
+    assert-tos-is-list
+    dup list-is-empty
+    abort" List is empty?"
 
+    \ Prep for loop.
+    list-get-links              \ link
+    1 swap                      \ max-pn link
 
+    \ Scan square list.
+    begin
+        ?dup
+    while
+        \ Check if current square pn in greater than the current max pn.
+        dup link-get-data       \ max-pn link square
+        square-get-pn           \ max-pn link sqr-pn
+        3 pick                  \ max-pn link sqr-pn max-pn
+        >                       \ max-pn link flag
+        if                      \ max-pn link
+            \ Set the square pn to be the max pn.
+            nip                 \ link
+            dup link-get-data   \ link square
+            square-get-pn       \ link sqr-pn
+            swap                \ max-pn link
+        then
 
+        link-get-next           \ max-pn link
+    repeat
+                            \ max-pn
+;
+
+\ Return rules for a non-empty square-list, having no incompatible squares.
+: square-list-get-rules ( list0 -- rulestore true | false )
+    \ Check arg.
+    assert-tos-is-list
+    dup list-is-empty
+    abort" List is empty?"
+
+    dup square-list-highest-pn      \ list0 max-pn
+
+    \ Check for 3/U
+    dup 3 =
+    if
+        2drop                       \
+        rulestore-new-0             \ rul-str
+        true
+        exit
+    then
+
+    swap                            \ max-pn list0
+    0 -rot                          \ rul-str max-pn list0
+
+    \ Prep for loop
+    list-get-links                  \ rul-str max-pn link
+
+    begin
+        ?dup
+    while
+        \ Check if the current square pn is equal to the max-pn.
+        dup link-get-data           \ rul-str max-pn link sqr
+        square-get-pn               \ rul-str max-pn link sqr-pn
+        2 pick                      \ rul-str max-pn link sqr-pn max-pn
+        =                           \ rul-str max-pn link flag
+        
+        if                          \ rul-str max-pn link
+            \ Update the return rulestore.
+            dup link-get-data       \ rul-str max-pn link sqr
+            square-get-rules        \ rul-str max-pn link sqr-ruls
+            3 pick                  \ rul-str max-pn link sqr-ruls rul-str
+            dup 0=
+            if
+                \ Square rulestore inits return rulestore.
+                drop                \ rul-str max-pn link sqr-ruls
+                rulestore-copy      \ rul-str max-pn link sqr-ruls (may be deallocated later)
+            else
+                \ Form union of square rulestore and return rulestore.
+                rulestore-union     \ rul-str max-pn link, new-rul-str true | false
+                0= if
+                    2drop drop false
+                    exit
+                then
+            then
+                                \ rul-str max-pn link new-ruls
+            2swap               \ link new-ruls rul-str max-pn
+            swap                \ link new-ruls max-pn rul-str
+            dup 0=
+            if
+                drop
+            else
+                rulestore-deallocate
+            then
+                                \ link new-ruls max-pn
+            rot                 \ new-ruls max-pn link
+        then
+        link-get-next
+    repeat
+                                \ rul-str max-pn
+    drop                        \ rul-str
+    true
+;

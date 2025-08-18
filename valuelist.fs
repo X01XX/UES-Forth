@@ -43,7 +43,7 @@
 \ value-list-push ( val1 list0 -- ) use list-push
 
 \ Remove a value from a value-list.
-: value-list-remove ( val list | item true | false )
+: value-list-remove ( val list -- item true | false )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-value

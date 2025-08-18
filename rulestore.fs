@@ -264,3 +264,43 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     ." ]"
 ;
 
+\ Return a copy of a rulestore.
+: rulestore-copy ( rs0 -- rs )
+    \ Check arg.
+    assert-tos-is-rulestore
+
+    dup rulestore-number-rules  \ rs0 nr
+    case
+        0 of
+            drop
+            rulestore-new-0
+        endof
+        1 of
+            rulestore-get-rule-0 rulestore-new-1
+        endof
+        2 of
+            dup rulestore-get-rule-0
+            swap rulestore-get-rule-1
+            rulestore-new-2
+        endof
+    endcase
+;
+
+\ Return the union of two rulestores.
+: rulestore-union ( rs1 rs0 -- ret )
+    \ Check args.
+    assert-tos-is-rulestore
+    assert-nos-is-rulestore
+
+    over rulestore-number-rules     \ rs1 rs0 nr1
+    over rulestore-number-rules     \ rs1 rs0 nr1 nr0
+    tuck                            \ rs1 rs0 nr0 nr1 nr0
+    <> abort" rulestores have a different number of rules?"
+
+                                    \ rs1 rs0 nr0
+
+    dup 0=
+    
+
+    
+;
