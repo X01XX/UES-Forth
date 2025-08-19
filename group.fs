@@ -4,7 +4,7 @@
     4 constant group-struct-number-cells
 
 \ Struct fields
-0 constant group-header                         \ id (16) use count (16) instance id (8) pn (8) pnc (8)
+0 constant group-header                         \ id (16) use count (16) pn (8) pnc (8)
 group-header   cell+ constant group-region      \ The group region.
 group-region   cell+ constant group-squares     \ A square list.
 group-squares  cell+ constant group-rules       \ A RuleStore.
@@ -88,32 +88,7 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
     \ Check arg.
     assert-tos-is-group
 
-    5c@
-;
-
-\ Return the instance ID from an group instance.
-: group-get-inst-id ( grp0 -- u)
-    \ Check arg.
-    assert-tos-is-group
-
-    \ Get intst ID.
-    4c@ 
-;
- 
-\ Set the instance ID of an group instance, use only in this file.
-: _group-set-inst-id ( u1 grp0 -- )
-    \ Check args.
-    assert-tos-is-group
-    assert-nos-is-value
-
-    over 0<
-    abort" Invalid instance id"
-
-    over 255 >
-    abort" Invalid instance id"
-    
-    \ Set inst id.
-    4c! 
+    4c@
 ;
 
 : _group-set-pn ( pn1 sqr0 -- )
@@ -129,7 +104,7 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
         abort
     then
 
-    5c!
+    4c!
 ;
 
 \ Return group 8-bit pnc value, as a bool.
@@ -137,12 +112,12 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
     \ Check arg.
     assert-tos-is-group
 
-    6c@
+    5c@
     0<>     \ Change 255 to -1
 ;
 
 : _group-set-pnc ( pnc sqr -- )
-    6c!
+    5c!
 ;
 
 : group-get-rules ( sqr0 -- rulstr )
@@ -265,9 +240,11 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
 
 : .group ( grp -- )
     ." Grp: "
-    dup group-get-inst-id .
+    dup group-get-region .region
     space
-    group-get-region .region
+    dup group-get-rules  .rulestore
+    space
+    group-get-squares   .square-list-states
 ;
 
 : .group-region ( grp -- )

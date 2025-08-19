@@ -425,7 +425,15 @@ action-logical-structure    cell+ constant action-groups                \ A grou
 
     dup action-get-logical-structure space ." LS: " .region-list
     dup action-get-incompatible-pairs space ." IP: " .region-list
-    action-get-groups space ." Grps: " .group-list-regions
+    \ Print each group.
+    action-get-groups list-get-links
+    begin
+        ?dup
+    while
+        dup link-get-data
+        cr 4 spaces .group
+        link-get-next
+    repeat
 ;
 
 \ Deallocate a action.

@@ -165,7 +165,7 @@
         dup link-get-data       \ max-pn link square
         square-get-pn           \ max-pn link sqr-pn
         3 pick                  \ max-pn link sqr-pn max-pn
-        >                       \ max-pn link flag
+        <                       \ max-pn link flag
         if                      \ max-pn link
             \ Set the square pn to be the max pn.
             nip                 \ link
