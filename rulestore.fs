@@ -286,8 +286,90 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     endcase
 ;
 
+\ Attempt to form union of two pn-2 rulestores, matching
+\ rules 0 and 0 and 1 and 1.
+: rulestore-union-00 ( rs1 rs0 -- rs true | false )
+    over rulestore-get-rule-0
+    over rulestore-get-rule-0
+
+    rule-union                  \ rs1 rs0, rul00 true | false
+    0= if
+        2drop
+        false
+        exit
+    then
+
+    -rot                        \ rul00 rs1 rs0
+    rulestore-get-rule-1        \ rul00 rs1 rlu1
+    swap                        \ rul00 rul1 rs1
+    rulestore-get-rule-1        \ rul00 rul1 rul1
+
+    rule-union                  \ rul00, rul11 true | false
+    if                          \ rul00 rul11
+        rulestore-new-2
+        true
+    else                        \ rul0
+        rule-deallocate
+        false
+    then
+;
+
+\ Attempt to form union of two pn-2 rulestores, matching
+\ rules 0 and 1 and 1 and 0.
+: rulestore-union-10 ( rs1 rs0 -- rs true | false )
+    over rulestore-get-rule-1   \ rs1 rs0 rs1-1
+    over rulestore-get-rule-0   \ rs1 rs0 rs1-1 rs0-0
+
+    rule-union                  \ rs1 rs0, rul01 true | false
+    0= if
+        2drop
+        false
+        exit
+    then
+    cr ." ru 10 " dup .rule cr
+
+    -rot                        \ rul01 rs1 rs0
+    rulestore-get-rule-1        \ rul01 rs1 rs0-1
+    swap                        \ rul01 rs0-1 rs1
+    rulestore-get-rule-0        \ rul01 rs0-1 rs1-0
+
+    rule-union                  \ rul01, rul10 true | false
+    if                          \ rul01 rul10
+        cr ." ru 01 " dup .rule cr
+        rulestore-new-2
+        true
+    else                        \ rul01
+        rule-deallocate
+        false
+    then
+;
+
+\ Return the union of two pn-2 rulestores.
+\ Check if one, of two, methods of matching works,
+\ but not none or both.
+: rulestore-union-2 ( rs1 rs0 -- rsx true | false )
+    \ Check args.
+    assert-tos-is-rulestore
+    assert-nos-is-rulestore
+
+    2dup rulestore-union-00         \ rs1 rs2, rs3 true | false
+    if                              \ rs1 rs2 rs3
+        -rot                        \ rs3 rs1 rs0
+        rulestore-union-10          \ rs3, rs4 true | false
+        if                          \ rs3 rs4
+            rulestore-deallocate
+            rulestore-deallocate
+            false
+        else                        \ rs3
+            true                    \ rs3 true
+        then
+    else                            \ rs1 rs2
+        rulestore-union-10          \ rs3 true | false
+    then
+;
+
 \ Return the union of two rulestores.
-: rulestore-union ( rs1 rs0 -- ret )
+: rulestore-union ( rs1 rs0 -- ret true | false )
     \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-rulestore
@@ -299,8 +381,23 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
                                     \ rs1 rs0 nr0
 
-    dup 0=
-    
-
-    
+    case
+        0 of
+            2drop
+            rulestore-new-0 true
+        endof
+        1 of
+            rulestore-get-rule-0        \ rs1 r0
+            swap rulestore-get-rule-0   \ r0 r1
+            rule-union                  \ rule true | false
+            if
+                rulestore-new-1 true
+            else
+                false
+            then
+        endof
+        2 of
+            rulestore-union-2
+        endof
+    endcase
 ;

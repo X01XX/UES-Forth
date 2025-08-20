@@ -325,6 +325,21 @@ region-state-0 cell+ constant region-state-1
     region-new
 ;
 
+\ Return the union of a region and a state.
+: region-union-state ( sta1 reg0 -- reg )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-value
+
+    region-high-low         \ sta1 high low
+    rot                     \ high low sta1
+    tuck                    \ high sta1 low sta1
+    and                     \ high sta1 low2
+    -rot                    \ low2 high sta1
+    or                      \ low2 high2
+    region-new
+;
+
 \ Return a regions X mask.
 : region-x-mask ( reg0 -- mask )
     \ Check arg.

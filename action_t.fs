@@ -11,6 +11,9 @@
 
     1 1 sample-new                  \ act smpl smpl2
     dup 3 pick action-add-sample    \ act smpl smpl2
+    dup 3 pick action-add-sample    \ act smpl smpl2
+    dup 3 pick action-add-sample    \ act smpl smpl2
+    dup 3 pick action-add-sample    \ act smpl smpl2
 
     cr 2 pick .action cr
 
@@ -62,6 +65,24 @@
     sample-deallocate
     sample-deallocate
     sample-deallocate
+    sample-deallocate
+
+    3 5 sample-new                  \ act smpl
+    dup 2 pick action-add-sample    \ act smpl
+
+    2 5 sample-new                  \ act smpl smpl
+    dup 3 pick action-add-sample    \ act smpl smpl
+
+    sample-deallocate
+    sample-deallocate
+
+    dup cr .action cr
+
+    2 2 sample-new                  \ act smpl
+    dup 2 pick action-add-sample    \ act smpl
+
+    over cr .action cr
+
     sample-deallocate
     action-deallocate
 ;

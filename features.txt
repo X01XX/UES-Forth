@@ -1,4 +1,5 @@
 Uses home-grown memory management.
+    Uses heap memory for data (allocate) instead of memory within the dictionary (alloc).
 
 Bits value is a number, not a struct.  No difference between state or mask.
 Limited by cell size, use of the sign bit may be tricky.

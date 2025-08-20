@@ -31,14 +31,6 @@
     [ ' .group ] literal swap .list
 ;
 
-: .group-region ( grp -- )
-    \ Check arg.
-    assert-tos-is-group
-
-    group-get-region
-    .region space
-;
-
 \ Print a list of group regions.
 : .group-list-regions ( grp-lst0 -- )
     \ Check args.
@@ -77,4 +69,60 @@
     else
         false
     then
+;
+
+\ Add a new square to appropriate groups.
+: group-list-add-square ( sqr1 grp-lst0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-square
+
+    list-get-links              \ sqr1 link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ sqr1 link grpx
+        2 pick                      \ sqr1 link grpx sqr1
+        square-get-state            \ sqr1 link grpx sta
+        over group-get-region       \ sqr1 link grpx sta regx
+        region-superset-of-state    \ sqr1 link grpx flag
+        if
+            2 pick swap             \ sqr1 link sqr1 grpx
+            group-add-square        \ sqr1 link
+        else
+            drop                    \ sqr1 link
+        then
+
+        link-get-next               \ sqr1 link
+    repeat
+                                    \ sqr1
+    drop
+;
+
+\  Have appropriate groups check a changed square.
+: group-list-check-square ( sqr1 grp-lst0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-square
+
+    list-get-links              \ sqr1 link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ sqr1 link grpx
+        2 pick                      \ sqr1 link grpx sqr1
+        square-get-state            \ sqr1 link grpx sta
+        over group-get-region       \ sqr1 link grpx sta regx
+        region-superset-of-state    \ sqr1 link grpx flag
+        if
+            2 pick swap             \ sqr1 link sqr1 grpx
+            group-check-square      \ sqr1 link
+        else
+            drop                    \ sqr1 link
+        then
+
+        link-get-next               \ sqr1 link
+    repeat
+                                    \ sqr1
+    drop
 ;

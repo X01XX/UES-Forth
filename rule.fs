@@ -660,68 +660,54 @@ rule-m11    cell+ constant rule-m10
     _rule-set-m00               \ rul
 ;
 
-\ Given four masks in a known order, add one to the m00 mask.
-: rule-adjust-mask-m00 ( m00 m01 m11 m10 -- m00+ m01 m11 m10 )
-                    \ m00 m01 m11 m10
-    2swap           \ m11 m10 m00 m01
-    swap            \ m11 m10 m01 m00
-    1+              \ m11 m10 m01 m00+
-    swap            \ m11 m10 m00 m01
-    2swap           \ m00 m01 m11 m10
+\ Add one to the m00 mask of a rule.
+: rule-adjust-mask-m00 ( rul -- )
+    dup rule-get-m00        \ rul m00
+    1+
+    swap                    \ m00 rul
+    _rule-set-m00
 ;
 
-\ Given four masks in a known order, add one to the m01 mask.
-: rule-adjust-mask-m01 ( m00 m01 m11 m10 -- m00 m01+ m11 m10 )
-                    \ m00 m01 m11 m10
-    2swap           \ m11 m10 m00 m01
-    1+              \ m11 m10 m00 m01+
-    2swap           \ m00 m01 m11 m10
+\ Add one to the m01 mask of a rule.
+: rule-adjust-mask-m01 ( rul -- )
+    dup rule-get-m01        \ rul m01
+    1+
+    swap                    \ m01 rul
+    _rule-set-m01
 ;
 
-\ Given four masks in a known order, add one to the m11 mask.
-: rule-adjust-mask-m11 ( m00 m01 m11 m10 -- m00 m01 m11+ m10 )
-                    \ m00 m01 m11 m10
-    swap            \ m00 m01 m10 m11
-    1+              \ m00 m01 m10 m11+
-    swap            \ m00 m01 m11 m10
+\ Add one to the m11 mask of a rule.
+: rule-adjust-mask-m11 ( rul -- )
+    dup rule-get-m11        \ rul m11
+    1+
+    swap                    \ m11 rul
+    _rule-set-m11
 ;
 
-\ Given four masks in a known order, add one to the m10 mask.
-: rule-adjust-mask-m10 ( m00 m01 m11 m10 -- m00 m01 m11 m10+ )
-                    \ m00 m01 m11 m10
-    1+              \ m00 m01 m11 m10+
+\ Add one to the m10 mask of a rule.
+: rule-adjust-mask-m10 ( rul -- )
+    dup rule-get-m10        \ rul m10
+    1+
+    swap                    \ m10 rul
+    _rule-set-m10
 ;
 
+\ Shift all masks left by 1 bit position.
+: rule-lshift ( rul -- )
+    dup rule-get-m00 1 lshift over _rule-set-m00
+    dup rule-get-m01 1 lshift over _rule-set-m01
+    dup rule-get-m11 1 lshift over _rule-set-m11
+    rule-get-m10 1 lshift over _rule-set-m10
+;
 
-\ Adjust masks for one bit position in a rule.
-: rule-adjust-masks ( m00 m01 m11 m10 ci cr -- m00 m01 m11 m10 )
-    \ left shift all masks
+: rule-adjust-masks ( ci cr rul0 -- )
+    \ Check arg
+    assert-tos-is-rule
 
-    \ Save two chars
-    2>r
-
-    \ Shift last two masks.
-    1 lshift
-    swap
-    1 lshift
-    swap
-
-    \ Swap top two.
-    2swap
-
-    \ Shift first two masks.
-    1 lshift
-    swap
-    1 lshift
-    swap
-
-    \ Swap top two, again.
-    2swap
+    dup rule-lshift
+    -rot                \ rul0 ci cr
+    swap                \ rul0 cr ci
     
-    \ restore two chars
-    2r>
-    swap            \ m00 m01 m11 m10 cr ci
-
     \ Process two chars
     case
         [char] 0 of
@@ -749,19 +735,19 @@ rule-m11    cell+ constant rule-m10
         [char] X of
             case
                 [char] 0 of \ process X->0 (1->0, 0->0)
-                    rule-adjust-mask-m00
+                    dup rule-adjust-mask-m00
                     rule-adjust-mask-m10
                 endof
                 [char] 1 of \ process X->1 (1->1, 0->1)
-                    rule-adjust-mask-m11
+                    dup rule-adjust-mask-m11
                     rule-adjust-mask-m01
                 endof
                 [char] X of \ process X->X (1->1, 0->0)
-                    rule-adjust-mask-m11
+                    dup rule-adjust-mask-m11
                     rule-adjust-mask-m00
                 endof
                 [char] x of \ process X->x (1->0, 0->1)
-                    rule-adjust-mask-m10
+                    dup rule-adjust-mask-m10
                     rule-adjust-mask-m01
                 endof
                 cr ." unexpected char" abort
@@ -774,35 +760,35 @@ rule-m11    cell+ constant rule-m10
 \ Return a rule from a string, like 00/01/11/10/XX/Xx/X0/X1/
 \ The slash (/) characters, *including the last*, are important as separators.
 \ The uderscore (_) character can also be used.
-: rule-from-string ( addn n -- rule )
-    0 -rot 0 -rot 0 -rot 0 -rot 0     \ 0 0 0 0 addr n 0
+: rule-from-string ( addr n -- rule )
+    \ Init rule.
+    _rule-allocate                  \ addr n rul
+    0 over _rule-set-m00
+    0 over _rule-set-m01
+    0 over _rule-set-m11
+    0 over _rule-set-m10            \ addr n rul
 
+    -rot                            \ rul addr n
     \ Check each pair of characters.
-    do                  \ 0 0 0 0 addr
-        dup c@          \ 0 0 0 0 addr ci
+    0                               \ rul addr n 0
+    do                              \ rul addr
+        dup c@                      \ rul addr ci
 
         case
-            [char] / of
-                >r                  \ 0 0 0 0 ci cr
-                rule-adjust-masks   \ 0 0 0 0
-                r>                  \ 0 0 0 0 addr
+            [char] / of             \ rul ci cr addr
+                -rot                \ rul addr ci cr
+                3 pick              \ rul addr ci cr rul
+                rule-adjust-masks   \ rul addr
             endof
             [char] _ of
-                >r                  \ 0 0 0 0 ci cr
-                rule-adjust-masks   \ 0 0 0 0
-                r>                  \ 0 0 0 0 addr
+                -rot                \ rul addr ci cr
+                3 pick              \ rul addr ci cr rul
+                rule-adjust-masks   \ rul addr
             endof
-            tuck                    \ 0 0 0 0 cx addr
+            tuck                    \ rul cx addr
         endcase
         1+
     loop
-                                    \ m00 m01 m11 m10 addr+
+                                    \ rul addr+
     drop
-
-    \ Construct rule instance.
-    _rule-allocate                  \ m00 m01 m11 m10 rul
-    tuck _rule-set-m10              \ m00 m01 m11 rul
-    tuck _rule-set-m11              \ m00 m01 rul
-    tuck _rule-set-m01              \ m00 rul
-    tuck _rule-set-m00              \ rul
 ;

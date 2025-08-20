@@ -147,6 +147,7 @@
     [ ' square-state-eq ] literal -rot list-member
 ;
 
+\ Return the highest pn value in a non-empty list of squares.
 : square-list-highest-pn ( list0 -- pn )
     \ Check arg.
     assert-tos-is-list
@@ -177,6 +178,62 @@
         link-get-next           \ max-pn link
     repeat
                             \ max-pn
+;
+
+\ Return a region built from squares of the highest pn value, in a non-empty list.
+: square-list-region ( sqr-lst0 -- reg )
+    \ Check arg.
+    assert-tos-is-list
+    dup list-is-empty
+    abort" List is empty?"
+
+    \ Get highest pn value
+    dup square-list-highest-pn swap \ pn sqr-lst
+
+    \ Prep for loop.
+    list-get-links                  \ pn link
+    0 swap                          \ pn reg link
+
+    \ Scan square list.
+    begin
+        ?dup
+    while
+        \ Check if square pn is equal to the max pn of the list.
+        dup link-get-data               \ pn reg link sqr
+        dup square-get-pn               \ pn reg link sqr s-pn
+        4 pick                          \ pn reg link sqr s-pn max-pn
+        <> if
+            drop                        \ pn reg link
+        else
+            square-get-state            \ pn reg link sta
+            rot                         \ pn link sta reg
+            dup 0=
+            if
+                                        \ pn link sta 0
+                drop                        \ pn link sta
+                dup                         \ pn link sta sta
+                region-new                  \ pn link reg
+                swap                        \ pn reg link
+            else
+                                            \ pn link sta reg
+                2dup                        \ pn link sta reg sta reg
+                region-superset-of-state    \ pn link sta reg flag
+                if
+                    nip swap                \ pn reg link
+                else
+                    \ Add state to expand return region.
+                    tuck                    \ pn link reg sta reg
+                    region-union-state      \ pn link reg reg2
+                    swap region-deallocate  \ pn link reg2
+                    swap                    \ pn reg2 link
+                then
+            then
+        then
+        
+        link-get-next           \ pn reg link
+    repeat
+                                \ pn reg
+    nip                         \ reg
 ;
 
 \ Return rules for a non-empty square-list, having no incompatible squares.

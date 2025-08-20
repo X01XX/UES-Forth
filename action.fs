@@ -632,8 +632,8 @@ action-logical-structure    cell+ constant action-groups                \ A grou
         0=
         abort" square not found?"
 
-        cr dup .square cr
-        cr over .square cr
+        \ cr dup .square cr
+        \ cr over .square cr
         square-compare          \ ret-lst act0 link region compare-result
 
         [char] I =              \ ret-lst act0 link region flag
@@ -789,7 +789,10 @@ action-logical-structure    cell+ constant action-groups                \ A grou
             swap
             2dup
             _action-check-incompatible-pairs
+            2dup
             _action-check-square
+            action-get-groups
+            group-list-check-square
         else
             2drop
         then
@@ -802,7 +805,10 @@ action-logical-structure    cell+ constant action-groups                \ A grou
         action-get-squares      \ act0 sqr sqr sqrlst
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
+        2dup
         _action-check-square
+        action-get-groups
+        group-list-add-square
     then
 ;
 

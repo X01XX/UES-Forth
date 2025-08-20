@@ -1,13 +1,14 @@
 \ Implement a group struct and functions.
 
 23197 constant group-id                                                                                  
-    4 constant group-struct-number-cells
+    5 constant group-struct-number-cells
 
 \ Struct fields
 0 constant group-header                         \ id (16) use count (16) pn (8) pnc (8)
-group-header   cell+ constant group-region      \ The group region.
-group-region   cell+ constant group-squares     \ A square list.
-group-squares  cell+ constant group-rules       \ A RuleStore.
+group-header    cell+ constant group-region     \ The group region.
+group-region    cell+ constant group-r-region   \ A Region covered the group rules, often a proper subset of the group-region.
+group-r-region  cell+ constant group-squares    \ A square list.
+group-squares   cell+ constant group-rules      \ A RuleStore.
 
 0 value group-mma \ Storage for group mma instance.
 
@@ -81,6 +82,22 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
 : _group-set-region ( reg1 addr -- )
     over struct-inc-use-count
     group-region +      \ Add offset.
+    !                   \ Set field.
+;
+
+\ Return the group squares region. 
+: group-get-r-region ( addr -- reg )
+    \ Check arg.
+    assert-tos-is-group
+
+    group-r-region +    \ Add offset.
+    @                   \ Fetch the field.
+;
+ 
+\ Set the square region of a group instance, use only in this file.
+: _group-set-r-region ( reg1 addr -- )
+    over struct-inc-use-count
+    group-r-region +    \ Add offset.
     !                   \ Set field.
 ;
 
@@ -177,6 +194,10 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
     tuck                        \ s addr r addr
     _group-set-region           \ s addr
 
+    \ Set r-region
+    over square-list-region     \ s addr reg
+    over _group-set-r-region    \ s addr
+
     \ Set rules
     over square-list-get-rules  \ s addr result flag
     0=
@@ -220,6 +241,7 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
     if
         \ Deallocate instance.
         dup group-get-region region-deallocate
+        dup group-get-r-region region-deallocate
         dup group-get-rules rulestore-deallocate
         dup group-get-squares square-list-deallocate
         group-mma mma-deallocate
@@ -241,6 +263,8 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
 : .group ( grp -- )
     ." Grp: "
     dup group-get-region .region
+    space ." - "
+    dup group-get-r-region .region
     space
     dup group-get-rules  .rulestore
     space
@@ -249,4 +273,101 @@ group-squares  cell+ constant group-rules       \ A RuleStore.
 
 : .group-region ( grp -- )
     group-get-region .region
+;
+
+\ Check a square for effects on the r-region and rules.
+\ Used for a new, or changed, square.
+: group-check-square ( sqr1 grp0 -- )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-square
+
+    \ Check square belongs in group.
+    over square-get-state       \ sqr1 grp0 sta
+    over group-get-region       \ sqr1 grp0 sta reg
+    region-superset-of-state    \ sqr1 grp0 flag
+    0= abort" square not in group?"
+
+    \ Check if square is outside of the current rule region.
+    over square-get-state       \ sqr1 grp0 sta
+    over group-get-r-region     \ sqr1 grp0 sta sreg
+    region-superset-of-state    \ sqr1 grp0 flag
+    0= if
+                                \ sqr1 grp0
+        \ Check square pn
+        over square-get-pn      \ sqr1 grp0 s-pn
+        over group-get-pn       \ sqr1 grp0 s-pn g-pn
+        =
+        if
+            \ Expand group rule region.
+            over square-get-state   \ sqr1 grp0 sta
+            over group-get-r-region \ sqr1 grp0 sta sreg
+            tuck                    \ sqr1 grp0 sreg sta sreg
+            region-union-state      \ sqr1 grp0 sreg sreg2
+
+            \ Print change.
+            cr 2 pick group-get-region ." group " .region
+            space ." change r-region from " over .region
+            space ." to " dup .region cr
+
+            2 pick                  \ sqr1 grp0 sreg sreg2 grp0
+            _group-set-r-region     \ sqr1 grp0 sreg
+
+            \ Dealloc previous region.
+            region-deallocate       \ sqr1 grp0
+
+            \ Adjust rules, if pn < 3/U.
+            over square-get-pn      \ sqr1 grp0 s-pn
+            3 <>
+            if
+                dup group-get-rules     \ sqr1 grp0 rul-str
+                over                    \ sqr1 grp0 rul-str grp0
+                group-get-squares       \ sqr1 grp0 rul-str sqr-lst
+                square-list-get-rules   \ sqr1 grp0 old-rul-str, new-rul-str true | false
+                0= abort" no rulestore from square-list?"
+
+                \ Print change.
+                cr 2 pick group-get-region ." group " .region
+                space ." change rules from " over .rulestore
+                space ." to " dup .rulestore cr
+            
+                2 pick                  \ sqr1 grp0 old-rul-str new-rul-str grp0
+                _group-set-rules        \ sqr1 grp0 old-rul-str
+                rulestore-deallocate    \ sqr1 grp0
+            then
+        then
+    then
+                                    \ sqr1 grp0
+    2drop
+;
+
+\ Add a square to a group.
+: group-add-square ( sqr1 grp0 -- )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-square
+
+    \ Check square belongs in group.
+    over square-get-state       \ sqr1 grp0 sta
+    over group-get-region       \ sqr1 grp0 sta reg
+    region-superset-of-state    \ sqr1 grp0 flag
+    0= abort" square not in group?"
+
+    \ Check if square is already in the group.
+    \ Possibly the square is in the group due to altering the incompatible pair list
+    \ and logical structure.
+    over square-get-state       \ sqr1 grp0 sta
+    over group-get-squares      \ sqr1 grp0 sta sqr-lst
+    square-list-member          \ sqr1 grp0 flag
+    if
+        2drop
+        exit
+    then
+
+    \ Add square to square list.
+    over                        \ sqr1 grp0 sqr1
+    over group-get-squares      \ sqr1 grp0 sqr1 sqr-lst
+    square-list-push            \ sqr1 grp0
+
+    group-check-square
 ;
