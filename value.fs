@@ -1,12 +1,12 @@
 \ Return true if a number is a valid value.
 : is-value ( u -- flag )
-    dup domain-all-bits-xt execute and
+    dup cur-domain-all-bits-xt execute and
     =
 ;
  
 \ Return true if a number is an invalid value.
 : is-not-value ( u -- flag )
-    dup domain-all-bits-xt execute and
+    dup cur-domain-all-bits-xt execute and
     <>
 ;
 
@@ -34,7 +34,7 @@
     assert-tos-is-value
 
     \ Setup for bit-position loop.
-    domain-ms-bit-xt execute   ( val0 ms-bit)
+    cur-domain-ms-bit-xt execute   ( val0 ms-bit)
 
     \ Process each bit.
     begin

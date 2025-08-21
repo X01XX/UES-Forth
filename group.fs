@@ -371,3 +371,15 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
 
     group-check-square
 ;
+
+\ Return true if two groups are equal.
+: group-eq ( grp1 grp0 -- flag )
+     \ Check args.
+    assert-tos-is-group
+    assert-nos-is-group
+
+    group-get-region
+    swap
+    group-get-region
+    region-eq
+;

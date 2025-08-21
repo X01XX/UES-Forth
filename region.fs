@@ -136,8 +136,8 @@ region-state-0 cell+ constant region-state-1
     \ Setup for bit-position loop.
     dup  region-get-state-1
     swap region-get-state-0
-    domain-ms-bit-xt execute    \ st2 st1 ms-bit
-    
+    cur-domain-ms-bit-xt execute    \ st2 st1 ms-bit
+
     \ Process each bit.
     begin
       dup
@@ -199,11 +199,7 @@ region-state-0 cell+ constant region-state-1
     dup struct-get-use-count      \ reg0 count
 
     2 <
-    if 
-        \ Clear fields.
-        0 over _region-set-state-0
-        0 over _region-set-state-1
-
+    if
         \ Deallocate instance.
         region-mma mma-deallocate
     else

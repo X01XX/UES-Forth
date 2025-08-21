@@ -1,31 +1,17 @@
 \ Implement a Session struct and functions.                                                                                             
 
 31319 constant session-id
-    2 constant session-struct-number-cells
+    3 constant session-struct-number-cells
 
 \ Struct fields
 0 constant session-header    \ 16-bits [0] struct id [1] use count
-session-header               cell+ constant session-domains               \ A domain-list
+session-header              cell+ constant session-domains              \ A domain-list
+session-domains             cell+ constant session-current-domain       \ A domain, or zero before first domain is added.
 
-0 value session-mma \ Storage for session mma instance.
-
-\ Init session mma, return the addr of allocated memory.
-: session-mma-init ( num-items -- ) \ sets session-mma.
-    dup 1 < 
-    abort" session-mma-init: Invalid number of items."
-
-    cr ." Initializing Session store."
-    session-struct-number-cells swap mma-new to session-mma
-;
+0 value session-addr \ Storage for session address.
 
 \ Check instance type.
 : is-allocated-session ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup session-mma mma-within-array 0=
-    if  
-        drop false exit
-    then
-
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
     session-id =    
 ;
@@ -51,7 +37,7 @@ session-header               cell+ constant session-domains               \ A do
     @                   \ Fetch the field.
 ;
 
-\ Return the action-list from an session instance.
+\ Set the domain-list for an session instance.
 : _session-set-domains ( lst ses0 -- )
     \ Check arg.
     assert-tos-is-session
@@ -61,34 +47,61 @@ session-header               cell+ constant session-domains               \ A do
     !                   \ Set the field.
 ;
 
+\ Return the current domain from an session instance.
+: session-get-current-domain ( ses0 -- dom )
+    \ Check arg.
+    assert-tos-is-session
+
+    session-current-domain +    \ Add offset.
+    @                           \ Fetch the field.
+;
+
+' session-get-current-domain to session-get-current-domain-xt
+
+\ Set the current domain for an session instance.
+: session-set-current-domain ( dom ses0 -- )
+    \ Check arg.
+    assert-tos-is-session
+    over 0<> if
+        assert-nos-is-domain
+    then
+
+    session-current-domain +    \ Add offset.
+    !                           \ Set the field.
+;
+
 \ End accessors.
 
 \ Create an session, given an instance ID.
 : session-new ( -- addr)
     
     \ Allocate space.
-    session-mma mma-allocate        \ val0 ses
-    
+    \ session-mma mma-allocate        \ses
+    session-struct-number-cells cells allocate
+    abort" Session allocation failed"
+
     \ Store id.
-    session-id over                 \ val0 ses id ses
-    struct-set-id                   \ val0 ses
-    
+    session-id over                 \ ses id ses
+    struct-set-id                   \ ses
+
     \ Init use count.
-    0 over struct-set-use-count     \ val0 ses
+    1 over struct-set-use-count     \ ses
 
     \ Set domains list.             
     list-new                        \ ses lst
     dup struct-inc-use-count        \ ses lst
     over _session-set-domains       \ ses
+
+    \ Zero-out current domain.
+    0 over session-set-current-domain
 ;
 
 \ Print a session.
-: .session ( act0 -- )
+: .session ( sess0 -- )
     \ Check arg.
     assert-tos-is-session
 
     ." Sess: "
-
     dup session-get-domains
     dup list-get-length
     ."  num domains: " .
@@ -96,21 +109,34 @@ session-header               cell+ constant session-domains               \ A do
 ;
 
 \ Deallocate a session.
-: session-deallocate ( act0 -- )
+: session-deallocate ( ses0 -- )
     \ Check arg.
     assert-tos-is-session
 
-    dup struct-get-use-count      \ act0 count
+    \ Clear fields.
+    dup session-get-domains domain-list-deallocate
 
-    2 <
-    if 
-        \ Clear fields.
-        dup session-get-domains domain-list-deallocate
-
-        \ Deallocate instance.
-        session-mma mma-deallocate
-    else
-        struct-dec-use-count
-    then
+    \ Deallocate instance.
+    0 over struct-set-id
+    free
+    abort" session free failed"
 ;
 
+: session-add-domain ( dom1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-domain
+
+    \ Add domain
+    2dup                    \ dom1 sess0 dom1 sess0
+    session-get-domains     \ dom1 sess0 dom1 dom-lst
+    domain-list-push        \ dom1 sess0
+
+    \ Set current-domain, if it is zero/invalid.
+    dup session-get-current-domain  \ dom1 sess0 cur-dom
+    0= if
+        session-set-current-domain
+    else
+        2drop
+    then
+;

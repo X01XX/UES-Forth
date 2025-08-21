@@ -3,38 +3,49 @@
 \
 \ Source code reordering can sometimes solve this, but it is not always easy, or aesthetic, and can change with new code.
 \
-\ So a place holder is defined here, like: ' abort value <function-name>-xt
+\ So a place holder is defined here, like: ' xtabort value <function-name>-xt
 \
 \ In a file before a function is defined, use a line like: "<function-name>-xt execute" instead of "<function-name>"
 \
 \ After the function is defined, add a line like: ' <function-name> to <function-name>-xt
 \
 
-' abort value domain-all-bits-xt
+: xtabort
+    ." indirect xt not initialized"
+    abort
+;
 
-' abort value domain-ms-bit-xt
+' xtabort value cur-domain-all-bits-xt
 
-' abort value domain-max-region-xt
+' xtabort value cur-domain-ms-bit-xt
 
-' abort value domain-inst-id-xt
+' xtabort value cur-domain-max-region-xt
 
-' abort value action-inst-id-xt
+' xtabort value cur-domain-inst-id-xt
 
-' abort value region-new-xt
+' xtabort value cur-domain-current-state-xt
 
-' abort value region-subtract-state-xt
-
-' abort value region-deallocate-xt
+' xtabort value domain-get-current-action-xt
 
 
-' abort value region-list-set-union-xt
+' xtabort value cur-action-inst-id-xt
 
-' abort value region-list-deallocate-xt
+' xtabort value region-new-xt
 
-' abort value region-list-push-xt
+' xtabort value region-subtract-state-xt
 
-' abort value region-list-subtract-region-xt
+' xtabort value region-deallocate-xt
 
+
+' xtabort value region-list-set-union-xt
+
+' xtabort value region-list-deallocate-xt
+
+' xtabort value region-list-push-xt
+
+' xtabort value region-list-subtract-region-xt
+
+' xtabort value session-get-current-domain-xt
 
 
 

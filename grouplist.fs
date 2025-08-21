@@ -41,14 +41,21 @@
     ." )"
 ;
 
-\ Push a group to a group-list.
+\ Push a group to a group-list, unluss it is already in the list.
 : group-list-push ( grp1 list0 -- )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-group
 
-    over struct-inc-use-count
-    list-push
+    2dup
+    [ ' group-eq ] literal -rot
+    list-member
+    if
+        2drop
+    else
+        over struct-inc-use-count
+        list-push
+    then
 ;
 
 \ Remove a group from a group-list, and deallocate.

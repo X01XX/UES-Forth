@@ -1,7 +1,7 @@
 \ Return the Boolean "NOT" of an unsigned number,
 \ while remaining within the bounds of allowable bits.
 : !not ( u1 -- u2 )
-    domain-all-bits-xt execute
+    cur-domain-all-bits-xt execute
     xor
 ;
 

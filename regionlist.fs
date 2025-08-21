@@ -41,14 +41,21 @@
     [ ' .region ] literal swap .list
 ;
 
-\ Push a region to a region-list.
+\ Push a region to a region-list, unless it is already in the list.
 : region-list-push ( reg1 list0 -- )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-region
 
-    over struct-inc-use-count
-    list-push
+    2dup
+    [ ' region-eq ] literal -rot
+    list-member
+    if
+        2drop
+    else
+        over struct-inc-use-count
+        list-push
+    then
 ;
 
 ' region-list-push to region-list-push-xt
@@ -295,7 +302,8 @@
     assert-tos-is-list
 
     list-new                    \ lst0 lst1
-    domain-max-region-xt execute           \ lst0 lst1 regM
+    cur-domain-max-region-xt    \ lst0 lst1 xt
+    execute                     \ lst0 lst1 regM
     over region-list-push       \ lst0 lst1
     2dup                        \ lst0 lst1 lst0 lst1
     region-list-subtract        \ lst0 lst1 lst2

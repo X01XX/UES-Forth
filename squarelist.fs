@@ -56,10 +56,9 @@
 
     2dup
     [ ' square-eq ] literal -rot
-    list-find
+    list-member
     if
-        drop 2drop
-        cr ." square-list-push: dropping" cr
+        2drop
     else
         over struct-inc-use-count
         list-push

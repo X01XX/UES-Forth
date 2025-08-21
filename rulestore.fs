@@ -326,7 +326,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         false
         exit
     then
-    cr ." ru 10 " dup .rule cr
+    \ cr ." ru 10 " dup .rule cr
 
     -rot                        \ rul01 rs1 rs0
     rulestore-get-rule-1        \ rul01 rs1 rs0-1
@@ -335,7 +335,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
     rule-union                  \ rul01, rul10 true | false
     if                          \ rul01 rul10
-        cr ." ru 01 " dup .rule cr
+        \ cr ." ru 01 " dup .rule cr
         rulestore-new-2
         true
     else                        \ rul01
@@ -357,6 +357,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         -rot                        \ rs3 rs1 rs0
         rulestore-union-10          \ rs3, rs4 true | false
         if                          \ rs3 rs4
+            \ cr ." too compatible" cr
             rulestore-deallocate
             rulestore-deallocate
             false

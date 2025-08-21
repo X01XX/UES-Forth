@@ -2,6 +2,7 @@
 
 : .action-list ( actlst0 -- )
     drop
+    cr ." .action-list TODO" cr
 ;
 
 : action-list-deallocate ( actlst0 -- )
@@ -16,7 +17,7 @@
 
     dup list-get-length     \ act act-lst len
     2 pick                  \ act act-lst len act
-    _action-set-inst-id     \ act act-lst
+    action-set-inst-id      \ act act-lst
     1 pick struct-inc-use-count
     list-push
 ;

@@ -381,7 +381,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
         2drop drop false exit
     then
 
-    \ Exit if no more checks can be made.
+    \ Exit if no more checks can be maderegion-eq.
     over 2 =
     if
         2drop drop true exit
@@ -523,8 +523,8 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     if                                  \ rf sqr0 pn pn-new
         swap                            \ rf sqr0 pn-new pn
         2 pick square-get-state         \ rf sqr0 pn-new pn sta
-        cr ." Dom: " domain-inst-id-xt execute . space
-           ." Act: " action-inst-id-xt execute . space
+        cr ." Dom: " cur-domain-inst-id-xt execute . space
+           ." Act: " cur-action-inst-id-xt execute . space
         ." square " .value space ." pn changed from " .pn space ." to " dup .pn cr
                                         \ rf sqr0 pn-new
         \ Save new pn
@@ -819,7 +819,22 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
 \ Return true if a square-state is a subset of a region.
 : square-state-in-region ( reg1 sqr0 -- flag )
+    \ Check args.
+    assert-tos-is-square
+    assert-nos-is-region
+
     square-get-state
     swap
     region-superset-of-state
+;
+
+\ Return the last, that is most-recent, result.
+: square-get-last-result ( sqr -- rslt )
+    \ Check arg.
+    assert-tos-is-square
+
+    dup square-get-result-count     \ sqr cnt
+    1- 4 mod                        \ sqr index
+    swap                            \ inx sqr
+    square-get-result               \ rslt
 ;

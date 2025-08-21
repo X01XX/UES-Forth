@@ -1,7 +1,7 @@
 \ Implement a Action struct and functions.                                                          
 
 29717 constant action-id
-    5 constant action-struct-number-cells
+    6 constant action-struct-number-cells
 
 \ Struct fields
 0 constant action-header    \ (16) struct id (16) use count (8) instance id 
@@ -9,6 +9,7 @@ action-header               cell+ constant action-squares               \ A squa
 action-squares              cell+ constant action-incompatible-pairs    \ A region-list
 action-incompatible-pairs   cell+ constant action-logical-structure     \ A region-list
 action-logical-structure    cell+ constant action-groups                \ A group-list.
+action-groups               cell+ constant action-xt                    \ An xt to run to get a sample.
 
 0 value action-mma \ Storage for action mma instance.
 
@@ -67,7 +68,7 @@ action-logical-structure    cell+ constant action-groups                \ A grou
 ;
  
 \ Set the instance ID of an action instance, use only in this file.
-: _action-set-inst-id ( u1 act0 -- )
+: action-set-inst-id ( u1 act0 -- )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-value
@@ -161,12 +162,32 @@ action-logical-structure    cell+ constant action-groups                \ A grou
     !                   \ Set the field.
 ;
 
-: action-inst-id ( -- id )
-    current-action
+\ Return the group-list from an action instance.
+: action-get-xt ( act0 -- lst )
+    \ Check arg.
+    assert-tos-is-action
+
+    action-xt +         \ Add offset.
+    @                   \ Fetch the field.
+;
+ 
+\ Set the group-list of an action instance, use only in this file.
+: _action-set-xt ( xt act0 -- )
+    \ Check args.
+    assert-tos-is-action
+
+    action-xt +         \ Add offset.
+    !                   \ Set the field.
+;
+
+: cur-action-inst-id ( -- id )
+    current-session                             \ sess
+    session-get-current-domain-xt execute       \ dom
+    domain-get-current-action-xt execute        \ act
     action-get-inst-id
 ;
 
-' action-inst-id to action-inst-id-xt
+' cur-action-inst-id to cur-action-inst-id-xt
 
 \ Return true if a region, in the logical structure, is a defining region.
 : action-region-is-defining ( reg1 act0 -- flag )
@@ -367,25 +388,28 @@ action-logical-structure    cell+ constant action-groups                \ A grou
 
 \ End accessors.
 
-\ Create an action, given an instance ID.
-\ The instance ID will likely be reset to match its position in a list,
+\ Create an action, given an xt to get a sample.
+\ The instance ID defaults to zero.
+\ It will likely be reset to match its position in a list, using action-set-inst-id,
 \ which avoids duplicates and may be useful as an index into the list.
-: action-new ( val0 -- addr)
-    \ Check args.
-    assert-tos-is-value
+: action-new ( xt1 -- addr)
 
     \ Allocate space.
-    action-mma mma-allocate     \ val0 actr
+    action-mma mma-allocate     \ xt1 actr
 
-    \ Store id.
-    action-id over              \ val0 act id act
-    struct-set-id               \ val0 act
+    \ Store struct id.
+    action-id over              \ xt1 act id act
+    struct-set-id               \ xt1 act
     
     \ Init use count.
-    0 over struct-set-use-count \ val0 act
+    0 over struct-set-use-count \ xt1 act
 
     \ Set intance ID.
-    tuck _action-set-inst-id    \ act
+    0 over
+    action-set-inst-id              \ xt1 act
+
+    \ Set xt
+    tuck _action-set-xt             \ act
 
     \ Set squares list.
     list-new                        \ act lst
@@ -400,7 +424,7 @@ action-logical-structure    cell+ constant action-groups                \ A grou
     \ Set logical-structure list.
     list-new                            \ act lst
     dup struct-inc-use-count            \ act lst
-    domain-max-region-xt execute        \ act lst mxreg
+    cur-domain-max-region-xt execute    \ act lst mxreg
     over region-list-push               \ act lst
     over _action-set-logical-structure  \ act
 
@@ -658,7 +682,7 @@ action-logical-structure    cell+ constant action-groups                \ A grou
 
     \ Init new logical-structure region list.
     list-new                                \ act0 ls-new
-    domain-max-region-xt execute            \ act0 ls-new max-reg
+    cur-domain-max-region-xt execute        \ act0 ls-new max-reg
     over region-list-push                   \ act0 ls-new
     
     2 pick                                  \ act0 ls-new act0
@@ -809,6 +833,46 @@ action-logical-structure    cell+ constant action-groups                \ A grou
         _action-check-square
         action-get-groups
         group-list-add-square
+    then
+;
+
+\ Return true if two actions are equal.
+: action-eq ( act1 act0 -- flag )
+     \ Check args.
+    assert-tos-is-action
+    assert-nos-is-action
+
+    action-get-inst-id
+    swap
+    action-get-inst-id
+    =
+;
+
+\ Take an action, to get a sample.
+: action-get-sample ( act0 -- smpl )
+     \ Check args.
+    assert-tos-is-action
+
+    cur-domain-current-state-xt \ act0 xt
+    execute                     \ act0 cur
+    swap                        \ cur act0
+
+    over                        \ cur act0 cur
+    over action-get-squares     \ cur act0 cur sqr-lst
+    square-list-find            \ cur act0, sqrx true | false
+
+    if                          \ cur act0 sqrx
+        square-get-last-result  \ cur act0 rslt
+        -rot                    \ rslt cur act0
+        true -rot               \ rslt true cur act0
+        action-get-xt           \ rslt true cur xt
+        execute                 \ smpl
+    else                        \ cur act0
+                                \ cur act0
+        0 -rot                  \ 0 cur act0
+        0 -rot                  \ 0 0 cur act0
+        action-get-xt           \ 0 0 cur xt
+        execute                 \ smpl
     then
 ;
 
