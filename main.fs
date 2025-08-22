@@ -180,8 +180,10 @@ cr ." main.fs"
     rulestore-tests
     state-tests
 
+    memory-use
+    cr cr ." Deallocating ..." cr
     current-session session-deallocate
 
-    \ memory-use
+    memory-use
     test-none-in-use
 ;
