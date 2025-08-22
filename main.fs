@@ -162,12 +162,8 @@ cr ." main.fs"
     4 domain-new                        \ dom
     \ to current-domain
 
-    dup current-session                 \ dom dom sess
+    current-session                     \ dom sess
     session-add-domain                  \ dom
-
-    [ ' act-0-get-sample ] literal      \ dom xt
-    action-new                          \ dom act
-    swap domain-add-action              \
 ;
 
 : all-tests

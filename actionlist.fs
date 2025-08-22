@@ -18,7 +18,14 @@
     dup list-get-length     \ act act-lst len
     2 pick                  \ act act-lst len act
     action-set-inst-id      \ act act-lst
-    1 pick struct-inc-use-count
+    over struct-inc-use-count
     list-push
 ;
 
+\ Find a action in a list, by instance id, if any.
+: action-list-find ( id1 list0 -- dom true | false )
+    \ Check args.
+    assert-tos-is-list
+
+    [ ' action-id-eq ] literal -rot list-find
+;

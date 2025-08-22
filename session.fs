@@ -133,10 +133,48 @@ session-domains             cell+ constant session-current-domain       \ A doma
     domain-list-push        \ dom1 sess0
 
     \ Set current-domain, if it is zero/invalid.
-    dup session-get-current-domain  \ dom1 sess0 cur-dom
-    0= if
-        session-set-current-domain
+    session-set-current-domain
+;
+
+\ Get a sample from an action in a domain.
+: session-get-sample ( act2 dom1 sess0 -- sample )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-domain
+    assert-3os-is-action
+
+    2dup session-set-current-domain
+    -rot                        \ sess0 act2 dom1
+    2dup domain-get-sample      \ sess0 act2 dom1 sample
+    cr dup .sample
+
+    nip nip nip
+;
+
+\ Return a sample fom a domain/action, given numeric id values.
+: session-get-sample-by-inst-id ( act-id2 dom-id1 sess0 -- sample true | false )
+    \ Check args.
+    assert-tos-is-session
+
+    swap                            \ act-id2 sess0 dom-id1
+    over session-get-domains        \ act-id2 sess0 dom-id dom-lst
+    domain-list-find                \ act-id2 sess0, dom true | false
+    if
+                                    \ act-id2 sess0 dom
+        rot                         \ sess0 dom act-id2
+        over domain-get-actions     \ sess0 dom act-id2 act-lst
+        action-list-find            \ sess0 dom, act true | false
+        if                          \ sess0 dom act
+            swap                    \ sess0 act dom
+            rot                     \ act dom sess0
+            session-get-sample      \ sample
+        else
+            cr ." Action not found" cr
+            2drop false
+        then
     else
-        2drop
+        cr ." Domain not found" cr
+        2drop false
     then
 ;
+

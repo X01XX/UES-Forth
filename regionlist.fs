@@ -239,7 +239,6 @@
                 begin
                     dup
                 while
-                    \ cr ." at 2" cr
                     dup link-get-data       \ ret-lst reg1 link r-lst link reg2
                     5 pick                  \ ret-lst reg1 link r-lst link reg2 ret-lst
                     region-list-push-nosubs \ ret-lst reg1 link r-lst link flag

@@ -277,3 +277,17 @@ decimal
 ;
 
 
+\ Return most significant bit mask for a given number of bits.
+: ms-bit ( nb0 -- u )
+    1 swap              \ 1 nb0
+    1-                  \ 1 nb0-
+    lshift              \ msb
+;
+
+\ Return mask of all bits used, given number of bits.
+: all-bits ( nb0 -- u )
+    ms-bit
+    1-
+    1 lshift
+    1 +
+;

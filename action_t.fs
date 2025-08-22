@@ -3,7 +3,8 @@
 \ Test adding samples and changing the logical structure, incompatible pairs.
 : action-test-add-sample
 
-    [ ' act-0-get-sample ] literal  \ xt
+    4                               \ 4
+    [ ' act-0-get-sample ] literal  \ 4 xt
     action-new                      \ act
     cr dup .action cr
 

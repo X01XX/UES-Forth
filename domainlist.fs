@@ -18,8 +18,15 @@
     dup list-get-length     \ dom dom-lst len
     2 pick                  \ dom dom-lst len dom
     domain-set-inst-id      \ dom dom-lst
-    1 pick struct-inc-use-count
+    over struct-inc-use-count
     list-push
 ;
 
+\ Find a domain in a list, by instance id, if any.
+: domain-list-find ( id1 list0 -- dom true | false )
+    \ Check args.
+    assert-tos-is-list
+
+    [ ' domain-id-eq ] literal -rot list-find
+;
 

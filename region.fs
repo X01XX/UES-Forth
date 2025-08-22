@@ -78,7 +78,6 @@ region-state-0 cell+ constant region-state-1
 : _region-set-state-0 ( u1 addr -- )
     \ Check args.
     assert-tos-is-region
-    assert-nos-is-value
 
     region-state-0 +    \ Add offset.
     !                   \ Set first field.
@@ -88,7 +87,6 @@ region-state-0 cell+ constant region-state-1
 : _region-set-state-1 ( u1 addr -- )
     \ Check args.
     assert-tos-is-region
-    assert-nos-is-value
 
     region-state-1 +    \ Add offset.
     !                   \ Set second field.
@@ -96,15 +94,9 @@ region-state-0 cell+ constant region-state-1
 
 \ End accessors.
 
-\ Create a region from two numbers on the stack.
-\ The numbers may be the same.
-\ If you want to keep the region on the stack, or in a value, or variable,
-\ run dup struct-inc-use-count, then deallocate it from there when done using it.
-\ If you want to push the region onto a list, region-list-push will increment the use count.
-: region-new ( u1 u0 -- addr)
-    \ Check args.
-    assert-tos-is-value
-    assert-nos-is-value
+\ Create a region from two numbers on the stack, without checking their validity.
+\ Split from region-new to allow adding an act0 in domain-new.
+: region-new2 ( u1 u0 -- addr)
 
     \ Allocate space.
     region-mma mma-allocate     \ u1 u2 addr
@@ -112,7 +104,7 @@ region-state-0 cell+ constant region-state-1
     \ Store id.
     region-id over              \ u1 u2 addr id addr
     struct-set-id               \ u1 u2 addr
-    
+
     \ Init use count.
     0 over struct-set-use-count
 
@@ -124,6 +116,20 @@ region-state-0 cell+ constant region-state-1
     \ Store states
     _region-set-state-1     \ addr u1 addr
     _region-set-state-0     \ addr
+;
+
+\ Create a region from two numbers on the stack.
+\ The numbers may be the same.
+\ If you want to keep the region on the stack, or in a value, or variable,
+\ run dup struct-inc-use-count, then deallocate it from there when done using it.
+\ If you want to push the region onto a list, region-list-push will increment the use count.
+: region-new ( u1 u0 -- addr )
+    \ Check args.
+    assert-tos-is-value
+    assert-nos-is-value
+
+    \ Make a new region without checking the values.
+    region-new2
 ;
 
 ' region-new to region-new-xt
@@ -689,4 +695,12 @@ region-state-0 cell+ constant region-state-1
     repeat
                                     \ reg0 ret-lst
     nip                             \ ret-lst
+;
+
+\ Return a maximum region, given a number of bits.
+\ Purely to allow adding a act0 in domain-new.
+: max-region ( nb0 -- reg )
+    all-bits 0
+
+    region-new2
 ;

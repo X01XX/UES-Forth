@@ -196,15 +196,24 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     domain-set-inst-id              \ nb0 dom
 
     \ Set num bits.
-    tuck _domain-set-num-bits       \ dom
+    2dup _domain-set-num-bits       \ nb0 dom
 
     \ Set actions list.             
-    list-new                        \ dom lst
-    dup struct-inc-use-count        \ dom lst
-    over _domain-set-actions        \ dom
+    list-new                        \ nb0 dom lst
+    dup struct-inc-use-count        \ nb0 dom lst
+    2dup swap                       \ nb0 dom lst lst dom
+    _domain-set-actions             \ nb0 dom lst
 
+    \ Add action 0.
+    rot                             \ dom lst nb0
+    [ ' act-0-get-sample ] literal  \ dom lst nb0 xt
+    action-new                      \ dom lst act
+    tuck swap                       \ dom act act lst
+    
+    action-list-push                \ dom act
+
+    over domain-set-current-action  \ dom
     0 over domain-set-current-state \ dom
-    0 over domain-set-current-action
 ;
 
 \ Print a domain.
@@ -249,15 +258,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     2dup                    \ act1 dom0 act1 dom0
     domain-get-actions      \ act1 dom0 act1 act-lst
-    action-list-push
+    action-list-push        \ act1 dom0
 
-    \ Set current action, if its zero/invalid.
-    dup domain-get-current-action   \ act1 dom0 cur-act
-    0= if
-        domain-set-current-action
-    else
-        2drop
-    then
+    domain-set-current-action
 ;
 
 \ Functions that will eventually use current-domain value.
@@ -270,16 +273,14 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
 \ Return most significant bit mask for a domain.
 : cur-domain-ms-bit ( -- u )
-    1
-    current-session session-get-current-domain-xt execute
-    domain-get-num-bits 1- lshift
+    cur-domain-num-bits ms-bit
 ;
 
 ' cur-domain-ms-bit to cur-domain-ms-bit-xt
 
 \ Return mask of all bits used.
 : cur-domain-all-bits ( -- u )
-    cur-domain-ms-bit 1- 1 lshift 1+
+    cur-domain-num-bits all-bits
 ;
 
 ' cur-domain-all-bits to cur-domain-all-bits-xt
@@ -305,7 +306,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
 ' cur-domain-current-state to cur-domain-current-state-xt
 
-\ Return true if two group s are equal.
+\ Return true if two domains are equal.
 : domain-eq ( grp1 grp0 -- flag )
      \ Check args.
     assert-tos-is-group 
@@ -313,6 +314,29 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     domain-get-inst-id
     swap
+    domain-get-inst-id
+    =
+;
+
+\ Get a sample fram an action in a domain.
+\ Call only from session-get-sample, since current-domain in set there.
+: domain-get-sample ( act1 dom0 -- sample )
+     \ Check args.
+    assert-tos-is-domain 
+    assert-nos-is-action
+
+    2dup domain-set-current-action
+
+    swap                        \ dom1 act1
+    action-get-sample           \ dom1 smpl
+    nip                         \ smpl
+;
+
+\ Return true if a domain id matches a number.
+: domain-id-eq ( id1 sqr0 -- flag )
+    \ Check args.
+    assert-tos-is-domain
+
     domain-get-inst-id
     =
 ;

@@ -737,7 +737,6 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
     over square-get-pn      \ sqr1 sqr0 pn1
     over square-get-pn      \ sqr1 sqr0 pn1 pn0
-    \ cr ." at 0 " .s cr
 
     case
         1 of

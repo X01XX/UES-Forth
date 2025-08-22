@@ -56,6 +56,12 @@ action-groups               cell+ constant action-xt                    \ An xt 
     abort" NOS is not an allocated action"
 ;
 
+\ Check 3OS for action, unconventional, leaves stack unchanged. 
+: assert-3os-is-action ( arg2 arg1 arg0 -- arg2 arg1 arg0 )
+    2 pick is-allocated-action 0=
+    abort" 3OS is not an allocated action"
+;
+
 \ Start accessors.
 
 \ Return the instance ID from an action instance.
@@ -71,7 +77,7 @@ action-groups               cell+ constant action-xt                    \ An xt 
 : action-set-inst-id ( u1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-value
+    \ assert-nos-is-value
 
     over 0<
     abort" Invalid instance id"
@@ -392,41 +398,46 @@ action-groups               cell+ constant action-xt                    \ An xt 
 \ The instance ID defaults to zero.
 \ It will likely be reset to match its position in a list, using action-set-inst-id,
 \ which avoids duplicates and may be useful as an index into the list.
-: action-new ( xt1 -- addr)
+: action-new ( nb1 xt1 -- addr)
 
     \ Allocate space.
-    action-mma mma-allocate     \ xt1 actr
+    action-mma mma-allocate     \ nb1 xt1 actr
 
     \ Store struct id.
-    action-id over              \ xt1 act id act
-    struct-set-id               \ xt1 act
+    action-id over              \ nb1 xt1 act id act
+    struct-set-id               \ nb1 xt1 act
     
     \ Init use count.
-    0 over struct-set-use-count \ xt1 act
+    0 over struct-set-use-count \ nb1 xt1 act
 
     \ Set intance ID.
     0 over
-    action-set-inst-id              \ xt1 act
+    action-set-inst-id              \ nb1 xt1 act
 
     \ Set xt
-    tuck _action-set-xt             \ act
+    tuck _action-set-xt             \ nb1 act
 
     \ Set squares list.
-    list-new                        \ act lst
-    dup struct-inc-use-count        \ act lst
-    over _action-set-squares        \ act
+    list-new                        \ nb1 act lst
+    dup struct-inc-use-count        \ nb1 act lst
+    over _action-set-squares        \ nb1 act
 
     \ Set incompatible-pairs list.
-    list-new                            \ act lst
-    dup struct-inc-use-count            \ act lst
-    over _action-set-incompatible-pairs \ act
+    list-new                            \ nb1 act lst
+    dup struct-inc-use-count            \ nb1 act lst
+    over _action-set-incompatible-pairs \ nb1 act
 
     \ Set logical-structure list.
-    list-new                            \ act lst
-    dup struct-inc-use-count            \ act lst
-    cur-domain-max-region-xt execute    \ act lst mxreg
-    over region-list-push               \ act lst
-    over _action-set-logical-structure  \ act
+    list-new                            \ nb1 act lst
+    dup struct-inc-use-count            \ nb1 act lst
+    2dup swap                           \ nb1 act lst lst act
+    _action-set-logical-structure       \ nb1 act lst
+
+    \ All max region.
+    rot                                 \ act lst nb1
+    all-bits                            \ act lst all-bits
+    0 region-new2                       \ act lst reg
+    swap region-list-push               \ act
 
     \ Set group list.
     list-new                            \ act lst
@@ -848,7 +859,9 @@ action-groups               cell+ constant action-xt                    \ An xt 
     =
 ;
 
-\ Take an action, to get a sample.
+\ Get a sample from an action.
+\ Call only from session-get-sample to domain-get-sample
+\ since current-domain and current-action need to be set first.
 : action-get-sample ( act0 -- smpl )
      \ Check args.
     assert-tos-is-action
@@ -876,3 +889,11 @@ action-groups               cell+ constant action-xt                    \ An xt 
     then
 ;
 
+\ Return true if a action id matches a number.
+: action-id-eq ( id1 sqr0 -- flag )
+    \ Check args.
+    assert-tos-is-action
+
+    action-get-inst-id
+    =
+;
