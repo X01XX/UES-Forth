@@ -9,4 +9,4 @@ To run:
 
 > include main.fs
 
-> all-tests
+> all-tests | main
