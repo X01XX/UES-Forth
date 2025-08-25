@@ -126,11 +126,12 @@ session-domains             cell+ constant session-current-domain       \ A doma
     \ Check args.
     assert-tos-is-session
     assert-nos-is-domain
+    cr ." session-add-domain: " over . cr
 
     \ Add domain
     2dup                    \ dom1 sess0 dom1 sess0
     session-get-domains     \ dom1 sess0 dom1 dom-lst
-    domain-list-push        \ dom1 sess0
+    domain-list-push-end    \ dom1 sess0
 
     \ Set current-domain, if it is zero/invalid.
     session-set-current-domain
@@ -178,3 +179,32 @@ session-domains             cell+ constant session-current-domain       \ A doma
     then
 ;
 
+: .session-current-state ( sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+
+    dup session-get-domains             \ sess0 dom-lst
+
+    list-get-links                      \ sess0 link
+    ." ("
+    begin
+        ?dup
+    while
+        dup link-get-data           \  sess0 link domx
+        \ dup domain-get-inst-id cr ." dom: " .
+        \ dup domain-get-num-bits space . cr
+
+        dup 3 pick session-set-current-domain
+        
+        domain-get-current-state    \ sess0 link stax
+        .value
+
+        link-get-next               \ sess0 link
+        dup if
+            space
+        then
+    repeat
+    ." )"
+                                    \ sess0
+    drop
+;

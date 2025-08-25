@@ -251,16 +251,20 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     then
 ;
 
-: domain-add-action ( act1 dom0 -- )
+: domain-add-action ( xt1 dom0 -- )
     \ Check args.
     assert-tos-is-domain
-    assert-nos-is-action
 
-    2dup                    \ act1 dom0 act1 dom0
-    domain-get-actions      \ act1 dom0 act1 act-lst
-    action-list-push        \ act1 dom0
+    dup domain-get-num-bits     \ xt1 dom0 nb
+    rot                         \ dom0 nb xt1
 
-    domain-set-current-action
+    action-new                  \ dom0 actx
+    swap                        \ actx dom0
+    2dup                        \ actx dom0 actx dom0
+    domain-get-actions          \ actx dom0 actx act-lst
+    action-list-push            \ actx dom0
+
+    domain-set-current-action   \
 ;
 
 \ Functions that will eventually use current-domain value.

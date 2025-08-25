@@ -113,6 +113,7 @@ include rule_t.fs
 include action_t.fs
 include rulestore_t.fs
 include state_t.fs
+include input.fs
 
 
 cr ." main.fs"
@@ -148,11 +149,58 @@ cr ." main.fs"
 \ rule-mma mma-free
 \ rulestore-mma mma-free
 \ square-mma mma-free
+: init-main ( -- )
+    \ Set up session.
+    session-new                                 \ sess
+    dup to current-session                      \ sess
+
+    \ Add domain 0
+    4 domain-new                                \ sess dom
+
+    \ Add actions to domain 0
+    [ ' domain-0-act-1-get-sample ] literal     \ sess dom0 xt
+    over domain-add-action                      \ sess dom0
+
+    \ Add a domain
+    over session-add-domain                    \ sess
+
+    \ Add domain 1
+    5 domain-new                                \ sess dom1
+
+    \ Add actions to domain 1
+    [ ' domain-1-act-1-get-sample ] literal     \ sess dom1 xt
+    over domain-add-action                      \ sess dom1
+
+    \ Add last domain
+    swap session-add-domain                     \ sess dom1
+;
+
+: main ( -- )
+    init-main
+
+    true
+    begin
+    while
+        \ Print state.
+        cr ." Current state: "
+        current-session .session-current-state
+        cr
+
+        80 s" Enter command: q(uit), ... > " get-user-input
+        \ cr .s cr
+        depth 1 <> abort" depth not equal one?"
+    repeat
+    
+    \ Clean up
+    memory-use
+    cr cr ." Deallocating ..." cr
+    current-session session-deallocate
+    memory-use
+;
 
 \ Set up a test domain and action.
 \ To supply number bits, max region, ms-bit, all-bits, domain-id, action-id.
 \ To run tests outside of all-tests, run this first.
-
 : test-init
 
     \ Set up session.
@@ -179,6 +227,7 @@ cr ." main.fs"
     action-tests
     rulestore-tests
     state-tests
+    input-test-parse-user-input
 
     memory-use
     cr cr ." Deallocating ..." cr

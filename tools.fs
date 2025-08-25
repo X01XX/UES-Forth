@@ -291,3 +291,6 @@ decimal
     1 lshift
     1 +
 ;
+
+\ The reverse of 2rot.
+: -2rot 2rot 2rot ;

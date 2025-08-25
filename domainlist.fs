@@ -10,7 +10,7 @@
     list-deallocate                                     \ Deallocate list and links.
 ;
 
-: domain-list-push ( domx dom-lst -- )
+: domain-list-push-end ( domx dom-lst -- )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-domain
@@ -19,7 +19,7 @@
     2 pick                  \ dom dom-lst len dom
     domain-set-inst-id      \ dom dom-lst
     over struct-inc-use-count
-    list-push
+    list-push-end
 ;
 
 \ Find a domain in a list, by instance id, if any.
