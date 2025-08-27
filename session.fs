@@ -256,11 +256,34 @@ session-current-domain      cell+ constant session-needs                \ A need
     \ Check args.
     assert-tos-is-session
 
-    dup session-get-domains             \ sess0 dom-lst
+    dup session-get-domains         \ sess0 dom-lst
 
-    domain-list-get-needs               \ sess0 ned-lst
-    \ TODO store needs in session.
-    swap _session-update-needs          \
+    \ Init list to start appending domain need lists to.
+    list-new swap                   \ sess0 lst-ret lst0
+
+    \ Scan domain-list, getting needs from each domain.
+    list-get-links                  \ sess0 lst-ret link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ sess0 lst-ret link domx
+
+        dup 4 pick                  \ sess0 lst-ret link domx domx sess0
+        session-set-current-domain  \ sess0 lst-ret link domx
+
+        domain-get-needs            \ sess0 lst-ret link dom-neds
+        rot                         \ sess0 link dom-neds lst-ret
+        2dup                        \ sess0 link dom-neds lst-ret dom-neds lst-ret
+        need-list-append            \ sess0 link dom-neds lst-ret'
+        swap need-list-deallocate   \ sess0 link lst-ret'
+        swap                        \ sess0 lst-ret' link
+
+        link-get-next
+    repeat
+                                    \ sess0 lst-ret
+
+    \ Store needs in session.
+    swap _session-update-needs      \
 ;
 
 \ Return the current domain.

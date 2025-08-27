@@ -214,7 +214,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     action-new                      \ dom lst act
     tuck swap                       \ dom act act lst
     
-    action-list-push                \ dom act
+    action-list-push-end            \ dom act
 
     over domain-set-current-action  \ dom
     0 over domain-set-current-state \ dom
@@ -266,7 +266,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     swap                        \ actx dom0
     2dup                        \ actx dom0 actx dom0
     domain-get-actions          \ actx dom0 actx act-lst
-    action-list-push            \ actx dom0
+    action-list-push-end        \ actx dom0
 
     domain-set-current-action   \
 ;
@@ -310,9 +310,32 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check args.
     assert-tos-is-domain
 
-    domain-get-actions      \ act-lst
+    dup domain-get-actions          \ dom0 act-lst
 
-    action-list-get-needs   \ ned-lst
+    \ Init list to start appending action need lists to.
+    list-new swap                   \ dom0 lst-ret act-lst
+
+    \ Scan action-list, getting needs from each action.
+    list-get-links                  \ dom0 lst-ret link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ dom0 lst-ret link actx
+
+        dup 4 pick                  \ dom0 lst-ret link actx actx dom
+        domain-set-current-action   \ dom0 lst-ret link actx
+
+        action-get-needs            \ dom0 lst-ret link act-neds
+        rot                         \ dom0 link act-neds lst-ret
+        2dup                        \ dom0 link act-neds lst-ret act-neds lst-ret
+        need-list-append            \ dom0 link act-neds lst-ret'
+        swap need-list-deallocate   \ dom0 link lst-ret'
+        swap                        \ dom0 lst-ret' link
+
+        link-get-next
+    repeat
+                                    \ dom0 lst-ret
+    nip                             \ lst-ret
 ;
 
 \ Return the current-action.

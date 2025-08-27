@@ -10,7 +10,7 @@
     list-deallocate                                 \ Deallocate list and links.
 ;
 
-: action-list-push ( actx act-lst -- )
+: action-list-push-end ( actx act-lst -- )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-action
@@ -19,7 +19,7 @@
     2 pick                  \ act act-lst len act
     action-set-inst-id      \ act act-lst
     over struct-inc-use-count
-    list-push
+    list-push-end
 ;
 
 \ Find a action in a list, by instance id, if any.
@@ -49,31 +49,4 @@
     repeat
                         \ lst0
     drop
-;
-
-\ Return list of needs, combined, from each action;
-: action-list-get-needs ( lst0 -- needs )
-    \ Check args.
-    assert-tos-is-list
-
-    \ Init list to start appending action need lists to.
-    list-new swap           \ lst-ret lst0
-
-    \ Scan action-list, getting needs from each action.
-    list-get-links          \ lst-ret link
-    begin
-        ?dup
-    while
-        dup link-get-data           \ lst-ret link actx
-
-        action-get-needs            \ lst-ret link act-neds
-        rot                         \ link act-neds lst-ret
-        2dup                        \ link act-neds lst-ret act-neds lst-ret
-        need-list-append            \ link act-neds lst-ret'
-        swap need-list-deallocate   \ link lst-ret'
-        swap                        \ lst-ret' link
-
-        link-get-next
-    repeat
-                            \ lst-ret
 ;
