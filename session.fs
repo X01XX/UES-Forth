@@ -1,12 +1,13 @@
 \ Implement a Session struct and functions.                                                                                             
 
 31319 constant session-id
-    3 constant session-struct-number-cells
+    4 constant session-struct-number-cells
 
 \ Struct fields
 0 constant session-header    \ 16-bits [0] struct id [1] use count
 session-header              cell+ constant session-domains              \ A domain-list
 session-domains             cell+ constant session-current-domain       \ A domain, or zero before first domain is added.
+session-current-domain      cell+ constant session-needs                \ A need-list.
 
 0 value session-addr \ Storage for session address.
 
@@ -70,6 +71,45 @@ session-domains             cell+ constant session-current-domain       \ A doma
     !                           \ Set the field.
 ;
 
+\ Return the session need-list
+: session-get-needs ( sess0 -- ned-lst )
+    \ Check arg.
+    assert-tos-is-session
+
+    session-needs +             \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the need-list for an session instance.
+: _session-set-needs ( ned-lst ses0 -- )
+    \ Check args.
+    assert-tos-is-session
+    over 0<> if
+        assert-nos-is-list
+        over struct-inc-use-count
+    then
+
+    session-needs +             \ Add offset.
+    !                           \ Set the field.
+;
+
+\ Update the session needs, deallocating the previous list, if any.
+: _session-update-needs  ( ned-lst sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
+
+    dup session-get-needs       \ ned-lst sess0 prev-lst
+    -rot                        \ prev-lst ned-lst sess0
+    _session-set-needs          \ prev-lst
+    dup 0=
+    if
+        drop
+    else
+        need-list-deallocate
+    then
+;
+
 \ End accessors.
 
 \ Create an session, given an instance ID.
@@ -94,6 +134,9 @@ session-domains             cell+ constant session-current-domain       \ A doma
 
     \ Zero-out current domain.
     0 over session-set-current-domain
+
+    \ Zero out need-list
+    0 over _session-set-needs       \ ses
 ;
 
 \ Print a session.
@@ -115,6 +158,8 @@ session-domains             cell+ constant session-current-domain       \ A doma
 
     \ Clear fields.
     dup session-get-domains domain-list-deallocate
+    dup session-get-needs
+    ?dup if need-list-deallocate then
 
     \ Deallocate instance.
     0 over struct-set-id
@@ -126,7 +171,7 @@ session-domains             cell+ constant session-current-domain       \ A doma
     \ Check args.
     assert-tos-is-session
     assert-nos-is-domain
-    cr ." session-add-domain: " over . cr
+    \ cr ." session-add-domain: " over . cr
 
     \ Add domain
     2dup                    \ dom1 sess0 dom1 sess0
@@ -191,8 +236,6 @@ session-domains             cell+ constant session-current-domain       \ A doma
         ?dup
     while
         dup link-get-data           \  sess0 link domx
-        \ dup domain-get-inst-id cr ." dom: " .
-        \ dup domain-get-num-bits space . cr
 
         dup 3 pick session-set-current-domain
         
@@ -208,3 +251,21 @@ session-domains             cell+ constant session-current-domain       \ A doma
                                     \ sess0
     drop
 ;
+
+: session-get-needs ( sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+
+    dup session-get-domains             \ sess0 dom-lst
+
+    domain-list-get-needs               \ sess0 ned-lst
+    \ TODO store needs in session.
+    swap _session-update-needs          \
+;
+
+\ Return the current domain.
+: cur-domain ( -- dom )
+    current-session session-get-current-domain
+;
+
+' cur-domain to cur-domain-xt

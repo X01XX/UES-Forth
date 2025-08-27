@@ -523,8 +523,8 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     if                                  \ rf sqr0 pn pn-new
         swap                            \ rf sqr0 pn-new pn
         2 pick square-get-state         \ rf sqr0 pn-new pn sta
-        cr ." Dom: " cur-domain-inst-id-xt execute . space
-           ." Act: " cur-action-inst-id-xt execute . space
+        cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute . space
+           ." Act: " cur-action-xt execute action-get-inst-id-xt execute . space
         ." square " .value space ." pn changed from " .pn space ." to " dup .pn cr
                                         \ rf sqr0 pn-new
         \ Save new pn

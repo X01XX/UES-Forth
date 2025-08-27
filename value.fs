@@ -1,13 +1,20 @@
 \ Return true if a number is a valid value.
-: is-value ( u -- flag )
-    dup cur-domain-all-bits-xt execute and
-    =
+: is-value ( u0 -- flag )
+    dup                                 \ u0 u0
+    cur-domain-xt execute               \ u0 u0 dom
+    domain-get-all-bits-mask-xt execute \ u0 u0 msk
+    and                                 \ u0 u0'
+    =                                   \ flag
 ;
  
 \ Return true if a number is an invalid value.
-: is-not-value ( u -- flag )
-    dup cur-domain-all-bits-xt execute and
-    <>
+: is-not-value ( u0 -- flag )
+    dup                         \ u0 u0
+    cur-domain-xt execute       \ u0 u0
+    domain-get-all-bits-mask-xt
+    execute                     \ u0 u0 msk
+    and                         \ u0'
+    <>                          \ flag
 ;
 
 \ Check TOS for value, unconventional, leaves stack unchanged. 
@@ -34,7 +41,9 @@
     assert-tos-is-value
 
     \ Setup for bit-position loop.
-    cur-domain-ms-bit-xt execute   ( val0 ms-bit)
+    cur-domain-xt execute           \ val0 dom
+    domain-get-ms-bit-mask-xt
+    execute                         \ val0 ms-bit
 
     \ Process each bit.
     begin
@@ -53,4 +62,28 @@
       1 rshift   \ val0 ms-bit
     repeat
     2drop       \
+;
+
+\ Isolate a least-significant-bit from a value.
+: value-isolate-lsb ( val0 -- val' bit )
+    dup 1 < abort" invalid number"
+    dup 1- over and     \ val0 val'  Remove lsb from val0.
+    swap                \ val' val0
+    over xor            \ val' lsb   Get lsb.
+;
+
+\ Return the number of bits in a value that are set to 1.
+: value-num-bits ( u - nb )
+    dup 0= if exit then
+
+    \ Init counter
+    0 swap              \ 0 u
+    begin
+        ?dup
+    while
+        \ Inc counter.
+        swap 1+ swap            \ cnt+ u
+
+        value-isolate-lsb drop  \ cnt+ u'
+    repeat
 ;

@@ -90,18 +90,25 @@
 
 \ TODO zero-token logic, like run a need.
 : do-zero-token-command ( -- true )
+    current-session session-get-needs
     true
 ;
 
 : do-one-token-commands ( c-addc c-cnt -- flag )
-    2dup s" q" compare 0=
+    2dup s" q" str=
     if
+        \ Clear token
         2drop
+        \ Return continue loop flag.
         false
-    else
-        2drop
-        true
+        exit
     then
+
+    cr ." One-token command not recognized" cr
+    \ Clear token.
+    2drop
+    \ Return continue loop flag.
+    true
 ;
 
 \ Do commands from user input.
@@ -123,9 +130,11 @@
             drop
             do-one-token-commands
         endof
-        \ Default, clear stack.
-        cr ." Token count does not correspond to any allowable ecommand" cr
+        \ Default.
+        cr ." Token count does not correspond to any allowable command" cr
+        \ Clear tokens.
         0 do 2drop loop
+        \ Return continue loop flag.
         true
     endcase
 ;
@@ -144,51 +153,3 @@
         parse-user-input         \ [ c-addr c-cnt ]* token-cnt
         eval-user-input          \ [ c-addr c-cnt ]* token-cnt
 ;
-
-: input-test-parse-user-input
-    \ Straight-forward test.
-    s" ab cde fghi" parse-user-input
-    3 <>
-    abort" Three tokens not found"
-
-    s" ab"   compare 0<> abort" ab not found"
-    s" cde"  compare 0<> abort" cde not found"
-    s" fghi" compare 0<> abort" fghi not found"
-
-    depth 0<> abort" Test 1 stack not empty"
-    
-    \ Double up separators, and at start and end.
-    s"  ab cde  fghi " parse-user-input
-    3 <>
-    abort" Three tokens not found"
-
-    s" ab"   compare 0<> abort" ab not found"
-    s" cde"  compare 0<> abort" cde not found"
-    s" fghi" compare 0<> abort" fghi not found"
-
-    depth 0<> abort" Test 2 stack not empty"
-    
-    \ Try no string.
-    s" " parse-user-input
-    0 <>
-    abort" No tokens not found"
-
-    depth 0<> abort" Test 3 stack not empty"
-    
-    \ Try only one separator.
-    s"  " parse-user-input
-    0 <>
-    abort" No tokens not found"
-
-    depth 0<> abort" Test 4 stack not empty"
-    
-    \ Try only two separators.
-    s"   " parse-user-input
-    0 <>
-    abort" No tokens not found"
-
-    depth 0<> abort" Test 5 stack not empty"
-
-    cr ." input-test-parse-user-input: Ok" cr
-;
-

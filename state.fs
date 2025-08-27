@@ -3,7 +3,8 @@
     \ Check arg.
     assert-tos-is-value
 
-    cur-domain-all-bits-xt execute      \ u2 all-bits
+    cur-domain-xt execute               \ u0 dom
+    domain-get-all-bits-mask-xt execute \ u0 all-bits
     0 region-new-xt execute             \ u0 reg-max
     dup struct-inc-use-count
     tuck                                \ reg-max u0 reg-max
@@ -34,7 +35,8 @@
     assert-tos-is-value
 
     \ Setup for bit-position loop.
-    cur-domain-ms-bit-xt execute   ( r-val1 i-val0 ms-bit)
+    cur-domain-xt execute               \ r-val1 i-val0 dom
+    domain-get-ms-bit-mask-xt execute   \ r-val1 i-val0 ms-bit
 
     \ Process each bit.
     begin

@@ -1,8 +1,12 @@
 \ Return the Boolean "NOT" of an unsigned number,
 \ while remaining within the bounds of allowable bits.
 : !not ( u1 -- u2 )
-    cur-domain-all-bits-xt execute
-    xor
+    cur-domain-xt execute       \ u1 dom
+    domain-get-all-bits-mask-xt \ u1 xt
+    execute                     \ u1 all-bits
+    tuck                        \ all u1 all
+    xor                         \ all u1'
+    and                         \ u1'' just to make sure.
 ;
 
 \ Return the Boolean "NAND" of two unsignreud numbers.

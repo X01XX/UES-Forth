@@ -30,3 +30,30 @@
     [ ' domain-id-eq ] literal -rot list-find
 ;
 
+\ Return needs aggregated from all domains.
+: domain-list-get-needs ( lst0 -- ned-lst )
+    \ Check args.
+    assert-tos-is-list
+
+    \ Init list to start appending domain need lists to.
+    list-new swap           \ lst-ret lst0
+
+    \ Scan domain-list, getting needs from each domain.
+    list-get-links          \ lst-ret link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ lst-ret link domx
+
+        domain-get-needs            \ lst-ret link dom-neds
+        rot                         \ link dom-neds lst-ret
+        2dup                        \ link dom-neds lst-ret dom-neds lst-ret
+        need-list-append            \ link dom-neds lst-ret'
+        swap need-list-deallocate   \ link lst-ret'
+        swap                        \ lst-ret' link
+
+        link-get-next
+    repeat
+                            \ lst-ret
+;
+

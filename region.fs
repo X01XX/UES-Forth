@@ -142,7 +142,8 @@ region-state-0 cell+ constant region-state-1
     \ Setup for bit-position loop.
     dup  region-get-state-1
     swap region-get-state-0
-    cur-domain-ms-bit-xt execute    \ st2 st1 ms-bit
+    cur-domain-xt execute               \ st2 st1 dom
+    domain-get-ms-bit-mask-xt execute   \ st2 st1 ms-bit
 
     \ Process each bit.
     begin

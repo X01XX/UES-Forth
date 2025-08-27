@@ -294,3 +294,27 @@ decimal
 
 \ The reverse of 2rot.
 : -2rot 2rot 2rot ;
+
+\ Return a terrible random number, from 0 to a given limit - 1.
+\ Used to exercise different sections of code, purity of randomness is not important. 
+: random ( limit -- result )
+    dup 1 < abort" limit is zero?"
+
+    \ Get the stack pointer.
+    sp@
+
+    \ Add seconds + minute-seconds.
+    time&date 2drop 2drop 60 * + +
+
+    \ Add limit.
+    over +
+
+    \ Get the return address, a code pointer.
+    r@
+
+    \ Modify return addr.
+    xor
+
+    \ Get result.
+    swap mod
+;

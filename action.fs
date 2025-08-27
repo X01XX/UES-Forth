@@ -9,7 +9,7 @@ action-header               cell+ constant action-squares               \ A squa
 action-squares              cell+ constant action-incompatible-pairs    \ A region-list
 action-incompatible-pairs   cell+ constant action-logical-structure     \ A region-list
 action-logical-structure    cell+ constant action-groups                \ A group-list.
-action-groups               cell+ constant action-xt                    \ An xt to run to get a sample.
+action-groups               cell+ constant action-function              \ An xt to run to get a sample.
 
 0 value action-mma \ Storage for action mma instance.
 
@@ -72,7 +72,9 @@ action-groups               cell+ constant action-xt                    \ An xt 
     \ Get intst ID.
     4c@
 ;
- 
+
+' action-get-inst-id to action-get-inst-id-xt
+
 \ Set the instance ID of an action instance, use only in this file.
 : action-set-inst-id ( u1 act0 -- )
     \ Check args.
@@ -168,32 +170,23 @@ action-groups               cell+ constant action-xt                    \ An xt 
     !                   \ Set the field.
 ;
 
-\ Return the group-list from an action instance.
-: action-get-xt ( act0 -- lst )
+\ Return the function xt that implements the action.
+: action-get-function ( act0 -- xt )
     \ Check arg.
     assert-tos-is-action
 
-    action-xt +         \ Add offset.
+    action-function +   \ Add offset.
     @                   \ Fetch the field.
 ;
  
-\ Set the group-list of an action instance, use only in this file.
-: _action-set-xt ( xt act0 -- )
+\ Set the futction xt that implements an action.
+: _action-set-function ( xt act0 -- )
     \ Check args.
     assert-tos-is-action
 
-    action-xt +         \ Add offset.
+    action-function +   \ Add offset.
     !                   \ Set the field.
 ;
-
-: cur-action-inst-id ( -- id )
-    current-session                             \ sess
-    session-get-current-domain-xt execute       \ dom
-    domain-get-current-action-xt execute        \ act
-    action-get-inst-id
-;
-
-' cur-action-inst-id to cur-action-inst-id-xt
 
 \ Return true if a region, in the logical structure, is a defining region.
 : action-region-is-defining ( reg1 act0 -- flag )
@@ -415,7 +408,7 @@ action-groups               cell+ constant action-xt                    \ An xt 
     action-set-inst-id              \ nb1 xt1 act
 
     \ Set xt
-    tuck _action-set-xt             \ nb1 act
+    tuck _action-set-function       \ nb1 act
 
     \ Set squares list.
     list-new                        \ nb1 act lst
@@ -693,7 +686,8 @@ action-groups               cell+ constant action-xt                    \ An xt 
 
     \ Init new logical-structure region list.
     list-new                                \ act0 ls-new
-    cur-domain-max-region-xt execute        \ act0 ls-new max-reg
+    cur-domain-xt execute                   \ act0 ls-new dom
+    domain-get-max-region-xt execute        \ act0 ls-new max-reg
     over region-list-push                   \ act0 ls-new
     
     2 pick                                  \ act0 ls-new act0
@@ -866,7 +860,8 @@ action-groups               cell+ constant action-xt                    \ An xt 
      \ Check args.
     assert-tos-is-action
 
-    cur-domain-current-state-xt \ act0 xt
+    cur-domain-xt execute       \ act0 dom
+    domain-get-current-state-xt
     execute                     \ act0 cur
     swap                        \ cur act0
 
@@ -878,13 +873,13 @@ action-groups               cell+ constant action-xt                    \ An xt 
         square-get-last-result  \ cur act0 rslt
         -rot                    \ rslt cur act0
         true -rot               \ rslt true cur act0
-        action-get-xt           \ rslt true cur xt
+        action-get-function     \ rslt true cur xt
         execute                 \ smpl
     else                        \ cur act0
                                 \ cur act0
         0 -rot                  \ 0 cur act0
         0 -rot                  \ 0 0 cur act0
-        action-get-xt           \ 0 0 cur xt
+        action-get-function     \ 0 0 cur xt
         execute                 \ smpl
     then
 ;
@@ -896,4 +891,15 @@ action-groups               cell+ constant action-xt                    \ An xt 
 
     action-get-inst-id
     =
+;
+
+\ Return a list of needs.
+: action-get-needs ( act0 -- ned-lst )
+    cr
+    ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    space ." Act: " dup action-get-inst-id . space ." get-needs TODO"
+    cr
+
+    drop
+    list-new
 ;

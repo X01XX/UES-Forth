@@ -220,8 +220,9 @@ rule-m11    cell+ constant rule-m10
 
     \ Set up masks and most-significant-bit,
     \ the basis of each cycle.
-    rule-get-masks                  \ m00 m01 m11 m10
-    cur-domain-ms-bit-xt execute    \ m00 m01 m11 m10 ms
+    rule-get-masks                      \ m00 m01 m11 m10
+    cur-domain-xt execute               \ m00 m01 m11 m10 dom
+    domain-get-ms-bit-mask-xt execute   \ m00 m01 m11 m10 ms
 
     begin
         dup
@@ -364,7 +365,9 @@ rule-m11    cell+ constant rule-m10
     or or or                \ m-all
 
     \ Check that all bit positions are used.
-    cur-domain-all-bits-xt execute =
+    cur-domain-xt execute               \ m-all dom
+    domain-get-all-bits-mask-xt execute \ m-all msk
+    =
 ;
 
 \ Return the valid result of a rule intersection, or false.

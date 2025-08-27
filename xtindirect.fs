@@ -15,20 +15,30 @@
     abort
 ;
 
-' xtabort value cur-domain-all-bits-xt
+' xtabort value session-get-current-domain-xt
 
-' xtabort value cur-domain-ms-bit-xt
 
-' xtabort value cur-domain-max-region-xt
-
-' xtabort value cur-domain-inst-id-xt
-
-' xtabort value cur-domain-current-state-xt
+' xtabort value cur-domain-xt
 
 ' xtabort value domain-get-current-action-xt
 
+' xtabort value domain-get-all-bits-mask-xt
 
-' xtabort value cur-action-inst-id-xt
+' xtabort value domain-get-ms-bit-mask-xt
+
+' xtabort value domain-get-inst-id-xt
+
+' xtabort value domain-get-max-region-xt
+
+' xtabort value domain-get-current-state-xt
+
+
+
+
+' xtabort value cur-action-xt
+
+' xtabort value action-get-inst-id-xt
+
 
 ' xtabort value region-new-xt
 
@@ -44,12 +54,4 @@
 ' xtabort value region-list-push-xt
 
 ' xtabort value region-list-subtract-region-xt
-
-' xtabort value session-get-current-domain-xt
-
-
-
-
-
-
 

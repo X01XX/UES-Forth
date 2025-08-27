@@ -77,7 +77,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Get intst ID.
     4c@
 ;
- 
+
+' domain-get-inst-id to domain-get-inst-id-xt
+
 \ Set the instance ID of an domain instance.
 : domain-set-inst-id ( u1 dom0 -- )
     \ Check args.
@@ -125,7 +127,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     domain-current-state +
     @
 ;
- 
+
+' domain-get-current-state to domain-get-current-state-xt
+
 \ Set the current state of a domain instance.
 : domain-set-current-state ( u1 dom0 -- )
     \ Check args.
@@ -267,49 +271,6 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     domain-set-current-action   \
 ;
 
-\ Functions that will eventually use current-domain value.
-
-\ Return the number of bits used by the domain.
-: cur-domain-num-bits ( -- u )
-    current-session session-get-current-domain-xt execute
-    domain-get-num-bits
-;
-
-\ Return most significant bit mask for a domain.
-: cur-domain-ms-bit ( -- u )
-    cur-domain-num-bits ms-bit
-;
-
-' cur-domain-ms-bit to cur-domain-ms-bit-xt
-
-\ Return mask of all bits used.
-: cur-domain-all-bits ( -- u )
-    cur-domain-num-bits all-bits
-;
-
-' cur-domain-all-bits to cur-domain-all-bits-xt
-
-\ Return a maximum region.
-: cur-domain-max-region ( -- reg )
-    cur-domain-all-bits 0 region-new
-;
-
-' cur-domain-max-region to cur-domain-max-region-xt
-
-: cur-domain-inst-id ( -- id )
-    current-session session-get-current-domain-xt execute
-    domain-get-inst-id
-;
-
-' cur-domain-inst-id to cur-domain-inst-id-xt
-
-: cur-domain-current-state ( -- id )
-    current-session session-get-current-domain-xt execute
-    domain-get-current-state
-;
-
-' cur-domain-current-state to cur-domain-current-state-xt
-
 \ Return true if two domains are equal.
 : domain-eq ( grp1 grp0 -- flag )
      \ Check args.
@@ -344,3 +305,55 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     domain-get-inst-id
     =
 ;
+
+: domain-get-needs ( dom0 -- ned-lst )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-get-actions      \ act-lst
+
+    action-list-get-needs   \ ned-lst
+;
+
+\ Return the current-action.
+: cur-action ( -- act )
+    cur-domain-xt execute domain-get-current-action
+;
+
+' cur-action to cur-action-xt
+
+\ Return the all bits mask.
+: domain-get-all-bits-mask ( dom -- mask )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-get-num-bits     \ u
+    1-                      \ u'    Don't just take 2^n, as it might be the maximum number of bits.
+    1 swap lshift           \ u''   Get most-significant-bit.
+    1-                      \ u'''  Get all bits 1 except the msb.
+    1 lshift                \ u'''' Get all bits 1 except the least-significant-bit.
+    1+                      \ mask  Maku lsb 1.
+;
+
+' domain-get-all-bits-mask to domain-get-all-bits-mask-xt
+
+\ Return the most-significant-bit mask.
+: domain-get-ms-bit-mask ( dom -- mask )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-get-num-bits     \ u
+    1-                      \ u'    Don't just take 2^n, as it might be the maximum number of bits.
+    1 swap lshift           \ mask
+;
+
+' domain-get-ms-bit-mask to domain-get-ms-bit-mask-xt
+
+\ Return the maximum region for the domains' number of bits.
+\ Caller to deallocate the region.
+: domain-get-max-region ( dom -- reg )
+    domain-get-all-bits-mask    \ msk
+    0 region-new                \ reg
+;
+
+' domain-get-max-region to domain-get-max-region-xt

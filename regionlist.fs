@@ -301,7 +301,8 @@
     assert-tos-is-list
 
     list-new                    \ lst0 lst1
-    cur-domain-max-region-xt    \ lst0 lst1 xt
+    cur-domain-xt execute       \ lst0 lst1 dom
+    domain-get-max-region-xt
     execute                     \ lst0 lst1 regM
     over region-list-push       \ lst0 lst1
     2dup                        \ lst0 lst1 lst0 lst1
