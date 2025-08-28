@@ -90,18 +90,15 @@
 
 \ Zero-token logic, get/show/act-on needs.
 : do-zero-token-command ( -- true )
-    current-session dup         \ sess sess
-    session-set-all-needs       \ sess
+    current-session             \ sess
     dup session-get-needs       \ sess ned-lst
-    cr ." Needs: "
 
     dup list-get-length         \ sess ned-lst len
     ?dup 0=
     if
-        ." No needs found" cr
+        \ ." No needs found" cr
         2drop
     else
-        over .need-list cr          \ sess ned-lst len
         random                      \ sess ned-lst indx
 
         dup cr ." Need chosen: " . space
@@ -190,10 +187,29 @@
 \ Evaluate the input.
 \ like: 80 s" Enter command: q(uit), ... > " get-user-input 
 : get-user-input ( n c-addr cnt -- )
+
+        \ Display needs.
+        current-session             \ n c-addr cnt sess
+        dup session-set-all-needs   \ n c-addr cnt sess
+        session-get-needs           \ n c-addr cnt ned-lst
+        dup list-get-length         \ n c-addr cnt ned-lst len
+        dup 0=
+        if
+            cr ." Needs: No needs found" cr
+            2drop
+        else
+            drop
+            cr ." Needs:" cr .need-list cr  \ n c-addr cnt
+        then
+
+        cr ." q - to quit"
+        cr ." Press Enter to randomly choose a need, if any." 
+        cr ." ps - to Print Session, all domains, actions."
         cr
-        cr ." ps - to Print Session, all domains, actions." cr
-        cr
+
+        
         \ Display the prompt.
+        cr
         type                    \ n
         \ Get chars, leaves num chars on TOS.
         pad dup rot accept      \ pad-addr pad-addr n
