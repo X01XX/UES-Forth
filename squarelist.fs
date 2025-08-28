@@ -54,6 +54,15 @@
     assert-tos-is-list
     assert-nos-is-square
 
+    dup list-is-empty
+    if
+        over square-get-state
+        15 =
+        if
+            cr ." *** square 15 addeded to empty list ***" cr
+        then
+    then
+    
     2dup
     [ ' square-eq ] literal -rot
     list-member

@@ -70,7 +70,7 @@ need-action  cell+ constant need-target     \ A state.
     \ Check args.
     assert-tos-is-need
 
-    need-action +       \ Add offset.
+    need-domain +       \ Add offset.
     !                   \ Set first field.
 ;
  
@@ -103,7 +103,7 @@ need-action  cell+ constant need-target     \ A state.
  
 \ Set the target field from a need instance, use only in this file.
 : _need-set-target ( dom1 ned0 -- )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-need
 
     need-target +       \ Add offset.
@@ -113,29 +113,29 @@ need-action  cell+ constant need-target     \ A state.
 \ End accessors.
 
 \ Create a need given a target.
-: need-new ( u0 -- addr)
-
+: need-new ( u2 act1 dom0 -- addr)
+    \ Check args.
+    assert-tos-is-domain-xt execute
+    assert-nos-is-action-xt execute
+    assert-3os-is-value
+    
     \ Allocate space.
-    need-mma mma-allocate           \ u0 addr
+    need-mma mma-allocate           \ u2 act1 dom0 ned
 
     \ Store id.
-    need-id over                    \ u0 addr id addr
-    struct-set-id                   \ u0 addr
+    need-id over struct-set-id      \ u2 act1 dom0 ned
 
     \ Init use count.
-    0 over struct-set-use-count     \ u0 addr
+    0 over struct-set-use-count     \ u2 act1 dom0 ned
 
+    \ Store domain
+    swap over _need-set-domain      \ u2 act1 ned
+
+    \ Store action
+    swap over _need-set-action      \ u2 ned
+    
     \ Store target
-    swap over _need-set-target      \ addr
-
-    \ Store domain.
-    cur-domain-xt execute           \ addr dom
-    2dup swap                       \ addr dom dom addr
-    _need-set-domain                \ addr dom
-
-    \ Store acction.
-    cur-action-xt execute           \ addr act
-    over _need-set-action           \ addr
+    swap over _need-set-target      \ ned
 ;
 
 \ Print a need.
@@ -143,10 +143,15 @@ need-action  cell+ constant need-target     \ A state.
     \ Check arg.
     assert-tos-is-need
 
-    ." Need: Dom: "
+    ." Dom: "
     dup need-get-domain domain-get-inst-id-xt execute . space
     ." Act: "
     dup need-get-action action-get-inst-id-xt execute . space
+
+    \ Set up for value print.
+    dup need-get-domain
+    current-session session-set-current-domain-xt execute
+
     ." Target: "
     need-get-target .value
 ;

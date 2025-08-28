@@ -36,7 +36,6 @@ include mm_array.fs     \ includes stack.fs
 include link.fs
 include list.fs
 
-
 \ Application.
 include globals.fs
 include xtindirect.fs
@@ -120,7 +119,6 @@ include rulestore_t.fs
 include state_t.fs
 include input_t.fs
 
-
 cr ." main.fs"
 
 \ Init array-stacks.
@@ -191,7 +189,11 @@ cr ." main.fs"
 
         80 s" Enter command: q(uit), ... > " get-user-input
         \ cr .s cr
-        depth 1 <> abort" depth not equal one?"
+        depth 1 <>
+        if
+            ." depth not equal one? " .s
+            abort
+        then
     repeat
     
     \ Clean up
@@ -199,6 +201,7 @@ cr ." main.fs"
     cr cr ." Deallocating ..." cr
     current-session session-deallocate
     memory-use
+    test-none-in-use
 ;
 
 \ Set up a test domain and action.
@@ -227,7 +230,7 @@ cr ." main.fs"
     region-tests
     region-list-tests
     rule-tests
-    action-tests
+     action-tests
     rulestore-tests
     state-tests
     input-test-parse-user-input

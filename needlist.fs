@@ -19,7 +19,31 @@
 : .need-list ( list0 -- )
     \ Check args.
     assert-tos-is-list
-    [ ' .need ] literal swap .list
+
+    \ Init counter
+    0 swap                  \ cnt link
+
+    \ Scan needs
+    list-get-links
+    begin
+        ?dup
+    while
+        dup link-get-data   \ cnt link ned
+
+        \ Print need and count.
+        cr
+        2 pick .
+        space
+        .need
+
+        \ Update count.
+        swap 1+ swap
+
+        link-get-next       \ cnt link
+    repeat
+    cr
+                            \ cnt
+    drop
 ;
 
 \ Push a need to a need-list, unless it is already in the list.
@@ -30,4 +54,25 @@
 
     over struct-inc-use-count
     list-push
+;
+
+\ Append nos need-list to the tos need-list.
+: need-list-append ( lst1 lst0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    swap                    \ lst0 lst1
+    list-get-links          \ lst0 link
+    begin
+        ?dup
+    while
+        dup link-get-data   \ lst0 link nedx
+        2 pick              \ lst0 link nedx lst0
+        need-list-push      \ lst0 link
+
+        link-get-next
+    repeat
+                        \ lst0
+    drop
 ;

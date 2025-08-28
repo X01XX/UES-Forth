@@ -88,9 +88,49 @@
     nip nip                         \ t-cnt
 ;
 
-\ TODO zero-token logic, like run a need.
+\ Zero-token logic, get/show/act-on needs.
 : do-zero-token-command ( -- true )
-    current-session session-get-needs
+    current-session dup         \ sess sess
+    session-set-all-needs       \ sess
+    dup session-get-needs       \ sess ned-lst
+    cr ." Needs: "
+
+    dup list-get-length         \ sess ned-lst len
+    ?dup 0=
+    if
+        ." No needs found" cr
+        2drop
+    else
+        over .need-list cr          \ sess ned-lst len
+        random                      \ sess ned-lst indx
+
+        dup cr ." Need chosen: " . space
+        swap list-get-item          \ sess ned
+        dup .need cr                \ sess ned
+
+        dup need-get-action         \ sess ned act
+        swap need-get-domain        \ sess act dom
+
+        \ Set cur domain.
+        dup                         \ sess act dom dom
+        3 pick                      \ sess act dom dom sess
+        session-set-current-domain  \ sess act dom
+
+        \ Set cur action
+        2dup                        \ sess act dom act dom
+        domain-set-current-action   \ sess act dom
+
+        \ Get sample
+        2dup                        \ sess act dom act dom
+        domain-get-sample           \ sess act dom sample
+        sample-deallocate           \ sess act dom
+        domain-get-inst-id
+        cr ." Dom: " .              \ sess act
+        .action cr                  \ sess
+
+        drop
+    then
+
     true
 ;
 
@@ -101,6 +141,13 @@
         2drop
         \ Return continue loop flag.
         false
+        exit
+    then
+    2dup s" ps" str=
+    if
+        2drop
+        current-session .session
+        true
         exit
     then
 
@@ -143,6 +190,8 @@
 \ Evaluate the input.
 \ like: 80 s" Enter command: q(uit), ... > " get-user-input 
 : get-user-input ( n c-addr cnt -- )
+        cr
+        cr ." ps - to Print Session, all domains, actions." cr
         cr
         \ Display the prompt.
         type                    \ n

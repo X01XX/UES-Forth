@@ -41,21 +41,21 @@
     ." )"
 ;
 
-\ Push a group to a group-list, unluss it is already in the list.
+\ Push a group to a group-list, unless it is already in the list.
 : group-list-push ( grp1 list0 -- )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-group
 
-    2dup
-    [ ' group-eq ] literal -rot
-    list-member
-    if
-        2drop
-    else
+\    2dup
+\    [ ' group-eq ] literal -rot
+\    list-member
+\    if
+\        2drop
+\    else
         over struct-inc-use-count
         list-push
-    then
+\    then
 ;
 
 \ Remove a group from a group-list, and deallocate.
@@ -108,6 +108,7 @@
 
 \  Have appropriate groups check a changed square.
 : group-list-check-square ( sqr1 grp-lst0 -- )
+    \ cr ." group-list-check-square - start" cr
     \ Check args.
     assert-tos-is-list
     assert-nos-is-square
@@ -132,4 +133,53 @@
     repeat
                                     \ sqr1
     drop
+    \ cr ." group-list-check-square - end" cr
+;
+
+\ Return true, if a state is in at least one group region.
+: group-list-state-in-group ( val1 grp-lst0 -- flag )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-value
+
+    list-get-links              \ val0 link
+    begin
+        ?dup
+    while
+        2dup                    \ val0 link val0 link
+        link-get-data           \ val0 link val0 grp
+        group-state-in          \ val0 link flag
+        if                      \ val0 link
+            2drop true exit
+        then
+
+        link-get-next
+    repeat
+                                \ val0
+    drop
+    false
+;
+
+\ Return true, if a state is in at least one group r-region.
+: group-list-state-in-group-r ( val1 grp-lst0 -- flag )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-value
+
+    list-get-links              \ val0 link
+    begin
+        ?dup
+    while
+        2dup                    \ val0 link val0 link
+        link-get-data           \ val0 link val0 grp
+        group-state-in-r        \ val0 link flag
+        if                      \ val0 link
+            2drop true exit
+        then
+
+        link-get-next
+    repeat
+                                \ val0
+    drop
+    false
 ;

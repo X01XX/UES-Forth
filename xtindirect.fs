@@ -17,6 +17,9 @@
 
 ' xtabort value session-get-current-domain-xt
 
+' xtabort value session-set-current-domain-xt
+
+
 
 ' xtabort value cur-domain-xt
 
@@ -32,12 +35,15 @@
 
 ' xtabort value domain-get-current-state-xt
 
+' xtabort value assert-tos-is-domain-xt
 
 
 
 ' xtabort value cur-action-xt
 
 ' xtabort value action-get-inst-id-xt
+
+' xtabort value assert-nos-is-action-xt
 
 
 ' xtabort value region-new-xt

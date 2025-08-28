@@ -220,6 +220,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     \ Set squares
     tuck                        \ addr s addr
     _group-set-squares          \ addr
+    \ cr ." group-new: " dup hex . decimal cr
 ;
 
 : group-from-sample ( smpl -- sqr )
@@ -229,13 +230,14 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     dup sample-get-result
     swap sample-get-initial
     group-new
+    cr ." at 1" cr
 ;
 
-: group-deallocate ( sqr0 -- )
+: group-deallocate ( grp0 -- )
     \ Check arg.
     assert-tos-is-group
 
-    dup struct-get-use-count      \ sqr0 count
+    dup struct-get-use-count      \ grp0 count
 
     2 <
     if
@@ -383,3 +385,24 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     group-get-region
     region-eq
 ;
+
+\ Return true, if a state is in a group region.
+: group-state-in ( sta1 grp0 -- flag )
+     \ Check args.
+    assert-tos-is-group
+    assert-nos-is-value
+
+    group-get-region            \ sta1 reg
+    region-superset-of-state    \ flag
+;
+
+\ Return true, if a state is in a group r-region.
+: group-state-in-r ( sta1 grp0 -- flag )
+     \ Check args.
+    assert-tos-is-group
+    assert-nos-is-value
+
+    group-get-r-region          \ sta1 reg
+    region-superset-of-state    \ flag
+;
+

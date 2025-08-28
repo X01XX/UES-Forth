@@ -71,6 +71,8 @@ session-current-domain      cell+ constant session-needs                \ A need
     !                           \ Set the field.
 ;
 
+' session-set-current-domain to session-set-current-domain-xt
+
 \ Return the session need-list
 : session-get-needs ( sess0 -- ned-lst )
     \ Check arg.
@@ -144,11 +146,29 @@ session-current-domain      cell+ constant session-needs                \ A need
     \ Check arg.
     assert-tos-is-session
 
-    ." Sess: "
+    cr ." Sess: "
     dup session-get-domains
     dup list-get-length
     ."  num domains: " .
-    ." domains " .domain-list
+    ." domains "
+
+                    \ sess0 dom-lst
+    list-get-links  \ sess0 link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ sess0 link dom
+        \ Set current domain
+        dup                         \ sess0 link dom dom
+        3 pick                      \ sess0 link dom dom sess0
+        session-set-current-domain  \ sess0 link dom
+        \ Print domain
+        .domain
+
+        link-get-next               \ sess0 link
+    repeat
+
+    drop
 ;
 
 \ Deallocate a session.
@@ -252,7 +272,7 @@ session-current-domain      cell+ constant session-needs                \ A need
     drop
 ;
 
-: session-get-needs ( sess0 -- )
+: session-set-all-needs ( sess0 -- )
     \ Check args.
     assert-tos-is-session
 

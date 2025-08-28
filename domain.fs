@@ -42,6 +42,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     abort" TOS is not an allocated domain"
 ;
 
+' assert-tos-is-domain to assert-tos-is-domain-xt
+
 \ Check NOS for domain, unconventional, leaves stack unchanged. 
 : assert-nos-is-domain ( arg1 arg0 -- arg0 )
     over is-allocated-domain 0=
@@ -226,14 +228,15 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
 
     dup domain-get-inst-id
-    ." Sess: " .
+    cr cr ." Dom: " .
 
     dup domain-get-num-bits ." num-bits: " . space
-    domain-get-actions
-    dup list-get-length
+    dup domain-get-actions
+    list-get-length
     ."  num actions: " .
     dup domain-get-current-state ." cur: " .value
-    ." actions " .action-list
+    cr
+    domain-get-actions .action-list
 ;
 
 \ Deallocate a domain.
@@ -293,8 +296,15 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     2dup domain-set-current-action
 
     swap                        \ dom1 act1
-    action-get-sample           \ dom1 smpl
-    nip                         \ smpl
+    dup action-get-sample       \ dom1 act1 smpl
+
+    dup sample-get-result       \ dom1 act1 smpl sta
+    3 pick                      \ dom1 act1 smpl sta dom 
+    domain-set-current-state    \ dom1 act1 smpl
+
+    rot domain-get-inst-id cr ." Dom: " .   \ act1 smpl
+    swap action-get-inst-id ." Act: " .     \ smpl
+    dup .sample cr
 ;
 
 \ Return true if a domain id matches a number.
@@ -310,32 +320,36 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check args.
     assert-tos-is-domain
 
-    dup domain-get-actions          \ dom0 act-lst
+    dup domain-get-current-state    \ dom0 sta
+    swap                            \ sta dom0
+    
+    dup domain-get-actions          \ sta dom0 act-lst
 
     \ Init list to start appending action need lists to.
-    list-new swap                   \ dom0 lst-ret act-lst
+    list-new swap                   \ sta dom0 lst-ret act-lst
 
     \ Scan action-list, getting needs from each action.
-    list-get-links                  \ dom0 lst-ret link
+    list-get-links                  \ sta dom0 lst-ret link
     begin
         ?dup
     while
-        dup link-get-data           \ dom0 lst-ret link actx
+        3 pick                      \ sta dom0 lst-ret link sta
+        over link-get-data          \ sta dom0 lst-ret link sta actx
 
-        dup 4 pick                  \ dom0 lst-ret link actx actx dom
-        domain-set-current-action   \ dom0 lst-ret link actx
+        dup 5 pick                  \ sta dom0 lst-ret link sta actx actx dom
+        domain-set-current-action   \ sta dom0 lst-ret link sta actx
 
-        action-get-needs            \ dom0 lst-ret link act-neds
-        rot                         \ dom0 link act-neds lst-ret
-        2dup                        \ dom0 link act-neds lst-ret act-neds lst-ret
-        need-list-append            \ dom0 link act-neds lst-ret'
-        swap need-list-deallocate   \ dom0 link lst-ret'
-        swap                        \ dom0 lst-ret' link
+        action-get-needs            \ sta dom0 lst-ret link act-neds
+        rot                         \ sta dom0 link act-neds lst-ret
+        2dup                        \ sta dom0 link act-neds lst-ret act-neds lst-ret
+        need-list-append            \ sta dom0 link act-neds lst-ret'
+        swap need-list-deallocate   \ sta dom0 link lst-ret'
+        swap                        \ sat dom0 lst-ret' link
 
         link-get-next
     repeat
-                                    \ dom0 lst-ret
-    nip                             \ lst-ret
+                                    \ sta dom0 lst-ret
+    nip nip                         \ lst-ret
 ;
 
 \ Return the current-action.

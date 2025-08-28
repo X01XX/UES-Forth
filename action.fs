@@ -56,6 +56,8 @@ action-groups               cell+ constant action-function              \ An xt 
     abort" NOS is not an allocated action"
 ;
 
+' assert-nos-is-action to assert-nos-is-action-xt
+
 \ Check 3OS for action, unconventional, leaves stack unchanged. 
 : assert-3os-is-action ( arg2 arg1 arg0 -- arg2 arg1 arg0 )
     2 pick is-allocated-action 0=
@@ -238,6 +240,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Add a guoup, if it does not already exist.
 : _action-add-group-if-not-exists ( reg1 act0 -- flag )
+    \ cr ." _action-add-group-if-not-exists: start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
@@ -249,6 +252,7 @@ action-groups               cell+ constant action-function              \ An xt 
     if
         2drop
         false
+        \ cr ." _action-add-group-if-not-exists: end" cr
         exit
     then
 
@@ -262,12 +266,13 @@ action-groups               cell+ constant action-function              \ An xt 
     action-get-groups                   \ grp grp-lst
     group-list-push                     \
     true
+    \ cr ." _action-add-group-if-not-exists: end" cr
 ;
 
 \ Update the logical-structure region-list of an action instance, use only in this file.
 \ Deallocate the old list last, so the instance field is never invalid.
 : _action-update-logical-structure ( new-ls act0 -- )
-    \ cr ." _action-update-logical-structure: " .s cr
+    \ cr ." _action-update-logical-structure: start"  cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
@@ -383,6 +388,7 @@ action-groups               cell+ constant action-function              \ An xt 
     region-list-deallocate              \ act0
 
     drop                                \
+    \ cr ."  _action-update-logical-structure - end" cr
 ;
 
 \ End accessors.
@@ -444,24 +450,26 @@ action-groups               cell+ constant action-function              \ An xt 
     assert-tos-is-action
 
     dup action-get-inst-id
-    ." Act: " .
+    cr 5 spaces ." Act: " .
 
     dup action-get-squares
     dup list-get-length
-    ."  num sqrs: " .
+    ." num sqrs: " .
     ." sqrs " .square-list-states
 
     dup action-get-logical-structure space ." LS: " .region-list
     dup action-get-incompatible-pairs space ." IP: " .region-list
+    \ cr ." Groups: "
     \ Print each group.
     action-get-groups list-get-links
     begin
         ?dup
     while
         dup link-get-data
-        cr 4 spaces .group
+        cr 10 spaces .group
         link-get-next
     repeat
+    cr
 ;
 
 \ Deallocate a action.
@@ -488,6 +496,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Get a list of incompatible pairs, no supersets, given a square.
 : action-find-incompatible-pairs-nosups ( sqr1 act0 -- square-list )
+    \ cr ." action-find-incompatible-pairs-nosups: start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
@@ -501,6 +510,7 @@ action-groups               cell+ constant action-function              \ An xt 
     if
         list-deallocate                         \ retlst sqr1 act0
         2drop                                   \ retlst
+        \ cr ." action-find-incompatible-pairs-nosups: end" cr
         exit
     then
 
@@ -529,11 +539,13 @@ action-groups               cell+ constant action-function              \ An xt 
     2drop                                   \ retlst sqr1 act0 inclst
     list-deallocate                         \ retlst sqr1 act0
     2drop                                   \ retlst
+    \ cr ." action-find-incompatible-pairs-nosups: end" cr
 ;
  
 \ Check a new, or changed square.
 \ Could affect action-incompatible-pairs and action-logical-structure.
 : _action-check-square ( sqr1 act0 -- )
+    \ cr ." _action-check-square - start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
@@ -608,6 +620,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     region-list-deallocate
     drop
+    \ cr ." _action-check-square - end" cr
 ;
 
 \ Return a square given a state.
@@ -623,7 +636,7 @@ action-groups               cell+ constant action-function              \ An xt 
 \ Check a given region-list, where the region states represent incompatible pairs,
 \ returning regions where the represented squares are no longer incompatible.
 : _action-not-incompatble-pairs ( reg-lst1 act0 -- reg-lst2 )
-    \ cr ." _action-not-incompatble-pairs" cr
+    \ cr ." _action-not-incompatble-pairs - start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
@@ -676,11 +689,12 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
                                 \ ret-lst act0 0
     2drop                       \ ret-lst
+    \ cr ." _action-not-incompatble-pairs - end" cr
 ;
 
 \ Recalc action-logical-structure from action-incompatible-pairs.
 :  _action-recalc-logical-structure ( act0 -- )
-    \ cr ." _action-recalc-logical-structure" cr
+    \ cr ." _action-recalc-logical-structure - start" cr
     \ Check args.
     assert-tos-is-action
 
@@ -724,12 +738,13 @@ action-groups               cell+ constant action-function              \ An xt 
     \ Store new LS.
     rot                                     \ ls-new act0
     _action-update-logical-structure        \
+    \ cr ." _action-recalc-logical-structure - end" cr
 ;
 
 \ Check incompatble pairs are still incompatible,
 \ given a squrare that has recently changed pn or pnc.
 : _action-check-incompatible-pairs ( sqr1 act0 -- )
-    \ cr ." _action-check-incompatible-pairs" cr
+    \ cr ." _action-check-incompatible-pairs - start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
@@ -743,6 +758,7 @@ action-groups               cell+ constant action-function              \ An xt 
     if
         list-deallocate                 \ act0
         2drop
+        \ cr ." _action-check-incompatible-pairs - end" cr
         exit
     then
 
@@ -755,6 +771,7 @@ action-groups               cell+ constant action-function              \ An xt 
         list-deallocate
         region-list-deallocate
         drop
+        \ cr ." _action-check-incompatible-pairs - end" cr
         exit
     then
 
@@ -787,6 +804,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     \ Recalc logical-structure
     _action-recalc-logical-structure
+    \ cr ." _action-check-incompatible-pairs - end" cr
 ;
 
 \ Add a sample.
@@ -800,6 +818,7 @@ action-groups               cell+ constant action-function              \ An xt 
 \ its ~A + ~B can be calculated and intersected with action-logical-structure.
 \
 : action-add-sample ( smpl1 act0 -- )
+    \ cr ." action-add-sample - start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-sample
@@ -834,11 +853,43 @@ action-groups               cell+ constant action-function              \ An xt 
         action-get-squares      \ act0 sqr sqr sqrlst
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
-        2dup
-        _action-check-square
-        action-get-groups
-        group-list-add-square
+        2dup                    \ sqr act0 sqr act0
+        _action-check-square    \ sqr act0
+        dup action-get-groups   \ sqr act0 grp-lst
+        2 pick                  \ sqr act0 grp-lst sqr
+        square-get-state        \ sqr act0 grp-lst sta
+        over                    \ sqr act0 grp-lst sta grp-lst
+        group-list-state-in-group   \ sqr act0 grp-lst flag
+        0= if
+            \ Check if this is the first square
+                                \ sqr act0 grp-lst
+
+            dup list-is-empty   \ sqr act0 grp-lst flag
+                
+            if
+                \ Add max region with first square.
+                                        \ sqr act0 grp-lst
+                rot                     \ act0 grp-lst sqr
+                list-new                \ act0 grp-lst sqr sqr-lst
+                tuck                    \ act0 grp-lst sqr-lst sqr sqr-lst
+                square-list-push        \ act0 grp-lst sqr-lst
+                cur-domain-xt execute   \ act0 grp-lst sqr-lst dom
+                domain-get-max-region-xt execute   \ act0 grp-lst sqr-lst mreg
+                group-new               \ act0 grp-lst grp
+                swap                    \ act0 grp grp-lst
+                group-list-push         \ act0
+                drop
+            else
+                2drop drop
+            then
+        else
+            2 pick              \ sqr act0 grp-lst sqr
+            swap                \ sqr act0 sqr grp-lst
+            group-list-add-square
+            2drop
+        then
     then
+    \ cr ." action-add-sample - end" cr
 ;
 
 \ Return true if two actions are equal.
@@ -857,31 +908,37 @@ action-groups               cell+ constant action-function              \ An xt 
 \ Call only from session-get-sample to domain-get-sample
 \ since current-domain and current-action need to be set first.
 : action-get-sample ( act0 -- smpl )
+    \ cr ." action-get-sample - start" cr
      \ Check args.
     assert-tos-is-action
+    cr ." Act: " dup action-get-inst-id . ." action-get-sample" cr
 
     cur-domain-xt execute       \ act0 dom
     domain-get-current-state-xt
     execute                     \ act0 cur
-    swap                        \ cur act0
+    over                        \ act0 cur act0
 
-    over                        \ cur act0 cur
-    over action-get-squares     \ cur act0 cur sqr-lst
-    square-list-find            \ cur act0, sqrx true | false
+    over                        \ act0 cur act0 cur
+    over action-get-squares     \ act0 cur act0 cur sqr-lst
+    square-list-find            \ act0 cur act0, sqrx true | false
 
-    if                          \ cur act0 sqrx
-        square-get-last-result  \ cur act0 rslt
-        -rot                    \ rslt cur act0
-        true -rot               \ rslt true cur act0
-        action-get-function     \ rslt true cur xt
-        execute                 \ smpl
-    else                        \ cur act0
-                                \ cur act0
-        0 -rot                  \ 0 cur act0
-        0 -rot                  \ 0 0 cur act0
-        action-get-function     \ 0 0 cur xt
-        execute                 \ smpl
+    if                          \ act0 cur act0 sqrx
+        square-get-last-result  \ act0 cur act0 rslt
+        -rot                    \ act0 rslt cur act0
+        true -rot               \ act0 rslt true cur act0
+        action-get-function     \ act0 rslt true cur xt
+        execute                 \ act0 smpl
+        nip                     \ smpl
+    else                        \ act0 cur act0
+                                \ act0 cur act0
+        0 -rot                  \ act0 0 cur act0
+        0 -rot                  \ act0 0 0 cur act0
+        action-get-function     \ act0 0 0 cur xt
+        execute                 \ act0 smpl
+        tuck swap               \ smpl smpl act0
+        action-add-sample       \ smpl
     then
+    \ cr ." action-get-sample - end" cr
 ;
 
 \ Return true if a action id matches a number.
@@ -894,12 +951,22 @@ action-groups               cell+ constant action-function              \ An xt 
 ;
 
 \ Return a list of needs.
-: action-get-needs ( act0 -- ned-lst )
-    cr
-    ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
-    space ." Act: " dup action-get-inst-id . space ." get-needs TODO"
-    cr
+: action-get-needs ( sta1 act0 -- ned-lst )
+    \ cr
+    \ ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ space ." Act: " dup action-get-inst-id . space ." get-needs for " over .value space ." TODO"
+    \ cr
 
-    drop
-    list-new
+    list-new -rot               \ lst-ret sta1 act0
+    over                        \ lst-ret sta1 act0 sta1
+    over action-get-groups      \ lst-ret sta1 act0 sta1 grp-lst
+    group-list-state-in-group-r \ lst-ret sta1 act0 flag
+    0= if
+                                \ lst-ret sta1 act0
+        cur-domain-xt execute   \ lst-ret sta1 act0 dom0
+        need-new                \ lst-ret ned
+        over need-list-push     \ lst-ret
+        exit
+    then
+    2drop
 ;
