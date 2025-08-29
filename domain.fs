@@ -316,9 +316,14 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     =
 ;
 
-: domain-get-needs ( dom0 -- ned-lst )
+: domain-get-needs ( reg1 dom0 -- ned-lst )
     \ Check args.
     assert-tos-is-domain
+    assert-nos-is-region
+
+    dup domain-get-inst-id cr ." domain-get-needs: Dom: " .
+    space ." reachable region: " over .region cr
+    nip
 
     dup domain-get-current-state    \ dom0 sta
     swap                            \ sta dom0
@@ -350,6 +355,50 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     repeat
                                     \ sta dom0 lst-ret
     nip nip                         \ lst-ret
+;
+
+\ Return a maximum region that might be reached, given the
+\ current state and the aggregate changes of all action group rules.
+: domain-calc-reachable-region ( dom0 -- r-reg )
+    \ Check args.
+    assert-tos-is-domain
+
+    dup domain-get-actions          \ dom0 act-lst
+
+    \ Init changes to start appending action changes to.
+    0 0 changes-new swap            \ dom0 cng-agg act-lst
+
+    \ Scan action-list, getting changes from each action.
+    list-get-links                  \ dom0 cng-agg link
+    begin
+        ?dup
+    while
+        dup link-get-data          \ dom0 cng-agg link actx
+
+        \ Set current action.
+        dup 4 pick                  \ dom0 cng-agg link actx actx dom
+        domain-set-current-action   \ dom0 cng-agg link actx
+
+        \ Get aggregate action changes.
+        action-calc-changes         \ dom0 cng-agg link act-cngs
+
+        \ Aggregate changes.
+        rot                         \ dom0 link act-cngs cng-agg
+        2dup changes-union          \ dom0 link act-cngs cng-agg cng-agg'
+
+        \ Clean up.
+        swap changes-deallocate     \ dom0 link act-cngs cng-agg'
+        swap changes-deallocate     \ dom0 link cng-agg'
+        swap                        \ dom0 cng-agg' link
+
+        link-get-next
+    repeat
+                                    \ dom0 cng-agg
+    swap domain-get-current-state   \ cng-agg sta
+    2dup swap                       \ cng-agg sta sta cng-agg
+    changes-apply-to-state          \ cng-agg sta sta'
+    region-new                      \ cng-agg reg
+    swap changes-deallocate         \ reg
 ;
 
 \ Return the current-action.

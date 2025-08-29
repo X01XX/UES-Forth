@@ -207,7 +207,6 @@
         cr ." ps - to Print Session, all domains, actions."
         cr
 
-        
         \ Display the prompt.
         cr
         type                    \ n

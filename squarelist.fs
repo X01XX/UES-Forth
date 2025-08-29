@@ -49,20 +49,11 @@
 ;
 
 \ Push a square to a square-list, unless it is already in the list.
-: square-list-push ( sqr1 list0 -- )
+: square-list-push-nodups ( sqr1 list0 -- )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-square
 
-    dup list-is-empty
-    if
-        over square-get-state
-        15 =
-        if
-            cr ." *** square 15 addeded to empty list ***" cr
-        then
-    then
-    
     2dup
     [ ' square-eq ] literal -rot
     list-member
@@ -72,6 +63,16 @@
         over struct-inc-use-count
         list-push
     then
+;
+
+\ Push a square to a square-list.
+: square-list-push ( sqr1 list0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-square
+
+    over struct-inc-use-count
+    list-push
 ;
 
 \ Remove the first square, idetified by xt, from a square-list, and deallocate.

@@ -47,15 +47,8 @@
     assert-tos-is-list
     assert-nos-is-group
 
-\    2dup
-\    [ ' group-eq ] literal -rot
-\    list-member
-\    if
-\        2drop
-\    else
-        over struct-inc-use-count
-        list-push
-\    then
+    over struct-inc-use-count
+    list-push
 ;
 
 \ Remove a group from a group-list, and deallocate.

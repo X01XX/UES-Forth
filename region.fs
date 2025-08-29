@@ -1,4 +1,12 @@
 \ Implement a region struct and functions.
+\
+\ The region represents a span of 2^N power squares in a K-Map of any number of bits.
+\
+\ The region can do this with any two states. The states may be the same for a single-state
+\ "region" in a K-Map.
+\
+\ The region is used as a two-state store, the states being not-equal, in
+\ action-incompatible-pairs list.
 
 19317 constant region-id
     3 constant region-struct-number-cells
@@ -497,7 +505,7 @@ region-state-0 cell+ constant region-state-1
     2dup region-intersects 0=       \ reg1 reg0 flag
     if
         list-new tuck               \ reg1 list reg0 list
-        region-list-push-xt execute            \ reg1 list
+        region-list-push-xt execute \ reg1 list
         nip                         \ list
         exit
     then

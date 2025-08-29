@@ -406,3 +406,10 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     region-superset-of-state    \ flag
 ;
 
+: group-calc-changes ( grp0 -- cngs )
+    \ Check args.
+    assert-tos-is-group
+
+    group-get-rules         \ rulestore
+    rulestore-calc-changes  \ changes
+;

@@ -13,11 +13,11 @@
 \ link   list   region Rule  RuleStore square
 \ 17137, 17971, 19317, 23131 23173     23197
 \
-\ Sample Action Session Domain Need
-\ 23719, 29717  31319   31379  19717
+\ Sample Action Session Domain Need  Changes
+\ 23719, 29717  31319   31379  19717 31973
 
 \ Struct ids not yet used:
-\ 31973, 37171, 37379, 41719,
+\ 37171, 37379, 41719,
 \ 41737, 43717, 47137, 47317, 53171,
 \ 53173, 53197, 53717, 53719, 53731,
 \ 59797, 61379, 61717, 61979.
@@ -48,6 +48,7 @@ include state.fs
 include sample.fs
 include region.fs
 
+include changes.fs
 include rule.fs
 include rulestore.fs
 include square.fs
@@ -83,6 +84,7 @@ cs
     cr 4 spaces ." RuleStore mma:    " rulestore-mma .mma-usage
     cr 4 spaces ." Square mma:       " square-mma .mma-usage
     cr 4 spaces ." Sample mma:       " sample-mma .mma-usage
+    cr 4 spaces ." Changes mma:      " changes-mma .mma-usage
     cr 4 spaces ." Group mma:        " group-mma .mma-usage
     cr 4 spaces ." Need mma:         " need-mma .mma-usage
     cr 4 spaces ." Action mma:       " action-mma .mma-usage
@@ -102,6 +104,7 @@ cs
     assert-sample-mma-none-in-use
     assert-need-mma-none-in-use
     assert-action-mma-none-in-use
+    assert-changes-mma-none-in-use
 
     depth 0<> 
     if  
@@ -129,6 +132,7 @@ cr ." main.fs"
 105 rulestore-mma-init
 106 square-mma-init
  20 sample-mma-init
+ 30 changes-mma-init
  30 group-mma-init
 100 need-mma-init
  20 action-mma-init
@@ -144,6 +148,7 @@ cr ." main.fs"
     rulestore-mma mma-free
     square-mma mma-free
     sample-mma mma-free
+    changes-mma mma-free
     group-mma mma-free
     need-mma mma-free
     action-mma mma-free
@@ -230,7 +235,7 @@ cr ." main.fs"
     region-tests
     region-list-tests
     rule-tests
-     action-tests
+    action-tests
     rulestore-tests
     state-tests
     input-test-parse-user-input

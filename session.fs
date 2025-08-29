@@ -137,8 +137,8 @@ session-current-domain      cell+ constant session-needs                \ A need
     \ Zero-out current domain.
     0 over session-set-current-domain
 
-    \ Zero out need-list
-    0 over _session-set-needs       \ ses
+    \ Init need-list
+    list-new over _session-set-needs    \ ses
 ;
 
 \ Print a session.
@@ -272,38 +272,90 @@ session-current-domain      cell+ constant session-needs                \ A need
     drop
 ;
 
+\ Get aggregate changes.
+: session-calc-reachable-regions ( sess0 -- reg-lst )
+    \ Check args.
+    assert-tos-is-session
+
+    dup session-get-domains             \ sess0 dom-lst
+
+    \ Init reachable region list.
+    list-new swap                       \ sess0 reg-lst lst0
+
+    \ Scan domain-list, getting needs from each domain.
+    list-get-links                      \ sess0 reg-lst link
+    begin
+        ?dup
+    while
+        dup link-get-data               \ sess0 reg-lst link domx
+
+        dup 4 pick                      \ sess0 reg-lst link domx domx sess0
+        session-set-current-domain      \ sess0 reg-lst link domx
+
+        domain-calc-reachable-region    \ sess0 reg-lst link dom-reg
+        2 pick                          \ sess0 reg-lst link dom-reg reg-lst
+        region-list-push-end            \ sess0 reg-lst link
+
+        link-get-next
+    repeat
+                                        \ sess0 reg-lst
+
+    \ dup .region-list
+    nip
+;
+
+\ Aggregate all domain needs, store in session instance field.
 : session-set-all-needs ( sess0 -- )
     \ Check args.
     assert-tos-is-session
 
-    dup session-get-domains         \ sess0 dom-lst
-
     \ Init list to start appending domain need lists to.
-    list-new swap                   \ sess0 lst-ret lst0
+    list-new                            \ s0 ned-lst
 
-    \ Scan domain-list, getting needs from each domain.
-    list-get-links                  \ sess0 lst-ret link
+    over session-calc-reachable-regions \ s0 ned-lst reg-lst
+    tuck                                \ s0 reg-lst ned-lst reg-lst
+
+    3 pick                              \ s0 reg-lst ned-lst reg-lst s0
+    session-get-domains                 \ s0 reg-lst ned-lst reg-lst dom-lst
+
+    \ Prep for loop.
+    list-get-links swap                 \ s0 reg-lst ned-lst d-link reg-lst
+    list-get-links swap                 \ s0 reg-lst ned-lst r-link d-link
+
+    \ Scan two lists to get all needs
     begin
         ?dup
     while
-        dup link-get-data           \ sess0 lst-ret link domx
+                                        \ s0 reg-lst ned-lst r-link d-link
 
-        dup 4 pick                  \ sess0 lst-ret link domx domx sess0
-        session-set-current-domain  \ sess0 lst-ret link domx
+        \ Get region and domain
+        over link-get-data              \ s0 reg-lst ned-lst r-link d-link | regx
+        over link-get-data              \ s0 reg-lst ned-lst r-link d-link | regx domx
 
-        domain-get-needs            \ sess0 lst-ret link dom-neds
-        rot                         \ sess0 link dom-neds lst-ret
-        2dup                        \ sess0 link dom-neds lst-ret dom-neds lst-ret
-        need-list-append            \ sess0 link dom-neds lst-ret'
-        swap need-list-deallocate   \ sess0 link lst-ret'
-        swap                        \ sess0 lst-ret' link
+        \ Set current domain
+        dup                             \ s0 reg-lst ned-lst r-link d-link | regx domx domx
+        7 pick                          \ s0 reg-lst ned-lst r-link d-link | regx domx domx s0
+        session-set-current-domain      \ s0 reg-lst ned-lst r-link d-link | regx domx
 
-        link-get-next
+        \ Get domain needs.
+        domain-get-needs                \ s0 reg-lst ned-lst r-link d-link | d-neds
+
+        \ Aggregate needs.
+        dup                             \ s0 reg-lst ned-lst r-link d-link | d-neds d-neds
+        4 pick                          \ s0 reg-lst ned-lst r-link d-link | d-neds d-neds ned-lst
+        need-list-append                \ s0 reg-lst ned-lst r-link d-link | d-neds
+
+        \ Clean up.
+        need-list-deallocate            \ s0 reg-lst ned-lst r-link d-link
+
+        \ Get next links.
+        link-get-next swap              \ s0 reg-lst ned-lst d-link' r-link
+        link-get-next swap              \ s0 reg-lst ned-lst r-link' d-link'
     repeat
-                                    \ sess0 lst-ret
-
-    \ Store needs in session.
-    swap _session-update-needs      \
+                                        \ s0 reg-lst ned-lst 0
+    drop                                \ s0 reg-lst ned-lst
+    swap region-list-deallocate         \ s0 ned-lst
+    swap _session-update-needs          \
 ;
 
 \ Return the current domain.

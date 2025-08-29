@@ -402,3 +402,43 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         endof
     endcase
 ;
+
+: rulestore-calc-changes ( rs0 -- cncgs )
+    \ Check arg.
+    assert-tos-is-rulestore
+
+    \ Init null changes.
+    0 0 changes-new swap        \ cngs rs0
+
+    dup rulestore-get-rule-0    \ cngs rs0 rul0
+    ?dup
+    if
+        rule-get-changes        \ cngs rs0 cng0
+        rot                     \ rs0 cng0 cngs
+        \ Get union changes
+        2dup changes-union      \ rs0 cng0 cngs cngs'
+
+        \ Cleanup
+        swap changes-deallocate
+        swap changes-deallocate
+        swap                    \ cngs rs0
+    else
+                                \ cngs rs0
+        drop                    \ cngs
+        exit
+    then
+
+    rulestore-get-rule-1    \ cngs rul1
+    ?dup
+    if
+        rule-get-changes        \ cngs cng1
+
+        \ Get union changes
+        2dup changes-union      \ cng1 cngs cngs'
+
+        \ Cleanup
+        swap changes-deallocate
+        swap changes-deallocate \ cngs
+    then
+                                \ cngs
+;

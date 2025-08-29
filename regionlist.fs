@@ -41,8 +41,20 @@
     [ ' .region ] literal swap .list
 ;
 
-\ Push a region to a region-list, unless it is already in the list.
+\ Push a region to a region-list.
 : region-list-push ( reg1 list0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-region
+
+    over struct-inc-use-count
+    list-push
+;
+
+' region-list-push to region-list-push-xt
+
+\ Push a region to a region-list, unless it is already in the lists.
+: region-list-push-nodups ( reg1 list0 -- )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-region
@@ -58,7 +70,15 @@
     then
 ;
 
-' region-list-push to region-list-push-xt
+\ Push a region to the end of a region-list.
+: region-list-push-end ( reg1 list0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-region
+
+    over struct-inc-use-count
+    list-push-end
+;
 
 \ Remove a region from a region-list, and deallocate.
 \ xt signature is ( item list-data -- flag )
@@ -196,7 +216,7 @@
     while
         dup link-get-data   \ lst-n link region
         2 pick              \ lst-n link region lst-n
-        region-list-push    \ lst-n link
+        region-list-push-end    \ lst-n link
         
         link-get-next       \ lst-n link
     repeat

@@ -970,3 +970,34 @@ action-groups               cell+ constant action-function              \ An xt 
     then
     2drop
 ;
+
+: action-calc-changes ( act0 -- cngs )
+    \ Check args.
+    assert-tos-is-action
+
+    0 0 changes-new swap            \ cngs act0
+    action-get-groups               \ cngs grp-lst
+
+    list-get-links                  \ cngs link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ cngs link grp
+        dup group-get-pn            \ cngs link grp pn
+        3 < if
+                                    \ cngs link grp
+            group-calc-changes      \ cngs link grp-cngs
+            rot                     \ link grp-cngs cngs
+            2dup changes-union      \ link grp-cngs cngs cngs'
+
+            \ Clean up.
+            swap changes-deallocate \ link grp-cngs cngs'
+            swap changes-deallocate \ link cngs'
+            swap                    \ cngs' link
+        else
+            drop                    \ cngs link
+        then
+
+        link-get-next
+    repeat
+;

@@ -124,13 +124,9 @@ rule-m11    cell+ constant rule-m10
 
 \ Create a rule from two numbers on the stack.
 : rule-new ( u-result u-initial -- addr)
-    \ Check u-initial.
-    dup is-not-value
-    abort" rule-new: u-initial is invalid"
-
-    \ Check u-result.
-    over is-not-value
-    abort" rule-new: u-result is invalid"
+    \ Check args.
+    assert-tos-is-value
+    assert-nos-is-value
 
     _rule-allocate          \ u-r u-i addr
 
@@ -300,12 +296,6 @@ rule-m11    cell+ constant rule-m10
 
     2 <
     if
-        \ Clear fields.
-        0 over _rule-set-m00
-        0 over _rule-set-m01
-        0 over _rule-set-m11
-        0 over _rule-set-m10
-
         \ Deallocate instance.
         rule-mma mma-deallocate
     else
@@ -794,4 +784,13 @@ rule-m11    cell+ constant rule-m10
     loop
                                     \ rul addr+
     drop
+;
+
+: rule-get-changes ( rul0 -- cngs )
+    \ Check arg
+    assert-tos-is-rule
+
+    dup rule-get-m10 swap   \ m10 rul0
+    rule-get-m01            \ m10 m01
+    changes-new
 ;
