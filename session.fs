@@ -4,7 +4,7 @@
     4 constant session-struct-number-cells
 
 \ Struct fields
-0 constant session-header    \ 16-bits [0] struct id [1] use count
+0 constant session-header    \ 16-bits [0] struct id
 session-header              cell+ constant session-domains              \ A domain-list
 session-domains             cell+ constant session-current-domain       \ A domain, or zero before first domain is added.
 session-current-domain      cell+ constant session-needs                \ A need-list.

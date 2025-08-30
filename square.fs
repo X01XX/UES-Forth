@@ -79,7 +79,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 ;
 
 \ Return the square state. 
-: square-get-state ( addr -- u)
+: square-get-state ( addr -- u )
     \ Check arg.
     assert-tos-is-square
 

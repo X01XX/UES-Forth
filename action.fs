@@ -4,7 +4,7 @@
     6 constant action-struct-number-cells
 
 \ Struct fields
-0 constant action-header    \ (16) struct id (16) use count (8) instance id 
+0 constant action-header    \ (16) struct id (16) use count (unused) (8) instance id 
 action-header               cell+ constant action-squares               \ A square-list
 action-squares              cell+ constant action-incompatible-pairs    \ A region-list
 action-incompatible-pairs   cell+ constant action-logical-structure     \ A region-list

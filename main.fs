@@ -1,5 +1,5 @@
 
-\ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs,
+\ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs tools.fs,
 \ contact the Wisconsin Alumni Research Foundation (WARF).
 
 \ Struct IDs.
@@ -10,14 +10,17 @@
 \ No digit appears consecutively.   (avoids 11)
 \
 \ Struct ids in use.
-\ link   list   region Rule  RuleStore square
-\ 17137, 17971, 19317, 23131 23173     23197
+\ link   list   region Rule   RuleStore square
+\ 17137, 17971, 19317, 23131, 23173,    23197
 \
-\ Sample Action Session Domain Need  Changes
-\ 23719, 29717  31319   31379  19717 31973
-
+\ Sample Action Session Domain Need   Changes
+\ 23719, 29717, 31319,  31379, 19717, 31973
+\
+\ Step   Plan
+\ 37171, 37379
+\
 \ Struct ids not yet used:
-\ 37171, 37379, 41719,
+\ 41719,
 \ 41737, 43717, 47137, 47317, 53171,
 \ 53173, 53197, 53717, 53719, 53731,
 \ 59797, 61379, 61717, 61979.
@@ -72,6 +75,10 @@ include domainlist.fs
 
 include session.fs
 include input.fs
+include step.fs
+include steplist.fs
+include plan.fs
+include planlist.fs
 
 cs
 
@@ -87,6 +94,8 @@ cs
     cr 4 spaces ." Changes mma:      " changes-mma .mma-usage
     cr 4 spaces ." Group mma:        " group-mma .mma-usage
     cr 4 spaces ." Need mma:         " need-mma .mma-usage
+    cr 4 spaces ." Step mma:         " step-mma .mma-usage
+    cr 4 spaces ." Plan mma:         " plan-mma .mma-usage
     cr 4 spaces ." Action mma:       " action-mma .mma-usage
     cr 4 spaces ." Domain mma:       " domain-mma .mma-usage
     cr 4 spaces ." dstack: " .s
@@ -103,6 +112,8 @@ cs
     assert-group-mma-none-in-use
     assert-sample-mma-none-in-use
     assert-need-mma-none-in-use
+    assert-step-mma-none-in-use
+    assert-plan-mma-none-in-use
     assert-action-mma-none-in-use
     assert-changes-mma-none-in-use
 
@@ -135,6 +146,8 @@ cr ." main.fs"
  30 changes-mma-init
  30 group-mma-init
 100 need-mma-init
+ 50 step-mma-init
+ 50 plan-mma-init
  20 action-mma-init
   5 domain-mma-init
 
@@ -151,6 +164,8 @@ cr ." main.fs"
     changes-mma mma-free
     group-mma mma-free
     need-mma mma-free
+    step-mma mma-free
+    plan-mma mma-free
     action-mma mma-free
     domain-mma mma-free
 ;

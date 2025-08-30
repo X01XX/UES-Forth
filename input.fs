@@ -106,26 +106,34 @@
         dup .need cr                \ sess ned
 
         dup need-get-action         \ sess ned act
-        swap need-get-domain        \ sess act dom
+        over need-get-domain        \ sess ned act dom
 
         \ Set cur domain.
-        dup                         \ sess act dom dom
-        3 pick                      \ sess act dom dom sess
-        session-set-current-domain  \ sess act dom
+        dup                         \ sess ned act dom dom
+        4 pick                      \ sess ned act dom dom sess
+        session-set-current-domain  \ sess ned act dom
 
         \ Set cur action
-        2dup                        \ sess act dom act dom
-        domain-set-current-action   \ sess act dom
+        2dup                        \ sess ned act dom act dom
+        domain-set-current-action   \ sess ned act dom
 
-        \ Get sample
-        2dup                        \ sess act dom act dom
-        domain-get-sample           \ sess act dom sample
-        sample-deallocate           \ sess act dom
-        domain-get-inst-id
-        cr ." Dom: " .              \ sess act
-        .action cr                  \ sess
-
-        drop
+        \ See if a plan is needed.
+        dup domain-get-current-state    \ sess ned act dom d-sta
+        3 pick need-get-target          \ sess ned act dom d-sta n-sta
+        =                               \ sess ned act dom flag
+        if
+            \ No plan needed, get sample.
+            2dup                        \ sess ned act dom act dom
+            domain-get-sample           \ sess ned act dom sample
+            sample-deallocate           \ sess ned act dom
+            domain-get-inst-id
+            cr ." Dom: " .              \ sess ned act
+            .action cr                  \ sess ned
+            2drop                       \
+        else                            \ sess ned act dom
+            cr ." No plan found" cr
+            2drop 2drop
+        then
     then
 
     true
