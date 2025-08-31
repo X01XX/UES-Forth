@@ -101,6 +101,8 @@ cs
     cr 4 spaces ." dstack: " .s
 ;
 
+' memory-use to memory-use-xt
+
 \ Check that no struct instances are in use, stack is clear.
 : test-none-in-use
     assert-link-mma-none-in-use
@@ -136,9 +138,9 @@ include input_t.fs
 cr ." main.fs"
 
 \ Init array-stacks.
-101 link-mma-init
+401 link-mma-init
 102 list-mma-init
-103 region-mma-init
+203 region-mma-init
 104 rule-mma-init
 105 rulestore-mma-init
 106 square-mma-init
@@ -173,13 +175,18 @@ cr ." main.fs"
 : init-main ( -- )
     \ Set up session.
     session-new                                 \ sess
+    dup struct-inc-use-count                    \ sess  (limited usefulness, so far, but follow convention)
     dup to current-session                      \ sess
+    
 
     \ Add domain 0
     4 domain-new                                \ sess dom
 
     \ Add actions to domain 0
     [ ' domain-0-act-1-get-sample ] literal     \ sess dom0 xt
+    over domain-add-action                      \ sess dom0
+
+    [ ' domain-0-act-2-get-sample ] literal     \ sess dom0 xt
     over domain-add-action                      \ sess dom0
 
     \ Add a domain
@@ -190,6 +197,12 @@ cr ." main.fs"
 
     \ Add actions to domain 1
     [ ' domain-1-act-1-get-sample ] literal     \ sess dom1 xt
+    over domain-add-action                      \ sess dom1
+
+    [ ' domain-1-act-2-get-sample ] literal     \ sess dom1 xt
+    over domain-add-action                      \ sess dom1
+
+    [ ' domain-1-act-3-get-sample ] literal     \ sess dom1 xt
     over domain-add-action                      \ sess dom1
 
     \ Add last domain
@@ -230,11 +243,12 @@ cr ." main.fs"
 : test-init
 
     \ Set up session.
-    session-new to current-session
+    session-new                         \ sess
+    dup struct-inc-use-count            \ sess (limited usefulness, so far, but follow convention)
+    to current-session                  \
 
     \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
     4 domain-new                        \ dom
-    \ to current-domain
 
     current-session                     \ dom sess
     session-add-domain                  \ dom

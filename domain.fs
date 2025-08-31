@@ -4,7 +4,7 @@
     4 constant domain-struct-number-cells
 
 \ Struct fields
-0 constant domain-header    \ 16-bits (16) struct id (16) use count (unused) (8) instance id (8) num-bits
+0 constant domain-header    \ 16-bits (16) struct id (16) use count (8) instance id (8) num-bits
 domain-header               cell+ constant domain-actions               \ A action-list
 domain-actions              cell+ constant domain-current-state         \ A state/value.
 domain-current-state        cell+ constant domain-current-action        \ An action addr.

@@ -12,11 +12,11 @@
     assert-tos-is-list
     assert-nos-is-domain
 
-    dup list-get-length     \ dom dom-lst len
-    2 pick                  \ dom dom-lst len dom
-    domain-set-inst-id      \ dom dom-lst
-    over struct-inc-use-count
-    list-push-end
+    dup list-get-length         \ dom dom-lst len
+    2 pick                      \ dom dom-lst len dom
+    domain-set-inst-id          \ dom dom-lst
+    over struct-inc-use-count   \ dom dom-lst  (limited usefulness, so far, but follow convention)
+    list-push-end               \
 ;
 
 \ Find a domain in a list, by instance id, if any.

@@ -167,7 +167,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
 
 \ End accessors.
 
-\ Return a new group, given a state and result.
+\ Return a new group, given a region and square-list.
 : group-new    ( sqrs1 reg0 -- group )
     \ Check args.
     assert-tos-is-region
@@ -201,8 +201,9 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     \ Set rules
     over square-list-get-rules  \ s addr result flag
     0=
-    if
-        ." Group squares cannot form rules."
+    if  dup group-get-region cr ." Group: " .region
+        space ." Group squares cannot form rules."
+        space over .square-list cr
         abort
     then
                                 \ s addr rules
@@ -325,6 +326,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
                 dup group-get-rules     \ sqr1 grp0 rul-str
                 over                    \ sqr1 grp0 rul-str grp0
                 group-get-squares       \ sqr1 grp0 rul-str sqr-lst
+                cr dup ." sqr-lst: " .square-list cr
                 square-list-get-rules   \ sqr1 grp0 old-rul-str, new-rul-str true | false
                 0= abort" no rulestore from square-list?"
 

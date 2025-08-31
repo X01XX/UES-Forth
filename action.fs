@@ -4,7 +4,7 @@
     6 constant action-struct-number-cells
 
 \ Struct fields
-0 constant action-header    \ (16) struct id (16) use count (unused) (8) instance id 
+0 constant action-header    \ (16) struct id (16) use count (8) instance id 
 action-header               cell+ constant action-squares               \ A square-list
 action-squares              cell+ constant action-incompatible-pairs    \ A region-list
 action-incompatible-pairs   cell+ constant action-logical-structure     \ A region-list
@@ -238,37 +238,6 @@ action-groups               cell+ constant action-function              \ An xt 
     then
 ;
 
-\ Add a guoup, if it does not already exist.
-: _action-add-group-if-not-exists ( reg1 act0 -- flag )
-    \ cr ." _action-add-group-if-not-exists: start" cr
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-
-    \ Return if the group already exits.
-    2dup                                \ reg1 act0 reg1 act0
-    action-get-groups                   \ reg1 act0 reg1 grp-lst
-    group-list-member                   \ reg1 act0 flag
-    if
-        2drop
-        false
-        \ cr ." _action-add-group-if-not-exists: end" cr
-        exit
-    then
-
-    \ Add the group.
-    over                                \ reg1 act0 reg1
-    over action-get-squares             \ reg1 act0 reg1 sqr-lst1
-    square-list-in-region               \ reg1 act0 sqr-lst2
-    rot                                 \ act0 sqr-lst2 reg1
-    group-new                           \ act0 grp
-    swap                                \ grp act0
-    action-get-groups                   \ grp grp-lst
-    group-list-push                     \
-    true
-    \ cr ." _action-add-group-if-not-exists: end" cr
-;
-
 \ Update the logical-structure region-list of an action instance, use only in this file.
 \ Deallocate the old list last, so the instance field is never invalid.
 : _action-update-logical-structure ( new-ls act0 -- )
@@ -294,7 +263,7 @@ action-groups               cell+ constant action-function              \ An xt 
     2dup                                \ old-ls new-ls act0 new-ls act0
     _action-set-logical-structure       \ old-ls new-ls act0
 
-    \ Sav action, for now..
+    \ Save action, for now..
     -rot                                \ act0 old-ls new-ls
 
     \ Get old regions that are deleted.
@@ -351,29 +320,70 @@ action-groups               cell+ constant action-function              \ An xt 
         swap list-deallocate                \ act0 old-ls new-ls link sta-lst2
 
         dup
-        list-is-empty
-        if
+        list-is-empty                       \ act0 old-ls new-ls link sta-lst2 flag
+        if                                  \ act0 old-ls new-ls link sta-lst2
             list-deallocate                 \ act0 old-ls new-ls link
-            space ." region is NOT defining"
+            space ." is NOT defining"
 
             \ If group exists, delete it.
             dup link-get-data               \ act0 old-ls new-ls link region
             4 pick                          \ act0 old-ls new-ls link region act0
-            _action-delete-group-if-exists  \ flag
-            if
+            _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
+            if                              \ act0 old-ls new-ls link 
                 space ." deleted group"
             then
-        else
-                                                \ act0 old-ls new-ls link sta-lst2
-            space ." region is defining " dup .value-list
+        else                                    \ act0 old-ls new-ls link sta-lst2
+            \ space ." region is defining " dup .value-list
             list-deallocate                     \ act0 old-ls new-ls link
 
-            \ If group does not exist, add it.
-            dup link-get-data                   \ act0 old-ls new-ls link region
-            4 pick                              \ act0 old-ls new-ls link region act0
-            _action-add-group-if-not-exists     \ act0 old-ls new-ls link flag
-            if
-                 space ." added group"
+            \ Check if group already exists
+            dup link-get-data                   \ act0 old-ls new-ls link reg
+            4 pick                              \ act0 old-ls new-ls link reg act0
+            action-get-groups                   \ act0 old-ls new-ls link reg grps
+            group-list-member                   \ act0 old-ls new-ls link flag
+            if                                  \ act0 old-ls new-ls link
+                space ." group already exists"
+            else
+                dup link-get-data                   \ act0 old-ls new-ls link reg
+                4 pick                              \ act0 old-ls new-ls link reg act0
+                action-get-squares                  \ act0 old-ls new-ls link reg sqr-lst1
+                square-list-in-region               \ act0 old-ls new-ls link sqr-lst2
+                dup list-is-empty                   \ act0 old-ls new-ls link sqr-lst2 flag
+                if                                  \ act0 old-ls new-ls link sqr-lst2
+                    space ." is NOT defining"
+                    square-list-deallocate
+
+                    \ If group exists, delete it.
+                    dup link-get-data               \ act0 old-ls new-ls link region
+                    4 pick                          \ act0 old-ls new-ls link region act0
+                    _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
+                    if                              \ act0 old-ls new-ls link 
+                        space ." deleted group"
+                    then
+                else
+                    dup                             \ act0 old-ls new-ls link sqr-lst2 sqr-lst2
+                    square-list-get-rules           \ act0 old-ls new-ls link sqr-lst2, ruls true | false
+                    if                              \ act0 old-ls new-ls link sqr-lst2 ruls
+                        space ." is defining" over .square-list-states
+                        \ TODO? change group-new to take rules.
+                        rulestore-deallocate        \ act0 old-ls new-ls link sqr-lst2
+                        over link-get-data          \ act0 old-ls new-ls link sqr-lst2 reg
+                        group-new                   \ act0 old-ls new-ls link grp
+                        4 pick action-get-groups    \ act0 old-ls new-ls link grp grp-lst
+                        group-list-push             \ act0 old-ls new-ls link
+                    else                            \ act0 old-ls new-ls link sqr-lst2
+                        space ." is NOT defining"
+                        square-list-deallocate      \ act0 old-ls new-ls link
+
+                        \ If group exists, delete it.
+                        dup link-get-data               \ act0 old-ls new-ls link region
+                        4 pick                          \ act0 old-ls new-ls link region act0
+                        _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
+                        if                              \ act0 old-ls new-ls link 
+                            space ." deleted group"
+                        then
+                    then
+                then
             then
         then
 
@@ -635,8 +645,8 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Check a given region-list, where the region states represent incompatible pairs,
 \ returning regions where the represented squares are no longer incompatible.
-: _action-not-incompatble-pairs ( reg-lst1 act0 -- reg-lst2 )
-    \ cr ." _action-not-incompatble-pairs - start" cr
+: _action-not-incompatible-pairs ( reg-lst1 act0 -- reg-lst2 )
+    \ cr ." _action-not-incompatible-pairs - start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
@@ -689,7 +699,7 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
                                 \ ret-lst act0 0
     2drop                       \ ret-lst
-    \ cr ." _action-not-incompatble-pairs - end" cr
+    \ cr ." _action-not-incompatible-pairs - end" cr
 ;
 
 \ Recalc action-logical-structure from action-incompatible-pairs.
@@ -764,7 +774,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     \ Some regions found, check them.   \ act0 reg-lst-in
     2dup swap                           \ act0 reg-lst-in reg-lst-in act0
-    _action-not-incompatble-pairs       \ act0 reg-lst-in reg-lst-not-i
+    _action-not-incompatible-pairs      \ act0 reg-lst-in reg-lst-not-i
     dup list-is-empty                   \ act0 reg-lst-in reg-lst-not-i flag
     if
         \ No not-incomptible pairs found.
@@ -863,9 +873,9 @@ action-groups               cell+ constant action-function              \ An xt 
         0= if
             \ Check if this is the first square
                                 \ sqr act0 grp-lst
+            over action-get-squares list-get-length \ sqr act0 grp-lst len
+            1 =   \ sqr act0 grp-lst flag
 
-            dup list-is-empty   \ sqr act0 grp-lst flag
-                
             if
                 \ Add max region with first square.
                                         \ sqr act0 grp-lst

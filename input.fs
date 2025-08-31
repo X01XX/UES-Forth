@@ -155,6 +155,13 @@
         true
         exit
     then
+    2dup s" mu" str=
+    if
+        2drop
+        memory-use-xt execute
+        true
+        exit
+    then
 
     cr ." One-token command not recognized" cr
     \ Clear token.
@@ -213,6 +220,7 @@
         cr ." q - to quit"
         cr ." Press Enter to randomly choose a need, if any." 
         cr ." ps - to Print Session, all domains, actions."
+        cr ." mu - Display Memory Use."
         cr
 
         \ Display the prompt.

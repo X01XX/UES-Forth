@@ -4,7 +4,7 @@
     4 constant session-struct-number-cells
 
 \ Struct fields
-0 constant session-header    \ 16-bits [0] struct id
+0 constant session-header    \ 16-bits [0] struct id [1] use count
 session-header              cell+ constant session-domains              \ A domain-list
 session-domains             cell+ constant session-current-domain       \ A domain, or zero before first domain is added.
 session-current-domain      cell+ constant session-needs                \ A need-list.
@@ -127,7 +127,7 @@ session-current-domain      cell+ constant session-needs                \ A need
     struct-set-id                   \ ses
 
     \ Init use count.
-    1 over struct-set-use-count     \ ses
+    0 over struct-set-use-count     \ ses
 
     \ Set domains list.             
     list-new                        \ ses lst

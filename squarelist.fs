@@ -264,6 +264,7 @@
     then
 
     swap                            \ max-pn list0
+    \ Init return rulestore.
     0 -rot                          \ rul-str max-pn list0
 
     \ Prep for loop
@@ -280,34 +281,33 @@
         
         if                          \ rul-str max-pn link
             \ Update the return rulestore.
-            dup link-get-data       \ rul-str max-pn link sqr
-            square-get-rules        \ rul-str max-pn link sqr-ruls
-            3 pick                  \ rul-str max-pn link sqr-ruls rul-str
-            dup 0=
-            if
-                \ Square rulestore inits return rulestore.
-                drop                \ rul-str max-pn link sqr-ruls
-                rulestore-copy      \ rul-str max-pn link sqr-ruls (may be deallocated later)
-            else
-                \ Form union of square rulestore and return rulestore.
-                rulestore-union     \ rul-str max-pn link, new-rul-str true | false
-                0= if
-                    2drop drop false
+            rot                             \ max-pn link rul-str
+
+            over link-get-data              \ max-pn link rul-str sqr
+            square-get-rules                \ max-pn link rul-str sqr-ruls
+            over                            \ max-pn link rul-str sqr-ruls rul-str
+            if                              \ max-pn link rul-str sqr-ruls
+                over                        \ max-pn link rul-str sqr-ruls rul-str
+                rulestore-union             \ max-pn link rul-str, new-rules true | false
+                if                          \ max-pn link rul-str new-rules
+                    swap                    \ max-pn link new-rules rul-str
+                    rulestore-deallocate    \ max-pn link new-rules
+                    -rot                    \ rul-str max-pn link
+                else                        \ max-pn link rul-str
+                    rulestore-deallocate    \ max-pn link
+                    2drop
+                    false
                     exit
                 then
-            then
-                                \ rul-str max-pn link new-ruls
-            2swap               \ link new-ruls rul-str max-pn
-            swap                \ link new-ruls max-pn rul-str
-            dup 0=
-            if
-                drop
-            else
-                rulestore-deallocate
-            then
-                                \ link new-ruls max-pn
-            rot                 \ new-ruls max-pn link
+            else                            \ max-pn link rul-str sqr-ruls
+                \ Square rules are the first rules
+                \ Init the return rulestore
+                nip                         \ max-pn link sqr-ruls
+                rulestore-copy              \ max-pn link sqr-ruls (since it may be deallocated later)
+                -rot                        \ rul-str max-pn link
+            then                            \ rul-str max-pn link
         then
+
         link-get-next
     repeat
                                 \ rul-str max-pn
