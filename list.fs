@@ -642,12 +642,12 @@ list-header cell+ constant list-links
     over                        \ u list u
     over list-get-length        \ u list u len
     over                        \ u list u len u
-    0 <
+    0<                          
     abort" index LT 0"
-
+                                \ u list u len
     >=
     abort" index too large"
-
+                                \ u list
     \ Step through links the given number of times.
     0 swap                      \ u count list
     list-get-links              \ u count link

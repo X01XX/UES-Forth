@@ -147,7 +147,7 @@ cr ." main.fs"
  20 sample-mma-init
  30 changes-mma-init
  30 group-mma-init
-100 need-mma-init
+200 need-mma-init
  50 step-mma-init
  50 plan-mma-init
  20 action-mma-init

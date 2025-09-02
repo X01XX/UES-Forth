@@ -4,7 +4,7 @@
     4 constant need-struct-number-cells
 
 \ Struct fields
-0 constant need-header        \ 16-bits [0] struct id [1] use count.
+0 constant need-header                      \ struct id (16), use count (16), Type (8).
 need-header  cell+ constant need-domain     \ A Domain addr.
 need-domain  cell+ constant need-action     \ An Action addr.
 need-action  cell+ constant need-target     \ A state.
@@ -110,32 +110,53 @@ need-action  cell+ constant need-target     \ A state.
     !                   \ Set first field.
 ;
 
+: need-get-type ( ned0 -- type )
+    \ Check arg.
+    assert-tos-is-need
+
+    4c@
+;
+
+: _need-set-type ( typ1 ned0 -- )
+
+    over 1 <
+    abort" _need-set-type: invalid type value"
+
+    over 2 >
+    abort" _need-set-type: invalid type value"
+
+    4c!
+;
+
 \ End accessors.
 
 \ Create a need given a target.
-: need-new ( u2 act1 dom0 -- addr)
+: need-new ( typ3 u2 act1 dom0 -- addr)
     \ Check args.
     assert-tos-is-domain-xt execute
     assert-nos-is-action-xt execute
     assert-3os-is-value
     
     \ Allocate space.
-    need-mma mma-allocate           \ u2 act1 dom0 ned
+    need-mma mma-allocate           \ typ3 u2 act1 dom0 ned
 
     \ Store id.
-    need-id over struct-set-id      \ u2 act1 dom0 ned
+    need-id over struct-set-id      \ typ3 u2 act1 dom0 ned
 
     \ Init use count.
-    0 over struct-set-use-count     \ u2 act1 dom0 ned
+    0 over struct-set-use-count     \ typ3 u2 act1 dom0 ned
 
     \ Store domain
-    swap over _need-set-domain      \ u2 act1 ned
+    tuck _need-set-domain           \ typ3 u2 act1 ned
 
     \ Store action
-    swap over _need-set-action      \ u2 ned
+    tuck _need-set-action           \ typ3 u2 ned
     
     \ Store target
-    swap over _need-set-target      \ ned
+    tuck _need-set-target           \ typ3 ned
+
+    \ Store type.
+    tuck _need-set-type             \ ned
 ;
 
 \ Print a need.
@@ -153,7 +174,14 @@ need-action  cell+ constant need-target     \ A state.
     current-session session-set-current-domain-xt execute
 
     ." Target: "
-    need-get-target .value
+    dup need-get-target .value
+
+    need-get-type
+    case
+        1 of space ." State not in group" endof
+        2 of space ." Confirm logical structure" endof
+        ." Unrecognized type value" abort
+    endcase
 ;
 
 \ Deallocate a need.

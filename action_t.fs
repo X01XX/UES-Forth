@@ -88,7 +88,10 @@
     sample-deallocate
     action-deallocate
     cr ." depth 1: " depth . cr
+
+    cr ." action-test-add-sample - Ok"
 ;
+
 
 : action-tests
     action-test-add-sample

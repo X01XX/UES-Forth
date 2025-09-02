@@ -331,30 +331,30 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     dup domain-get-actions          \ sta dom0 act-lst
 
     \ Init list to start appending action need lists to.
-    list-new swap                   \ sta dom0 lst-ret act-lst
+    list-new swap                   \ sta dom0 ret-lst act-lst
 
     \ Scan action-list, getting needs from each action.
-    list-get-links                  \ sta dom0 lst-ret link
+    list-get-links                  \ sta dom0 ret-lst link
     begin
         ?dup
     while
-        3 pick                      \ sta dom0 lst-ret link sta
-        over link-get-data          \ sta dom0 lst-ret link sta actx
+        3 pick                      \ sta dom0 ret-lst link sta
+        over link-get-data          \ sta dom0 ret-lst link sta actx
 
-        dup 5 pick                  \ sta dom0 lst-ret link sta actx actx dom
-        domain-set-current-action   \ sta dom0 lst-ret link sta actx
+        dup 5 pick                  \ sta dom0 ret-lst link sta actx actx dom
+        domain-set-current-action   \ sta dom0 ret-lst link sta actx
 
-        action-get-needs            \ sta dom0 lst-ret link act-neds
-        rot                         \ sta dom0 link act-neds lst-ret
-        2dup                        \ sta dom0 link act-neds lst-ret act-neds lst-ret
-        need-list-append            \ sta dom0 link act-neds lst-ret'
-        swap need-list-deallocate   \ sta dom0 link lst-ret'
-        swap                        \ sat dom0 lst-ret' link
+        action-get-needs            \ sta dom0 ret-lst link act-neds
+        rot                         \ sta dom0 link act-neds ret-lst
+        2dup                        \ sta dom0 link act-neds ret-lst act-neds ret-lst
+        need-list-append            \ sta dom0 link act-neds ret-lst'
+        swap need-list-deallocate   \ sta dom0 link ret-lst'
+        swap                        \ sat dom0 ret-lst' link
 
         link-get-next
     repeat
-                                    \ sta dom0 lst-ret
-    nip nip                         \ lst-ret
+                                    \ sta dom0 ret-lst
+    nip nip                         \ ret-lst
 ;
 
 \ Return a maximum region that might be reached, given the

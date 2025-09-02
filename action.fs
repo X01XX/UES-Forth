@@ -467,8 +467,8 @@ action-groups               cell+ constant action-function              \ An xt 
     ." num sqrs: " .
     ." sqrs " .square-list-states
 
-    dup action-get-logical-structure space ." LS: " .region-list
-    dup action-get-incompatible-pairs space ." IP: " .region-list
+    dup action-get-logical-structure cr 7 spaces ." LS: " .region-list
+    dup action-get-incompatible-pairs cr 7 spaces ." IP: " .region-list
     \ cr ." Groups: "
     \ Print each group.
     action-get-groups list-get-links
@@ -953,7 +953,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Return true if a action id matches a number.
 : action-id-eq ( id1 sqr0 -- flag )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-action
 
     action-get-inst-id
@@ -967,18 +967,88 @@ action-groups               cell+ constant action-function              \ An xt 
     \ space ." Act: " dup action-get-inst-id . space ." get-needs for " over .value space ." TODO"
     \ cr
 
-    list-new -rot               \ lst-ret sta1 act0
-    over                        \ lst-ret sta1 act0 sta1
-    over action-get-groups      \ lst-ret sta1 act0 sta1 grp-lst
-    group-list-state-in-group-r \ lst-ret sta1 act0 flag
+    \ Check if the current state is not in a group.
+    list-new -rot               \ ret-lst sta1 act0 |
+    over                        \ ret-lst sta1 act0 | sta1
+    over action-get-groups      \ ret-lst sta1 act0 | sta1 grp-lst
+    group-list-state-in-group-r \ ret-lst sta1 act0 | flag
     0= if
-                                \ lst-ret sta1 act0
-        cur-domain-xt execute   \ lst-ret sta1 act0 dom0
-        need-new                \ lst-ret ned
-        over need-list-push     \ lst-ret
+                                \ ret-lst sta1 act0 |
+        \ Make need.
+        1                       \ ret-lst sta1 act0 | 1 (type)
+        2 pick                  \ ret-lst sta1 act0 | 1 sta
+        2 pick                  \ ret-lst sta1 act0 | 1 sta act0
+        cur-domain-xt execute   \ ret-lst sta1 act0 | 1 sta act0 dom0
+        need-new                \ ret-lst sta1 act0 | ned
+        \ Store need.
+        3 pick                  \ ret-lst sta1 act0 | ned ret-lst
+        need-list-push          \ ret-lst sta1 act0 |
+        \ Return need-list.
+        2drop
         exit
     then
-    2drop
+
+    \ Check for squares in action-incompatible-pairs that are not pnc.
+    dup action-get-incompatible-pairs   \ ret-lst sta1 act0 | par-lst
+    list-get-links              \ ret-lst sta1 act0 | link
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret-lst sta1 act0 | link regx
+        region-get-states       \ ret-lst sta1 act0 | link s0 s1
+        3 pick                  \ ret-lst sta1 act0 | link s0 s1 act0
+        action-get-squares      \ ret-lst sta1 act0 | link s0 s1 sqr-lst
+        tuck                    \ ret-lst sta1 act0 | link s0 sqr-lst s1 sqr-lst
+        \ Check s1
+        square-list-find        \ ret-lst sta1 act0 | link s0 sqr-lst, sqrx true | false
+        if                      \ ret-lst sta1 act0 | link s0 sqr-lst sqrx
+            dup square-get-pnc  \ ret-lst sta1 act0 | link s0 sqr-lst sqrx pnc
+            0= if                       \ ret-lst sta1 act0 | link s0 sqr-lst sqrx
+                \ Make need.
+                2 swap                  \ ret-lst sta1 act0 | link s0 sqr-lst | 2 sqrx
+                square-get-state        \ ret-lst sta1 act0 | link s0 sqr-lst | 2 stax
+                5 pick                  \ ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0
+                cur-domain-xt execute   \ ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0 dom
+                need-new                \ ret-lst sta1 act0 | link s0 sqr-lst | ned
+                \ Store need.
+                6 pick need-list-push   \ ret-lst sta1 act0 | link s0 sqr-lst
+                2drop 2drop drop
+                exit
+            else
+                drop                    \ ret-lst sta1 act0 | link s0 sqr-lst
+            then
+        else
+            ." Square not found?" abort
+        then
+                                        \ ret-lst sta1 act0 | link s0 sqr-lst
+        \ Check s0
+        square-list-find                \ ret-lst sta1 act0 | link, sqrx true | false
+        if                              \ ret-lst sta1 act0 | link sqrx
+            dup square-get-pnc          \ ret-lst sta1 act0 | link sqrx pnc
+            0= if                       \ ret-lst sta1 act0 | link sqrx
+                \ Make need.
+                2 swap                  \ ret-lst sta1 act0 | link | 2 sqrx
+                square-get-state        \ ret-lst sta1 act0 | link | 2 stax
+                3 pick                  \ ret-lst sta1 act0 | link | 2 stax act0
+                cur-domain-xt execute   \ ret-lst sta1 act0 | link | 2 stax act0 dom
+                need-new                \ ret-lst sta1 act0 | link | ned
+                \ Store need.
+                4 pick need-list-push   \ ret-lst sta1 act0 | link
+                2drop drop
+                exit
+            else
+                drop                    \ ret-lst sta1 act0 | link
+            then
+        else
+            ." Square not found?" abort
+        then
+
+        link-get-next           \ ret-lst sta1 act0 | link
+    repeat
+
+                                \ ret-lst sta1 act0
+    \ Clean up.
+    2drop                       \ ret-lst
 ;
 
 : action-calc-changes ( act0 -- cngs )

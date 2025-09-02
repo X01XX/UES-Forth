@@ -172,7 +172,7 @@ rule-m11    cell+ constant rule-m10
     assert-tos-is-rule
     assert-nos-is-rule
 
-    \ Check m00grep "^: " *.fs | grep -- none-in-use
+    \ Check m00
     2dup rule-get-m00           \ rul1 rul0 rul1 0m00
     swap rule-get-m00           \ rul1 rul0 0m00 1m00
     <> if

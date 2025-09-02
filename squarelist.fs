@@ -126,7 +126,7 @@
         region-superset-of-state    \ ret-lst reg1 link flag
         if
             \ Add state to return list.
-            dup link-get-data       \ ret-lst reg1 link sqrxgrep 
+            dup link-get-data       \ ret-lst reg1 link sqrx
             square-get-state        \ ret-lst reg1 link stax
             3 pick                  \ ret-lst reg1 link stax ret-lst
             list-push               \ ret-lst reg1 link
