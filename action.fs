@@ -251,7 +251,7 @@ action-groups               cell+ constant action-function              \ An xt 
     over                                \ new-lst act0 new-lst
     over action-get-logical-structure   \ new-lst act0 new-lst old-lst
     2dup region-list-eq                 \ new-lst act0 new-lst old-lst flag
-    abort" region lists equal?"
+    if cr ." region lists equal?" cr then
     nip                                 \ new-lst act0 old-lst
 
     \ Get/save current LS.
@@ -593,12 +593,10 @@ action-groups               cell+ constant action-function              \ An xt 
             drop
         else
             dup                                     \ act0 inclst link regx regx
-            4 pick action-get-incompatible-pairs    \ act0 inclst link regx regx pair-lst
-            [ ' region-subset-of ] literal -rot     \ act0 inclst link regx xt regx pair-lst
+            4 pick action-get-logical-structure     \ act0 inclst link regx regx LS-lst
+            [ ' region-superset-of ] literal -rot   \ act0 inclst link regx xt regx LS-lst
             list-member                             \ act0 inclst link regx flag
             if
-                drop                                \ act0 inclst link
-            else
                 \ Add region to the action-incompatible-pairs  list.
                 cr ." Act: " 3 pick action-get-inst-id . space ." Adding incompatible pair: " dup region-get-states .value space .value cr
                 dup 4 pick                          \ act0 inclst link regx regx act0
@@ -620,6 +618,8 @@ action-groups               cell+ constant action-function              \ An xt 
                 _action-update-logical-structure    \ act0 inclst link reg-lst lsl-lst
                 drop                                \ act0 inclst link reg-lst
                 region-list-deallocate              \ act0 inclst link
+            else
+                drop                                \ act0 inclst link
             then
         then
 
@@ -917,33 +917,35 @@ action-groups               cell+ constant action-function              \ An xt 
 \ Get a sample from an action.
 \ Call only from session-get-sample to domain-get-sample
 \ since current-domain and current-action need to be set first.
-: action-get-sample ( act0 -- smpl )
+: action-get-sample ( sta1 act0 -- smpl )
     \ cr ." action-get-sample - start" cr
      \ Check args.
     assert-tos-is-action
+    assert-nos-is-value
+
     cr ." Act: " dup action-get-inst-id . ." action-get-sample" cr
 
-    cur-domain-xt execute       \ act0 dom
-    domain-get-current-state-xt
-    execute                     \ act0 cur
-    over                        \ act0 cur act0
+    tuck                        \ act0 sta1 act0
+    
 
-    over                        \ act0 cur act0 cur
-    over action-get-squares     \ act0 cur act0 cur sqr-lst
-    square-list-find            \ act0 cur act0, sqrx true | false
+    over                        \ act0 sta1 act0 sta1
+    over action-get-squares     \ act0 sta1 act0 sta1 sqr-lst
+    square-list-find            \ act0 sta1 act0, sqrx true | false
 
-    if                          \ act0 cur act0 sqrx
-        square-get-last-result  \ act0 cur act0 rslt
-        -rot                    \ act0 rslt cur act0
-        true -rot               \ act0 rslt true cur act0
-        action-get-function     \ act0 rslt true cur xt
+    if                          \ act0 sta1 act0 sqrx
+        square-get-last-result  \ act0 sta1 act0 rslt
+        -rot                    \ act0 rslt sta1 act0
+        true -rot               \ act0 rslt true sta1 act0
+        action-get-function     \ act0 rslt true sta1 xt
         execute                 \ act0 smpl
-        nip                     \ smpl
-    else                        \ act0 cur act0
-                                \ act0 cur act0
-        0 -rot                  \ act0 0 cur act0
-        0 -rot                  \ act0 0 0 cur act0
-        action-get-function     \ act0 0 0 cur xt
+        tuck                    \ smpl act0 smpl
+        swap                    \ smpl smpl act0
+        action-add-sample       \ smpl
+    else                        \ act0 sta1 act0
+                                \ act0 sta1 act0
+        0 -rot                  \ act0 0 sta1 act0
+        0 -rot                  \ act0 0 0 sta1 act0
+        action-get-function     \ act0 0 0 sta1 xt
         execute                 \ act0 smpl
         tuck swap               \ smpl smpl act0
         action-add-sample       \ smpl
@@ -1052,7 +1054,7 @@ action-groups               cell+ constant action-function              \ An xt 
 ;
 
 : action-calc-changes ( act0 -- cngs )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-action
 
     0 0 changes-new swap            \ cngs act0
@@ -1080,4 +1082,52 @@ action-groups               cell+ constant action-function              \ An xt 
 
         link-get-next
     repeat
+;
+
+\ Return a list of possible forward-chaining steps, given a sample.
+: action-get-forward-steps ( smpl1 act0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-sample
+
+    \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ space ." Act: " dup action-get-inst-id .
+    \ space ." action-get-steps: " over .sample
+
+    list-new -rot                   \ ret-lst smpl1 act0
+    action-get-groups               \ ret-lst smpl1 grp-lst
+    list-get-links                  \ ret-lst smpl1 link
+    begin
+        ?dup
+    while
+        over                        \ ret-lst smpl1 link smpl1
+        over link-get-data          \ ret-lst smpl1 link smpl1 grpx
+
+        \ Check if group might apply.
+        dup group-get-pn            \ ret-lst smpl1 link smpl1 grpx pn
+        3 <                         \ ret-lst smpl1 link smpl1 grpx flag
+        if
+            over sample-get-initial     \ ret-lst smpl1 link smpl1 grpx stax
+            over group-get-r-region     \ ret-lst smpl1 link smpl1 grpx stax regx
+            region-superset-of-state    \ ret-lst smpl1 link smpl1 grpx flag
+            if
+                group-get-forward-steps \ ret-lst smpl1 link grp-stp-lst
+                dup                     \ ret-lst smpl1 link grp-stp-lst grp-stp-lst
+                4 pick                  \ ret-lst smpl1 link grp-stp-lst grp-stp-lst ret-lst
+                step-list-append-xt execute        \ ret-lst smpl1 link grp-stp-lst
+                step-list-deallocate-xt execute    \ ret-lst smpl1 link
+            else
+                \ Sample initial state is not in the group r-region.
+                2drop                   \ ret-lst smpl1 link
+            then
+        else
+            \ pn = 3/U
+            2drop
+        then
+
+        link-get-next               \ ret-lst smpl1 link
+    repeat
+                                    \ ret-lst smpl1
+    drop                            \ ret-lst
+    \ cr ." action-get-forward-steps: " dup .step-list-xt execute cr
 ;

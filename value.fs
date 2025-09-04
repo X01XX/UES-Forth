@@ -87,3 +87,14 @@
         value-isolate-lsb drop  \ cnt+ u'
     repeat
 ;
+
+\ Return true if a target value is between two values, inclusive.
+\ That is, the target has no bit-position that is different from both other numbers,
+\ That is, the target is within the region formed by the other two numbers.
+: value-between ( target2 u1 u0 -- flag )
+    rot tuck            \ u1 target2 u0 target2
+    xor -rot            \ dif0 u1 target2
+    xor                 \ dif0 dif1
+    and                 \ dif-both
+    0=                  \ flag
+;

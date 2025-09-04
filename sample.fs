@@ -152,3 +152,55 @@ sample-initial cell+ constant sample-result
     then
 ;
 
+\ Return a changes instance from a sample.
+: sample-changes ( smpl0 -- cngs )
+    \ Check arg.
+    assert-tos-is-sample
+
+    dup sample-get-initial      \ smpl0 i-sta
+    over sample-get-result      \ smpl0 i-sta r-sta
+    over over invert and        \ smpl0 i-sta r-sta m10
+    -rot                        \ smpl0 m10 i-sta r-sta
+    swap invert and             \ smpl0 m10 m01
+    changes-new                 \ smpl0 cngs
+    nip
+;
+
+\ Return true if a sample result state is NE the initial state.
+: sample-r-ne-i ( smpl -- flag )
+    \ Check arg.
+    assert-tos-is-sample
+
+    dup sample-get-initial      \ smpl0 i-sta
+    swap sample-get-result      \ i-sta r-sta
+    <>
+;
+
+\ Return true if a state is between a sample initial and result states,
+\ inclusive.
+: sample-state-between ( sta1 smpl0 -- flag )
+    \ Check args.
+    assert-tos-is-sample
+    assert-nos-is-value
+
+    dup sample-get-initial      \ sta1 smpl0 s-i
+    swap sample-get-result      \ sta1 s-i s-r
+    value-between
+;
+
+\ Return true if to samples are equal.
+: sample-eq ( smpl1 smpl2 -- flag )
+    \ Check args.
+    assert-tos-is-sample
+    assert-nos-is-sample
+
+    over sample-get-initial     \ smpl1 smpl2 1-i
+    over sample-get-initial     \ smpl1 smpl2 1-i 2-i
+    <> if
+        2drop false exit
+    then
+                                \ smpl1 smpl2
+    sample-get-result           \ smpl1 2-r
+    swap sample-get-result      \ 2-r 1-r
+    =
+;

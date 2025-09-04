@@ -172,3 +172,11 @@ changes-m01    cell+ constant changes-m10
     or                          \ sta1 msk
     xor                         \ result state
 ;
+
+: .changes ( cngs -- )
+    \ Check arg.
+    assert-tos-is-changes
+
+    ." (m10: " dup changes-get-m10 .value
+    ." , m01: " changes-get-m01 .value ." )"
+;

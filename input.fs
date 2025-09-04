@@ -88,6 +88,61 @@
     nip nip                         \ t-cnt
 ;
 
+: do-need ( ned -- )
+    \ Check arg.
+    assert-tos-is-need
+
+    dup need-get-action         \ ned act
+    over need-get-domain        \ ned act dom
+
+    \ Set cur domain.
+    dup                         \ ned act dom dom
+    current-session             \ ned act dom dom sess
+    session-set-current-domain  \ ned act dom
+
+    \ See if a plan is needed.
+    dup domain-get-current-state    \ ned act dom d-sta
+    3 pick need-get-target          \ ned act dom d-sta n-sta
+    =                               \ ned act dom flag
+    if
+        \ No plan needed, get sample.
+        2dup                        \ ned act dom act dom
+        domain-get-sample           \ ned act dom sample
+        sample-deallocate           \ ned act dom
+        domain-get-inst-id
+        cr ." Dom: " .              \ ned act
+        .action cr                  \ ned
+        drop                        \
+    else                            \ ned act dom
+        2 pick need-get-target      \ ned act dom t-sta
+        over domain-get-current-state   \ ned act dom t-sta c-state
+        sample-new                  \ ned act dom smpl
+        2dup swap                   \ ned act dom smpl smpl dom
+        domain-get-plan-xt execute  \ ned act dom smpl, plan true | false
+        if
+            cr ." plan found: " dup .plan
+            dup plan-run                \ ned act dom smpl plan flag
+            if
+                cr ." plan succeeded" cr
+                                        \ ned act dom smpl plan
+                3 pick                  \ ned act dom smpl plan act
+                3 pick                  \ ned act dom smpl plan act dom
+                domain-get-sample       \ ned act dom smpl plan smpl
+                sample-deallocate       \ ned act dom smpl plan
+            else
+                cr ." plan fained" cr
+            then
+                                        \ ned act dom smpl plan
+            plan-deallocate
+        else
+            cr ." No plan found" cr
+        then
+                                        \ ned act dom smpl
+        sample-deallocate               \ ned act dom
+        2drop drop
+    then
+;
+
 \ Zero-token logic, get/show/act-on needs.
 : do-zero-token-command ( -- true )
     current-session             \ sess
@@ -105,37 +160,9 @@
         swap list-get-item          \ sess ned
         dup .need cr                \ sess ned
 
-        dup need-get-action         \ sess ned act
-        over need-get-domain        \ sess ned act dom
-
-        \ Set cur domain.
-        dup                         \ sess ned act dom dom
-        4 pick                      \ sess ned act dom dom sess
-        session-set-current-domain  \ sess ned act dom
-
-        \ Set cur action
-        2dup                        \ sess ned act dom act dom
-        domain-set-current-action   \ sess ned act dom
-
-        \ See if a plan is needed.
-        dup domain-get-current-state    \ sess ned act dom d-sta
-        3 pick need-get-target          \ sess ned act dom d-sta n-sta
-        =                               \ sess ned act dom flag
-        if
-            \ No plan needed, get sample.
-            2dup                        \ sess ned act dom act dom
-            domain-get-sample           \ sess ned act dom sample
-            sample-deallocate           \ sess ned act dom
-            domain-get-inst-id
-            cr ." Dom: " .              \ sess ned act
-            .action cr                  \ sess ned
-            2drop                       \
-        else                            \ sess ned act dom
-            cr ." No plan found" cr
-            2drop 2drop
-        then
+        nip                         \ ned
+        do-need                     \
     then
-
     true
 ;
 
@@ -159,6 +186,40 @@
     if
         2drop
         memory-use-xt execute
+        true
+        exit
+    then
+
+
+
+    2dup snumber?
+    if
+        nip nip
+        \ cr dup ." You entered number " . cr
+
+        \ Check lower bound.
+        dup 0 <                             \ n flag
+        if
+            cr ." Number entered is LT zero" cr
+            drop true exit
+        then                                \ n
+
+        \ Check higher bound.
+        current-session                     \ n sess
+        session-get-needs                   \ n ned-lst
+        dup list-get-length                 \ n ned-lst ned-len
+        2 pick                              \ n ned-lst ned-len n
+        swap                                \ n ned-lst n ned-len
+        >=
+        if                                  \ n ned-lst flag
+            cr ." Number entered is GE need list length" cr
+            2drop true exit
+        then                                \ n ned-lst
+
+        \ Get selected need.
+        list-get-item                       \ ned
+        cr ." You chose need: " dup .need cr
+        do-need
         true
         exit
     then
@@ -221,6 +282,7 @@
         cr ." Press Enter to randomly choose a need, if any." 
         cr ." ps - to Print Session, all domains, actions."
         cr ." mu - Display Memory Use."
+        cr ." <number> - Select a particular need."
         cr
 
         \ Display the prompt.

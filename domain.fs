@@ -293,18 +293,23 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain 
     assert-nos-is-action
 
-    2dup domain-set-current-action
+    \ Set domain current action.
+    2dup domain-set-current-action  \ act1 dom0
 
-    swap                        \ dom1 act1
-    dup action-get-sample       \ dom1 act1 smpl
+    \ Get action sample.
+    dup domain-get-current-state    \ act1 dom0 | d-sta
+    2 pick                          \ act1 dom0 | d-sta act1
+    action-get-sample               \ act1 dom0 | smpl
 
-    dup sample-get-result       \ dom1 act1 smpl sta
-    3 pick                      \ dom1 act1 smpl sta dom 
-    domain-set-current-state    \ dom1 act1 smpl
+    \ Set domain current state.
+    dup sample-get-result           \ act1 dom0 | smpl sta
+    2 pick                          \ act1 dom0 | smpl sta dom 
+    domain-set-current-state        \ act1 dom0 | smpl
 
-    rot domain-get-inst-id cr ." Dom: " .   \ act1 smpl
-    swap action-get-inst-id ." Act: " .     \ smpl
+    over domain-get-inst-id cr ." Dom: " .      \ act1 dom0 | smpl
+    2 pick action-get-inst-id ." Act: " .       \ smpl
     dup .sample cr
+    nip nip
 ;
 
 \ Return true if a domain id matches a number.
@@ -443,3 +448,82 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 ;
 
 ' domain-get-max-region to domain-get-max-region-xt
+
+: domain-get-plan ( smpl1 dom0 -- plan true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+    \ cr ." at 1 " .s cr
+
+    cr ." Dom: " dup domain-get-inst-id . space ." Getting plan for " over .sample
+    \ Get change mask               \ smpl1 dom0
+    over sample-get-initial 2 pick sample-get-result xor
+    space dup ." change mask: " .value 
+    cr
+    0= abort" no changes?"
+                                    \ smpl1 dom0
+    \ cr ." at 2 " .s cr
+    \ over sample-changes             \ smpl1 dom0 cngs
+    \ cr ." Changes: " dup .changes cr
+    \ changes-deallocate
+
+    \ Init return list.
+    list-new swap                   \ smpl1 stp-lst dom0
+
+    dup domain-get-actions          \ smpl1 stp-lst dom0 act-lst
+    list-get-links                  \ smpl1 stp-lst dom0 link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ smpl1 stp-lst dom0 link actx
+        dup                         \ smpl1 stp-lst dom0 link actx actx
+        3 pick                      \ smpl1 stp-lst dom0 link actx actx dom
+        domain-set-current-action   \ smpl1 stp-lst dom0 link actx
+        4 pick swap                 \ smpl1 stp-lst dom0 link smpl1 actx
+        action-get-forward-steps    \ smpl1 stp-lst dom0 link act-stps
+        dup                         \ smpl1 stp-lst dom0 ink act-stps act-stps
+        4 pick step-list-append     \ smpl1 stp-lst dom0 link act-stps
+        step-list-deallocate        \ smpl1 stp-lst dom0 link
+
+        link-get-next
+    repeat
+                                    \ smpl1 stp-lst dom0
+    cr ." Dom: " dup domain-get-inst-id .
+    space ." Possible steps: " over .step-list cr
+
+    \ Look for one step that solves the problem.
+    2 pick sample-get-result        \ smpl1 stp-lst dom0 | smp-r
+    2 pick list-get-links           \ smpl1 stp-lst dom0 | smp-r link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ smpl1 stp-lst dom0 | smp-r link step
+        step-get-result             \ smpl1 stp-lst dom0 | smp-r link stp-r
+        2 pick =                    \ smpl1 stp-lst dom0 | smp-r link
+        if
+            link-get-data           \ smpl1 stp-lst dom0 | smp-r step
+            2 pick                  \ smpl1 stp-lst dom0 | smp-r step dom
+            plan-new-xt execute     \ smpl1 stp-lst dom0 | smp-r step plan
+            
+            tuck                    \ smpl1 stp-lst dom0 | smp-r plan step plan
+            plan-push-end-xt execute    \ smpl1 stp-lst dom0 | smp-r plan
+            nip                     \ smpl1 stp-lst dom0 | plan
+            nip                     \ smpl1 stp-lst plan
+            swap                    \ smpl1 plan stp-lst
+            step-list-deallocate    \ smpl1 plan
+            nip                     \ plan
+            true
+            exit
+        then
+            
+        link-get-next               \ smpl1 stp-lst dom0 | smp-r link
+    repeat
+                                    \ smpl1 stp-lst dom0 | smp-r
+    2drop                           \ smpl1 stp-lst
+    step-list-deallocate            \ smpl1
+    drop
+    
+    false
+;
+
+' domain-get-plan to domain-get-plan-xt

@@ -787,10 +787,77 @@ rule-m11    cell+ constant rule-m10
 ;
 
 : rule-get-changes ( rul0 -- cngs )
-    \ Check arg
+    \ Check arg.
     assert-tos-is-rule
 
     dup rule-get-m10 swap   \ m10 rul0
     rule-get-m01            \ m10 m01
     changes-new
+;
+
+\ Apply a rule to a given state, forward-chaining, returning a sample.
+: rule-apply-to-state-f ( sta1 rul0 -- smpl true | false )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-value
+
+    \ Check if the sample initial state is not in the rule initial region.
+    2dup                            \ sta1 rul0 | sta1 rul0
+    rule-initial-region             \ sta1 rul0 | sta1 regx
+    tuck                            \ sta1 rul0 | regx sta1 regx
+    region-superset-of-state        \ sta1 rul0 | regx flag
+    swap region-deallocate          \ sta1 rul0 | flag
+    0= if
+        2drop false exit
+    then
+
+    \ Get m10 mask that affects the given state.
+                                    \ sta1 rul0
+    over swap                       \ sta1 sta1 rul0
+    2dup rule-get-m10 and           \ sta1 sta1 rul0 m10
+    -rot                            \ sta1 m10 sta1 rul0
+    rule-get-m01                    \ sta1 m10 sta1 r-m01
+    swap invert and                 \ sta1 m10 m01
+    or                              \ sta1 msk
+    over xor                        \ sta1 sta2
+    swap                            \ sta2 sta1
+    sample-new                      \ smpl
+    true
+;
+
+: rule-get-forward-step ( smpl1 rul0 -- step true | false )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-sample
+
+    \ Get a sample from rul0, and smpl1 initial state, if possible.
+    over sample-get-initial     \ smpl1 rul0 | smp-i
+    over rule-apply-to-state-f  \ smpl1 rul0 | smpl2 true | false
+    0= if
+        2drop false exit
+    then
+
+    \ Check if rule did not change the smpl1 initial state.
+    dup sample-r-ne-i           \ smpl1 rul0 | smpl2 flag
+    0= if
+        sample-deallocate
+        2drop false exit
+    then
+
+    \ Check if the smpl2 result is beween the smpl1 initial and result, inclusive,
+    \ except we know its not EQ smpl1 initial.
+    dup sample-get-result       \ smpl1 rul0 | smpl2 smp2-i
+    3 pick                      \ smpl1 rul0 | smpl2 smp2-i smpl1
+    sample-state-between        \ smpl1 rul0 | smpl2 flag
+    0= if
+        sample-deallocate
+        2drop false exit
+    then
+
+    \ Make a step
+    0 swap                  \ smpl1 rul0 | 0 smpl2
+    cur-action-xt execute   \ smpl1 rul0 | 0 smpl2 actx
+    step-new-xt execute     \ smpl1 rul0 | stpx
+    nip nip
+    true
 ;

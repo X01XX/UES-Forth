@@ -103,6 +103,18 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     !                   \ Set field.
 ;
 
+\ Return step result state.
+: step-get-result ( stp0 -- sta )
+    step-get-sample
+    sample-get-result
+;
+
+\ Return step initial state.
+: step-get-initial ( stp0 -- sta )
+    step-get-sample
+    sample-get-initial
+;
+
 \ End accessors.
 
 \ Return a new step, given a state and result.
@@ -112,21 +124,21 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     assert-nos-is-sample
 
    \ Allocate space.
-    step-mma mma-allocate           \ as2 s2 a0 addr
+    step-mma mma-allocate           \ as2 s1 a0 addr
 
     \ Store id.
-    step-id over                    \ as2 s2 a0 addr id addr
-    struct-set-id                   \ as2 s2 a0 addr
+    step-id over                    \ as2 s1 a0 addr id addr
+    struct-set-id                   \ as2 s1 a0 addr
         
     \ Init use count.
-    0 over struct-set-use-count     \ as2 s2 a0 addr
+    0 over struct-set-use-count     \ as2 s1 a0 addr
 
     \ Set action.
-    tuck                            \ as2 s2 addr a0 addr
-    _step-set-action                \ as2 s2 addr
+    tuck                            \ as2 s1 addr a0 addr
+    _step-set-action                \ as2 s1 addr
 
     \ Set sample.
-    tuck                            \ as2 addr s2 addr
+    tuck                            \ as2 addr s1 addr
     over struct-inc-use-count
     _step-set-sample                \ as2 addr
 
@@ -135,14 +147,15 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     ?dup
     if
       assert-tos-is-sample
-      drop
+      struct-inc-use-count
     then
 
     \ Set alt-sample
     tuck                            \ addr as2 addr
-    over struct-inc-use-count
-    _step-set-action                \ addr
+    _step-set-alt-sample            \ addr
 ;
+
+' step-new to step-new-xt
 
 : .step ( stp0 -- )
     \ Check arg.
@@ -170,7 +183,9 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
         dup step-get-sample
         sample-deallocate
         dup step-get-alt-sample
-        sample-deallocate
+        ?dup if
+            sample-deallocate
+        then
         step-mma mma-deallocate
     else
         struct-dec-use-count

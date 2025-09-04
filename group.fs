@@ -231,7 +231,6 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     dup sample-get-result
     swap sample-get-initial
     group-new
-    cr ." at 1" cr
 ;
 
 : group-deallocate ( grp0 -- )
@@ -414,4 +413,39 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
 
     group-get-rules         \ rulestore
     rulestore-calc-changes  \ changes
+;
+
+\ Return a list of possible forward-chaining steps, given a sample.
+\ Where the sample is in the group r-region.
+: group-get-forward-steps ( smpl1 grp0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-sample
+    \ cr ." group-get-forward-steps:" cr
+
+    list-new -rot           \ ret-lst smpl1 grp0
+    dup group-get-rules     \ ret-lst smpl1 grp0 grp-ruls
+    swap group-get-pn       \ ret-lst smpl1 grp-ruls pn
+    case
+        1 of
+                                        \ ret-lst smpl1 grp-ruls
+            over                        \ ret-lst smpl1 grp-ruls | smpl1
+            over rulestore-get-rule-0   \ ret-lst smpl1 grp-ruls | smpl1 rul0
+            rule-get-forward-step       \ ret-lst smpl1 grp-ruls | stpx true | false
+            if
+                3 pick                      \ ret-lst smpl1 grp-ruls | stpx ret-lst
+                step-list-push-xt execute   \ ret-lst smpl1 grp-ruls
+            then
+            2drop
+        endof
+        2 of
+            cr ." group-get-forward-steps: TODO" cr
+            2drop
+        endof
+        3 of
+            2drop
+        endof
+        cr ." Invalid pn value" cr
+        abort
+    endcase
 ;

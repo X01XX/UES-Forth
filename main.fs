@@ -48,10 +48,11 @@ include bool.fs
 
 include state.fs
 
-include sample.fs
+
 include region.fs
 
 include changes.fs
+include sample.fs
 include rule.fs
 include rulestore.fs
 include square.fs
@@ -70,15 +71,16 @@ include action.fs
 include actionlist.fs
 include actionxts.fs
 
+include step.fs
+include steplist.fs
+
 include domain.fs
 include domainlist.fs
 
 include session.fs
-include input.fs
-include step.fs
-include steplist.fs
 include plan.fs
 include planlist.fs
+include input.fs
 
 cs
 
@@ -138,20 +140,20 @@ include input_t.fs
 cr ." main.fs"
 
 \ Init array-stacks.
-401 link-mma-init
-102 list-mma-init
-203 region-mma-init
-104 rule-mma-init
-105 rulestore-mma-init
-106 square-mma-init
- 20 sample-mma-init
- 30 changes-mma-init
- 30 group-mma-init
+601 link-mma-init
+202 list-mma-init
+403 region-mma-init
+304 rule-mma-init
+305 rulestore-mma-init
+206 square-mma-init
+ 50 sample-mma-init
+ 50 changes-mma-init
+100 group-mma-init
 200 need-mma-init
  50 step-mma-init
  50 plan-mma-init
- 20 action-mma-init
-  5 domain-mma-init
+ 50 action-mma-init
+ 25 domain-mma-init
 
 \ Free heap memory before exiting.
 : free-heap ( -- )
@@ -189,6 +191,12 @@ cr ." main.fs"
     [ ' domain-0-act-2-get-sample ] literal     \ sess dom0 xt
     over domain-add-action                      \ sess dom0
 
+    [ ' domain-0-act-3-get-sample ] literal     \ sess dom0 xt
+    over domain-add-action                      \ sess dom0
+
+    [ ' domain-0-act-4-get-sample ] literal     \ sess dom0 xt
+    over domain-add-action                      \ sess dom0
+    
     \ Add a domain
     over session-add-domain                    \ sess
 
@@ -209,14 +217,19 @@ cr ." main.fs"
     swap session-add-domain                     \ sess dom1
 ;
 
+0 value step-num
 : main ( -- )
     init-main
-
+    0 to step-num
     true
     begin
     while
-        \ Print state.
-        cr ." Current state: "
+        \ Inc step num
+        step-num 1+ to step-num
+        
+        \ Print header.
+        cr ." Step: " step-num .
+        space ." Current state: "
         current-session .session-current-state
         cr
 

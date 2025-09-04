@@ -89,6 +89,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Return a new, empty, plan, given a domain.
 : plan-new    ( dom0 -- plan )
+    cr ." plan-new" cr
     \ Check args.
     assert-tos-is-domain
 
@@ -112,16 +113,18 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     over _plan-set-step-list        \ addr
 ;
 
+' plan-new to plan-new-xt
+
 : .plan ( stp0 -- )
     \ Check arg.
     assert-tos-is-plan
 
     dup plan-get-domain domain-get-inst-id
     ." Dom: " . space
-    dup plan-get-step-list .step-list
+    plan-get-step-list .step-list
 ;
 
-: plan-deallocate ( stp0 -- )
+: plan-deallocate ( pln0 -- )
     \ Check arg.
     assert-tos-is-plan
 
@@ -138,3 +141,75 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     then
 ;
 
+\ Push a step to the end of a plan.
+: plan-push-end ( stp1 pln0 -- )
+    cr ." plan-push-new" cr
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-step
+
+    over                        \ stp1 pln0 | stp1
+    over plan-get-step-list     \ stp1 pln0 | stp1 stp-lst
+    step-list-push-end          \ stp1 pln0
+    cr ." plan-push-end: TODO verify added step links with previous steps" cr
+    2drop
+;
+
+' plan-push-end to plan-push-end-xt
+
+\ Return the initial state of a plan.
+: plan-get-initial-state ( pln - sta )
+    \ Check arg.
+    assert-tos-is-plan
+
+    plan-get-step-list      \ stp-lst
+    dup list-is-empty
+    abort" Empty step-list in plan?"
+    list-get-links          \ link
+    link-get-data           \ step
+    step-get-initial        \ sta
+;
+
+\ Run a plan.  Return true if it works.
+: plan-run ( pln0 -- flag )
+    cr ." plan-run" cr
+    \ Check arg.
+    assert-tos-is-plan
+
+    \ Set current domain and action.
+    dup plan-get-domain             \ pln0 dom
+    dup                             \ pln0 dom dom
+    current-session                 \ pln0 dom dom sess
+    session-set-current-domain      \ pln0 dom
+
+    dup domain-get-current-state    \ pln0 dom cur-sta
+    2 pick plan-get-initial-state   \ pln0 dom cur-sta pln-sta
+    <> abort" Plan initial state does not match the domain current state"
+
+                                    \ pln0 dom
+    over plan-get-step-list         \ pln0 dom stp-lst
+    list-get-links                  \ pln0 dom link
+    begin
+        ?dup
+    while
+        \ Get action sample.
+        dup link-get-data           \ pln0 dom link step
+        dup step-get-action         \ pln0 dom link step actx
+        3 pick                      \ pln0 dom link step actx dom
+        domain-get-sample           \ pln0 dom link step d-smpl
+
+        \ Check if action sample is as expected.
+        over step-get-sample        \ pln0 dom link step d-smpl s-smpl
+        over sample-eq              \ pln0 dom link step d-smpl flag
+        swap sample-deallocate      \ pln0 dom link step flag
+        0= if
+            2drop 2drop false exit
+        then
+        drop                        \ pln0 dom link
+
+        link-get-next
+    repeat
+                                    \ pln0 dom
+    2drop
+    true
+;

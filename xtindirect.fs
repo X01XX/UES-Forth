@@ -37,6 +37,8 @@
 
 ' xtabort value assert-tos-is-domain-xt
 
+' xtabort value domain-get-plan-xt
+
 
 
 ' xtabort value cur-action-xt
@@ -63,3 +65,19 @@
 
 
 ' xtabort value memory-use-xt
+
+' xtabort value step-list-append-xt
+
+' xtabort value step-list-deallocate-xt
+
+' xtabort value step-list-push-xt
+
+' xtabort value step-new-xt
+
+' xtabort value .step-list-xt
+
+
+' xtabort value plan-new-xt
+
+' xtabort value plan-push-end-xt
+
