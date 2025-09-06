@@ -89,8 +89,8 @@
     \ Make region-list list, using regions made with duplicate states.
     list-new                                \ lst1
     4  7 region-new over region-list-push   \ lst1
-    4 13 region-new over region-list-push   \ lst1
-    7 13 region-new over region-list-push   \ lst1
+    4 #13 region-new over region-list-push  \ lst1
+    7 #13 region-new over region-list-push  \ lst1
 
     dup region-list-states                  \ lst1 lst2
 
@@ -104,7 +104,7 @@
     [ ' = ] literal 7 2 pick list-member
     0= abort" 7 not in list?"
 
-    [ ' = ] literal 13 2 pick list-member
+    [ ' = ] literal #13 2 pick list-member
     0= abort" 13 not in list?"
 
     list-deallocate
@@ -142,15 +142,15 @@
     region-list-state-in-one-region         \ lst1 | flag
     abort" 7 in one region?"
 
-    12 over                                 \ lst1 12 lst1
+    #12 over                                \ lst1 12 lst1
     region-list-state-in-one-region         \ lst1 flag
     0= abort" 12 not in one region?"
 
-    13 over                                 \ lst1 13 lst1
+    #13 over                                \ lst1 13 lst1
     region-list-state-in-one-region         \ lst1 flag
     abort" 13 in one region?"
 
-    15 over                                 \ lst1 15 lst1
+    #15 over                                \ lst1 15 lst1
     region-list-state-in-one-region         \ lst1 | flag
     0= abort" 15 not in one region?"
 
@@ -167,9 +167,9 @@
     4 over list-push
     6 over list-push
     7 over list-push
-    12 over list-push
-    13 over list-push
-    15 over list-push
+    #12 over list-push
+    #13 over list-push
+    #15 over list-push
 
     \ Make a region-list.
     list-new                                \ sta-lst reg-lst
@@ -193,10 +193,10 @@
     [ ' = ] literal 6 2 pick list-member
     0= abort" 6 not in list?"
 
-    [ ' = ] literal 12 2 pick list-member
+    [ ' = ] literal #12 2 pick list-member
     0= abort" 12 not in list?"
 
-    [ ' = ] literal 15 2 pick list-member
+    [ ' = ] literal #15 2 pick list-member
     0= abort" 15 not in list?"
 
     list-deallocate

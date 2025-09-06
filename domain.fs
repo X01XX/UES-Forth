@@ -449,81 +449,146 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
 ' domain-get-max-region to domain-get-max-region-xt
 
-: domain-get-plan ( smpl1 dom0 -- plan true | false )
+\ Return a step forward, from a sample initial state,
+\ towards the sample result state.
+\ That is, within the union formed by the two sample states.
+\ If more than one step is found, randomly choose one,
+\ to support a random depth-first strategy.
+: domain-get-step-f ( smpl1 dom0 -- step true | false )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
-    \ cr ." at 1 " .s cr
 
-    cr ." Dom: " dup domain-get-inst-id . space ." Getting plan for " over .sample
-    \ Get change mask               \ smpl1 dom0
-    over sample-get-initial 2 pick sample-get-result xor
-    space dup ." change mask: " .value 
-    cr
-    0= abort" no changes?"
-                                    \ smpl1 dom0
-    \ cr ." at 2 " .s cr
-    \ over sample-changes             \ smpl1 dom0 cngs
-    \ cr ." Changes: " dup .changes cr
-    \ changes-deallocate
-
-    \ Init return list.
+    \ Init aggregate step list.
     list-new swap                   \ smpl1 stp-lst dom0
 
+    \ Get steps from each action.
     dup domain-get-actions          \ smpl1 stp-lst dom0 act-lst
     list-get-links                  \ smpl1 stp-lst dom0 link
     begin
         ?dup
-    while
-        dup link-get-data           \ smpl1 stp-lst dom0 link actx
-        dup                         \ smpl1 stp-lst dom0 link actx actx
-        3 pick                      \ smpl1 stp-lst dom0 link actx actx dom
-        domain-set-current-action   \ smpl1 stp-lst dom0 link actx
-        4 pick swap                 \ smpl1 stp-lst dom0 link smpl1 actx
-        action-get-forward-steps    \ smpl1 stp-lst dom0 link act-stps
-        dup                         \ smpl1 stp-lst dom0 ink act-stps act-stps
-        4 pick step-list-append     \ smpl1 stp-lst dom0 link act-stps
-        step-list-deallocate        \ smpl1 stp-lst dom0 link
+    while                           \ smpl1 stp-lst dom0 link |
+        dup link-get-data           \ | actx
+        dup                         \ | actx actx
+        3 pick                      \ | actx actx dom
+        domain-set-current-action   \ | actx
+        4 pick swap                 \ | smpl1 actx
+        action-get-forward-steps    \ | act-stps
+        dup                         \ | act-stps act-stps
+        4 pick step-list-append     \ | act-stps
+        step-list-deallocate        \ |
 
         link-get-next
     repeat
                                     \ smpl1 stp-lst dom0
-    cr ." Dom: " dup domain-get-inst-id .
-    space ." Possible steps: " over .step-list cr
+    \ cr ." Dom: " dup domain-get-inst-id .
+    \ space ." for: " 2 pick .sample
+    \ space ." Possible steps: " over .step-list cr
 
-    \ Look for one step that solves the problem.
-    2 pick sample-get-result        \ smpl1 stp-lst dom0 | smp-r
-    2 pick list-get-links           \ smpl1 stp-lst dom0 | smp-r link
+    \ Isolate step list
+    drop nip                        \ stp-lst
+    dup list-is-empty               \ stp-lst flag
+    if
+        \ cr dup ." at 77: " .list-raw cr
+        step-list-deallocate
+        false
+        exit
+    then
+
+    \ Pick a step.
+    dup list-get-length             \ stp-lst len
+    random                          \ stp-lst inx
+    over                            \ stp-lst inx stp-lst
+
+    \ Extract step.
+    step-list-remove-item           \ stp-lst, stpx true | false
+    0= abort" Step not found?"      \ stp-lst stpx
+
+    \ Clean up.
+    swap step-list-deallocate       \ stpx
+    \ Return.
+    true
+;
+
+\ Form a plan by getting successive steps closer, between
+\ a sample initial state to a sample result state.
+: domain-get-plan2-f ( smpl1 dom0 -- plan true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    \ Copy sample for later deallocation in loop.
+    swap sample-copy swap           \ smpl2 dom0
+    \ Init return plan.
+    dup plan-new-xt execute         \ smpl2 dom0 pln
+    -rot                            \ pln smpl2 dom0
+
     begin
-        ?dup
-    while
-        dup link-get-data           \ smpl1 stp-lst dom0 | smp-r link step
-        step-get-result             \ smpl1 stp-lst dom0 | smp-r link stp-r
-        2 pick =                    \ smpl1 stp-lst dom0 | smp-r link
-        if
-            link-get-data           \ smpl1 stp-lst dom0 | smp-r step
-            2 pick                  \ smpl1 stp-lst dom0 | smp-r step dom
-            plan-new-xt execute     \ smpl1 stp-lst dom0 | smp-r step plan
-            
-            tuck                    \ smpl1 stp-lst dom0 | smp-r plan step plan
-            plan-push-end-xt execute    \ smpl1 stp-lst dom0 | smp-r plan
-            nip                     \ smpl1 stp-lst dom0 | plan
-            nip                     \ smpl1 stp-lst plan
-            swap                    \ smpl1 plan stp-lst
-            step-list-deallocate    \ smpl1 plan
-            nip                     \ plan
+        2dup domain-get-step-f      \ pln smpl2 dom0 | stpx true | false
+
+        0= if
+            drop
+            sample-deallocate
+            plan-deallocate-xt execute
+            false
+            exit
+         then
+
+        \ Check if this is the last step needed.
+        2 pick                      \ pln smpl2 dom0 | stpx smpl2
+        sample-get-result           \ pln smpl2 dom0 | stpx r-2
+        over step-get-result        \ pln smpl2 dom0 | stpx smpl2-r stp-r
+        = if                        \ pln smpl2 dom0 | stpx
+            \ Clean up.
+            swap drop               \ pln smpl2 stpx
+            swap sample-deallocate  \ pln stpx
+            \ Add step to plan.
+            over                    \ pln stpx pln
+            plan-push-end-xt        \ pln stpx pln xt
+            execute                 \ pln
+            \ Return.
             true
             exit
         then
-            
-        link-get-next               \ smpl1 stp-lst dom0 | smp-r link
-    repeat
-                                    \ smpl1 stp-lst dom0 | smp-r
-    2drop                           \ smpl1 stp-lst
-    step-list-deallocate            \ smpl1
-    drop
-    
+
+        \ Add step to plan.         \ pln smpl2 dom0 | stpx
+        dup                         \ pln smpl2 dom0 | stpx stpx
+        4 pick                      \ pln smpl2 dom0 | stpx stpx pln
+        plan-push-end-xt execute    \ pln smpl2 dom0 | stpx
+        \ Create new sample.
+        step-get-result             \ pln smpl2 dom0 | stp-r
+        2 pick sample-get-result    \ pln smpl2 dom0 | stp-r smpl-r
+        swap                        \ pln smpl2 dom0 | smpl-r stp-r
+        sample-new                  \ pln smpl2 dom0 | smpl3
+        \ Clean up.
+        rot sample-deallocate       \ pln dom0 smpl3
+        swap                        \ pln smpl3 dom
+    again
+;
+
+\ Using a random depth-first forward-chaining strategy. Try a number
+\ of times to find a plan to accomplish a desired sample.
+: domain-get-plan-f ( smpl1 dom0 -- plan true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    3 0 do
+        2dup domain-get-plan2-f \ smpl1 dom0 | pln t | f
+        if                      \ smpl1 dom0 | pln
+            \ Clean up.
+            nip nip             \ pln
+            \ Return.
+            true                \ pln t
+            unloop
+            exit
+        then
+    loop
+    \ Clean up.
+    2drop
+    \ Return.
     false
 ;
 
-' domain-get-plan to domain-get-plan-xt
+' domain-get-plan-f to domain-get-plan-f-xt
+

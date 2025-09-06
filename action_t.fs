@@ -19,7 +19,7 @@
 
     cr 2 pick .action cr
 
-    2 15 sample-new                 \ act smpl smpl2 smpl3
+    2 #15 sample-new                \ act smpl smpl2 smpl3
     dup 4 pick action-add-sample    \ act smpl smpl2 smpl3
 
     cr 3 pick .action cr
@@ -39,10 +39,10 @@
         abort
     then
 
-    3 15 sample-new                 \ act smpl smpl2 smpl3 smpl4
+    3 #15 sample-new                \ act smpl smpl2 smpl3 smpl4
     dup 5 pick action-add-sample    \ act smpl smpl2 smpl3 smpl4
 
-    4 15 sample-new                 \ act smpl smpl2 smpl3 smpl4 smpl5
+    4 #15 sample-new                \ act smpl smpl2 smpl3 smpl4 smpl5
     dup 6 pick action-add-sample    \ act smpl smpl2 smpl3 smpl4 smpl5
 
     cr 5 pick .action cr

@@ -192,9 +192,9 @@
 
     cr ."    pn 2 to 2 compatible:"
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop  \ sqr5-5-a
     1 1 square-new
-    14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
+    #14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
     \ 2dup ." sqr " .square cr ." sqr " .square
     2dup square-compare
     assert-char-C
@@ -205,7 +205,7 @@
     cr ."    pn 2 to 2 incompatible:"
     \ Try incompatible.
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop  \ sqr5-5-a
     1 1 square-new
     0 over square-add-result drop  \ sqr1-1-0
     2dup square-compare
@@ -216,7 +216,7 @@
     
     \ Try too compatible. Combination produces X0, X1 and XX, Xx.
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop  \ sqr5-5-a
     9 9 square-new
     1 over square-add-result drop  \ sqr9-9-1
     2dup square-compare
@@ -227,15 +227,15 @@
 
     cr ."    pn 2 to 2 compatible:"
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop \ sqr5-5-a
      5 over square-add-result drop  \ sqr5-5-a
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop \ sqr5-5-a
     assert-square-pnc-t
 
     1 1 square-new
-    14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
+    #14 over square-add-result drop \ sqr5-5-10 sqr-1-1-e
      1 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
-    14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
+    #14 over square-add-result drop \ sqr5-5-10 sqr-1-1-e
     assert-square-pnc-t
 
     2dup square-compare
@@ -247,9 +247,9 @@
     cr ."    pn 2 to 1 incompatible, GT 1 sample:"
     \ Try order 1.
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop \ sqr5-5-a
      5 over square-add-result drop  \ sqr5-5-a
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop \ sqr5-5-a
     assert-square-pnc-t
 
     1 1 square-new
@@ -269,7 +269,7 @@
     cr ."    pn 2 to 1 compatible, 1 sample:"
     \ Try order 1.
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop  \ sqr5-5-a
 
     1 1 square-new
 
@@ -287,7 +287,7 @@
     cr ."    pn 2 to 1 sample, incompatible:"
     \ Try order 1.
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop  \ sqr5-5-a
 
     9 1 square-new                  \ sqr-5-a sqr-1-9
 
@@ -323,9 +323,9 @@
     cr ."    pn 2 to 1 sample, more samples needed:"
     \ Try order 1.
     5 5 square-new
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop  \ sqr5-5-a
      5 over square-add-result drop  \ sqr5-5-a
-    10 over square-add-result drop  \ sqr5-5-a
+    #10 over square-add-result drop  \ sqr5-5-a
     assert-square-pnc-t
 
     1 1 square-new                  \ sqr-5-a sqr-1-1

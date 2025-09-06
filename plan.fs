@@ -89,7 +89,6 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Return a new, empty, plan, given a domain.
 : plan-new    ( dom0 -- plan )
-    cr ." plan-new" cr
     \ Check args.
     assert-tos-is-domain
 
@@ -141,23 +140,60 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     then
 ;
 
+' plan-deallocate to plan-deallocate-xt
+
+\ Return the result state of a non-empty plan.
+: plan-get-result-state ( pln - sta )
+    \ Check arg.
+    assert-tos-is-plan
+
+    \ Check for empty list.
+    plan-get-step-list      \ stp-lst
+    dup list-is-empty
+    abort" Empty step-list in plan?"
+
+    \ Scan the steps.
+    list-get-links          \ link
+    begin
+        dup link-get-data   \ link step
+        swap                \ step link
+
+        link-get-next       \ step link
+        dup 0=
+        if
+            drop
+            step-get-result
+            exit
+        then
+        nip                 \ link
+    again
+;
+
 \ Push a step to the end of a plan.
 : plan-push-end ( stp1 pln0 -- )
-    cr ." plan-push-new" cr
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-step
 
-    over                        \ stp1 pln0 | stp1
-    over plan-get-step-list     \ stp1 pln0 | stp1 stp-lst
-    step-list-push-end          \ stp1 pln0
-    cr ." plan-push-end: TODO verify added step links with previous steps" cr
+    over                            \ stp1 pln0 | stp1
+    over plan-get-step-list         \ stp1 pln0 | stp1 stp-lst
+
+    \ Check step linkage.
+    dup list-is-empty               \ stp1 pln0 | stp1 stp-lst flag
+    0= if                           \ stp1 pln0 | stp1 stp-lst
+        over step-get-initial       \ stp1 pln0 | stp1 stp-lst stp-i
+        3 pick                      \ stp1 pln0 | stp1 stp-lst stp-i pln
+        plan-get-result-state       \ stp1 pln0 | stp1 stp-lst stp-i pln-r
+        <> abort" steps do not link"
+    then
+
+    step-list-push-end              \ stp1 pln0
     2drop
 ;
 
 ' plan-push-end to plan-push-end-xt
 
-\ Return the initial state of a plan.
+\ Return the initial state of a non-empty plan.
 : plan-get-initial-state ( pln - sta )
     \ Check arg.
     assert-tos-is-plan

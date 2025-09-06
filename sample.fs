@@ -1,4 +1,9 @@
-\ Implement a Sample struct and functions.                                                          
+\ Implement a Sample struct and functions.
+\
+\ A initial/result pair of taking an action.
+\
+\ A initial/result problem, that may be solved with one, or many, actions, all within
+\ a single domain.
 
 23719 constant sample-id
     3 constant sample-struct-number-cells
@@ -118,6 +123,15 @@ sample-initial cell+ constant sample-result
     \ Store states
     tuck _sample-set-initial   \ r1  addr
     tuck _sample-set-result    \ addr
+;
+
+: sample-copy ( smpl0 - smpl )
+    \ Check arg.
+    assert-tos-is-sample
+
+    dup sample-get-result       \ smpl0 s-r
+    swap sample-get-initial     \ s-r s-i
+    sample-new
 ;
 
 \ Print a sample.

@@ -61,3 +61,16 @@
 ;
 
 ' step-list-append to step-list-append-xt
+
+: step-list-remove-item ( inx1 lst0 -- stpx true | false )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-remove-item        \ stpx true | false
+    if
+        dup struct-dec-use-count
+        true
+    else
+        false
+    then
+;

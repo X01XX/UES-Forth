@@ -476,7 +476,7 @@ action-groups               cell+ constant action-function              \ An xt 
         ?dup
     while
         dup link-get-data
-        cr 10 spaces .group
+        cr #10 spaces .group
         link-get-next
     repeat
     cr
@@ -840,23 +840,23 @@ action-groups               cell+ constant action-function              \ An xt 
     square-list-find            \ smpl1 act0, sqr true | false
     if
         \ Update existing square
-        rot                     \ act0 sqr smpl
-        over                    \ act sqr smpl sqr
-        square-add-sample       \ act sqr flag
+        rot                     \ act0 sqr smpl1
+        over                    \ act0 sqr smpl1 sqr
+        square-add-sample       \ act0 sqr flag
         if
-            swap
-            2dup
-            _action-check-incompatible-pairs
-            2dup
-            _action-check-square
-            action-get-groups
-            group-list-check-square
+            swap                \ sqr act0
+            2dup                \ sqr act0 sqr act0
+            _action-check-incompatible-pairs    \ sqr act0
+            2dup                        \ sqr act0 sqr act0
+            _action-check-square        \ sqr act0
+            action-get-groups           \ sqr grp-lst
+            group-list-check-square     \
         else
             2drop
         then
     else
         \ Add new square.
-        swap                    \ act0 smpl
+        swap                    \ act0 smpl1
         square-from-sample      \ act0 sqr
         dup                     \ act0 sqr sqr
         2 pick                  \ act0 sqr sqr act0

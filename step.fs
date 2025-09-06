@@ -105,12 +105,18 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 
 \ Return step result state.
 : step-get-result ( stp0 -- sta )
+    \ Check arg.
+    assert-tos-is-step
+
     step-get-sample
     sample-get-result
 ;
 
 \ Return step initial state.
 : step-get-initial ( stp0 -- sta )
+    \ Check arg.
+    assert-tos-is-step
+
     step-get-sample
     sample-get-initial
 ;

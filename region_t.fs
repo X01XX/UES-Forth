@@ -46,9 +46,9 @@
      4 over list-push
      6 over list-push
      7 over list-push
-    12 over list-push
-    13 over list-push
-    15 over list-push
+    #12 over list-push
+    #13 over list-push
+    #15 over list-push
 
     \ Make region
     s" XXX1" region-from-string             \ sta-lst reg
@@ -65,10 +65,10 @@
     [ ' = ] literal 7 2 pick list-member
     0= abort" 7 not in list?"
 
-    [ ' = ] literal 13 2 pick list-member
+    [ ' = ] literal #13 2 pick list-member
     0= abort" 13 not in list?"
 
-    [ ' = ] literal 15 2 pick list-member
+    [ ' = ] literal #15 2 pick list-member
     0= abort" 15 not in list?"
 
     list-deallocate

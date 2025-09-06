@@ -262,22 +262,22 @@ rule-m11    cell+ constant rule-m10
         \ Of 4 masks, one or two can have a bit set and be valid.
         \ Not zero, three or four.
         case
-            0  of ." 0?" endof
-            1  of ." 00" endof
-            2  of ." 01" endof
-            3  of ." 0X" endof
-            4  of ." 11" endof
-            5  of ." XX" endof
-            6  of ." X1" endof
-            7  of ." 3?" endof
-            8  of ." 10" endof
-            9  of ." X0" endof
-            10 of ." Xx" endof
-            11 of ." 3?" endof
-            12 of ." 1X" endof
-            13 of ." 3?" endof
-            14 of ." 3?" endof
-            15 of ." 4?" endof
+              0 of ." 0?" endof
+              1 of ." 00" endof
+              2 of ." 01" endof
+              3 of ." 0X" endof
+              4 of ." 11" endof
+              5 of ." XX" endof
+              6 of ." X1" endof
+              7 of ." 3?" endof
+              8 of ." 10" endof
+              9 of ." X0" endof
+            #10 of ." Xx" endof
+            #11 of ." 3?" endof
+            #12 of ." 1X" endof
+            #13 of ." 3?" endof
+            #14 of ." 3?" endof
+            #15 of ." 4?" endof
         endcase
 
         1 rshift        \ shift ms bit right one position.
@@ -365,7 +365,7 @@ rule-m11    cell+ constant rule-m10
 \ of the two rules initial regions.
 \ As X1 & Xx = 01, X1 & XX = 11, X0 & Xx = 10, X0 & XX = 00.
 : rule-intersection ( rul1 rul0 -- result true | false )
-    \ Check arg.
+    \ Check arg.$590F6CBD5980
     assert-tos-is-rule
     assert-nos-is-rule
 

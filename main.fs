@@ -146,12 +146,12 @@ cr ." main.fs"
 304 rule-mma-init
 305 rulestore-mma-init
 206 square-mma-init
- 50 sample-mma-init
+250 sample-mma-init
  50 changes-mma-init
 100 group-mma-init
 200 need-mma-init
- 50 step-mma-init
- 50 plan-mma-init
+150 step-mma-init
+150 plan-mma-init
  50 action-mma-init
  25 domain-mma-init
 

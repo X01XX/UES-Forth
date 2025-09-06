@@ -37,7 +37,7 @@
 
 ' xtabort value assert-tos-is-domain-xt
 
-' xtabort value domain-get-plan-xt
+' xtabort value domain-get-plan-f-xt
 
 
 
@@ -80,4 +80,7 @@
 ' xtabort value plan-new-xt
 
 ' xtabort value plan-push-end-xt
+
+' xtabort value plan-deallocate-xt
+
 

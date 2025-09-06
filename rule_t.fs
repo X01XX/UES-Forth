@@ -92,7 +92,7 @@
 ;
 
 : rule-test-get-forward-step ( smpl1 rul0 -- step true | false )
-    11 4 sample-new                     \ smpl
+    #11 4 sample-new                    \ smpl
     s" XX/XX/XX/Xx/" rule-from-string   \ smpl rul
     2dup                                \ smpl rul smpl rul
     rule-get-forward-step               \ smpl rul, stp true | false

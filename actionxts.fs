@@ -54,7 +54,7 @@
 
     nip nip
 
-    dup 12 and
+    dup #12 and
     case
         0 of    \ 00XX -> 01XX
             dup 4 + swap
@@ -65,7 +65,7 @@
         8 of    \ 10XX -> 00XX
             dup 8 - swap
         endof
-        12 of    \ 11XX -> 10XX
+        #12 of    \ 11XX -> 10XX
             dup 4 -  swap
         endof
     endcase
@@ -110,7 +110,7 @@
 
     nip nip
 
-    dup 12 and
+    dup #12 and
     case
         0 of    \ 00XX -> 10XX
             dup 8 + swap
@@ -121,7 +121,7 @@
         8 of    \ 10XX -> 11XX
             dup 4 + swap
         endof
-        12 of    \ 11XX -> 01XX
+        #12 of    \ 11XX -> 01XX
             dup 8 -  swap
         endof
     endcase
@@ -167,7 +167,7 @@
 
     nip nip
 
-    dup 12 and
+    dup #12 and
     case
         0 of    \ X00XX -> X01XX
             dup 4 + swap
@@ -178,7 +178,7 @@
         8 of    \ X10XX -> X00XX
             dup 8 - swap
         endof
-        12 of    \ X11XX -> X10XX
+        #12 of    \ X11XX -> X10XX
             dup 4 -  swap
         endof
     endcase
@@ -193,6 +193,6 @@
 
     nip nip
 
-    dup 16 xor swap     \ XXXXX -> xXXXX
+    dup #16 xor swap     \ XXXXX -> xXXXX
     sample-new
 ;
