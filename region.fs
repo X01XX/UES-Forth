@@ -61,6 +61,12 @@ region-state-0 cell+ constant region-state-1
     abort" NOS is not an allocated region"
 ;
 
+\ Check 3OS for region, unconventional, leaves stack unchanged. 
+: assert-3os-is-region ( arg2 arg1 arg0 -- arg1 arg0 )
+    2 pick is-allocated-region 0=
+    abort" NOS is not an allocated region"
+;
+
 \ Start accessors.
 
 \ Return the first field from a region instance.
@@ -140,7 +146,7 @@ region-state-0 cell+ constant region-state-1
     region-new2
 ;
 
-' region-new to region-new-xt
+\ ' region-new to region-new-xt
 
 \ Print a region.
 : .region ( reg0 -- )
@@ -183,7 +189,7 @@ region-state-0 cell+ constant region-state-1
 
       1 rshift
     repeat
-    2drop drop  \ Drop state1 state2 msb.
+    3drop   \ Drop state1 state2 msb.
 ;
 
 \ Return the highest state in a region.
@@ -222,7 +228,7 @@ region-state-0 cell+ constant region-state-1
     then
 ;
 
-' region-deallocate to region-deallocate-xt
+\ ' region-deallocate to region-deallocate-xt
 
 \ Return the two states that make a region.
 : region-get-states ( reg0 -- s1 s0 )
@@ -495,132 +501,6 @@ region-state-0 cell+ constant region-state-1
     0=                          \ flag
 ;
 
-\ Return a region-list from a TOS region minus the NOS region.
-: region-subtract ( reg1 reg0 -- region-list )
-    \ Check args.
-    assert-tos-is-region
-    assert-nos-is-region
-
-    \ Check if any subtraction is needed.
-    2dup region-intersects 0=       \ reg1 reg0 flag
-    if
-        list-new tuck               \ reg1 list reg0 list
-        region-list-push-xt execute \ reg1 list
-        nip                         \ list
-        exit
-    then
-
-    \ Check if the result is nothing.
-    2dup swap                       \ reg1 reg0 reg0 reg1
-    region-superset-of              \ reg1 reg0 flag
-    if
-        2drop
-        list-new
-        exit
-    then
-
-    \ Init return list
-    list-new                        \ reg1 reg0 list
-
-    \ Change x over 1 positions to 0 over 1, one position at a time.
-                                    \ reg1 reg0 list
-    over region-x-mask              \ reg1 reg0 list | xmask
-    3 pick region-1-mask            \ reg1 reg0 list | xmask 1mask
-    and                             \ reg1 reg0 list | x1mask
-
-    begin
-        dup
-    while
-        isolate-a-bit               \ reg1 reg0 list | x1mask' one-bit
-        3 pick                      \ reg1 reg0 list | x1mask' one-bit reg0
-        region-x-to-0               \ reg1 reg0 list | x1mask' reg0'
-        2 pick region-list-push-xt execute     \ reg1 reg0 list | x1mask'
-    repeat
-    drop                            \ reg1 reg0 list
-
-    \ Change x over 0 positions to 1 over 0, one position at a time.
-                                    \ reg1 reg0 list
-    over region-x-mask              \ reg1 reg0 list | xmask
-    3 pick region-0-mask            \ reg1 reg0 list | xmask 0mask
-    and                             \ reg1 reg0 list | x0mask
-    begin
-        dup
-    while
-        isolate-a-bit               \ reg1 reg0 list | x0mask' one-bit
-        3 pick                      \ reg1 reg0 list | x0mask' one-bit reg0
-        region-x-to-1               \ reg1 reg0 list | x0mask' reg0'
-        2 pick region-list-push-xt execute     \ reg1 reg0 list | x0mask'
-    repeat
-    drop                            \ reg1 reg0 list
-
-    nip nip                         \ list
-;
-
-\ Return a region-list from a TOS region minus the NOS state.
-: region-subtract-state ( sta1 reg0 -- region-list )
-    \ Check args.
-    assert-tos-is-region
-    assert-nos-is-value
-
-    \ Check if any subtraction is needed.
-    2dup region-superset-of-state 0=    \ sta1 reg0 flag
-    if
-        list-new tuck              \ sta1 list reg0 list
-        region-list-push-xt execute            \ sta1 list
-        nip                         \ list
-        exit
-    then
-
-    \ Init return list
-    list-new                        \ sta1 reg0 list
-
-    \ Change x over 1 positions to 0 over 1, one position at a time.
-                                    \ sta1 reg0 list
-    over region-x-mask              \ sta1 reg0 list | xmask
-
-    \ Check if the result is nothing.
-    dup 0=                          \ sta1 reg0 list | xmask
-    if
-        drop
-        swap drop
-        swap drop
-        exit
-    then
-
-    3 pick                          \ sta1 reg0 list | xmask 1mask
-    and                             \ sta1 reg0 list | x1mask
-
-    begin
-        dup
-    while
-        isolate-a-bit               \ sta1 reg0 list | x1mask' one-bit
-        3 pick                      \ sta1 reg0 list | x1mask' one-bit reg0
-        region-x-to-0               \ sta1 reg0 list | x1mask' reg0'
-        2 pick                      \ sta1 reg0 list | x1mask' reg0 list
-        region-list-push-xt execute            \ sta1 reg0 list | x1mask'
-    repeat
-    drop                            \ sta1 reg0 list
-
-    \ Change x over 0 positions to 1 over 0, one position at a time.
-                                    \ sta1 reg0 list
-    over region-x-mask              \ sta1 reg0 list | xmask
-    3 pick !not                     \ sta1 reg0 list | xmask 0mask
-    and                             \ sta1 reg0 list | x0mask
-    begin
-        dup
-    while
-        isolate-a-bit               \ sta1 reg0 list | x0mask' one-bit
-        3 pick                      \ sta1 reg0 list | x0mask' one-bit reg0
-        region-x-to-1               \ sta1 reg0 list | x0mask' reg0'
-        2 pick region-list-push-xt execute     \ sta1 reg0 list | x0mask'
-    repeat
-    drop                            \ sta1 reg0 list
-
-    nip nip                         \ list
-;
-
-' region-subtract-state to region-subtract-state-xt
-
 \ Return true if a region uses a given state.
 : region-uses-state ( sta1 reg0 -- flag )
     \ Check args.
@@ -713,3 +593,4 @@ region-state-0 cell+ constant region-state-1
 
     region-new2
 ;
+

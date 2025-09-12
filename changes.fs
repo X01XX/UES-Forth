@@ -180,3 +180,33 @@ changes-m01    cell+ constant changes-m10
     ." (m10: " dup changes-get-m10 .value
     ." , m01: " changes-get-m01 .value ." )"
 ;
+
+\ Put both changes masks on the stack.
+: changes-masks ( cngs0 -- m10 m01 )
+    \ Check arg.
+    assert-tos-is-changes
+
+    dup changes-get-m10
+    swap changes-get-m01
+;
+
+\ Return changes needed so that a from-region will intersect a to-region.
+: changes-region-to-region ( reg-to reg-from -- cngs )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-region
+
+    over region-edge-mask
+    over region-edge-mask
+    and                         \ to frm egd-msk
+    -rot                        \ edg-msk to from
+    region-get-state-0  swap    \ edg-msk fs0 to
+    region-get-state-0          \ edg-msk fs0 ts0
+    over over invert            \ edg-msk fs0 ts0 fs0 ~ts0
+    and                         \ edg-msk fs0 ts0 m10 
+    3 pick and                  \ edg-msk fs0 ts0 m10'
+    -rot                        \ edg-msk m10' fs0 ts0
+    swap invert and             \ edg-msk m10' m01
+    rot and                     \ m10' m01'
+    changes-new                 \ cngs
+;

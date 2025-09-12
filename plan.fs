@@ -123,6 +123,8 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     plan-get-step-list .step-list
 ;
 
+' .plan to .plan-xt
+
 : plan-deallocate ( pln0 -- )
     \ Check arg.
     assert-tos-is-plan
@@ -205,6 +207,31 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     link-get-data           \ step
     step-get-initial        \ sta
 ;
+
+\ Push a step to the beginning of a plan.
+: plan-push ( stp1 pln0 -- )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-step
+    \ cr ." plan-push: " over .step space dup .plan cr
+
+    over                            \ stp1 pln0 | stp1
+    over plan-get-step-list         \ stp1 pln0 | stp1 stp-lst
+
+    \ Check step linkage.
+    dup list-is-empty               \ stp1 pln0 | stp1 stp-lst flag
+    0= if                           \ stp1 pln0 | stp1 stp-lst
+        over step-get-result        \ stp1 pln0 | stp1 stp-lst stp-i
+        3 pick                      \ stp1 pln0 | stp1 stp-lst stp-i pln
+        plan-get-initial-state      \ stp1 pln0 | stp1 stp-lst stp-i pln-r
+        <> abort" steps do not link"
+    then
+
+    step-list-push                  \ stp1 pln0
+    2drop
+;
+
+' plan-push to plan-push-xt
 
 \ Run a plan.  Return true if it works.
 : plan-run ( pln0 -- flag )

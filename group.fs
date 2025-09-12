@@ -428,11 +428,11 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     swap group-get-pn       \ ret-lst smpl1 grp-ruls pn
     case
         1 of
-                                        \ ret-lst smpl1 grp-ruls
-            over                        \ ret-lst smpl1 grp-ruls | smpl1
-            over rulestore-get-rule-0   \ ret-lst smpl1 grp-ruls | smpl1 rul0
-            rule-get-forward-step       \ ret-lst smpl1 grp-ruls | stpx true | false
-            if
+                                            \ ret-lst smpl1 grp-ruls
+            over                            \ ret-lst smpl1 grp-ruls | smpl1
+            over rulestore-get-rule-0       \ ret-lst smpl1 grp-ruls | smpl1 rul0
+            rule-get-forward-step           \ ret-lst smpl1 grp-ruls | stpx true | false
+            if                              \ ret-lst smpl1 grp-ruls | stpx
                 3 pick                      \ ret-lst smpl1 grp-ruls | stpx ret-lst
                 step-list-push-xt execute   \ ret-lst smpl1 grp-ruls
             then
@@ -448,4 +448,67 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
         cr ." Invalid pn value" cr
         abort
     endcase
+;
+
+\ Return 0, 1 or 2, backward steps.
+: group-get-backward-steps ( smpl1 grp0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-sample
+
+    \ cr ." group-get-backward-steps: " dup .group space over .sample cr
+
+    \ Init return list.
+    list-new -rot                           \ ret smpl1 grp0
+
+    \ Get group pn.
+    dup group-get-pn                        \ ret smpl1 grp0 pn
+
+    \ Process group by pn value.
+    case
+        1 of
+            group-get-rules                 \ ret smpl1 ruls
+            rulestore-get-rule-0            \ ret smpl1 rul
+            rule-get-backward-step          \ ret, stpx t | f
+            if
+                over                        \ ret stpx ret
+                step-list-push-xt execute   \ ret
+            then
+        endof
+        2 of
+            group-get-rules                 \ ret smpl1 ruls
+            2dup                            \ ret smpl1 ruls smpl1 ruls
+            rulestore-get-rule-0            \ ret smpl1 ruls smpl1 rul0
+            rule-get-backward-step          \ ret smpl1 ruls, stpx t | f
+            if
+                \ Get/set alt sample
+                dup                         \ ret smpl1 ruls stpx stpx
+                step-get-sample-xt execute  \ ret smpl1 ruls stpx smpl2
+                sample-get-initial          \ ret smpl1 ruls stpx s-i
+                2 pick rulestore-get-rule-1 \ ret smpl1 ruls stpx s-i rul1
+                rule-apply-to-state-f       \ ret smpl1 ruls stpx, smpl2 t | f
+                if
+                                            \ ret smpl1 ruls stpx smpl2
+                    dup sample-get-result   \ ret smpl1 ruls stpx smpl2 rstl2
+                    4 pick                  \ ret smpl1 ruls stpx smpl2 rstl2 smpl1
+                    sample-get-result       \ ret smpl1 ruls stpx smpl2 rstl2 rslt1
+                    <> if
+                        over                            \ ret smpl1 ruls stpx smpl2 stpx
+                        step-set-alt-sample-xt execute  \ ret smpl1 ruls stpx
+                    then
+                else
+                    ." no alt sample?"
+                    abort
+                then
+                3 pick                      \ ret smpl1 ruls stpx ret
+                step-list-push-xt execute   \ ret smpl1 ruls
+            then
+            ." TODO try rule-1 with rule-0 as alt"
+            2drop
+        endof
+        3 of
+            2drop
+        endof
+    endcase
+    \ cr   ." -> " dup .step-list-xt execute cr
 ;

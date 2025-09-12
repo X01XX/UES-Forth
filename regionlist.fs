@@ -6,7 +6,7 @@
     list-deallocate                                 \ Deallocate list and links.
 ;
 
-' region-list-deallocate to region-list-deallocate-xt
+\ ' region-list-deallocate to region-list-deallocate-xt
 
 \ Return the intersection of two region lists.
 : region-list-set-intersection ( list1 list0 -- list-result )
@@ -24,7 +24,7 @@
     over list-apply                     \ list-result
 ;
 
-' region-list-set-union to region-list-set-union-xt
+\ ' region-list-set-union to region-list-set-union-xt
 
 \ Return the difference of two region lists.
 : region-list-set-difference ( list1 list0 -- list-result )
@@ -51,7 +51,7 @@
     list-push
 ;
 
-' region-list-push to region-list-push-xt
+\ ' region-list-push to region-list-push-xt
 
 \ Push a region to a region-list, unless it is already in the lists.
 : region-list-push-nodups ( reg1 list0 -- )
@@ -253,7 +253,7 @@
             2dup region-intersects  \ ret-lst reg1 link reg1 reg2 flag
             if
                 \ They intersect, there will be same remainder.
-                region-subtract     \ ret-lst reg1 link remainder-lst
+                region-subtract-xt execute     \ ret-lst reg1 link remainder-lst
                 \ Add remainders to the return list
                 dup list-get-links  \ ret-lst reg1 link r-lst link
                 begin
@@ -282,7 +282,7 @@
     2drop                       \ ret-lst
 ;
 
-' region-list-subtract-region to region-list-subtract-region-xt
+\ ' region-list-subtract-region to region-list-subtract-region-xt
 
 \ From the TOS region-list, subtract the NOS region-list.
 \ In many cases, you should run region-list-subtract-n instead.
@@ -523,7 +523,7 @@
             dup 0<>
             if
                 \ Counter is 1, return false.
-                2drop drop false
+                3drop false
                 exit
             then
 

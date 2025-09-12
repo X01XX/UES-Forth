@@ -39,6 +39,8 @@
 
 ' xtabort value domain-get-plan-f-xt
 
+' xtabort value domain-get-plan-b-xt
+
 
 
 ' xtabort value cur-action-xt
@@ -48,20 +50,7 @@
 ' xtabort value assert-nos-is-action-xt
 
 
-' xtabort value region-new-xt
-
-' xtabort value region-subtract-state-xt
-
-' xtabort value region-deallocate-xt
-
-
-' xtabort value region-list-set-union-xt
-
-' xtabort value region-list-deallocate-xt
-
-' xtabort value region-list-push-xt
-
-' xtabort value region-list-subtract-region-xt
+' xtabort value region-subtract-xt
 
 
 ' xtabort value memory-use-xt
@@ -76,11 +65,21 @@
 
 ' xtabort value .step-list-xt
 
+' xtabort value step-get-sample-xt
+
+' xtabort value step-set-alt-sample-xt
+
+' xtabort value .step-xt
+
 
 ' xtabort value plan-new-xt
 
 ' xtabort value plan-push-end-xt
 
 ' xtabort value plan-deallocate-xt
+
+' xtabort value plan-push-xt
+
+' xtabort value .plan-xt
 
 

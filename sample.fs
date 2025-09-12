@@ -98,6 +98,14 @@ sample-initial cell+ constant sample-result
     !                   \ Set second field.
 ;
 
+: sample-get-states ( smpl -- u-r u-i )
+    \ Check arg.
+    assert-tos-is-sample
+
+    dup sample-get-result swap  \ r smpl
+    sample-get-initial          \ r i
+;
+
 \ End accessors.
 
 \ Create a sample from two numbers on the stack.

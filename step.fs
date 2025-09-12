@@ -74,22 +74,24 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 ;
 
 \ Return the step sample. 
-: step-get-sample ( addr -- act )
+: step-get-sample ( addr -- smpl )
     \ Check arg.
     assert-tos-is-step
 
     step-sample +       \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
+' step-get-sample to step-get-sample-xt
+
 \ Set the sample of a step instance, use only in this file.
-: _step-set-sample ( u1 addr -- )
+: _step-set-sample ( smpl addr -- )
     step-sample +       \ Add offset.
     !                   \ Set field.
 ;
 
 \ Return the step alt-sample. 
-: step-get-alt-sample ( addr -- act )
+: step-get-alt-sample ( addr -- smpl )
     \ Check arg.
     assert-tos-is-step
 
@@ -98,10 +100,12 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 ;
  
 \ Set the alt-sample of a step instance, use only in this file.
-: _step-set-alt-sample ( u1 addr -- )
+: step-set-alt-sample ( smpl addr -- )
     step-alt-sample +   \ Add offset.
     !                   \ Set field.
 ;
+
+' step-set-alt-sample to step-set-alt-sample-xt
 
 \ Return step result state.
 : step-get-result ( stp0 -- sta )
@@ -158,7 +162,7 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 
     \ Set alt-sample
     tuck                            \ addr as2 addr
-    _step-set-alt-sample            \ addr
+    step-set-alt-sample             \ addr
 ;
 
 ' step-new to step-new-xt
@@ -176,6 +180,8 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
         space ." Alt: " .sample
     then   
 ;
+
+' .step to .step-xt
 
 : step-deallocate ( stp0 -- )
     \ Check arg.

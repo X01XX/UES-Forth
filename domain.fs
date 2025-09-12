@@ -489,7 +489,6 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     drop nip                        \ stp-lst
     dup list-is-empty               \ stp-lst flag
     if
-        \ cr dup ." at 77: " .list-raw cr
         step-list-deallocate
         false
         exit
@@ -584,6 +583,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             exit
         then
     loop
+                                \ smpl1 dom0
+
     \ Clean up.
     2drop
     \ Return.
@@ -591,4 +592,187 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 ;
 
 ' domain-get-plan-f to domain-get-plan-f-xt
+
+: domain-get-step-b ( smpl1 dom0 -- step true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    \ Init aggregate step list.
+    list-new swap                   \ smpl1 stp-lst dom0
+
+    \ Get steps from each action.
+    dup domain-get-actions          \ smpl1 stp-lst dom0 act-lst
+    list-get-links                  \ smpl1 stp-lst dom0 link
+    begin
+        ?dup
+    while                           \ smpl1 stp-lst dom0 link |
+        dup link-get-data           \ | actx
+        dup                         \ | actx actx
+        3 pick                      \ | actx actx dom
+        domain-set-current-action   \ | actx
+        4 pick swap                 \ | smpl1 actx
+        action-get-backward-steps   \ | act-stps
+        dup                         \ | act-stps act-stps
+        4 pick step-list-append     \ | act-stps
+        step-list-deallocate        \ |
+
+        link-get-next
+    repeat
+                                    \ smpl1 stp-lst dom0
+    \ cr ." Dom: " dup domain-get-inst-id .
+    \ space ." for: " 2 pick .sample
+    \ space ." Possible steps: " over .step-list cr
+
+    \ Isolate step list
+    drop nip                        \ stp-lst
+    dup list-is-empty               \ stp-lst flag
+    if
+        step-list-deallocate
+        false
+        exit
+    then
+
+    \ Pick a step.
+    dup list-get-length             \ stp-lst len
+    random                          \ stp-lst inx
+    over                            \ stp-lst inx stp-lst
+
+    \ Extract step.
+    step-list-remove-item           \ stp-lst, stpx true | false
+    0= abort" Step not found?"      \ stp-lst stpx
+
+    \ Clean up.
+    swap step-list-deallocate       \ stpx
+    \ Return.
+    true
+;
+
+\ Form a plan by getting successive steps closer, between
+\ a sample result state to a sample initial state.
+: domain-get-plan2-b ( smpl1 dom0 -- plan true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    \ Copy sample for later deallocation in loop.
+    swap sample-copy swap           \ smpl2 dom0
+    \ Init return plan.
+    dup plan-new-xt execute         \ smpl2 dom0 pln
+    -rot                            \ pln smpl2 dom0
+
+    begin
+        2dup domain-get-step-b      \ pln smpl2 dom0 | stpx true | false
+
+        0= if
+            drop
+            sample-deallocate
+            plan-deallocate-xt execute
+            false
+            exit
+         then
+
+        \ Check if this is the last step needed.
+        2 pick                      \ pln smpl2 dom0 | stpx smpl2
+        sample-get-initial          \ pln smpl2 dom0 | stpx r-2
+        over step-get-initial       \ pln smpl2 dom0 | stpx smpl2-r stp-r
+        = if                        \ pln smpl2 dom0 | stpx
+            \ Clean up.
+            swap drop               \ pln smpl2 stpx
+            swap sample-deallocate  \ pln stpx
+            \ Add step to plan.
+            over                    \ pln stpx pln
+            plan-push-xt            \ pln stpx pln xt
+            execute                 \ pln
+            \ Return.
+            true
+            exit
+        then
+
+        \ Add step to plan.         \ pln smpl2 dom0 | stpx
+        dup                         \ pln smpl2 dom0 | stpx stpx
+        4 pick                      \ pln smpl2 dom0 | stpx stpx pln
+        plan-push-xt execute        \ pln smpl2 dom0 | stpx
+
+        \ Create new sample.
+        step-get-initial            \ pln smpl2 dom0 | stp-r
+        2 pick sample-get-initial   \ pln smpl2 dom0 | stp-r smpl-r
+        sample-new                  \ pln smpl2 dom0 | smpl3
+        \ Clean up.
+        rot sample-deallocate       \ pln dom0 smpl3
+        swap                        \ pln smpl3 dom
+    again
+;
+
+\ Using a random depth-first backward-chaining strategy. Try a number
+\ of times to find a plan to accomplish a desired sample.
+: domain-get-plan-b ( smpl1 dom0 -- plan true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    3 0 do
+        2dup domain-get-plan2-b \ smpl1 dom0 | pln t | f
+        if                      \ smpl1 dom0 | pln
+            \ Clean up.
+            nip nip             \ pln
+            \ Return.
+            true                \ pln t
+            unloop
+            exit
+        then
+    loop
+                                \ smpl1 dom0
+
+    \ Clean up.
+    2drop
+    \ Return.
+    false
+;
+
+' domain-get-plan-b to domain-get-plan-b-xt
+
+\ Randomly try forward or backward chaining.
+\ If it does not work, try the other.
+: domain-get-plan ( smpl1 dom0 -- plan true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    2 random
+    if
+        \ Try forward-chaining.
+        2dup domain-get-plan-f      \ smpl1 dom0 | p t | f
+        if
+            nip nip
+            cr ." plan found (f) " dup .plan-xt execute cr
+            true
+            exit
+        then
+        \ Try backward-chaining.
+        domain-get-plan-b      \ p t | f
+        if
+            cr ." plan found (b*) " dup .plan-xt execute cr
+            true
+            exit
+        then
+    else
+        \ Try backward-chaining.
+        2dup domain-get-plan-b      \ smpl1 dom0 | p t | f
+        if
+            nip nip
+            cr ." plan found (b) " dup .plan-xt execute cr
+            true
+            exit
+        then
+        \ Try forward-chaining.
+        domain-get-plan-f      \ p t | f
+        if
+            cr ." plan found (f*) " dup .plan-xt execute cr
+            true
+            exit
+        then
+    then
+    false
+;
 

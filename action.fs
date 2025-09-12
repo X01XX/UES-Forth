@@ -890,7 +890,7 @@ action-groups               cell+ constant action-function              \ An xt 
                 group-list-push         \ act0
                 drop
             else
-                2drop drop
+                3drop
             then
         else
             2 pick              \ sqr act0 grp-lst sqr
@@ -923,7 +923,7 @@ action-groups               cell+ constant action-function              \ An xt 
     assert-tos-is-action
     assert-nos-is-value
 
-    cr ." Act: " dup action-get-inst-id . ." action-get-sample" cr
+    \ cr ." Act: " dup action-get-inst-id . ." action-get-sample" cr
 
     tuck                        \ act0 sta1 act0
     
@@ -1014,7 +1014,7 @@ action-groups               cell+ constant action-function              \ An xt 
                 need-new                \ ret-lst sta1 act0 | link s0 sqr-lst | ned
                 \ Store need.
                 6 pick need-list-push   \ ret-lst sta1 act0 | link s0 sqr-lst
-                2drop 2drop drop
+                2drop 3drop
                 exit
             else
                 drop                    \ ret-lst sta1 act0 | link s0 sqr-lst
@@ -1036,7 +1036,7 @@ action-groups               cell+ constant action-function              \ An xt 
                 need-new                \ ret-lst sta1 act0 | link | ned
                 \ Store need.
                 4 pick need-list-push   \ ret-lst sta1 act0 | link
-                2drop drop
+                3drop
                 exit
             else
                 drop                    \ ret-lst sta1 act0 | link
@@ -1130,4 +1130,38 @@ action-groups               cell+ constant action-function              \ An xt 
                                     \ ret-lst smpl1
     drop                            \ ret-lst
     \ cr ." action-get-forward-steps: " dup .step-list-xt execute cr
+;
+
+\ Return a list of possible forward-chaining steps, given a sample.
+: action-get-backward-steps ( smpl1 act0 -- stp-lst )
+
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-sample
+
+    \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ space ." Act: " dup action-get-inst-id .
+    \ space ." action-get-backward-steps: " over .sample
+
+    list-new -rot                   \ ret smpl1 act0
+    action-get-groups               \ ret smpl1 grp-lst
+    list-get-links                  \ ret smpl1 link
+    begin
+        ?dup
+    while
+        over                        \ ret smpl1 link smpl1
+        over link-get-data          \ ret smpl1 link smpl1 grpx
+
+        \ Get backward steps, step-list returned may be empty.
+        group-get-backward-steps            \ ret smpl1 link stp-lst
+        dup                                 \ ret smpl1 link stp-lst stp-lst
+        4 pick                              \ ret smpl1 link stp-lst stp-lst ret
+        step-list-append-xt execute         \ ret smpl1 link stp-lst
+        step-list-deallocate-xt execute     \ ret smpl1 link
+
+        link-get-next               \ ret smpl1 link
+    repeat
+                                    \ ret smpl1
+    drop                            \ ret
+    \ cr ." action-get-backward-steps: " dup .step-list-xt execute cr
 ;

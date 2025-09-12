@@ -118,9 +118,8 @@
         over domain-get-current-state   \ ned act dom t-sta c-state
         sample-new                  \ ned act dom smpl
         2dup swap                   \ ned act dom smpl smpl dom
-        domain-get-plan-f-xt execute    \ ned act dom smpl, plan true | false
+        domain-get-plan    \ ned act dom smpl, plan true | false
         if
-            cr ." plan found: " dup .plan
             dup plan-run                \ ned act dom smpl plan flag
             if
                 cr ." plan succeeded" cr

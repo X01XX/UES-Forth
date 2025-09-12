@@ -1,0 +1,96 @@
+< previous, > current
+/home/earl/fs1/action.fs
+893c893
+<                 2drop drop
+---
+>                 3drop
+1017c1017
+<                 2drop 2drop drop
+---
+>                 2drop 3drop
+1039c1039
+<                 2drop drop
+---
+>                 3drop
+/home/earl/fs1/actionlist.fs
+/home/earl/fs1/action_t.fs
+/home/earl/fs1/actionxts.fs
+/home/earl/fs1/bool.fs
+/home/earl/fs1/changes.fs
+/home/earl/fs1/domain2.fs
+/home/earl/fs1/domain.fs
+/home/earl/fs1/domainlist.fs
+/home/earl/fs1/globals.fs
+/home/earl/fs1/group.fs
+/home/earl/fs1/grouplist.fs
+/home/earl/fs1/input.fs
+/home/earl/fs1/input_t.fs
+/home/earl/fs1/link.fs
+/home/earl/fs1/list.fs
+/home/earl/fs1/main.fs
+/home/earl/fs1/mm_array.fs
+/home/earl/fs1/need.fs
+/home/earl/fs1/needlist.fs
+/home/earl/fs1/plan.fs
+/home/earl/fs1/planlist.fs
+/home/earl/fs1/region.fs
+192c192
+<     2drop drop  \ Drop state1 state2 msb.
+---
+>     3drop   \ Drop state1 state2 msb.
+/home/earl/fs1/regionlist.fs
+526c526
+<                 2drop drop false
+---
+>                 3drop false
+/home/earl/fs1/regionlist_t.fs
+/home/earl/fs1/region_t.fs
+/home/earl/fs1/rule.fs
+/home/earl/fs1/rulestore.fs
+/home/earl/fs1/rulestore_t.fs
+/home/earl/fs1/rule_t.fs
+/home/earl/fs1/sample.fs
+/home/earl/fs1/session.fs
+/home/earl/fs1/square.fs
+330c330
+<         2drop drop false exit
+---
+>         3drop false exit
+336c336
+<         2drop drop true exit
+---
+>         3drop true exit
+345c345
+<         2drop drop false exit
+---
+>         3drop false exit
+351c351
+<         2drop drop true exit
+---
+>         3drop true exit
+381c381
+<         2drop drop false exit
+---
+>         3drop false exit
+561c561
+<         2drop drop                      \ rf
+---
+>         3drop                           \ rf
+/home/earl/fs1/squarelist.fs
+/home/earl/fs1/squarelist_t.fs
+/home/earl/fs1/square_t.fs
+/home/earl/fs1/stack.fs
+/home/earl/fs1/state.fs
+71c71
+<     2drop drop       \
+---
+>     3drop           \
+/home/earl/fs1/state_t.fs
+/home/earl/fs1/step.fs
+/home/earl/fs1/steplist.fs
+/home/earl/fs1/tools.fs
+320a321
+> 
+/home/earl/fs1/value.fs
+/home/earl/fs1/valuelist.fs
+/home/earl/fs1/xtindirect.fs

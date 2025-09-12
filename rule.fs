@@ -801,7 +801,7 @@ rule-m11    cell+ constant rule-m10
     assert-tos-is-rule
     assert-nos-is-value
 
-    \ Check if the sample initial state is not in the rule initial region.
+    \ Check if the state is not in the rule initial region.
     2dup                            \ sta1 rul0 | sta1 rul0
     rule-initial-region             \ sta1 rul0 | sta1 regx
     tuck                            \ sta1 rul0 | regx sta1 regx
@@ -855,9 +855,191 @@ rule-m11    cell+ constant rule-m10
     then
 
     \ Make a step
-    0 swap                  \ smpl1 rul0 | 0 smpl2
-    cur-action-xt execute   \ smpl1 rul0 | 0 smpl2 actx
-    step-new-xt execute     \ smpl1 rul0 | stpx
+    0 swap                      \ smpl1 rul0 | 0 smpl2
+    cur-action-xt execute       \ smpl1 rul0 | 0 smpl2 actx
+    step-new-xt execute         \ smpl1 rul0 | stpx
     nip nip
     true
+;
+
+\ Return true if a rule changes at least one bit.
+: rule-makes-change ( rul0 -- flag )
+    \ Check arg.
+    assert-tos-is-rule
+
+    dup rule-get-m01        \ rul0 m01
+    0<> if
+        drop
+        true
+        exit
+    then
+
+    rule-get-m10            \ m10
+    0<>
+;
+
+\ Ruturn a rule restricted, initial and result regions, to a given
+\ region, and the rule still changes at least one bit.
+: rule-restrict-to-region ( reg1 rul0 -- rul true | false )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-region
+
+    \ Check if reg1 intersects the rule initial region.
+    2dup                            \ reg1 rul0 reg1 rul0
+    rule-initial-region             \ reg1 rul0 reg1 reg-i
+    tuck                            \ reg1 rul0 reg-i reg1 reg-i
+    region-intersects               \ reg1 rul0 reg-i flag
+    swap region-deallocate          \ reg1 rul0 flag
+    0= if
+        2drop
+        false
+        exit
+    then
+
+    \ Restrict the rules' initial region.
+    2dup                            \ reg1 rul0 reg1 rul0
+    rule-restrict-initial-region    \ reg1 rul0 rul'
+
+    \ Check if the restricted rules' result region intersects reg1.
+    dup rule-result-region          \ reg1 rul0 rul' reg-r
+    dup 4 pick                      \ reg1 rul0 rul' reg-r reg-r reg1
+    region-intersects               \ reg1 rul0 rul' reg-r flag
+    swap region-deallocate          \ reg1 rul0 rul' flag
+    0= if
+        rule-deallocate
+        2drop
+        false
+        exit
+    then
+
+    \ Check if reg1 is a superset of the restricted rules' result region.
+    dup rule-result-region          \ reg1 rul0 rul' reg-r
+    dup 4 pick                      \ reg1 rul0 rul' reg-r reg-r reg1
+    region-superset-of              \ reg1 rul0 rul' reg-r flag
+    swap region-deallocate          \ reg1 rul0 rul' flag
+    0= if
+        nip nip                     \ rul'
+        dup rule-makes-change       \ rul' flag
+        if
+            true
+        else
+            rule-deallocate
+            false
+        then
+        exit
+    then
+
+    \ Restrict the restricted rules' result region to reg1.
+                                    \ reg1 rul0 rul'
+    nip                             \ reg1 rul'
+    tuck                            \ rul' reg1 rul'
+    rule-restrict-result-region     \ rul' rul''
+
+    \ Clean up.
+    swap rule-deallocate            \ rul''
+
+    \ Return.
+    dup rule-makes-change           \ rul' flag
+    if
+        true
+    else
+        rule-deallocate
+        false
+    then
+;
+
+\ Apply a rule to a given state, backward-chaining, returning a sample.
+\ For X->0, the result will be 1->0.
+\ For X->1, the result will be 0->1.
+: rule-apply-to-state-b ( sta1 rul0 -- smpl true | false )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-value
+
+    \ Check if the state is not in the rule result region.
+    2dup                            \ sta1 rul0 | sta1 rul0
+    rule-result-region              \ sta1 rul0 | sta1 regx (dl)
+    tuck                            \ sta1 rul0 | regx sta1 regx
+    region-superset-of-state        \ sta1 rul0 | regx flag
+    swap region-deallocate          \ sta1 rul0 | flag
+    0= if
+        2drop false exit
+    then
+
+    \ Get m10 mask that affects the given state.
+                                    \ sta1 rul0
+    over swap                       \ sta1 sta1 rul0
+    over invert                     \ sta1 sta1 rul0 sta1'
+    over rule-get-m10 and           \ sta1 sta1 rul0 m10'
+    -rot                            \ sta1 m10' sta1 rul0
+
+    \ Get m01 mask that affects the given state.
+    rule-get-m01                    \ sta1 m10 sta1 r-m01
+    and                             \ sta1 m10 m01
+    or                              \ sta1 msk
+    over xor                        \ sta1 sta2
+    sample-new                      \ smpl
+    true
+;
+
+\ Return a backward step for a rule.
+\ The rule is restricted to the region formed by the sample states,
+\ to manage X->0 and X->1 rule bit positions.
+: rule-get-backward-step ( smpl1 rul0 -- step true | false )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-sample
+
+    \ cr ." rule-get-backward-step: " dup .rule space over .sample cr
+
+    dup rule-result-region              \ smpl1 rul r-reg (dl)
+    2 pick sample-get-result            \ smpl1 rul r-reg s-r
+    over region-superset-of-state       \ smpl1 rul r-reg flag
+    if
+                                        \ smpl1 rul r-reg
+        region-deallocate               \ smpl1 rul
+        over sample-get-states          \ smpl1 rul s-r s-i
+        region-new                      \ smpl1 rul sreg (dl)
+        dup rot                         \ smpl1 sreg sreg rul
+        rule-restrict-to-region         \ smpl1 sreg, rul' t | f
+        if
+            swap region-deallocate      \ smpl1 rul' (dl)
+                                        \ smpl1 rul'
+            over                        \ smpl1 rul' smpl
+            sample-get-result           \ smpl1 rul' s-r
+            over rule-result-region     \ smpl1 rul' s-r regx (dl)
+            tuck                        \ smpl1 rul' regx s-r regx
+            region-superset-of-state    \ smpl1 rul' regx flag
+            swap region-deallocate      \ smpl1 rul' flag
+            if
+                                        \ smpl1 rul'
+                swap sample-get-result  \ rul' s-r
+                over                    \ rul' s-r rul'
+                rule-apply-to-state-b   \ rul', smpl2 t | f
+                if
+                    0 swap                  \ rul' 0 smpl2
+                    cur-action-xt execute   \ rul' 0 smpl2 actx
+                    step-new-xt execute     \ rul' stpx
+                    swap rule-deallocate    \ stpx
+                    true
+                else
+                    rule-deallocate
+                    false
+                then
+            else
+                rule-deallocate
+                drop
+                false
+            then
+        else
+            region-deallocate
+            drop
+            false
+        then
+    else
+        region-deallocate
+        2drop
+        false
+    then
 ;

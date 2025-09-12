@@ -16,12 +16,11 @@
 \ Sample Action Session Domain Need   Changes
 \ 23719, 29717, 31319,  31379, 19717, 31973
 \
-\ Step   Plan
-\ 37171, 37379
+\ Step   Plan   Step2  Plan2
+\ 37171, 37379, 41719, 41737
 \
 \ Struct ids not yet used:
-\ 41719,
-\ 41737, 43717, 47137, 47317, 53171,
+\ 43717, 47137, 47317, 53171,
 \ 53173, 53197, 53717, 53719, 53731,
 \ 59797, 61379, 61717, 61979.
 
@@ -46,19 +45,19 @@ include xtindirect.fs
 include value.fs
 include bool.fs
 
-include state.fs
-
-
 include region.fs
+include regionlist.fs
+include region2.fs
+include state.fs
 
 include changes.fs
 include sample.fs
+
 include rule.fs
 include rulestore.fs
 include square.fs
 
 include valuelist.fs
-include regionlist.fs
 include squarelist.fs
 
 include group.fs
@@ -179,7 +178,6 @@ cr ." main.fs"
     session-new                                 \ sess
     dup struct-inc-use-count                    \ sess  (limited usefulness, so far, but follow convention)
     dup to current-session                      \ sess
-    
 
     \ Add domain 0
     4 domain-new                                \ sess dom
@@ -273,13 +271,21 @@ cr ." main.fs"
     test-init
 
     square-tests
+    depth 0<> abort" Test a stack not empty"
     square-list-tests
+    depth 0<> abort" Test b stack not empty"
     region-tests
+    depth 0<> abort" Test c stack not empty"
     region-list-tests
+    depth 0<> abort" Test d stack not empty"
     rule-tests
+    depth 0<> abort" Test e stack not empty"
     action-tests
+    depth 0<> abort" Test f stack not empty"
     rulestore-tests
+    depth 0<> abort" Test g stack not empty"
     state-tests
+    depth 0<> abort" Test h stack not empty"
     input-test-parse-user-input
 
     memory-use

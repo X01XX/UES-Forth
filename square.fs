@@ -327,13 +327,13 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     1 swap square-get-result        \ sqr0 rc r0 r1
     over <>                         \ sqr0 rc r0 flag
     if
-        2drop drop false exit
+        3drop false exit
     then
 
     \ Exit if no more checks can be made.
     over 2 =
     if
-        2drop drop true exit
+        3drop true exit
     then
 
     \ rc must be > 2, check r0 = r2
@@ -342,13 +342,13 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     over
     <>                         \ sqr0 rc r0 flag
     if
-        2drop drop false exit
+        3drop false exit
     then
 
     \ Exit if no more checks can be made.
     over 3 =
     if
-        2drop drop true exit
+        3drop true exit
     then
 
     \ rc must be > 3, check r0 = r3
@@ -378,7 +378,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     1 swap square-get-result        \ sqr0 rc r0 r1
     over =                          \ sqr0 rc r0 flag
     if
-        2drop drop false exit
+        3drop false exit
     then
 
     \ Exit if no more checks can be maderegion-eq.
@@ -558,7 +558,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
         drop true                       \ true
     else
         \ pnc flag is false, default to pn change flag.
-        2drop drop                      \ rf
+        3drop                           \ rf
     then
 ;
 

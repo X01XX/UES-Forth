@@ -22,10 +22,8 @@ decimal
 ;
 
 \ Show base in decimal, while preserving the base.
-: base-dec ( -- )  \ Side effect: Print a number.
-    base @         \ Get current base.
-    decimal dup .  \ Make copy and display as decimal.
-    base !         \ Restore base.
+: .base-dec ( -- )  \ Side effect: Print a number.
+    base @ dec.    \ Get current base.
 ;
 
 \ Set base to binary.
@@ -318,3 +316,4 @@ decimal
     \ Get result.
     swap mod
 ;
+

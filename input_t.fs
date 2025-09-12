@@ -1,4 +1,6 @@
 : input-test-parse-user-input
+    depth 0<> abort" Test 0 stack not empty"
+
     \ Straight-forward test.
     s" ab cde fghi" parse-user-input
     3 <>
@@ -9,7 +11,7 @@
     s" fghi" compare 0<> abort" fghi not found"
 
     depth 0<> abort" Test 1 stack not empty"
-    
+
     \ Double up separators, and at start and end.
     s"  ab cde  fghi " parse-user-input
     3 <>

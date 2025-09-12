@@ -39,6 +39,28 @@
     rule-deallocate
     region-deallocate
 
+    s" 0101" region-from-string         \ reg1
+
+    s" Xx/Xx/XX/XX/" rule-from-string   \ reg1 rul1
+
+    2dup                                \ reg1 rul1 reg1 rul1
+    rule-restrict-result-region         \ reg1 rul1 rul2
+    cr ." rslt2: " dup .rule cr
+    rule-deallocate
+    rule-deallocate
+    region-deallocate
+
+    s" 0101" region-from-string         \ reg1
+
+    s" X0/X1/XX/XX/" rule-from-string   \ reg1 rul1
+
+    2dup                                \ reg1 rul1 reg1 rul1
+    rule-restrict-result-region         \ reg1 rul1 rul2
+    cr ." rslt3: " dup .rule cr
+    rule-deallocate
+    rule-deallocate
+    region-deallocate
+
     cr ." rule-test-restrict-result-region - Ok" cr
 ;
 
@@ -110,10 +132,55 @@
     cr ." rule-test-get-forward-step - Ok" cr
 ;
 
+: rule-test-restrict-to-region
+    5 15 region-new                     \ reg
+    s" 01/X1/11/XX/" rule-from-string   \ reg rul
+    2dup rule-restrict-to-region       \ reg rul rul'
+    if
+    else
+        cr ." rule restriction failed?" abort
+    then
+    s" 01/11/11/11/" rule-from-string   \ reg rul rul' rul2
+    2dup rule-eq                        \ reg rul rul' rul2 flag
+    if
+    else
+        cr ." invalid rule?" cr abort
+    then
+
+    rule-deallocate
+    rule-deallocate
+    rule-deallocate
+    region-deallocate
+
+    cr ." rule-test-restrict-to-region - Ok" cr
+;
+
+: rule-test-get-backward-step
+    15 5 sample-new                     \ smpl
+    s" 01/X1/11/XX/" rule-from-string   \ smpl rul
+    2dup rule-get-backward-step         \ smpl rul, stpx t | f
+    if
+        cr ." Step found: " dup .step cr
+        dup step-get-sample
+        sample-get-states
+        7 <> abort" Sample initial not 7?"
+        15 <> abort" Sample result not 15?"
+        step-deallocate
+    else
+        ." step not found" abort
+    then
+    rule-deallocate
+    sample-deallocate
+
+    cr ." rule-test-get-backward-step - Ok" cr
+;
+
 : rule-tests
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
     rule-test-apply-to-state-f
     rule-test-get-forward-step
+    rule-test-restrict-to-region
+    rule-test-get-backward-step
 ;
 
