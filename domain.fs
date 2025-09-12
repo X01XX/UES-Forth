@@ -732,9 +732,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
 ' domain-get-plan-b to domain-get-plan-b-xt
 
-\ Randomly try forward or backward chaining.
-\ If it does not work, try the other.
-: domain-get-plan ( smpl1 dom0 -- plan true | false )
+\ Try forward and backward chaining to make a plan
+\ for going from the initial state of a sample to the result state.
+: domain-get-plan2-fb ( smpl1 dom0 -- plan true | false )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
@@ -774,5 +774,47 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         then
     then
     false
+;
+
+\ Asymmetric chaining.
+\ Look for rules that contain a needed bit change,
+\ do not intersect a region formed by the two states of a sample,
+\ and no rule exists with the same bit change that does intersect
+\ the union.
+: domain-asymmetric-chaining ( smpl1 dom0 -- plan t | f )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    \ Find an asymmetric rule.
+
+    \ Translate the sample-initial-state to the initial region of the rule, giving the rule-initial-state.
+
+    \ If the rule-initial-state is not equal to the sample-initial-state,
+    \ find a plan (plan1) from the sample-initial-state to the rule-initial-state.
+
+    \ Apply the rule to the rule-initial-state, forming a step, and the rule-result-state.
+
+    \ If the rule-result-state is not equal to the sample-result-state,
+    \ find a plan (plan2) from the rule-result-state to the sample-result-state.
+
+    \ Join plan1, the asymmetric step, and plan2.
+    
+    2drop
+    false
+;
+
+\ Get a plan for going between the initial state of a sample to the result state.
+: domain-get-plan ( smpl1 dom0 -- plan true | false )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    2dup domain-get-plan2-fb        \ smpl1 dom0, plan t | f
+    if
+        nip nip true                \ plan t
+    else
+        domain-asymmetric-chaining  \ plan t | f
+    then
 ;
 
