@@ -2,8 +2,8 @@
 \ A parking spot for the start of a list of links, or no links, that is, an empty list.
 \ This struct wholly manages the link struct.
 
-17971 constant list-id
-    2 constant list-struct-number-cells
+#17971 constant list-id
+     2 constant list-struct-number-cells
 
 \ List struct fields.
 0 constant  list-header             \ 16-bits [0] struct id [1] use count [2] length.

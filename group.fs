@@ -1,7 +1,7 @@
 \ Implement a group struct and functions.
 
-23197 constant group-id                                                                                  
-    5 constant group-struct-number-cells
+#23197 constant group-id                                                                                  
+     5 constant group-struct-number-cells
 
 \ Struct fields
 0 constant group-header                         \ id (16) use count (16) pn (8) pnc (8)
@@ -511,4 +511,29 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
         endof
     endcase
     \ cr   ." -> " dup .step-list-xt execute cr
+;
+
+\ Return steps by changes, forward-chaining.
+: group-get-steps-by-changes-f ( smpl1 grp0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-sample
+
+    cr ." group-get-steps-by-changes-f: " dup .group space over .sample cr
+
+    \ Get group pn.
+    dup group-get-pn                        \ smpl1 grp0 pn
+
+    \ Handle unpredictable group.
+    3 = if
+        2drop
+        list-new
+        exit
+    then
+
+    group-get-rules                         \ smpl ruls
+    rulestore-get-steps-by-changes-f        \ stp-lst
+    \ cr ." at 4 " .s cr
+
+     cr   ." -> " dup .step-list-xt execute cr
 ;

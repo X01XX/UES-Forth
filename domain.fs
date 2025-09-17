@@ -1,7 +1,7 @@
 \ Implement a Domain struct and functions.
 
-31379 constant domain-id
-    4 constant domain-struct-number-cells
+#31379 constant domain-id
+     4 constant domain-struct-number-cells
 
 \ Struct fields
 0 constant domain-header    \ 16-bits (16) struct id (16) use count (8) instance id (8) num-bits
@@ -776,17 +776,58 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     false
 ;
 
-\ Asymmetric chaining.
-\ Look for rules that contain a needed bit change,
-\ do not intersect a region formed by the two states of a sample,
-\ and no rule exists with the same bit change that does intersect
-\ the union.
-: domain-asymmetric-chaining ( smpl1 dom0 -- plan t | f )
+: domain-get-steps-by-changes-f ( smpl1 dom0 -- stp-lst )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
 
+    \ Init return list.
+    list-new swap                   \ smpl1 stp-lst dom0
+
+    \ Get steps from each action.
+    dup domain-get-actions          \ smpl1 stp-lst dom0 act-lst
+    list-get-links                  \ smpl1 stp-lst dom0 link
+    begin
+        ?dup
+    while                               \ smpl1 stp-lst dom0 link |
+        dup link-get-data               \ | actx
+        dup                             \ | actx actx
+        3 pick                          \ | actx actx dom
+        domain-set-current-action       \ | actx
+        4 pick swap                     \ | smpl1 actx
+        action-get-steps-by-changes-f   \ | act-stps
+        dup                             \ | act-stps act-stps
+        4 pick step-list-append         \ | act-stps
+        step-list-deallocate            \ |
+
+        link-get-next
+    repeat
+;
+
+\ Asymmetric chaining, forward.
+\ Look for rules that contain a needed bit change,
+\ do not intersect a region formed by the two states of a sample, that is fails rule-restrict-to-region,
+\ and no rule exists with the same bit change that does intersect
+\ the union.
+: domain-asymmetric-chaining-f ( smpl1 dom0 -- plan t | f )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    2drop
+    false
+    exit
+
     \ Find an asymmetric rule.
+    domain-get-steps-by-changes-f           \ stp-lst t | f
+    if
+        cr ." steps by changes steps: " dup .step-list cr
+        step-list-deallocate
+        current-session
+        .session-xt execute
+    else
+        cr ." steps by changes steps: None" cr
+    then
 
     \ Translate the sample-initial-state to the initial region of the rule, giving the rule-initial-state.
 
@@ -799,8 +840,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ find a plan (plan2) from the rule-result-state to the sample-result-state.
 
     \ Join plan1, the asymmetric step, and plan2.
-    
-    2drop
+
     false
 ;
 
@@ -814,7 +854,10 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     if
         nip nip true                \ plan t
     else
-        domain-asymmetric-chaining  \ plan t | f
+        \ domain-asymmetric-chaining-f  \ plan t | f
+        2drop
+        false
     then
 ;
+
 

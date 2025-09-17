@@ -74,3 +74,59 @@
         false
     then
 ;
+
+\ Return steps that intersect (one, or two, equal states) a given sample.
+: step-list-step-intersections ( smpl1 stp-lst0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-sample
+
+    \ Prep for loop.
+    list-new -rot               \ ret smpl1 lst0
+    list-get-links              \ ret smpl1 link
+
+    begin
+        ?dup
+    while
+        over                    \ ret smpl1 link smpl1 
+        over link-get-data      \ ret smpl1 link smpl1 step
+        step-intersects-sample  \ ret smpl1 link flag
+        if
+            dup link-get-data   \ ret smpl1 link step
+            3 pick              \ ret smpl1 link step ret
+            step-list-push      \ ret smpl1 link
+        then
+
+        link-get-next
+    repeat
+                                \ ret smpl1
+    drop                        \ ret
+;
+
+\ Return steps that do not intersect (one, or two, equal states) a given sample.
+: step-list-step-non-intersections ( smpl1 stp-lst0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-sample
+
+    \ Prep for loop.
+    list-new -rot               \ ret smpl1 lst0
+    list-get-links              \ ret smpl1 link
+
+    begin
+        ?dup
+    while
+        over                    \ ret smpl1 link smpl1 
+        over link-get-data      \ ret smpl1 link smpl1 step
+        step-intersects-sample  \ ret smpl1 link flag
+        0= if
+            dup link-get-data   \ ret smpl1 link step
+            3 pick              \ ret smpl1 link step ret
+            step-list-push      \ ret smpl1 link
+        then
+
+        link-get-next
+    repeat
+                                \ ret smpl1
+    drop                        \ ret
+;

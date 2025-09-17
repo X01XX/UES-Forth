@@ -8,8 +8,8 @@
 \ The region is used as a two-state store, the states being not-equal, in
 \ action-incompatible-pairs list.
 
-19317 constant region-id
-    3 constant region-struct-number-cells
+#19317 constant region-id
+     3 constant region-struct-number-cells
 
 \ Struct fields
 0 constant region-header        \ 16-bits [0] struct id [1] use count.
@@ -592,5 +592,21 @@ region-state-0 cell+ constant region-state-1
     all-bits 0
 
     region-new2
+;
+
+\ Return a state in a region, requiring the least changes from a state
+\ outside of the region.
+: region-translate-state    ( sta1 reg0 -- sta )                                                                                                           
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-value
+    2dup region-superset-of-state
+    abort" No need to translate?"
+
+    dup region-get-state-0      \ sta1 reg0 rsta0
+    2 pick xor                  \ sta1 reg0 diff
+    swap region-edge-mask       \ sta1 diff edge-msk
+    and                         \ sta1 diff'
+    xor                         \ sta' (in region)
 ;
 

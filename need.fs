@@ -1,7 +1,7 @@
 \ Implement a need struct and functions.
 
-19717 constant need-id
-    4 constant need-struct-number-cells
+#19717 constant need-id
+     4 constant need-struct-number-cells
 
 \ Struct fields
 0 constant need-header                      \ struct id (16), use count (16), Type (8).

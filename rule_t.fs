@@ -133,7 +133,7 @@
 ;
 
 : rule-test-restrict-to-region
-    5 15 region-new                     \ reg
+    5 #15 region-new                     \ reg
     s" 01/X1/11/XX/" rule-from-string   \ reg rul
     2dup rule-restrict-to-region       \ reg rul rul'
     if
@@ -156,7 +156,7 @@
 ;
 
 : rule-test-get-backward-step
-    15 5 sample-new                     \ smpl
+    #15 5 sample-new                     \ smpl
     s" 01/X1/11/XX/" rule-from-string   \ smpl rul
     2dup rule-get-backward-step         \ smpl rul, stpx t | f
     if
@@ -164,7 +164,7 @@
         dup step-get-sample
         sample-get-states
         7 <> abort" Sample initial not 7?"
-        15 <> abort" Sample result not 15?"
+        #15 <> abort" Sample result not 15?"
         step-deallocate
     else
         ." step not found" abort

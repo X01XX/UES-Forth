@@ -1,5 +1,5 @@
-17137 constant link-id
-    3 constant link-struct-number-cells
+#17137 constant link-id
+     3 constant link-struct-number-cells
 
 \ Link struct fields.
 0 constant  link-header         \ 16-bits [0] struct id [1] use count.

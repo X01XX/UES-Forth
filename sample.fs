@@ -5,8 +5,8 @@
 \ A initial/result problem, that may be solved with one, or many, actions, all within
 \ a single domain.
 
-23719 constant sample-id
-    3 constant sample-struct-number-cells
+#23719 constant sample-id
+     3 constant sample-struct-number-cells
 
 \ Struct fields
 0 constant sample-header    \ 16-bits [0] struct id [1] use count.
@@ -181,7 +181,7 @@ sample-initial cell+ constant sample-result
 
     dup sample-get-initial      \ smpl0 i-sta
     over sample-get-result      \ smpl0 i-sta r-sta
-    over over invert and        \ smpl0 i-sta r-sta m10
+    2dup invert and             \ smpl0 i-sta r-sta m10
     -rot                        \ smpl0 m10 i-sta r-sta
     swap invert and             \ smpl0 m10 m01
     changes-new                 \ smpl0 cngs
@@ -226,3 +226,63 @@ sample-initial cell+ constant sample-result
     swap sample-get-result      \ 2-r 1-r
     =
 ;
+
+\ Return true if a samples' changes intersect a given changes instance.
+: sample-intersects-changes ( cngs1 smpl0 -- flag )
+    \ Check args.
+    assert-tos-is-sample
+    assert-nos-is-changes
+
+    sample-changes          \ cngs1 s-cngs
+    tuck                    \ s-cngs cngs1 s-cngs
+    changes-intersect       \ s-cngs flag
+    swap changes-deallocate \ flag
+;
+
+\ Return true if a sample contains a given state.
+: sample-contains-state ( sta1 smpl0 -- flag )
+    \ Check args.
+    assert-tos-is-sample
+    assert-nos-is-value
+
+    sample-get-states       \ sta1 s1-r s1-i
+    rot                     \ s1-r s1-i sta1
+    tuck                    \ s1-r sta1 s1-i sta1
+    =                       \ s1-r sta1 flag
+    if
+        2drop
+        true
+        exit
+    then
+
+    =                       \ flag
+;
+
+\ Return true if two samples share at least one state.
+: sample-intersects ( smpl1 smpl0 -- flag )
+    \ Check args.
+    assert-tos-is-sample
+    assert-nos-is-sample
+
+    sample-get-states       \ smpl1 s0-r s0-i
+    rot                     \ s0-r s0-i smpl1
+    tuck                    \ s0-r smpl1 s0-i smpl1
+    sample-contains-state   \ s0-r smpl1 flag
+    if
+        2drop
+        true
+        exit
+    then
+                            \ s0-r smpl1
+    sample-contains-state   \ flag
+;
+
+\ Return a region for a sample.
+: sample-region ( smpl0 -- reg )
+    \ Check arg.
+    assert-tos-is-sample
+
+    sample-get-states
+    region-new
+;
+

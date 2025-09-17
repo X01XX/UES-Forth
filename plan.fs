@@ -1,7 +1,7 @@
 \ Implement a plan struct and functions.
 
-37379 constant plan-id                                                                                  
-    3 constant plan-struct-number-cells
+#37379 constant plan-id                                                                                  
+     3 constant plan-struct-number-cells
 
 \ Struct fields
 0 constant plan-header                          \ id (16) use count (16)

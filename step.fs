@@ -1,7 +1,7 @@
 \ Implement a step struct and functions.
 
-37171 constant step-id                                                                                  
-    4 constant step-struct-number-cells
+#37171 constant step-id                                                                                  
+     4 constant step-struct-number-cells
 
 \ Struct fields
 0 constant step-header                          \ id (16) use count (16)
@@ -133,6 +133,13 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     assert-tos-is-action
     assert-nos-is-sample
 
+    dup action-get-inst-id          \ as2 s1 act0 act-id
+    0<> if
+        \ If action not zero, a change must happen.
+        over sample-get-states =    \ as2 s1 act0 flag
+        abort" Sample makes no change?"
+    then
+
    \ Allocate space.
     step-mma mma-allocate           \ as2 s1 a0 addr
 
@@ -202,5 +209,15 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     else
         struct-dec-use-count
     then
+;
+
+\ Return true if a steps' sample has a state that is in a given sample.
+: step-intersects-sample ( smpl1 stp0 -- flag )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-sample
+
+    step-get-sample     \ smpl1 stp-smpl
+    sample-intersects   \ flag
 ;
 

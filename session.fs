@@ -1,7 +1,7 @@
 \ Implement a Session struct and functions.                                                                                             
 
-31319 constant session-id
-    4 constant session-struct-number-cells
+#31319 constant session-id
+     4 constant session-struct-number-cells
 
 \ Struct fields
 0 constant session-header    \ 16-bits [0] struct id [1] use count
@@ -170,6 +170,8 @@ session-current-domain      cell+ constant session-needs                \ A need
 
     drop
 ;
+
+' .session to .session-xt
 
 \ Deallocate a session.
 : session-deallocate ( ses0 -- )

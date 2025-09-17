@@ -12,8 +12,8 @@
 \
 \ So the prediction of what is achievable may be over-optimistic.
 
-31973 constant changes-id
-    3 constant changes-struct-number-cells
+#31973 constant changes-id
+     3 constant changes-struct-number-cells
 
 \ Struct fields.
 0 constant changes-header      \ 16-bits [0] struct id [1] use count.
@@ -202,7 +202,7 @@ changes-m01    cell+ constant changes-m10
     -rot                        \ edg-msk to from
     region-get-state-0  swap    \ edg-msk fs0 to
     region-get-state-0          \ edg-msk fs0 ts0
-    over over invert            \ edg-msk fs0 ts0 fs0 ~ts0
+    2dup invert                 \ edg-msk fs0 ts0 fs0 ~ts0
     and                         \ edg-msk fs0 ts0 m10 
     3 pick and                  \ edg-msk fs0 ts0 m10'
     -rot                        \ edg-msk m10' fs0 ts0
@@ -210,3 +210,24 @@ changes-m01    cell+ constant changes-m10
     rot and                     \ m10' m01'
     changes-new                 \ cngs
 ;
+
+\ Return true if two changes intersect, in at least one bit.
+: changes-intersect ( cngs1 cngs0 -- flag )
+    \ Check args.
+    assert-tos-is-changes
+    assert-nos-is-changes
+
+    over changes-get-m01        \ cngs1 cngs0 1m01
+    over changes-get-m01        \ cngs1 cngs0 1m01 0m01
+    and 0<> if
+        2drop
+        true
+        exit
+    then
+
+    changes-get-m10             \ cngs1 0m10
+    swap changes-get-m10        \ 0m10 1m10
+    and
+    0<>
+;
+

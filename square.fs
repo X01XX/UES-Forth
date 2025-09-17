@@ -1,7 +1,7 @@
 \ Implement a square struct and functions.
 
-23197 constant square-id                                                                                  
-    7 constant square-struct-number-cells
+#23197 constant square-id                                                                                  
+     7 constant square-struct-number-cells
 
 \ Struct fields
 0 constant square-header                        \ id (16) use count (16) result count (16) pn (8) pnc (8)

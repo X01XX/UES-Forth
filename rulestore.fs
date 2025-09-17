@@ -2,8 +2,8 @@
 \ This holds zero, one, or two rules.
 \ If two rules, order does not matter.
 
-23173 constant rulestore-id
-    3 constant rulestore-struct-number-cells
+#23173 constant rulestore-id
+     3 constant rulestore-struct-number-cells
 
 \ Struct fields
 0 constant rulestore-header     \ 16-bits [0] struct id [1] use count.
@@ -71,6 +71,15 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Get second rule.
     rulestore-rule-1 +  \ Add offset.
     @                   \ Fetch the field.
+;
+
+\ Get both rules.
+: rulestore-get-rules ( rulstr -- rul1 rul0 )
+    \ Check arg
+    assert-tos-is-rulestore
+
+    dup rulestore-get-rule-1    \ rulstr rul1
+    swap rulestore-get-rule-0   \ rul1 rul0
 ;
  
 \ Set the first field of a rulestore, use only in this file.
@@ -163,9 +172,9 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     abort" rulestore-new-2: rules cannot be equal."
 
     \ Check that the rule initial regions are equal.
-    over rule-initial-region    \ rul1 rul0 reg1
-    over rule-initial-region    \ rul1 rul0 reg1 reg0
-    2dup region-eq 0=           \ rul1 rul0 reg1 reg0 flag
+    over rule-calc-initial-region   \ rul1 rul0 reg1
+    over rule-calc-initial-region   \ rul1 rul0 reg1 reg0
+    2dup region-eq 0=               \ rul1 rul0 reg1 reg0 flag
     abort" rulestore-new-2: Rules must have the same initial region."
 
     region-deallocate
@@ -441,4 +450,64 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         swap changes-deallocate \ cngs
     then
                                 \ cngs
+;
+
+\ Given a rulestore and a desired sample, return a list
+\ of steps that may help, in forward-chaining.
+\ The steps' samples' states may not match any state in the desired sample.
+\ So one option would be to make a plan from the given sample's initial state
+\ to the steps' initial state.
+: rulestore-get-steps-by-changes-f ( smpl1 ruls0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-rulestore
+    assert-nos-is-sample
+
+    \ Init return list.
+    list-new -rot                       \ ret smpl1 ruls0 |
+    \ cr ." at 1 " .s cr
+
+    \ Process rule 0.
+    2dup rulestore-get-rule-0           \ | smpl1 rul0
+    rule-get-sample-by-changes-f        \ | smpl-r0 t | f
+    if
+        over rulestore-get-rule-1       \ | smpl-r0 rul1
+        dup
+        if
+            over sample-get-initial     \ | smpl-r0 rul1 smpl-r0-i
+            tuck swap                   \ | smpl-r0 smpl-r0-i smpl-r0-i rul1
+            rule-apply-to-state-f       \ | smpl-r0 smpl-r0-i r1-s-r
+            swap sample-new             \ | smpl-r0 smpl-r1
+            swap                        \ | smpl-r1 smpl-r0
+        else
+            swap                        \ | 0 smpl-r0
+        then
+        cur-action-xt execute
+        step-new-xt execute             \ | stpx
+        3 pick                          \ | stpx ret
+        step-list-push-xt execute       \ |
+    then
+                                        \ ret smpl1 ruls0 |
+
+    \ Process rule 1.
+    dup rulestore-get-rule-1            \ | rul1
+    dup if
+        2 pick swap                     \ | smpl1 rul1
+        rule-get-sample-by-changes-f    \ | smpl-r1 t | f
+        if
+            dup sample-get-initial      \ | smpl-r1 r1-s-i
+            2 pick                      \ | smpl-r1 r1-s-i ruls
+            rulestore-get-rule-0        \ | smpl-r1 r1-s-i rul0
+            rule-apply-to-state-f       \ | smpl-r1 r1-s-i r0-s-r
+            swap sample-new             \ | smpl-r1 smpl-r0
+            cur-action-xt execute
+            swap step-new-xt execute    \ | stpx
+            3 pick                      \ | stpx ret
+            step-list-push-xt execute   \ |
+        then
+        \ cr ." at 2 " .s cr
+        2drop
+    else
+        \ cr ." at 3 " .s cr
+        3drop
+    then
 ;

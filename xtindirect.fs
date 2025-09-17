@@ -19,6 +19,8 @@
 
 ' xtabort value session-set-current-domain-xt
 
+' xtabort value .session-xt
+
 
 
 ' xtabort value cur-domain-xt
