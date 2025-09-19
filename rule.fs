@@ -993,18 +993,8 @@ rule-m11    cell+ constant rule-m10
 
     \ cr ." rule-get-backward-step: " dup .rule space over .sample cr
 
-    \ Check if rule may apply to the sample.
-    dup rule-calc-result-region         \ smpl1 rul0 r-reg (dl)
-    2 pick sample-get-result            \ smpl1 rul0 r-reg s-r
-    over region-superset-of-state       \ smpl1 rul0 r-reg flag
-    swap region-deallocate              \ smpl1 rul0 flag
-    0= if
-        2drop
-        false
-        exit
-    then
-
-    \ Reduce the effects of unneeded X->0 and X-> 1 bit positions.
+    \ Restrict the possible rule initial state to the glidepath.
+    \ Affects the rule result region.
     over sample-region                  \ smpl1 rul0 s-reg
     tuck swap                           \ smpl1 s-reg s-reg rul0
     rule-restrict-to-region             \ smpl1 s-reg, rul0' t | f
@@ -1012,6 +1002,18 @@ rule-m11    cell+ constant rule-m10
         swap region-deallocate          \ smpl1 rul0'
     else
         region-deallocate
+        drop
+        false
+        exit
+    then
+
+    \ Check if rule may apply to the sample.
+    dup rule-calc-result-region         \ smpl1 rul0' r-reg (dl)
+    2 pick sample-get-result            \ smpl1 rul0' r-reg s-r
+    over region-superset-of-state       \ smpl1 rul0' r-reg flag
+    swap region-deallocate              \ smpl1 rul0' flag
+    0= if
+        rule-deallocate
         drop
         false
         exit
