@@ -325,7 +325,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
                 dup group-get-rules     \ sqr1 grp0 rul-str
                 over                    \ sqr1 grp0 rul-str grp0
                 group-get-squares       \ sqr1 grp0 rul-str sqr-lst
-                cr dup ." sqr-lst: " .square-list cr
+                \ cr dup ." sqr-lst: " .square-list cr
                 square-list-get-rules   \ sqr1 grp0 old-rul-str, new-rul-str true | false
                 0= abort" no rulestore from square-list?"
 

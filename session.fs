@@ -366,3 +366,25 @@ session-current-domain      cell+ constant session-needs                \ A need
 ;
 
 ' cur-domain to cur-domain-xt
+
+\ Return a domain, given a domain ID.
+: session-find-domain ( u1 sess0 -- dom t | f )
+    \ Check args.
+    assert-tos-is-session
+    over 0 < if
+        2drop
+        false
+        exit
+    then
+
+    session-get-domains         \ u1 dom-lst
+    2dup list-get-length   \ u1 dom-lst u1 len
+    >= if
+        2drop
+        false
+        exit
+    then
+
+    list-get-item               \ dom
+    true
+;

@@ -1004,16 +1004,31 @@ rule-m11    cell+ constant rule-m10
         exit
     then
 
-    \ Get initial value from rule.
-                                        \ smpl1 rul0
-    over sample-get-result              \ smpl1 rul0 s-r
-    swap                                \ smpl1 s-r rul0
-    rule-apply-to-state-b               \ smpl1, smpl2 t | f
-    0= if
+    \ Reduce the effects of unneeded X->0 and X-> 1 bit positions.
+    over sample-region                  \ smpl1 rul0 s-reg
+    tuck swap                           \ smpl1 s-reg s-reg rul0
+    rule-restrict-to-region             \ smpl1 s-reg, rul0' t | f
+    if
+        swap region-deallocate          \ smpl1 rul0'
+    else
+        region-deallocate
         drop
         false
         exit
     then
+
+    \ Get initial value from rule.
+                                        \ smpl1 rul0'
+    over sample-get-result              \ smpl1 rul0' s-r
+    over                                \ smpl1 rul0' s-r rul0'
+    rule-apply-to-state-b               \ smpl1 rul0', smpl2 t | f
+    0= if
+        rule-deallocate
+        drop
+        false
+        exit
+    then
+    swap rule-deallocate                \ smpl1 smpl2
 
     \ Check if rule did not change the smpl1 result state.
     dup sample-r-ne-i                   \ smpl1 smpl2 flag
@@ -1076,7 +1091,7 @@ rule-m11    cell+ constant rule-m10
     over changes-masks and 0<> abort" changes cannot be doubled up"
 
     \ Init return rule.
-    0 0 rule-new                \ cngs1 rul0 rul' |
+    0 0 rule-new                \ cngs1 rul0 rrule-test-restrict-to-regionul' |
 
     \ Get m01 set in changes and rule.
     2 pick changes-get-m01      \ | cm01

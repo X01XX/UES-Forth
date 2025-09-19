@@ -122,7 +122,7 @@ need-action  cell+ constant need-target     \ A state.
     over 1 <
     abort" _need-set-type: invalid type value"
 
-    over 2 >
+    over 3 >
     abort" _need-set-type: invalid type value"
 
     4c!
@@ -180,6 +180,7 @@ need-action  cell+ constant need-target     \ A state.
     case
         1 of space ." State not in group" endof
         2 of space ." Confirm logical structure" endof
+        3 of space ." Improve logical structure" endof
         ." Unrecognized type value" abort
     endcase
 ;

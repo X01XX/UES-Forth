@@ -848,6 +848,7 @@ action-groups               cell+ constant action-function              \ An xt 
             2dup                \ sqr act0 sqr act0
             _action-check-incompatible-pairs    \ sqr act0
             2dup                        \ sqr act0 sqr act0
+            \ cr ." At 1 " .s cr
             _action-check-square        \ sqr act0
             action-get-groups           \ sqr grp-lst
             group-list-check-square     \
@@ -864,6 +865,7 @@ action-groups               cell+ constant action-function              \ An xt 
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
         2dup                    \ sqr act0 sqr act0
+        \ cr ." At 2 " .s cr
         _action-check-square    \ sqr act0
         dup action-get-groups   \ sqr act0 grp-lst
         2 pick                  \ sqr act0 grp-lst sqr
@@ -975,19 +977,31 @@ action-groups               cell+ constant action-function              \ An xt 
     over action-get-groups      \ ret-lst sta1 act0 | sta1 grp-lst
     group-list-state-in-group-r \ ret-lst sta1 act0 | flag
     0= if
-                                \ ret-lst sta1 act0 |
-        \ Make need.
-        1                       \ ret-lst sta1 act0 | 1 (type)
-        2 pick                  \ ret-lst sta1 act0 | 1 sta
-        2 pick                  \ ret-lst sta1 act0 | 1 sta act0
-        cur-domain-xt execute   \ ret-lst sta1 act0 | 1 sta act0 dom0
-        need-new                \ ret-lst sta1 act0 | ned
-        \ Store need.
-        3 pick                  \ ret-lst sta1 act0 | ned ret-lst
-        need-list-push          \ ret-lst sta1 act0 |
-        \ Return need-list.
-        2drop
-        exit
+        \ Check if no square.
+        2dup action-find-square \ ret-lst sta1 act0 | sqr t | f
+        if
+            \ Check square pnc.
+            square-get-pnc          \ ret-lst sta1 act0 | pnc
+            0=                      \ ret-lst sta1 act0 | flag (not pnc)
+        else                        \ no square.
+            true                    \ ret-lst sta1 act0 | t
+        then
+        if
+                                    \ ret-lst sta1 act0 |
+            \ Make need.
+            1                       \ ret-lst sta1 act0 | 1 (type)
+            2 pick                  \ ret-lst sta1 act0 | 1 sta
+            2 pick                  \ ret-lst sta1 act0 | 1 sta act0
+            cur-domain-xt execute   \ ret-lst sta1 act0 | 1 sta act0 dom0
+            need-new                \ ret-lst sta1 act0 | ned
+            \ Store need.
+            3 pick                  \ ret-lst sta1 act0 | ned ret-lst
+            need-list-push          \ ret-lst sta1 act0 |
+
+            \ Return need-list.
+            2drop
+            exit
+        then
     then
 
     \ Check for squares in action-incompatible-pairs that are not pnc.
@@ -1048,6 +1062,38 @@ action-groups               cell+ constant action-function              \ An xt 
         link-get-next           \ ret-lst sta1 act0 | link
     repeat
 
+    \ Check for non-adjacent incompatible pairs.
+    dup action-get-incompatible-pairs   \ ret-lst sta1 act0 | par-lst
+    list-get-links                      \ ret-lst sta1 act0 | link
+    begin
+        ?dup
+    while
+        dup link-get-data               \ ret-lst sta1 act0 | link regx
+
+        \ Check if region states are non-adjacent.  That is, GT 1 X bit.
+        region-x-mask                   \ ret-lst sta1 act0 | link x-msk
+        isolate-a-bit                   \ ret-lst sta1 act0 | link rem bit
+        swap                            \ ret-lst sta1 act0 | link bit rem
+        0<> if                          \ ret-lst sta1 act0 | link bit
+            \ Get a state between the states that define the region. TODO use better selection method.
+            over link-get-data          \ ret-lst sta1 act0 | link bit regx
+            region-get-state-0          \ ret-lst sta1 act0 | link bit r-sta-0
+            xor                         \ ret-lst sta1 act0 | link sta'
+            \ Make need.
+            3 swap                      \ ret-lst sta1 act0 | link 3 sta'
+            3 pick                      \ ret-lst sta1 act0 | link 3 sta' act0
+            cur-domain-xt execute       \ ret-lst sta1 act0 | link 3 sta' act0 domx
+            need-new                    \ ret-lst sta1 act0 | link ned
+            \ Store need.
+            4 pick need-list-push       \ ret-lst sta1 act0 | link
+            3drop
+            exit
+        else
+            drop                        \ ret-lst sta1 act0 | link
+        then
+
+        link-get-next           \ ret-lst sta1 act0 | link
+    repeat
                                 \ ret-lst sta1 act0
     \ Clean up.
     2drop                       \ ret-lst

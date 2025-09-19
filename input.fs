@@ -165,7 +165,7 @@
     true
 ;
 
-: do-one-token-commands ( c-addc c-cnt -- flag )
+: do-one-token-commands ( c-addr c-cnt -- flag )
     2dup s" q" str=
     if
         \ Clear token
@@ -230,6 +230,109 @@
     true
 ;
 
+: do-three-token-commands ( c-addr c-cnt -- flag )
+    \ Change Domain State: cs domain-number state
+    2dup s" cds" str=
+    if
+        2drop
+        \ Get domain ID.
+        snumber?
+        if
+            current-session session-find-domain     \ ... dom t | f
+            if
+                -rot                                \ ... dom c-addr cnt
+            else
+                cr ." cds command: domain number invalid" cr
+                2drop
+                true
+                exit
+            then
+        else
+            cr ." cds command: domain number invalid" cr
+            2drop
+            true
+            exit
+        then
+
+        \ Get state.
+        snumber?                                    \ dom, sta t | f
+        if
+            dup is-not-value
+            if
+                cr ." cds command: state invalid" cr
+                2drop
+                true
+                exit
+            else
+                swap                                \ sta dom
+                domain-set-current-state            \
+                true
+                exit
+            then
+        else
+            cr ." cds command: state invalid" cr
+            drop
+        then
+        true
+        exit
+    then
+    \ Print square detail.
+        2dup s" psd" str=
+    if
+        cr ." spd command" cr
+        2drop
+        \ Get domain ID.
+        snumber?                                    \ ... dom-id t | f
+        if
+            cr ." domain " dup . cr
+            current-session session-find-domain     \ ... dom t | f
+            if
+                -rot                                \ ... dom c-addr cnt
+            else
+                cr ." psd command: domain number invalid" cr
+                2drop
+                true
+                exit
+            then
+        else
+            cr ." psd command: domain number invalid" cr
+            2drop
+            true
+            exit
+        then
+
+        \ Get action.
+        snumber?                                    \ ... dom, act-id t | f
+        if
+            cr ." action " dup . cr
+            swap domain-find-action                 \ ... act t | f
+            if
+                action-get-squares                  \ ... sqr-lst
+                cr .square-list cr
+                true
+                exit
+            else
+                cr ." psd command: action invalid" cr
+                true
+                exit
+            then
+        else
+            cr ." psd command: action invalid" cr
+            drop
+        then
+        true
+        exit
+    then
+
+        cr ." Three-token command not recognized" cr
+    \ Clear tokens.
+    2drop
+    2drop
+    2drop
+    \ Return continue loop flag.
+    true
+;
+
 \ Do commands from user input.
 \ Return true if the read-eval loop should continue.
 : eval-user-input ( [ c-addr c-cnt ]* token-cnt -- flag )
@@ -248,6 +351,10 @@
         1 of
             drop
             do-one-token-commands
+        endof
+        3 of
+            drop
+            do-three-token-commands
         endof
         \ Default.
         cr ." Token count does not correspond to any allowable command" cr
@@ -280,6 +387,8 @@
         cr ." q - to quit"
         cr ." Press Enter to randomly choose a need, if any." 
         cr ." ps - to Print Session, all domains, actions."
+        cr ." cds <domain ID> <state> - Change Domain State."
+        cr ." psd <domain ID> <action ID> - Print square Detail."
         cr ." mu - Display Memory Use."
         cr ." <number> - Select a particular need."
         cr

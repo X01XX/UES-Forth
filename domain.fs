@@ -860,4 +860,27 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     then
 ;
 
+\ Return a action, given a action ID.
+: domain-find-action ( u1 dom0 -- act t | f )
+    cr ." domain-find-action: Dom: " dup domain-get-inst-id . space over . cr
+    \ Check args.
+    assert-tos-is-domain
+    over 0 < if
+        2drop
+        false
+        exit
+    then
+
+    domain-get-actions          \ u1 act-lst
+    2dup list-get-length   \ u1 act-lst u1 len
+    >= if
+        2drop
+        false
+        exit
+    then
+
+    list-get-item               \ dom
+    true
+;
+
 
