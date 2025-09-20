@@ -425,7 +425,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         rule-get-changes        \ cngs rs0 cng0
         rot                     \ rs0 cng0 cngs
         \ Get union changes
-        2dup changes-union      \ rs0 cng0 cngs cngs'
+        2dup changes-calc-union \ rs0 cng0 cngs cngs'
 
         \ Cleanup
         swap changes-deallocate
@@ -443,7 +443,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         rule-get-changes        \ cngs cng1
 
         \ Get union changes
-        2dup changes-union      \ cng1 cngs cngs'
+        2dup changes-calc-union \ cng1 cngs cngs'
 
         \ Cleanup
         swap changes-deallocate

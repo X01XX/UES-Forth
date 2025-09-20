@@ -117,7 +117,7 @@
     #11 4 sample-new                    \ smpl
     s" XX/XX/XX/Xx/" rule-from-string   \ smpl rul
     2dup                                \ smpl rul smpl rul
-    rule-get-forward-step               \ smpl rul, stp true | false
+    rule-calc-forward-step              \ smpl rul, stp true | false
     if
         cr ." step: " dup .step cr
         dup step-get-sample sample-get-result
@@ -157,8 +157,8 @@
 
 : rule-test-get-backward-step
     #15 5 sample-new                     \ smpl
-    s" 01/X1/11/XX/" rule-from-string   \ smpl rul
-    2dup rule-get-backward-step         \ smpl rul, stpx t | f
+    s" 01/X1/11/XX/" rule-from-string    \ smpl rul
+    2dup rule-calc-backward-step         \ smpl rul, stpx t | f
     if
         cr ." Step found: " dup .step cr
         dup step-get-sample

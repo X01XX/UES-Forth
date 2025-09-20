@@ -2,6 +2,9 @@
 
 \ Deallocate a step list.
 : step-list-deallocate ( list0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
     [ ' step-deallocate ] literal over list-apply   \ Deallocate step instances in the list.
     list-deallocate                                 \ Deallocate list and links.
 ;
@@ -30,6 +33,7 @@
 \ Push a step to a step-list.
 : step-list-push ( stp1 list0 -- )
     \ Check args.
+    \ cr ." at step-list-push: " .s cr
     assert-tos-is-list
     assert-nos-is-step
 
@@ -130,3 +134,57 @@
                                 \ ret smpl1
     drop                        \ ret
 ;
+
+\ Return a list of steps that have a sample with the desired changes.
+: step-list-intersects-changes ( cngs1 stp-lst0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-changes
+
+    \ Prep for loop.
+    list-new -rot               \ ret cngs1 lst0
+    list-get-links              \ ret cngs1 link
+
+    begin
+        ?dup
+    while
+        over                    \ ret cngs1 link cngs1
+        over link-get-data      \ ret cngs1 link cngs1 stpx
+        step-intersects-changes \ ret cngs1 link flag
+        if
+            dup link-get-data   \ ret cngs1 link stpx
+            3 pick              \ ret cngs1 link stpx ret
+            step-list-push      \ ret cngs1 link
+        then
+
+        link-get-next
+    repeat
+    drop                        \ ret
+;
+
+\
+: step-list-any-match-initial ( sta1 lst0 -- flag )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-value
+
+    list-get-links          \ sta1 link
+    begin
+        ?dup
+    while
+        2dup link-get-data  \ sta1 link sta1 stpx
+        step-get-sample     \ sta1 link sta1 smpl
+        sample-get-initial  \ sta1 link sta1 smpl-sta
+        = if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+
+    drop
+    false
+;
+

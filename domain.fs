@@ -389,7 +389,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Aggregate changes.
         rot                         \ dom0 link act-cngs cng-agg
-        2dup changes-union          \ dom0 link act-cngs cng-agg cng-agg'
+        2dup changes-calc-union     \ dom0 link act-cngs cng-agg cng-agg'
 
         \ Clean up.
         swap changes-deallocate     \ dom0 link act-cngs cng-agg'
@@ -802,6 +802,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         link-get-next
     repeat
+    drop                                \ smpl1 stp-lst
+    nip                                 \ stp-lst
 ;
 
 \ Asymmetric chaining, forward.
@@ -813,33 +815,101 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
-
-    2drop
-    false
-    exit
+    \ cr ." domain-asymmetric-chaining-f" cr
 
     \ Find an asymmetric rule.
-    domain-get-steps-by-changes-f           \ stp-lst t | f
-    if
-        cr ." steps by changes steps: " dup .step-list cr
-        step-list-deallocate
-        current-session
-        .session-xt execute
+    over swap                               \ smpl1 smpl1 dom
+    domain-get-steps-by-changes-f           \ smpl1 stp-lst
+
+    cr ." steps by changes steps: " dup .step-list cr
+
+    \ Prep for loop by single-bit change.
+    over sample-calc-changes                \ smpl1 stp-lst cngs
+    dup changes-split                       \ smpl1 stp-lst cngs cng-lst
+    swap changes-deallocate                 \ smpl1 stp-lst cng-lst
+    list-new swap                           \ smpl1 stp-lst asym-lst cng-lst
+    dup list-get-links                      \ smpl1 stp-lst asym-lst cng-lst link
+
+    \ For each single-bit change, find steps that do not start at the sample initial state
+    \ without any alternate steps that do.
+    begin
+        ?dup
+    while                                   \ smpl1 stp-lst asym-lst cng-lst link
+
+        \ Find steps that provide the one-bit change, but possibly others.
+        dup link-get-data                   \ smpl1 stp-lst asym-lst cng-lst link cng1
+        4 pick                              \ smpl1 stp-lst asym-lst cng-lst link cng1 stp-lst
+        step-list-intersects-changes        \ smpl1 stp-lst asym-lst cng-lst link stp-cng-lst
+        dup list-get-length                 \ smpl1 stp-lst asym-lst cng-lst link sc-lst len
+
+        \ Check if the one-bit change is possible, else done.
+        0= if                               \ smpl1 stp-lst asym-lst cng-lst link sc-lst
+            cr ." step for change not found" cr
+            step-list-deallocate
+            drop
+            changes-list-deallocate
+            step-list-deallocate
+            step-list-deallocate
+            drop
+            false
+            exit
+        then
+
+        \ Check if there are only steps that do not match the smpl1 initial state.
+        dup                                 \ smpl1 stp-lst asym-lst cng-lst link sc-lst sc-lst
+        6 pick sample-get-initial           \ smpl1 stp-lst asym-lst cng-lst link sc-lst sc-lst s-i
+        swap step-list-any-match-initial    \ smpl1 stp-lst asym-lst cng-lst link sc-lst flag
+        0= if                               \ smpl1 stp-lst asym-lst cng-lst link sc-lst
+            \ Save the steps.
+            dup 4 pick                      \ smpl1 stp-lst asym-lst cng-lst link sci-lst sci-lst asym-lst
+            step-list-append                \ smpl1 stp-lst asym-lst cng-lst link sci-lst
+        then
+        step-list-deallocate                \ smpl1 stp-lst asym-lst cng-lst link
+
+        link-get-next                       \ smpl1 stp-lst asym-lst cng-lst link
+    repeat
+    changes-list-deallocate                 \ smpl1 stp-lst asym-lst
+    swap step-list-deallocate               \ smpl1 asym-lst
+
+    dup list-get-length                     \ smpl1 asym-lst
+    0<> if
+        cr ." asym-lst: " dup .step-list cr
+
+        \ Randomly choose a step.
+        dup list-get-length                 \ smpl1 asym-lst len
+        random                              \ smpl1 asym-lst inx
+        over list-get-item                  \ smpl1 asym-lst stpx
+        cr ." step: " dup .step cr
+        step-get-sample                     \ smpl1 asym-lst smpl2
+
+        \ Get plan smpl1-i to smpl2-i.
+        dup sample-get-initial              \ smpl1 asym-lst smpl2 s2-i
+        3 pick sample-get-initial           \ smpl1 asym-lst smpl2 s2-i s1-i
+        sample-new                          \ smpl1 asym-lst smpl2 smpl3
+        cr ." find plan1: " dup .sample cr
+        sample-deallocate
+
+        \ Get plan from smpl2-r to smpl1-r.
+        2 pick sample-get-result            \ smpl1 asym-lst smpl2 s1-r
+        over sample-get-result              \ smpl1 asym-lst smpl2 s1-r s2-r
+        sample-new                          \ smpl1 asym-lst smpl2 smpl3
+        cr ." find plan2: " dup .sample cr
+
+        cr ." TODO Join plan1, the asymmetric step, and plan2."
+
+        sample-deallocate
+        drop
+        step-list-deallocate                \ smpl1
+        drop
     else
-        cr ." steps by changes steps: None" cr
+        step-list-deallocate                \ smpl1
+        drop
     then
 
-    \ Translate the sample-initial-state to the initial region of the rule, giving the rule-initial-state.
+    \ Print session data.
+    current-session
+    .session-xt execute
 
-    \ If the rule-initial-state is not equal to the sample-initial-state,
-    \ find a plan (plan1) from the sample-initial-state to the rule-initial-state.
-
-    \ Apply the rule to the rule-initial-state, forming a step, and the rule-result-state.
-
-    \ If the rule-result-state is not equal to the sample-result-state,
-    \ find a plan (plan2) from the rule-result-state to the sample-result-state.
-
-    \ Join plan1, the asymmetric step, and plan2.
 
     false
 ;
@@ -849,13 +919,17 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
+    \ cr ." domain-get-plan" cr
 
-    2dup domain-get-plan2-fb        \ smpl1 dom0, plan t | f
+    2dup domain-get-plan2-fb            \ smpl1 dom0, plan t | f
     if
-        nip nip true                \ plan t
+        nip nip true                    \ plan t
     else
-        \ domain-asymmetric-chaining-f  \ plan t | f
-        2drop
+        \ cr ." domain-get-plan: at 1" cr
+        domain-asymmetric-chaining-f    \ plan t | f
+        if
+            plan-deallocate-xt execute
+        then
         false
     then
 ;

@@ -13,12 +13,12 @@
 \ So the prediction of what is achievable may be over-optimistic.
 
 #31973 constant changes-id
-     3 constant changes-struct-number-cells
+    #3 constant changes-struct-number-cells
 
 \ Struct fields.
 0 constant changes-header      \ 16-bits [0] struct id [1] use count.
-changes-header cell+ constant changes-m01
-changes-m01    cell+ constant changes-m10
+changes-header      cell+ constant changes-m01-disp
+changes-m01-disp    cell+ constant changes-m10-disp
 
 0 value changes-mma    \ Storage for changes mma instance.
 
@@ -41,26 +41,26 @@ changes-m01    cell+ constant changes-m10
 
 \ Return the m01 field of a changes instance.
 : changes-get-m01 ( cngs0 -- u)
-    changes-m01 +      \ Add offset.
-    @               \ Fetch the field.
+    changes-m01-disp +  \ Add offset.
+    @                   \ Fetch the field.
 ;
 
 \ Set the m01 field of a changes instance, use only in this file. 
 : _changes-set-m01 ( u1 cngs0 -- )
-    changes-m01 +      \ Add offset.
-    !               \ Set the field.
+    changes-m01-disp +  \ Add offset.
+    !                   \ Set the field.
 ;
 
 \ Return the m10 field of a changes instance.
 : changes-get-m10 ( cngs0 -- u)
-    changes-m10 +      \ Add offset.
-    @               \ Fetch the field.
+    changes-m10-disp +  \ Add offset.
+    @                   \ Fetch the field.
 ;
 
 \ Set the m10 field of a changes instance, use only in this file. 
 : _changes-set-m10 ( u1 cngs0 -- )
-    changes-m10 +      \ Add offset.
-    !               \ Set the field.
+    changes-m10-disp +  \ Add offset.
+    !                   \ Set the field.
 ;
 
 \ End accessors.
@@ -142,7 +142,7 @@ changes-m01    cell+ constant changes-m10
 ;
 
 \ Return the union of two changes.
-: changes-union ( cngs1 cngs0 -- cngs )
+: changes-calc-union ( cngs1 cngs0 -- cngs )
     \ Check args.
     assert-tos-is-changes
     assert-nos-is-changes
@@ -182,7 +182,7 @@ changes-m01    cell+ constant changes-m10
 ;
 
 \ Put both changes masks on the stack.
-: changes-masks ( cngs0 -- m10 m01 )
+: changes-get-masks ( cngs0 -- m10 m01 )
     \ Check arg.
     assert-tos-is-changes
 
@@ -191,7 +191,7 @@ changes-m01    cell+ constant changes-m10
 ;
 
 \ Return changes needed so that a from-region will intersect a to-region.
-: changes-region-to-region ( reg-to reg-from -- cngs )
+: changes-new-from-regions ( reg-to reg-from -- cngs )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region

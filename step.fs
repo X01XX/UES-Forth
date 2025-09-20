@@ -221,3 +221,17 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     sample-intersects   \ flag
 ;
 
+\ Return true if a steps' sample changes intersects a given changes.
+: step-intersects-changes ( cngs1 stp0 -- flag )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-changes
+
+    step-get-sample             \ cngs1 stp-smpl
+    sample-calc-changes         \ cngs1 stp-cngs
+    tuck                        \ stp-cngs csgs1 stp-cngs
+    changes-intersect           \ stp-cngs flag
+    swap changes-deallocate     \ flag
+;
+
+

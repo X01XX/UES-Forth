@@ -10,8 +10,8 @@
 
 \ Struct fields
 0 constant sample-header    \ 16-bits [0] struct id [1] use count.
-sample-header  cell+ constant sample-initial
-sample-initial cell+ constant sample-result
+sample-header       cell+ constant sample-initial-disp
+sample-initial-disp cell+ constant sample-result-disp
 
 0 value sample-mma \ Storage for sample mma instance.
 
@@ -65,8 +65,8 @@ sample-initial cell+ constant sample-result
     \ Check arg.
     assert-tos-is-sample
 
-    sample-initial +    \ Add offset.
-    @                   \ Fetch the field.
+    sample-initial-disp +   \ Add offset.
+    @                       \ Fetch the field.
 ;
  
 \ Return the second field from a sample instance.
@@ -75,8 +75,8 @@ sample-initial cell+ constant sample-result
     assert-tos-is-sample
 
     \ Get second state.
-    sample-result +    \ Add offset.
-    @                   \ Fetch the field.
+    sample-result-disp +    \ Add offset.
+    @                       \ Fetch the field.
 ;
 \ Set the first field from a sample instance, use only in this file.
 : _sample-set-initial ( u1 addr -- )
@@ -84,8 +84,8 @@ sample-initial cell+ constant sample-result
     assert-tos-is-sample
     assert-nos-is-value
 
-    sample-initial +    \ Add offset.
-    !                   \ Set first field.
+    sample-initial-disp +   \ Add offset.
+    !                       \ Set first field.
 ;
  
 \ Set the second field from a sample instance, use only in this file.
@@ -94,8 +94,8 @@ sample-initial cell+ constant sample-result
     assert-tos-is-sample
     assert-nos-is-value
 
-    sample-result +    \ Add offset.
-    !                   \ Set second field.
+    sample-result-disp +    \ Add offset.
+    !                       \ Set second field.
 ;
 
 : sample-get-states ( smpl -- u-r u-i )
@@ -175,7 +175,7 @@ sample-initial cell+ constant sample-result
 ;
 
 \ Return a changes instance from a sample.
-: sample-changes ( smpl0 -- cngs )
+: sample-calc-changes ( smpl0 -- cngs )
     \ Check arg.
     assert-tos-is-sample
 
@@ -233,7 +233,7 @@ sample-initial cell+ constant sample-result
     assert-tos-is-sample
     assert-nos-is-changes
 
-    sample-changes          \ cngs1 s-cngs
+    sample-calc-changes     \ cngs1 s-cngs
     tuck                    \ s-cngs cngs1 s-cngs
     changes-intersect       \ s-cngs flag
     swap changes-deallocate \ flag
@@ -278,7 +278,7 @@ sample-initial cell+ constant sample-result
 ;
 
 \ Return a region for a sample.
-: sample-region ( smpl0 -- reg )
+: sample-to-region ( smpl0 -- reg )
     \ Check arg.
     assert-tos-is-sample
 

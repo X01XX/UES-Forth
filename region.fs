@@ -9,12 +9,12 @@
 \ action-incompatible-pairs list.
 
 #19317 constant region-id
-     3 constant region-struct-number-cells
+    #3 constant region-struct-number-cells
 
 \ Struct fields
 0 constant region-header        \ 16-bits [0] struct id [1] use count.
-region-header  cell+ constant region-state-0
-region-state-0 cell+ constant region-state-1
+region-header       cell+ constant region-state-0-disp
+region-state-0-disp cell+ constant region-state-1-disp
 
 0 value region-mma \ Storage for region mma instance.
 
@@ -74,8 +74,8 @@ region-state-0 cell+ constant region-state-1
     \ Check arg.
     assert-tos-is-region
 
-    region-state-0 +    \ Add offset.
-    @                   \ Fetch the field.
+    region-state-0-disp +   \ Add offset.
+    @                       \ Fetch the field.
 ;
  
 \ Return the second field from a region instance.
@@ -84,8 +84,8 @@ region-state-0 cell+ constant region-state-1
     assert-tos-is-region
 
     \ Get second state.
-    region-state-1 +    \ Add offset.
-    @                   \ Fetch the field.
+    region-state-1-disp +   \ Add offset.
+    @                       \ Fetch the field.
 ;
  
 \ Set the first field from a region instance, use only in this file.
@@ -93,8 +93,8 @@ region-state-0 cell+ constant region-state-1
     \ Check args.
     assert-tos-is-region
 
-    region-state-0 +    \ Add offset.
-    !                   \ Set first field.
+    region-state-0-disp +   \ Add offset.
+    !                       \ Set first field.
 ;
  
 \ Set the second field from a region instance, use only in this file.
@@ -102,8 +102,8 @@ region-state-0 cell+ constant region-state-1
     \ Check args.
     assert-tos-is-region
 
-    region-state-1 +    \ Add offset.
-    !                   \ Set second field.
+    region-state-1-disp +   \ Add offset.
+    !                       \ Set second field.
 ;
 
 \ End accessors.

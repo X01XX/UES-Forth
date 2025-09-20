@@ -825,7 +825,8 @@ rule-m11    cell+ constant rule-m10
     true
 ;
 
-: rule-get-forward-step ( smpl1 rul0 -- step true | false )
+\ Return a forward step for a rule.
+: rule-calc-forward-step ( smpl1 rul0 -- step true | false )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-sample
@@ -986,16 +987,16 @@ rule-m11    cell+ constant rule-m10
 \ Return a backward step for a rule.
 \ The rule is restricted to the region formed by the sample states,
 \ to manage X->0 and X->1 rule bit positions.
-: rule-get-backward-step ( smpl1 rul0 -- step true | false )
+: rule-calc-backward-step ( smpl1 rul0 -- step true | false )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-sample
 
-    \ cr ." rule-get-backward-step: " dup .rule space over .sample cr
+    \ cr ." rule-calc-backward-step: " dup .rule space over .sample cr
 
     \ Restrict the possible rule initial state to the glidepath.
     \ Affects the rule result region.
-    over sample-region                  \ smpl1 rul0 s-reg
+    over sample-to-region               \ smpl1 rul0 s-reg
     tuck swap                           \ smpl1 s-reg s-reg rul0
     rule-restrict-to-region             \ smpl1 s-reg, rul0' t | f
     if
@@ -1041,19 +1042,8 @@ rule-m11    cell+ constant rule-m10
         exit
     then
 
-    \ Check if new initial state is closer to the smpl1 initial state.
-    tuck                    \ smpl2 smpl1 smpl2
-    sample-get-initial      \ smpl2 smpl1 s2-i
-    swap                    \ smpl2 s2-i smpl1
-    sample-state-between    \ smpl2 flag
-    0= if
-        sample-deallocate
-        false
-        exit
-    then
-
     \ Make step.
-    0 swap                  \ 0 smpl2
+    nip 0 swap              \ 0 smpl2
     cur-action-xt execute   \ 0 smpl2 actx
     step-new-xt execute     \ stpx
     true
@@ -1065,7 +1055,7 @@ rule-m11    cell+ constant rule-m10
     assert-tos-is-rule
     assert-nos-is-changes
     \ Check changes m01 + m10, not zero
-    over changes-masks or 0= abort" changes cannot be zero"
+    over changes-get-masks or 0= abort" changes cannot be zero"
 
     over changes-get-m01    \ cngs1 rul0 cm01
     over rule-get-m01       \ cngs1 rul0 cm01 rm01
@@ -1090,7 +1080,7 @@ rule-m11    cell+ constant rule-m10
     assert-tos-is-rule
     assert-nos-is-changes
     \ Check cm10 & cm01 is zero.
-    over changes-masks and 0<> abort" changes cannot be doubled up"
+    over changes-get-masks and 0<> abort" changes cannot be doubled up"
 
     \ Init return rule.
     0 0 rule-new                \ cngs1 rul0 rrule-test-restrict-to-regionul' |
@@ -1161,7 +1151,7 @@ rule-m11    cell+ constant rule-m10
     over sample-r-ne-i 0= abort" sample does not change?"
 
     \ Check if rule has wanted changes.
-    over sample-changes                 \ s2 r0 cngs (dl)
+    over sample-calc-changes            \ s2 r0 cngs (dl)
     swap                                \ s2 cngs r0
     2dup rule-intersects-changes        \ s2 cngs r0 flag
     0= if

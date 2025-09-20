@@ -1,14 +1,14 @@
 \ Implement a group struct and functions.
 
 #23197 constant group-id                                                                                  
-     5 constant group-struct-number-cells
+    #5 constant group-struct-number-cells
 
 \ Struct fields
-0 constant group-header                         \ id (16) use count (16) pn (8) pnc (8)
-group-header    cell+ constant group-region     \ The group region.
-group-region    cell+ constant group-r-region   \ A Region covered the group rules, often a proper subset of the group-region.
-group-r-region  cell+ constant group-squares    \ A square list.
-group-squares   cell+ constant group-rules      \ A RuleStore.
+0 constant group-header                                 \ id (16) use count (16) pn (8) pnc (8)
+group-header        cell+ constant group-region-disp    \ The group region.
+group-region-disp   cell+ constant group-r-region-disp  \ A Region covered the group rules, often a proper subset of the group-region.
+group-r-region-disp cell+ constant group-squares-disp   \ A square list.
+group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 
 0 value group-mma \ Storage for group mma instance.
 
@@ -74,14 +74,14 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     \ Check arg.
     assert-tos-is-group
 
-    group-region +      \ Add offset.
+    group-region-disp + \ Add offset.
     @                   \ Fetch the field.
 ;
  
 \ Set the region of a group instance, use only in this file.
 : _group-set-region ( reg1 addr -- )
     over struct-inc-use-count
-    group-region +      \ Add offset.
+    group-region-disp + \ Add offset.
     !                   \ Set field.
 ;
 
@@ -90,15 +90,15 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     \ Check arg.
     assert-tos-is-group
 
-    group-r-region +    \ Add offset.
-    @                   \ Fetch the field.
+    group-r-region-disp +   \ Add offset.
+    @                       \ Fetch the field.
 ;
  
 \ Set the square region of a group instance, use only in this file.
 : _group-set-r-region ( reg1 addr -- )
     over struct-inc-use-count
-    group-r-region +    \ Add offset.
-    !                   \ Set field.
+    group-r-region-disp +   \ Add offset.
+    !                       \ Set field.
 ;
 
 : group-get-pn ( sqr0 -- pn )
@@ -141,13 +141,13 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     \ Check arg.
     assert-tos-is-group
 
-    group-rules + @
+    group-rules-disp + @
 ;
 
 : _group-set-rules ( rulstr1 sqr0 -- )
     over struct-inc-use-count
 
-    group-rules + !
+    group-rules-disp + !
 ;
 
 \ Return the group squares. 
@@ -155,14 +155,14 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     \ Check arg.
     assert-tos-is-group
 
-    group-squares +     \ Add offset.
-    @                   \ Fetch the field.
+    group-squares-disp +    \ Add offset.
+    @                       \ Fetch the field.
 ;
  
 \ Set the squares field of a group instance, use only in this file.
 : _group-set-squares ( sqr-lst addr -- )
-    group-squares +     \ Add offset.
-    !                   \ Set field.
+    group-squares-disp +    \ Add offset.
+    !                       \ Set field.
 ;
 
 \ End accessors.
@@ -224,7 +224,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     \ cr ." group-new: " dup hex . decimal cr
 ;
 
-: group-from-sample ( smpl -- sqr )
+: group-new-from-sample ( smpl -- sqr )
     \ Check arg.
     assert-tos-is-sample
 
@@ -417,11 +417,11 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
 
 \ Return a list of possible forward-chaining steps, given a sample.
 \ Where the sample is in the group r-region.
-: group-get-forward-steps ( smpl1 grp0 -- stp-lst )
+: group-calc-forward-steps ( smpl1 grp0 -- stp-lst )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-sample
-    \ cr ." group-get-forward-steps:" cr
+    \ cr ." group-calc-forward-steps:" cr
 
     list-new -rot           \ ret-lst smpl1 grp0
     dup group-get-rules     \ ret-lst smpl1 grp0 grp-ruls
@@ -431,7 +431,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
                                             \ ret-lst smpl1 grp-ruls
             over                            \ ret-lst smpl1 grp-ruls | smpl1
             over rulestore-get-rule-0       \ ret-lst smpl1 grp-ruls | smpl1 rul0
-            rule-get-forward-step           \ ret-lst smpl1 grp-ruls | stpx true | false
+            rule-calc-forward-step          \ ret-lst smpl1 grp-ruls | stpx true | false
             if                              \ ret-lst smpl1 grp-ruls | stpx
                 3 pick                      \ ret-lst smpl1 grp-ruls | stpx ret-lst
                 step-list-push-xt execute   \ ret-lst smpl1 grp-ruls
@@ -439,7 +439,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
             2drop
         endof
         2 of
-            cr ." group-get-forward-steps: TODO" cr
+            cr ." group-calc-forward-steps: TODO" cr
             2drop
         endof
         3 of
@@ -451,12 +451,12 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
 ;
 
 \ Return 0, 1 or 2, backward steps.
-: group-get-backward-steps ( smpl1 grp0 -- stp-lst )
+: group-calc-backward-steps ( smpl1 grp0 -- stp-lst )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-sample
 
-    \ cr ." group-get-backward-steps: " dup .group space over .sample cr
+    \ cr ." group-calc-backward-steps: " dup .group space over .sample cr
 
     \ Init return list.
     list-new -rot                           \ ret smpl1 grp0
@@ -469,7 +469,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
         1 of
             group-get-rules                 \ ret smpl1 ruls
             rulestore-get-rule-0            \ ret smpl1 rul
-            rule-get-backward-step          \ ret, stpx t | f
+            rule-calc-backward-step         \ ret, stpx t | f
             if
                 over                        \ ret stpx ret
                 step-list-push-xt execute   \ ret
@@ -479,7 +479,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
             group-get-rules                 \ ret smpl1 ruls
             2dup                            \ ret smpl1 ruls smpl1 ruls
             rulestore-get-rule-0            \ ret smpl1 ruls smpl1 rul0
-            rule-get-backward-step          \ ret smpl1 ruls, stpx t | f
+            rule-calc-backward-step         \ ret smpl1 ruls, stpx t | f
             if
                 \ Get/set alt sample
                 dup                         \ ret smpl1 ruls stpx stpx
@@ -519,7 +519,7 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     assert-tos-is-group
     assert-nos-is-sample
 
-    cr ." group-get-steps-by-changes-f: " dup .group space over .sample cr
+    \ cr ." group-get-steps-by-changes-f: " dup .group space over .sample cr
 
     \ Get group pn.
     dup group-get-pn                        \ smpl1 grp0 pn
@@ -535,5 +535,5 @@ group-squares   cell+ constant group-rules      \ A RuleStore.
     rulestore-get-steps-by-changes-f        \ stp-lst
     \ cr ." at 4 " .s cr
 
-     cr   ." -> " dup .step-list-xt execute cr
+    \ cr   ." -> " dup .step-list-xt execute cr
 ;

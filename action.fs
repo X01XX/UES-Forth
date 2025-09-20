@@ -1116,7 +1116,7 @@ action-groups               cell+ constant action-function              \ An xt 
                                     \ cngs link grp
             group-calc-changes      \ cngs link grp-cngs
             rot                     \ link grp-cngs cngs
-            2dup changes-union      \ link grp-cngs cngs cngs'
+            2dup changes-calc-union \ link grp-cngs cngs cngs'
 
             \ Clean up.
             swap changes-deallocate \ link grp-cngs cngs'
@@ -1157,11 +1157,11 @@ action-groups               cell+ constant action-function              \ An xt 
             over group-get-r-region     \ ret-lst smpl1 link smpl1 grpx stax regx
             region-superset-of-state    \ ret-lst smpl1 link smpl1 grpx flag
             if
-                group-get-forward-steps \ ret-lst smpl1 link grp-stp-lst
-                dup                     \ ret-lst smpl1 link grp-stp-lst grp-stp-lst
-                4 pick                  \ ret-lst smpl1 link grp-stp-lst grp-stp-lst ret-lst
-                step-list-append-xt execute        \ ret-lst smpl1 link grp-stp-lst
-                step-list-deallocate-xt execute    \ ret-lst smpl1 link
+                group-calc-forward-steps        \ ret-lst smpl1 link grp-stp-lst
+                dup                             \ ret-lst smpl1 link grp-stp-lst grp-stp-lst
+                4 pick                          \ ret-lst smpl1 link grp-stp-lst grp-stp-lst ret-lst
+                step-list-append-xt execute     \ ret-lst smpl1 link grp-stp-lst
+                step-list-deallocate-xt execute \ ret-lst smpl1 link
             else
                 \ Sample initial state is not in the group r-region.
                 2drop                   \ ret-lst smpl1 link
@@ -1198,7 +1198,7 @@ action-groups               cell+ constant action-function              \ An xt 
         over link-get-data          \ ret smpl1 link smpl1 grpx
 
         \ Get backward steps, step-list returned may be empty.
-        group-get-backward-steps            \ ret smpl1 link stp-lst
+        group-calc-backward-steps           \ ret smpl1 link stp-lst
         dup                                 \ ret smpl1 link stp-lst stp-lst
         4 pick                              \ ret smpl1 link stp-lst stp-lst ret
         step-list-append-xt execute         \ ret smpl1 link stp-lst
@@ -1219,7 +1219,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     space ." Act: " dup action-get-inst-id .
-    space ." action-get-steps-by-changes: " over .sample
+    cr space ." action-get-steps-by-changes-f: " over .sample
 
     list-new -rot                   \ ret smpl1 act0
     action-get-groups               \ ret smpl1 grp-lst
@@ -1241,5 +1241,5 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
                                     \ ret smpl1
     drop                            \ ret
-    cr ." action-get-steps-by-changes-f: " dup .step-list-xt execute cr
+    \ cr ." action-get-steps-by-changes-f: " dup .step-list-xt execute cr
 ;
