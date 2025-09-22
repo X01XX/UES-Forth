@@ -812,99 +812,139 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 \ and no rule exists with the same bit change that does intersect
 \ the union.
 : domain-asymmetric-chaining-f ( smpl1 dom0 -- plan t | f )
+    \ cr ." at 0 " .s cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
     \ cr ." domain-asymmetric-chaining-f" cr
 
     \ Find an asymmetric rule.
-    over swap                               \ smpl1 smpl1 dom
-    domain-get-steps-by-changes-f           \ smpl1 stp-lst
+    2dup                                    \ smpl1 dom0 | smpl1 dom0
+    domain-get-steps-by-changes-f           \ smpl1 dom0 | stp-lst
 
-    cr ." steps by changes steps: " dup .step-list cr
+    \ cr ." steps by changes steps: " dup .step-list cr
 
     \ Prep for loop by single-bit change.
-    over sample-calc-changes                \ smpl1 stp-lst cngs
-    dup changes-split                       \ smpl1 stp-lst cngs cng-lst
-    swap changes-deallocate                 \ smpl1 stp-lst cng-lst
-    list-new swap                           \ smpl1 stp-lst asym-lst cng-lst
-    dup list-get-links                      \ smpl1 stp-lst asym-lst cng-lst link
+    2 pick sample-calc-changes              \ smpl1 dom0 | stp-lst cngs
+    dup changes-split                       \ smpl1 dom0 | stp-lst cngs cng-lst
+    swap changes-deallocate                 \ smpl1 dom0 | stp-lst cng-lst
+    list-new swap                           \ smpl1 dom0 | stp-lst asym-lst cng-lst
+    dup list-get-links                      \ smpl1 dom0 | stp-lst asym-lst cng-lst link
+
+    \ cr ." at 1 " .s cr
 
     \ For each single-bit change, find steps that do not start at the sample initial state
     \ without any alternate steps that do.
     begin
         ?dup
-    while                                   \ smpl1 stp-lst asym-lst cng-lst link
+    while                                   \ smpl1 dom0 | stp-lst asym-lst cng-lst link
 
         \ Find steps that provide the one-bit change, but possibly others.
-        dup link-get-data                   \ smpl1 stp-lst asym-lst cng-lst link cng1
-        4 pick                              \ smpl1 stp-lst asym-lst cng-lst link cng1 stp-lst
-        step-list-intersects-changes        \ smpl1 stp-lst asym-lst cng-lst link stp-cng-lst
-        dup list-get-length                 \ smpl1 stp-lst asym-lst cng-lst link sc-lst len
+        dup link-get-data                   \ smpl1 dom0 | stp-lst asym-lst cng-lst link cng1
+        4 pick                              \ smpl1 dom0 | stp-lst asym-lst cng-lst link cng1 stp-lst
+        step-list-intersects-changes        \ smpl1 dom0 | stp-lst asym-lst cng-lst link stp-cng-lst
+        dup list-get-length                 \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst len
 
         \ Check if the one-bit change is possible, else done.
-        0= if                               \ smpl1 stp-lst asym-lst cng-lst link sc-lst
+        0= if                               \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst
             cr ." step for change not found" cr
-            step-list-deallocate
-            drop
-            changes-list-deallocate
-            step-list-deallocate
-            step-list-deallocate
-            drop
+            step-list-deallocate            \ smpl1 dom0 | stp-lst asym-lst cng-lst link
+            drop                            \ smpl1 dom0 | stp-lst asym-lst cng-lst
+            changes-list-deallocate         \ smpl1 dom0 | stp-lst asym-lst
+            step-list-deallocate            \ smpl1 dom0 | stp-lst
+            step-list-deallocate            \ smpl1 dom0 |
+            2drop
             false
             exit
         then
 
+        \ cr ." at 2 " .s cr
+        
         \ Check if there are only steps that do not match the smpl1 initial state.
-        dup                                 \ smpl1 stp-lst asym-lst cng-lst link sc-lst sc-lst
-        6 pick sample-get-initial           \ smpl1 stp-lst asym-lst cng-lst link sc-lst sc-lst s-i
-        swap step-list-any-match-initial    \ smpl1 stp-lst asym-lst cng-lst link sc-lst flag
-        0= if                               \ smpl1 stp-lst asym-lst cng-lst link sc-lst
+        dup                                 \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst
+        7 pick sample-get-initial           \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst s-i
+        swap step-list-any-match-initial    \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst flag
+        0= if                               \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst
             \ Save the steps.
-            dup 4 pick                      \ smpl1 stp-lst asym-lst cng-lst link sci-lst sci-lst asym-lst
-            step-list-append                \ smpl1 stp-lst asym-lst cng-lst link sci-lst
+            dup 4 pick                      \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst sci-lst asym-lst
+            step-list-append                \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst
         then
-        step-list-deallocate                \ smpl1 stp-lst asym-lst cng-lst link
+        step-list-deallocate                \ smpl1 dom0 | stp-lst asym-lst cng-lst link
 
-        link-get-next                       \ smpl1 stp-lst asym-lst cng-lst link
+        \ cr ." at 3 " .s cr
+        
+        link-get-next                       \ smpl1 dom0 | stp-lst asym-lst cng-lst link
     repeat
-    changes-list-deallocate                 \ smpl1 stp-lst asym-lst
-    swap step-list-deallocate               \ smpl1 asym-lst
 
-    dup list-get-length                     \ smpl1 asym-lst
+    \ cr ." at 4 " .s cr
+
+    changes-list-deallocate                 \ smpl1 dom0 | stp-lst asym-lst
+    swap step-list-deallocate               \ smpl1 dom0 | asym-lst
+
+    dup list-get-length                     \ smpl1 dom0 | asym-lst
     0<> if
         cr ." asym-lst: " dup .step-list cr
 
         \ Randomly choose a step.
-        dup list-get-length                 \ smpl1 asym-lst len
-        random                              \ smpl1 asym-lst inx
-        over list-get-item                  \ smpl1 asym-lst stpx
+        dup list-get-length                 \ smpl1 dom0 | asym-lst len
+        random                              \ smpl1 dom0 | asym-lst inx
+        over list-get-item                  \ smpl1 dom0 | asym-lst stpx
         cr ." step: " dup .step cr
-        step-get-sample                     \ smpl1 asym-lst smpl2
+        dup step-get-sample                 \ smpl1 dom0 | asym-lst stpx smpl2
+       \  cr ." step sample: " dup .sample cr
 
         \ Get plan smpl1-i to smpl2-i.
-        dup sample-get-initial              \ smpl1 asym-lst smpl2 s2-i
-        3 pick sample-get-initial           \ smpl1 asym-lst smpl2 s2-i s1-i
-        sample-new                          \ smpl1 asym-lst smpl2 smpl3
+        dup sample-get-initial              \ smpl1 dom0 | asym-lst stpx smpl2 s2-i
+        5 pick sample-get-initial           \ smpl1 dom0 | asym-lst stpx smpl2 s2-i s1-i
+        sample-new                          \ smpl1 dom0 | asym-lst stpx smpl2 smpl3
         cr ." find plan1: " dup .sample cr
-        sample-deallocate
 
-        \ Get plan from smpl2-r to smpl1-r.
-        2 pick sample-get-result            \ smpl1 asym-lst smpl2 s1-r
-        over sample-get-result              \ smpl1 asym-lst smpl2 s1-r s2-r
-        sample-new                          \ smpl1 asym-lst smpl2 smpl3
-        cr ." find plan2: " dup .sample cr
+       \  cr ." at 5 " .s cr
 
-        cr ." TODO Join plan1, the asymmetric step, and plan2."
+        dup                                 \ smpl1 dom0 | asym-lst stpx smpl2 smpl3 smpl3
+        5 pick                              \ smpl1 dom0 | asym-lst stpx smpl2 smpl3 smpl3 dom0
+        domain-get-plan2-f                  \ smpl1 dom0 | asym-lst stpx smpl2 smpl3, plan t | f
+        if
+            swap sample-deallocate          \ smpl1 dom0 | asym-lst stpx smpl2 plan1
+    
+            cr ." Partial plan1 found: " dup .plan-xt execute cr
+            
+            \ Get plan 2
+            5 pick sample-get-result        \ smpl1 dom0 | asym-lst stpx smpl2 plan1 s1-r
+            2 pick sample-get-result        \ smpl1 dom0 | asym-lst stpx smpl2 plan1 s1-r s2-r
+            sample-new                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4
+            cr ." find plan2: " dup .sample cr
 
-        sample-deallocate
-        drop
-        step-list-deallocate                \ smpl1
-        drop
+            dup 6 pick                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4 smpl4 dom0
+            domain-get-plan2-f              \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4, plan2 t | f
+            if                              \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4 plan2
+                swap sample-deallocate      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
+                cr ." Partial plan2 found: " dup .plan-xt execute cr
+                plan-deallocate-xt execute  \ smpl1 dom0 | asym-lst stpx smpl2 plan1
+                
+            else                            \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4
+                sample-deallocate           \ smpl1 dom0 | asym-lst stpx smpl2 plan1
+            then
+
+            \ TODO link plan1 step plan2
+            cr ." TODO Join plan1, the asymmetric step, and plan2."
+
+            
+            plan-deallocate-xt execute      \ smpl1 dom0 | asym-lst stpx smpl2
+        else
+                                            \ smpl1 dom0 | asym-lst stpx smpl2 smpl3
+            sample-deallocate               \ smpl1 dom0 | asym-lst stpx smpl2
+        then
+        drop                                \ smpl1 dom0 | asym-lst stpx
+
+        \ cr ." at 6 " .s cr
+        drop                                \ smpl1 dom0 | asym-lst
+        step-list-deallocate                \ smpl1 dom0 |
     else
-        step-list-deallocate                \ smpl1
-        drop
+        step-list-deallocate                \ smpl1 dom0 |
     then
+
+    2drop                                   \
 
     \ Print session data.
     current-session

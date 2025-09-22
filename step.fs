@@ -193,6 +193,7 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 : step-deallocate ( stp0 -- )
     \ Check arg.
     assert-tos-is-step
+    cr dup ." step: " .step cr
 
     dup struct-get-use-count      \ stp0 count
 

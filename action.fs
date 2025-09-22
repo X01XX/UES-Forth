@@ -557,6 +557,7 @@ action-groups               cell+ constant action-function              \ An xt 
 : _action-check-square ( sqr1 act0 -- )
     \ cr ." _action-check-square - start" cr
     \ Check args.
+    dup is-allocated-action 0= if cr .s cr then
     assert-tos-is-action
     assert-nos-is-square
 
@@ -580,7 +581,7 @@ action-groups               cell+ constant action-function              \ An xt 
                                             \ act0 inclst
     dup list-get-links                      \ act0 inclst link
     begin
-        dup                                 \ act0 inclst link link
+        ?dup                                \ act0 inclst link
     while
         dup link-get-data                   \ act0 inclst link regx
 
@@ -625,8 +626,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
         link-get-next                       \ act0 inclst sta1 link-next
     repeat
-                                            \ act0 inclst 0
-    drop                                    \ act0 inclst
+                                            \ act0 inclst
 
     region-list-deallocate
     drop
@@ -839,6 +839,7 @@ action-groups               cell+ constant action-function              \ An xt 
     over action-get-squares
     square-list-find            \ smpl1 act0, sqr true | false
     if
+                                \ smpl1 act0 sqr
         \ Update existing square
         rot                     \ act0 sqr smpl1
         over                    \ act0 sqr smpl1 sqr
@@ -1217,9 +1218,9 @@ action-groups               cell+ constant action-function              \ An xt 
     assert-tos-is-action
     assert-nos-is-sample
 
-    cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
-    space ." Act: " dup action-get-inst-id .
-    cr space ." action-get-steps-by-changes-f: " over .sample
+    \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ space ." Act: " dup action-get-inst-id .
+    \ cr space ." action-get-steps-by-changes-f: " over .sample
 
     list-new -rot                   \ ret smpl1 act0
     action-get-groups               \ ret smpl1 grp-lst
