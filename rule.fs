@@ -1046,6 +1046,8 @@ rule-m11    cell+ constant rule-m10
     nip 0 swap              \ 0 smpl2
     cur-action-xt execute   \ 0 smpl2 actx
     step-new-xt execute     \ stpx
+    \ Set to not-forward, that is, backward.
+    0 over step-set-forward-xt execute  \ stpx
     true
 ;
 

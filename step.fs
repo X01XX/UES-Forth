@@ -4,7 +4,7 @@
      4 constant step-struct-number-cells
 
 \ Struct fields
-0 constant step-header                          \ id (16) use count (16)
+0 constant step-header                          \ id (16) use count (16) forward flag (8)
 step-header   cell+ constant step-action        \ An action addr.
 step-action   cell+ constant step-sample        \ A expected, or desired, sample.
 step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a diversion, not an error, for a pn-2 action.
@@ -125,6 +125,29 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     sample-get-initial
 ;
 
+\ Return forward-flag from an step instance.
+: step-get-forward ( act0 -- bool)
+    \ Check arg.
+    assert-tos-is-step
+
+    \ Get forward flag.
+    4c@
+    0<>     \ Turn 255 into -1
+;
+
+
+\ Set the forward flag of an step instance, use only in this file.
+: step-set-forward ( b1 act0 -- )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-bool
+
+    \ Set forward flag, to 0 or 255.
+    4c!
+;
+
+' step-set-forward to step-set-forward-xt
+
 \ End accessors.
 
 \ Return a new step, given a state and result.
@@ -170,21 +193,53 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     \ Set alt-sample
     tuck                            \ addr as2 addr
     step-set-alt-sample             \ addr
+
+    -1 over step-set-forward        \ addr
 ;
 
 ' step-new to step-new-xt
+
+\ Print a sample for a step.
+: .step-sample ( smpl1 stp0 -- )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-sample
+
+    dup step-get-action                     \ smpl1 stp0 actx
+    action-get-inst-id-xt execute           \ smpl1 stp0 act-id
+    swap step-get-forward                   \ smpl1 act-id flag
+    if                                      \ smpl1 act-id
+        over sample-get-initial             \ smpl1 act-id s-i
+        .value                              \ smpl1 act-id
+        ." -"
+        0 <# #S 0 #> type drop              \ smpl1
+        ." ->"
+        sample-get-result .value            \
+    else
+                                            \ smpl1 act-id
+        over sample-get-initial             \ smpl1 act-id s-i
+        .value                              \ smpl1 act-id
+        ." <-"
+        0 <# #S 0 #> type drop              \ smpl1
+        ." -"
+        sample-get-result .value            \
+    then
+;
 
 : .step ( stp0 -- )
     \ Check arg.
     assert-tos-is-step
 
-    dup step-get-action action-get-inst-id
-    ." Act: " . space
-    dup step-get-sample .sample
-    step-get-alt-sample
+    dup step-get-sample     \ stp0 smpl
+    over                    \ stp0 smpl stp0
+    .step-sample            \ stp0
+
+    dup step-get-alt-sample \ stp0 smpl-alt
     ?dup
     if
-        space ." Alt: " .sample
+        space ." Alt: " swap .step-sample
+    else
+        drop
     then   
 ;
 
