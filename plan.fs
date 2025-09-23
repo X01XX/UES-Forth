@@ -276,3 +276,28 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     2drop
     true
 ;
+
+\ Append a nos plan to a tos plan.
+: plan-append ( pln1 pln0 -- )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-plan
+    \ cr ." append: " over .plan space ." to: " dup .plan cr
+
+    swap                    \ pln0 pln1
+    plan-get-step-list      \ pln0 stp-lst1
+    list-get-links          \ pln0 link
+
+    begin
+        ?dup
+    while
+        dup link-get-data   \ pln0 link stpx
+        2 pick              \ pln0 link stpx pln0
+        plan-push-end       \ pln0 link
+
+        link-get-next       \ pln0 link
+    repeat
+    drop
+;
+
+' plan-append to plan-append-xt

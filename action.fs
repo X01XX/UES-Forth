@@ -662,7 +662,7 @@ action-groups               cell+ constant action-function              \ An xt 
     list-get-links              \ ret-lst act0 link
 
     begin
-        dup
+        ?dup
     while
         dup link-get-data       \ ret-lst act0 link region
         dup                     \ ret-lst act0 link region region
@@ -697,8 +697,8 @@ action-groups               cell+ constant action-function              \ An xt 
 
         link-get-next
     repeat
-                                \ ret-lst act0 0
-    2drop                       \ ret-lst
+                                \ ret-lst act0
+    drop                        \ ret-lst
     \ cr ." _action-not-incompatible-pairs - end" cr
 ;
 
@@ -719,7 +719,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     list-get-links                          \ act0 ls-new link
     begin
-        dup
+        ?dup
     while
         \ Get next ~A + ~B region list.
         dup link-get-data                   \ act0 ls-new link region
@@ -742,11 +742,10 @@ action-groups               cell+ constant action-function              \ An xt 
 
         link-get-next
     repeat
-                                            \ act0 ls-new 0
-    drop                                    \ act0 ls-new
+                                            \ act0 ls-new
 
     \ Store new LS.
-    rot                                     \ ls-new act0
+    swap                                    \ ls-new act0
     _action-update-logical-structure        \
     \ cr ." _action-recalc-logical-structure - end" cr
 ;
@@ -767,7 +766,7 @@ action-groups               cell+ constant action-function              \ An xt 
     dup list-is-empty                   \ act0 reg-lst-in flag
     if
         list-deallocate                 \ act0
-        2drop
+        drop
         \ cr ." _action-check-incompatible-pairs - end" cr
         exit
     then
@@ -793,7 +792,7 @@ action-groups               cell+ constant action-function              \ An xt 
     dup                                 \ act0 reg-lst-not-i reg-lst-not-i
     list-get-links                      \ act0 reg-lst-not-i link
     begin
-        dup
+        ?dup
     while
         dup link-get-data               \ act0 reg-lst-not-i link region
         cr ." state " dup region-get-states .value space ." and " .value space ." are no longer incompatible" cr
@@ -808,8 +807,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
         link-get-next
     repeat
-                                        \ act0 reg-lst-not-i 0
-    drop                                \ act0 reg-list-not-i
+                                        \ act0 reg-lst-not-i
     region-list-deallocate              \ act0
 
     \ Recalc logical-structure
@@ -835,8 +833,8 @@ action-groups               cell+ constant action-function              \ An xt 
 
     cr ." Act: " dup action-get-inst-id . space ." adding sample: " over .sample cr
 
-    over sample-get-initial
-    over action-get-squares
+    over sample-get-initial     \ smpl1 act0 s-i
+    over action-get-squares     \ smpl1 act0 s-i act0
     square-list-find            \ smpl1 act0, sqr true | false
     if
                                 \ smpl1 act0 sqr
@@ -849,7 +847,6 @@ action-groups               cell+ constant action-function              \ An xt 
             2dup                \ sqr act0 sqr act0
             _action-check-incompatible-pairs    \ sqr act0
             2dup                        \ sqr act0 sqr act0
-            \ cr ." At 1 " .s cr
             _action-check-square        \ sqr act0
             action-get-groups           \ sqr grp-lst
             group-list-check-square     \
@@ -866,7 +863,6 @@ action-groups               cell+ constant action-function              \ An xt 
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
         2dup                    \ sqr act0 sqr act0
-        \ cr ." At 2 " .s cr
         _action-check-square    \ sqr act0
         dup action-get-groups   \ sqr act0 grp-lst
         2 pick                  \ sqr act0 grp-lst sqr
