@@ -1,3 +1,3 @@
 
--1 value current-session        \ Storeage for session address.
+-1 value current-session        \ Storage for session address.
 

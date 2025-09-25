@@ -231,7 +231,7 @@
 ;
 
 : do-three-token-commands ( c-addr c-cnt -- flag )
-    \ Change Domain State: cs domain-number state
+    \ Change Domain State: cds domain-number state
     2dup s" cds" str=
     if
         2drop
@@ -240,6 +240,9 @@
         if
             current-session session-find-domain     \ ... dom t | f
             if
+                \ Set current domain.
+                dup current-session session-set-current-domain
+
                 -rot                                \ ... dom c-addr cnt
             else
                 cr ." cds command: domain number invalid" cr
@@ -276,10 +279,10 @@
         true
         exit
     then
+
     \ Print square detail.
-        2dup s" psd" str=
+    2dup s" psd" str=
     if
-        cr ." spd command" cr
         2drop
         \ Get domain ID.
         snumber?                                    \ ... dom-id t | f
@@ -287,6 +290,9 @@
             cr ." domain " dup . cr
             current-session session-find-domain     \ ... dom t | f
             if
+                \ Set current domain.
+                dup current-session session-set-current-domain
+
                 -rot                                \ ... dom c-addr cnt
             else
                 cr ." psd command: domain number invalid" cr
@@ -324,7 +330,84 @@
         exit
     then
 
-        cr ." Three-token command not recognized" cr
+    \ To State: tos domain-number state
+    2dup s" tos" str=
+    if
+        2drop
+        \ Get domain ID.
+        snumber?
+        if
+            current-session session-find-domain     \ ... dom t | f
+            if
+                \ Set current domain.
+                dup current-session session-set-current-domain
+
+                -rot                                \ ... dom c-addr cnt
+            else
+                cr ." tos command: domain number invalid" cr
+                2drop
+                true
+                exit
+            then
+        else
+            cr ." tos command: domain number invalid" cr
+            2drop
+            true
+            exit
+        then
+
+        \ Get state.
+        snumber?                                    \ dom, sta t | f
+        if
+            dup is-not-value
+            if
+                cr ." tos command: state invalid" cr
+                2drop
+                true
+                exit
+            else
+                swap                                \ sta dom
+                dup domain-get-current-state        \ sta dom cur-sta
+                rot swap                            \ dom sta cur-sta
+                2dup =
+                if                                  \ dom sta cur-sta
+                    cr ." Already at that state."
+                    3drop
+                    true
+                    exit
+                then
+
+                \ Do domain-get-plan
+                sample-new                          \ dom smpl
+                tuck swap                           \ smpl smpl dom
+                domain-get-plan                     \ smpl, plan t | f
+                if                                  \ smpl plan
+                    swap sample-deallocate          \ plan
+                    dup                             \ plan plan
+                    plan-run                        \ plan flag
+                    swap plan-deallocate            \ flag
+                    if
+                        cr ." Plan succeeded" cr
+                    else
+                        cr ." Plan failed" cr
+                    then
+                else                                \ smpl
+                    sample-deallocate               \
+                    cr ." No plan found" cr
+                then
+
+                true
+                exit
+            then
+        else
+            cr ." tos command: state invalid" cr
+            drop
+        then
+        true
+        exit
+    then
+
+    cr ." Three-token command not recognized" cr
     \ Clear tokens.
     2drop
     2drop
@@ -387,7 +470,8 @@
         cr ." q - to quit"
         cr ." Press Enter to randomly choose a need, if any." 
         cr ." ps - to Print Session, all domains, actions."
-        cr ." cds <domain ID> <state> - Change Domain State."
+        cr ." cds <domain ID> <state> - Change Domain State, arbitrary."
+        cr ." tos <domain ID> <state> - Change Domain State, by finding and executing a plan."
         cr ." psd <domain ID> <action ID> - Print square Detail."
         cr ." mu - Display Memory Use."
         cr ." <number> - Select a particular need."
