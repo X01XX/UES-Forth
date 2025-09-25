@@ -537,3 +537,83 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 
     \ cr   ." -> " dup .step-list-xt execute cr
 ;
+
+\ Return steps by changes, backward-chaining.
+: group-get-steps-by-changes-b ( smpl1 grp0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-sample
+
+    \ cr ." group-get-steps-by-changes-b: " dup .group space over .sample cr
+
+    \ Get group pn.
+    dup group-get-pn                        \ smpl1 grp0 pn
+
+    \ Handle unpredictable group.
+    3 = if
+        2drop
+        list-new
+        exit
+    then
+
+    group-get-rules                         \ smpl ruls
+    rulestore-get-steps-by-changes-b        \ stp-lst
+    \ cr ." at 4 " .s cr
+
+    \ cr   ." -> " dup .step-list-xt execute cr
+;
+
+\ Return an expansion need.
+: group-get-expansion-needs ( reg1 grp0 -- ned t | f )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-region
+
+    \ cr ." group: " dup group-get-region .region
+    \ space ." r-reg: " dup group-get-r-region .region
+    \ space ." reachable: " over .region
+
+    \ Get group region.
+    dup group-get-region        \ reg1 grp0 grp-reg
+    rot                         \ grp0 grp-reg reg1
+
+    \ Get group region intersection reachable region.
+    region-intersection         \ grp0, reg-int t | false
+    0= if
+        cr ." region " .region space ." does not intersect " .region cr
+        abort
+    then
+
+                                \ grp0 reg-int
+    swap group-get-r-region     \ reg-int grp-r-reg
+
+    2dup region-eq              \ reg-int grp-r-reg flag
+    if
+        drop
+        region-deallocate
+        false
+        exit
+    then
+
+                                \ reg-int grp-r-reg
+    dup region-get-state-0 swap \ reg-int r-reg-sta0 grp-r-reg
+    region-edge-mask            \ reg-int sta0 edg-msk
+    2 pick region-x-mask        \ reg-int sta0 edg-msk x-msk
+    and                         \ reg-int sta0 cng-msk
+    rot region-deallocate       \ sta0 cng-msk
+    \ space ." cng-msk: " dup .value cr
+    ?dup
+    if
+        xor                         \ sta0'
+    
+        \ Make need.
+        4 swap                      \ 4 sta0'
+        cur-action-xt execute       \ 4 sta0' actx
+        cur-domain-xt execute       \ 4 sta0' actx domx
+        need-new-xt execute         \ nedx
+        true
+    else
+        drop
+        false
+    then
+;

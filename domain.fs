@@ -328,38 +328,43 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     dup domain-get-inst-id cr ." domain-get-needs: Dom: " .
     space ." reachable region: " over .region cr
-    nip
+    \ nip
 
-    dup domain-get-current-state    \ dom0 sta
-    swap                            \ sta dom0
+    dup domain-get-current-state    \ reg1 dom0 sta
+    swap                            \ reg1 sta dom0
     
-    dup domain-get-actions          \ sta dom0 act-lst
+    dup domain-get-actions          \ reg1 sta dom0 act-lst
 
     \ Init list to start appending action need lists to.
-    list-new swap                   \ sta dom0 ret-lst act-lst
+    list-new swap                   \ reg1 sta dom0 ret-lst act-lst
 
     \ Scan action-list, getting needs from each action.
-    list-get-links                  \ sta dom0 ret-lst link
+    list-get-links                  \ reg1 sta dom0 ret-lst link
     begin
         ?dup
     while
-        3 pick                      \ sta dom0 ret-lst link sta
-        over link-get-data          \ sta dom0 ret-lst link sta actx
+        \ Set current action.
+        dup link-get-data           \ reg1 sta dom0 ret-lst link actx
+        3 pick                      \ reg1 sta dom0 ret-lst link actx dom
+        domain-set-current-action   \ reg1 sta dom0 ret-lst link
 
-        dup 5 pick                  \ sta dom0 ret-lst link sta actx actx dom
-        domain-set-current-action   \ sta dom0 ret-lst link sta actx
+        \ Get action needs.
+        4 pick                      \ reg1 sta dom0 ret-lst link reg1
+        4 pick                      \ reg1 sta dom0 ret-lst link reg1 sta 
+        2 pick link-get-data        \ reg1 sta dom0 ret-lst link reg1 sta actx
+        action-get-needs            \ reg1 sta dom0 ret-lst link act-neds
 
-        action-get-needs            \ sta dom0 ret-lst link act-neds
-        rot                         \ sta dom0 link act-neds ret-lst
-        2dup                        \ sta dom0 link act-neds ret-lst act-neds ret-lst
-        need-list-append            \ sta dom0 link act-neds ret-lst'
-        swap need-list-deallocate   \ sta dom0 link ret-lst'
-        swap                        \ sat dom0 ret-lst' link
+        \ Add needs to return list.
+        rot                         \ reg1 sta dom0 link act-neds ret-lst
+        2dup                        \ reg1 sta dom0 link act-neds ret-lst act-neds ret-lst
+        need-list-append            \ reg1 sta dom0 link act-neds ret-lst'
+        swap need-list-deallocate   \ reg1 sta dom0 link ret-lst'
+        swap                        \ reg1 sta dom0 ret-lst' link
 
         link-get-next
     repeat
-                                    \ sta dom0 ret-lst
-    nip nip                         \ ret-lst
+                                    \ reg1 sta dom0 ret-lst
+    nip nip nip                     \ ret-lst
 ;
 
 \ Return a maximum region that might be reached, given the
@@ -883,7 +888,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         dup                                 \ smpl1 dom0 | asym-lst stpx smpl2 smpl3 smpl3
         5 pick                              \ smpl1 dom0 | asym-lst stpx smpl2 smpl3 smpl3 dom0
-        domain-get-plan2-f                  \ smpl1 dom0 | asym-lst stpx smpl2 smpl3, plan t | f
+        domain-get-plan2-fb                 \ smpl1 dom0 | asym-lst stpx smpl2 smpl3, plan t | f
         if
             swap sample-deallocate          \ smpl1 dom0 | asym-lst stpx smpl2 plan1
 
@@ -893,7 +898,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             sample-new                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4
 
             dup 6 pick                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4 smpl4 dom0
-            domain-get-plan2-f              \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4, plan2 t | f
+            domain-get-plan2-fb             \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4, plan2 t | f
             if                              \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4 plan2
                 swap sample-deallocate      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
 
@@ -975,6 +980,36 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     list-get-item               \ dom
     true
+;
+
+: domain-get-steps-by-changes-b ( smpl1 dom0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-sample
+
+    \ Init return list.
+    list-new swap                   \ smpl1 stp-lst dom0
+
+    \ Get steps from each action.
+    dup domain-get-actions          \ smpl1 stp-lst dom0 act-lst
+    list-get-links                  \ smpl1 stp-lst dom0 link
+    begin
+        ?dup
+    while                               \ smpl1 stp-lst dom0 link |
+        dup link-get-data               \ | actx
+        dup                             \ | actx actx
+        3 pick                          \ | actx actx dom
+        domain-set-current-action       \ | actx
+        4 pick swap                     \ | smpl1 actx
+        action-get-steps-by-changes-b   \ | act-stps
+        dup                             \ | act-stps act-stps
+        4 pick step-list-append         \ | act-stps
+        step-list-deallocate            \ |
+
+        link-get-next
+    repeat
+    drop                                \ smpl1 stp-lst
+    nip                                 \ stp-lst
 ;
 
 

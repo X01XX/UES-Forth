@@ -1192,3 +1192,52 @@ rule-m11    cell+ constant rule-m10
     nip
     true
 ;
+
+\ Get a predicted sample from a rule, by changes needed in a given sample,
+\ backward-chaining.
+: rule-get-sample-by-changes-b ( smpl2 rul0 -- smpl t | f )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-sample
+    over sample-r-ne-i 0= abort" sample does not change?"
+
+    \ Check if rule has wanted changes.
+    over sample-calc-changes            \ s2 r0 cngs (dl)
+    swap                                \ s2 cngs r0
+    2dup rule-intersects-changes        \ s2 cngs r0 flag
+    0= if
+        drop
+        changes-deallocate
+        drop
+        false
+        exit
+    then
+
+    \ Restrict rule to changes, like X->1 to 0->1, for 0->1 in changes.
+    over swap                           \ s2 cngs cngs r0
+    rule-restrict-to-changes            \ s2 cngs r0' (dl)
+    swap changes-deallocate             \ s2 r0' |
+    
+    \ Check backward path.
+    over sample-get-result  dup         \ | sta-i sta-i
+    2 pick                              \ | sta-i sta-i r0'
+    rule-calc-result-region             \ | sta-i sta-i reg-i (dl)
+    tuck region-superset-of-state       \ | sta-i reg-i flag
+    0= if
+        2dup                            \ | sta-i reg-i sta-i reg-i
+        region-translate-state          \ | sta-i reg-i sta-i'
+        rot drop                        \ | reg-i sta-i'
+        swap                            \ | sta-i' reg-i
+    then
+    region-deallocate                   \ | sta-i
+
+    \ sta-i now known to intersect rule initial region.
+                                        \ | sta-i
+    over rule-apply-to-state-b          \ | smpl2 t | f
+    0= abort" apply failed?"
+
+    \ Clean up.
+    swap rule-deallocate                \ s2 smpl2
+    nip
+    true
+;

@@ -122,7 +122,7 @@ need-action  cell+ constant need-target     \ A state.
     over 1 <
     abort" _need-set-type: invalid type value"
 
-    over 3 >
+    over 4 >
     abort" _need-set-type: invalid type value"
 
     4c!
@@ -159,6 +159,8 @@ need-action  cell+ constant need-target     \ A state.
     tuck _need-set-type             \ ned
 ;
 
+' need-new to need-new-xt
+
 \ Print a need.
 : .need ( ned0 -- )
     \ Check arg.
@@ -181,6 +183,7 @@ need-action  cell+ constant need-target     \ A state.
         1 of space ." State not in group" endof
         2 of space ." Confirm logical structure" endof
         3 of space ." Improve logical structure" endof
+        4 of space ." Expand group" endof
         ." Unrecognized type value" abort
     endcase
 ;
