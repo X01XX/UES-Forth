@@ -45,6 +45,15 @@
     abort" NOS is not bool"
 ;
 
+\ Check 3OS for bool, unconventional, leaves stack unchanged. 
+: assert-3os-is-bool ( u ?? ?? -- )
+    2 pick dup 0=
+    swap -1 =
+    or
+    0=
+    abort" 3OS is not bool"
+;
+
 : .bool ( b -- )
     \ Check arg.
     assert-tos-is-bool

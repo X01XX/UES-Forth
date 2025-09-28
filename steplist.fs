@@ -163,19 +163,19 @@
 ;
 
 \
-: step-list-any-match-initial ( sta1 lst0 -- flag )
+: step-list-any-match-sample ( smpl1 lst0 -- flag )
     \ Check args.
     assert-tos-is-list
-    assert-nos-is-value
+    assert-nos-is-sample
 
-    list-get-links          \ sta1 link
+    list-get-links          \ smpl1 link
     begin
         ?dup
     while
-        2dup link-get-data  \ sta1 link sta1 stpx
-        step-get-sample     \ sta1 link sta1 smpl
-        sample-get-initial  \ sta1 link sta1 smpl-sta
-        = if
+        2dup link-get-data  \ smpl1 link smpl1 stpx
+        step-get-sample     \ smpl1 link smpl1 stp-smpl
+        sample-intersects   \ smpl1 link flag
+        if
             2drop
             true
             exit

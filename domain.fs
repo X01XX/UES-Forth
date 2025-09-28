@@ -327,8 +327,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-nos-is-region
 
     dup domain-get-inst-id cr ." domain-get-needs: Dom: " .
-    space ." reachable region: " over .region cr
-    \ nip
+    \ space ." reachable region: " over .region cr
 
     dup domain-get-current-state    \ reg1 dom0 sta
     swap                            \ reg1 sta dom0
@@ -824,6 +823,11 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Find an asymmetric rule.
     2dup                                    \ smpl1 dom0 | smpl1 dom0
     domain-get-steps-by-changes-f           \ smpl1 dom0 | stp-lst
+    dup list-is-empty if
+        3drop
+        false
+        exit
+    then
 
     \ Prep for loop by single-bit change.
     2 pick sample-calc-changes              \ smpl1 dom0 | stp-lst cngs
@@ -832,7 +836,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     list-new swap                           \ smpl1 dom0 | stp-lst asym-lst cng-lst
     dup list-get-links                      \ smpl1 dom0 | stp-lst asym-lst cng-lst link
 
-    \ For each single-bit change, find steps that do not start at the sample initial state
+    \ For each single-bit change, find steps that do not contain the sample initial states
     \ without any alternate steps that do.
     begin
         ?dup
@@ -858,8 +862,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Check if there are only steps that do not match the smpl1 initial state.
         dup                                 \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst
-        7 pick sample-get-initial           \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst s-i
-        swap step-list-any-match-initial    \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst flag
+        7 pick                              \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst smpl1
+        swap step-list-any-match-sample     \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst flag
         0= if                               \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst
             \ Save the steps.
             dup 4 pick                      \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst sci-lst asym-lst

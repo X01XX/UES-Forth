@@ -423,16 +423,23 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     assert-nos-is-sample
     \ cr ." group-calc-forward-steps:" cr
 
+    \ Init return list.
     list-new -rot           \ ret-lst smpl1 grp0
-    dup group-get-rules     \ ret-lst smpl1 grp0 grp-ruls
-    swap group-get-pn       \ ret-lst smpl1 grp-ruls pn
+
+    dup group-get-pn       \ ret-lst smpl1 grp0 pn
     case
         1 of
-                                            \ ret-lst smpl1 grp-ruls
+                                            \ ret-lst smpl1 grp0
+            group-get-rules                 \ ret-lst smpl1 grp-ruls
             over                            \ ret-lst smpl1 grp-ruls | smpl1
             over rulestore-get-rule-0       \ ret-lst smpl1 grp-ruls | smpl1 rul0
-            rule-calc-forward-step          \ ret-lst smpl1 grp-ruls | stpx true | false
-            if                              \ ret-lst smpl1 grp-ruls | stpx
+            rule-calc-forward-sample        \ ret-lst smpl1 grp-ruls | smpl2 true | false
+            if                              \ ret-lst smpl1 grp-ruls | smpl2
+                \ Make step.
+                0 swap                      \ ret-lst smpl1 grp-ruls | 0 smpl2
+                cur-action-xt execute       \ ret-lst smpl1 grp-ruls | 0 smpl2 actx
+                step-new-xt execute         \ ret-lst smpl1 grp-ruls | stpx
+                \ Store step.
                 3 pick                      \ ret-lst smpl1 grp-ruls | stpx ret-lst
                 step-list-push-xt execute   \ ret-lst smpl1 grp-ruls
             then
@@ -459,50 +466,30 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     \ cr ." group-calc-backward-steps: " dup .group space over .sample cr
 
     \ Init return list.
-    list-new -rot                           \ ret smpl1 grp0
+    list-new -rot                           \ ret-lst smpl1 grp0
 
     \ Get group pn.
-    dup group-get-pn                        \ ret smpl1 grp0 pn
+    dup group-get-pn                        \ ret-lst smpl1 grp0 pn
 
     \ Process group by pn value.
     case
         1 of
-            group-get-rules                 \ ret smpl1 ruls
-            rulestore-get-rule-0            \ ret smpl1 rul
-            rule-calc-backward-step         \ ret, stpx t | f
-            if
-                over                        \ ret stpx ret
-                step-list-push-xt execute   \ ret
+            group-get-rules                 \ ret-lst smpl1 grp-ruls
+            over                            \ ret-lst smpl1 grp-ruls smpl1
+            over rulestore-get-rule-0       \ ret-lst smpl1 grp-ruls smpl1 rul0
+            rule-calc-backward-sample       \ ret-lst smpl1 grp-ruls, smpl2 t | f
+            if                              \ ret-lst smpl1 grp-ruls | smpl2
+                \ Make step.
+                0 swap                      \ ret-lst smpl1 grp-ruls | 0 smpl2
+                cur-action-xt execute       \ ret-lst smpl1 grp-ruls | 0 smpl2 actx
+                step-new-xt execute         \ ret-lst smpl1 grp-ruls | stpx
+                \ Store step.
+                3 pick                      \ ret-lst smpl1 grp-ruls | stpx ret-lst
+                step-list-push-xt execute   \ ret-lst smpl1 grp-ruls
             then
+            2drop
         endof
         2 of
-            group-get-rules                 \ ret smpl1 ruls
-            2dup                            \ ret smpl1 ruls smpl1 ruls
-            rulestore-get-rule-0            \ ret smpl1 ruls smpl1 rul0
-            rule-calc-backward-step         \ ret smpl1 ruls, stpx t | f
-            if
-                \ Get/set alt sample
-                dup                         \ ret smpl1 ruls stpx stpx
-                step-get-sample-xt execute  \ ret smpl1 ruls stpx smpl2
-                sample-get-initial          \ ret smpl1 ruls stpx s-i
-                2 pick rulestore-get-rule-1 \ ret smpl1 ruls stpx s-i rul1
-                rule-apply-to-state-f       \ ret smpl1 ruls stpx, smpl2 t | f
-                if
-                                            \ ret smpl1 ruls stpx smpl2
-                    dup sample-get-result   \ ret smpl1 ruls stpx smpl2 rstl2
-                    4 pick                  \ ret smpl1 ruls stpx smpl2 rstl2 smpl1
-                    sample-get-result       \ ret smpl1 ruls stpx smpl2 rstl2 rslt1
-                    <> if
-                        over                            \ ret smpl1 ruls stpx smpl2 stpx
-                        step-set-alt-sample-xt execute  \ ret smpl1 ruls stpx
-                    then
-                else
-                    ." no alt sample?"
-                    abort
-                then
-                3 pick                      \ ret smpl1 ruls stpx ret
-                step-list-push-xt execute   \ ret smpl1 ruls
-            then
             ." TODO try rule-1 with rule-0 as alt"
             2drop
         endof
@@ -563,8 +550,8 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     \ cr   ." -> " dup .step-list-xt execute cr
 ;
 
-\ Return an expansion need.
-: group-get-expansion-needs ( reg1 grp0 -- ned t | f )
+\ Return a fill need, if any.
+: group-get-fill-needs ( reg1 grp0 -- ned t | f )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-region

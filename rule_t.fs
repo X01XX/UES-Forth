@@ -113,23 +113,23 @@
     cr ." rule-test-apply-to-state-f - Ok" cr
 ;
 
-: rule-test-get-forward-step ( smpl1 rul0 -- step true | false )
+: rule-test-get-forward-sample ( smpl1 rul0 -- smpl true | false )
     #11 4 sample-new                    \ smpl
     s" XX/XX/XX/Xx/" rule-from-string   \ smpl rul
     2dup                                \ smpl rul smpl rul
-    rule-calc-forward-step              \ smpl rul, stp true | false
+    rule-calc-forward-sample            \ smpl rul, smpl true | false
     if
-        cr ." step: " dup .step cr
-        dup step-get-sample sample-get-result
+        cr ." sample: " dup .sample cr
+        dup sample-get-result
         5 <> abort" Step result is not 5"
-        step-deallocate
+        sample-deallocate
     else
-        cr ." no step" cr abort
+        cr ." no sample" cr abort
     then
     rule-deallocate
     sample-deallocate
 
-    cr ." rule-test-get-forward-step - Ok" cr
+    cr ." rule-test-get-forward-sample - Ok" cr
 ;
 
 : rule-test-restrict-to-region
@@ -155,19 +155,17 @@
     cr ." rule-test-restrict-to-region - Ok" cr
 ;
 
-: rule-test-get-backward-step
+: rule-test-get-backward-sample
     #15 5 sample-new                     \ smpl
     s" 01/X1/11/XX/" rule-from-string    \ smpl rul
-    2dup rule-calc-backward-step         \ smpl rul, stpx t | f
+    2dup rule-calc-backward-sample       \ smpl rul, stpx t | f
     if
-        cr ." Step found: " dup .step cr
-        dup step-get-sample
-        sample-get-states
+        cr ." Sample found: " dup .sample cr
+        dup sample-get-initial
         7 <> abort" Sample initial not 7?"
-        #15 <> abort" Sample result not 15?"
-        step-deallocate
+        sample-deallocate
     else
-        ." step not found" abort
+        ." sample not found" abort
     then
     rule-deallocate
     sample-deallocate
@@ -179,8 +177,8 @@
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
     rule-test-apply-to-state-f
-    rule-test-get-forward-step
+    rule-test-get-forward-sample
     rule-test-restrict-to-region
-    rule-test-get-backward-step
+    rule-test-get-backward-sample
 ;
 

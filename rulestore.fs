@@ -171,7 +171,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     2dup rule-eq
     abort" rulestore-new-2: rules cannot be equal."
 
-    \ Check that the rule initial regions are equal.
+    \ Check that the rule initial regions arore equal.
     over rule-calc-initial-region   \ rul1 rul0 reg1
     over rule-calc-initial-region   \ rul1 rul0 reg1 reg0
     2dup region-eq 0=               \ rul1 rul0 reg1 reg0 flag
@@ -223,7 +223,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     dup struct-get-use-count      \ reg0 count
 
     2 <
-    if 
+    if
         \ Deallocate/clear fields.
         dup rulestore-get-rule-0
         dup
@@ -464,24 +464,25 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
     \ Init return list.
     list-new -rot                       \ ret smpl1 ruls0 |
-    \ cr ." at 1 " .s cr
 
     \ Process rule 0.
     2dup rulestore-get-rule-0           \ | smpl1 rul0
-    rule-get-sample-by-changes-f        \ | smpl-r0 t | f
-    if
-        over rulestore-get-rule-1       \ | smpl-r0 rul1
-        dup
+    rule-get-sample-by-changes-f        \ | rul0-smpl t | f
+    if                                  \ | rul0-smpl
+        \ Check for alternate rule.
+        over rulestore-get-rule-1       \ | rul0-smpl rul1
         if
-            over sample-get-initial     \ | smpl-r0 rul1 smpl-r0-i
-            tuck swap                   \ | smpl-r0 smpl-r0-i smpl-r0-i rul1
-            rule-apply-to-state-f       \ | smpl-r0 smpl-r0-i r1-s-r
-            swap sample-new             \ | smpl-r0 smpl-r1
-            swap                        \ | smpl-r1 smpl-r0
+            over sample-get-initial     \ | rul0-smpl rul1 rul0-smpl-i
+            tuck swap                   \ | rul0-smpl rul0-smpl-i rul0-smpl-i rul1
+            rule-apply-to-state-f       \ | rul0-smpl rul0-smpl-i rul1-r
+            swap sample-new             \ | rul0-smpl rul1-smpl
+            swap                        \ | rul1-smpl rul0-smpl
         else
-            swap                        \ | 0 smpl-r0
+            0 swap                      \ | 0 rul0-smpl
         then
-        cur-action-xt execute
+
+        \ Make step.
+        cur-action-xt execute           \ | 0/smpl1 rul0-smpl actx
         step-new-xt execute             \ | stpx
         3 pick                          \ | stpx ret
         step-list-push-xt execute       \ |
@@ -492,22 +493,21 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     dup rulestore-get-rule-1            \ | rul1
     dup if
         2 pick swap                     \ | smpl1 rul1
-        rule-get-sample-by-changes-f    \ | smpl-r1 t | f
+        rule-get-sample-by-changes-f    \ | rul1-smpl t | f
         if
-            dup sample-get-initial      \ | smpl-r1 r1-s-i
-            2 pick                      \ | smpl-r1 r1-s-i ruls
-            rulestore-get-rule-0        \ | smpl-r1 r1-s-i rul0
-            rule-apply-to-state-f       \ | smpl-r1 r1-s-i r0-s-r
-            swap sample-new             \ | smpl-r1 smpl-r0
-            cur-action-xt execute
+            2 pick sample-get-initial   \ | rul1-smpl smpl1-i 
+            2 pick                      \ | rul1-smpl smpl1-i ruls0
+            rulestore-get-rule-0        \ | rul1-smpl smpl1-i rul0
+            rule-apply-to-state-f       \ | rul1-smpl smpl1-i rul0-r
+            swap sample-new             \ | rul1-smpl rul0-smpl
+            swap                        \ | rul0-smpl rul1-smpl
+            cur-action-xt execute       \ | rul0-smpl rul1-smpl actx
             swap step-new-xt execute    \ | stpx
             3 pick                      \ | stpx ret
             step-list-push-xt execute   \ |
         then
-        \ cr ." at 2 " .s cr
         2drop
     else
-        \ cr ." at 3 " .s cr
         3drop
     then
 ;
@@ -524,27 +524,35 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
     \ Init return list.
     list-new -rot                       \ ret smpl1 ruls0 |
-    \ cr ." at 1 " .s cr
 
     \ Process rule 0.
-    2dup rulestore-get-rule-0           \ | smpl1 rul0
-    rule-get-sample-by-changes-b        \ | smpl-r0 t | f
+    2dup                                \ | smpl1 ruls0
+    rulestore-get-rule-0                \ | smpl1 rul0
+    2dup                                \ | smpl1 rul0
+    rule-get-sample-by-changes-b        \ | smpl1 rul0 rul0-smpl t | f
     if
-        over rulestore-get-rule-1       \ | smpl-r0 rul1
+        \ Check alternate path.
+        3 pick rulestore-get-rule-1     \ | rul0-smpl rul1
         dup
-        if
-            over sample-get-result      \ | smpl-r0 rul1 smpl-r0-i
-            tuck swap                   \ | smpl-r0 smpl-r0-i smpl-r0-i rul1
-            rule-apply-to-state-b       \ | smpl-r0 smpl-r0-i r1-s-r
-            swap sample-new             \ | smpl-r0 smpl-r1
-            swap                        \ | smpl-r1 smpl-r0
+        if                              \ | rul0-smpl rul1
+                                        \ The second rule may have a greatly different result compared to the first rule
+                                        \ but they have the same initial region, so use rul0-smpl-i forward on rule1.
+
+            over sample-get-initial     \ | rul0-smpl rul1 rul0-smpl-i
+            tuck swap                   \ | rul0-smpl rul0-smpl-i rul0-smpl-i rul1
+            rule-apply-to-state-f       \ | rul0-smpl rul0-smpl-i rul1-r
+            swap sample-new             \ | rul0-smpl rul1-smpl
+
+            swap                        \ | rul1-smpl rul0-smpl
         else
-            swap                        \ | 0 smpl-r0
+            swap                        \ | 0 rul0-smpl
         then
-        cur-action-xt execute
+        cur-action-xt execute           \ | 0/rul1-smpl rul0-smpl actx
         step-new-xt execute             \ | stpx
         3 pick                          \ | stpx ret
         step-list-push-xt execute       \ |
+    else
+        2drop
     then
                                         \ ret smpl1 ruls0 |
 
@@ -552,22 +560,29 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     dup rulestore-get-rule-1            \ | rul1
     dup if
         2 pick swap                     \ | smpl1 rul1
-        rule-get-sample-by-changes-b    \ | smpl-r1 t | f
-        if
-            dup sample-get-result       \ | smpl-r1 r1-s-i
-            2 pick                      \ | smpl-r1 r1-s-i ruls
-            rulestore-get-rule-0        \ | smpl-r1 r1-s-i rul0
-            rule-apply-to-state-b       \ | smpl-r1 r1-s-i r0-s-r
-            swap sample-new             \ | smpl-r1 smpl-r0
-            cur-action-xt execute
+
+        rule-get-sample-by-changes-b    \ | rul1-smpl t | f
+        if                              \ | rul1-smpl
+                                        \ The first rule may have a greatly different result compared to the second rule
+                                        \ but they have the same initial region, so use rul1-smpl-i forward on rule0.
+
+            2 pick sample-get-initial   \ | rul1-smpl rul1-smpl-i
+            2 pick                      \ | rul1-smpl rul1-smpl-i ruls0
+            rulestore-get-rule-0        \ | rul1-smpl rul1-smpl-i rul0
+            rule-apply-to-state-f       \ | rul1-smpl rul1-smpl-i rul0-r
+            swap sample-new             \ | rul1-smpl rul0-smpl
+
+            
+            swap                        \ | rul0-smpl rul1-smpl
+            cur-action-xt execute       \ | rul0-smpl rul1-smpl actx
             swap step-new-xt execute    \ | stpx
             3 pick                      \ | stpx ret
             step-list-push-xt execute   \ |
+            2drop
+        else
+            3drop                       \ ret
         then
-        \ cr ." at 2 " .s cr
-        2drop
     else
-        \ cr ." at 3 " .s cr
-        3drop
+        3drop                           \ ret
     then
 ;

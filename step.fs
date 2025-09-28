@@ -3,7 +3,7 @@
 #37171 constant step-id                                                                                  
      4 constant step-struct-number-cells
 
-\ Struct fields
+\ Struct fields.
 0 constant step-header                          \ id (16) use count (16) forward flag (8)
 step-header   cell+ constant step-action        \ An action addr.
 step-action   cell+ constant step-sample        \ A expected, or desired, sample.
@@ -150,7 +150,15 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 
 \ End accessors.
 
-\ Return a new step, given a state and result.
+\ Return a new step, given:
+\    Action.
+\    Sample.
+\    Alt-sample (may be zero).
+\    Order-matters flag.
+\        if false
+\            Forward-chaining:  Rule initial region is a superset of the glidepath.
+\            Backward-chaining: Rule result region is a superset of the glidepath.
+\            i.e. Can be used anytime in the path. 
 : step-new    ( alt-smpl2 smpl1 act0 -- step )
     \ Check args.
     assert-tos-is-action
@@ -194,7 +202,8 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     tuck                            \ addr as2 addr
     step-set-alt-sample             \ addr
 
-    -1 over step-set-forward        \ addr
+    \ Default to step forward.
+    true over step-set-forward        \ addr
 ;
 
 ' step-new to step-new-xt
@@ -234,13 +243,11 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     over                    \ stp0 smpl stp0
     .step-sample            \ stp0
 
-    dup step-get-alt-sample \ stp0 smpl-alt
+    step-get-alt-sample     \ stp0 smpl-alt
     ?dup
     if
-        space ." Alt: " swap .step-sample
-    else
-        drop
-    then   
+        space ." Alt: " over .step-sample
+    then
 ;
 
 ' .step to .step-xt

@@ -961,7 +961,8 @@ action-groups               cell+ constant action-function              \ An xt 
     =
 ;
 
-\ Return a list of needs.
+\ Return a list of needs for an action, given the current state
+\ and the reachable region.
 : action-get-needs ( reg1 sta1 act0 -- ned-lst )
     \ Check args.
     assert-tos-is-action
@@ -1023,17 +1024,24 @@ action-groups               cell+ constant action-function              \ An xt 
         if                      \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx
             dup square-get-pnc  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx pnc
             0= if                       \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx
-                \ Make need.
-                2 swap                  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 sqrx
-                square-get-state        \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax
-                5 pick                  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0
-                cur-domain-xt execute   \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0 dom
-                need-new                \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | ned
-                \ Store need.
-                6 pick need-list-push   \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
-                2drop 3drop             \ reg1 ret-lst
-                nip                     \ ret-lst
-                exit
+                \ Check if target is in the reachable region.
+                dup square-get-state        \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx sta
+                8 pick                      \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx sta reg1
+                region-superset-of-state    \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx flag
+                if
+                    \ Make need.
+                    2 swap                  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 sqrx
+                    square-get-state        \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax
+                    5 pick                  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0
+                    cur-domain-xt execute   \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0 dom
+                    need-new                \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | ned
+                    \ Store need.
+                    6 pick need-list-push   \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
+                    2drop 3drop             \ reg1 ret-lst
+                    nip                     \ ret-lst
+                    exit
+                then
+                drop                    \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
             else
                 drop                    \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
             then
@@ -1046,17 +1054,24 @@ action-groups               cell+ constant action-function              \ An xt 
         if                              \ reg1 ret-lst sta1 act0 | link sqrx
             dup square-get-pnc          \ reg1 ret-lst sta1 act0 | link sqrx pnc
             0= if                       \ reg1 ret-lst sta1 act0 | link sqrx
-                \ Make need.
-                2 swap                  \ reg1 ret-lst sta1 act0 | link | 2 sqrx
-                square-get-state        \ reg1 ret-lst sta1 act0 | link | 2 stax
-                3 pick                  \ reg1 ret-lst sta1 act0 | link | 2 stax act0
-                cur-domain-xt execute   \ reg1 ret-lst sta1 act0 | link | 2 stax act0 dom
-                need-new                \ reg1 ret-lst sta1 act0 | link | ned
-                \ Store need.
-                4 pick need-list-push   \ reg1 ret-lst sta1 act0 | link
-                3drop                   \ reg1 ret-lst
-                nip                     \ ret-lst
-                exit
+                \ Check if target is in the reachable region.
+                dup square-get-state        \ reg1 ret-lst sta1 act0 | link sqrx sta
+                6 pick                      \ reg1 ret-lst sta1 act0 | link sqrx sta reg1
+                region-superset-of-state    \ reg1 ret-lst sta1 act0 | link sqrx flag
+                if
+                    \ Make need.
+                    2 swap                  \ reg1 ret-lst sta1 act0 | link | 2 sqrx
+                    square-get-state        \ reg1 ret-lst sta1 act0 | link | 2 stax
+                    3 pick                  \ reg1 ret-lst sta1 act0 | link | 2 stax act0
+                    cur-domain-xt execute   \ reg1 ret-lst sta1 act0 | link | 2 stax act0 dom
+                    need-new                \ reg1 ret-lst sta1 act0 | link | ned
+                    \ Store need.
+                    4 pick need-list-push   \ reg1 ret-lst sta1 act0 | link
+                    3drop                   \ reg1 ret-lst
+                    nip                     \ ret-lst
+                    exit
+                then
+                drop                    \ reg1 ret-lst sta1 act0 | link
             else
                 drop                    \ reg1 ret-lst sta1 act0 | link
             then
@@ -1084,16 +1099,24 @@ action-groups               cell+ constant action-function              \ An xt 
             over link-get-data          \ reg1 ret-lst sta1 act0 | link bit regx
             region-get-state-0          \ reg1 ret-lst sta1 act0 | link bit r-sta-0
             xor                         \ reg1 ret-lst sta1 act0 | link sta'
-            \ Make need.
-            3 swap                      \ reg1 ret-lst sta1 act0 | link 3 sta'
-            3 pick                      \ reg1 ret-lst sta1 act0 | link 3 sta' act0
-            cur-domain-xt execute       \ reg1 ret-lst sta1 act0 | link 3 sta' act0 domx
-            need-new                    \ reg1 ret-lst sta1 act0 | link ned
-            \ Store need.
-            4 pick need-list-push       \ reg1 ret-lst sta1 act0 | link
-            3drop                       \ reg1 ret-lst
-            nip                         \ ret-lst
-            exit
+
+            \ Check if target is in the reachable region.
+            dup                         \ reg1 ret-lst sta1 act0 | link sta' sta'
+            6 pick                      \ reg1 ret-lst sta1 act0 | link sta' sta' reg1
+            region-superset-of-state    \ reg1 ret-lst sta1 act0 | link sta' flag
+            if
+                \ Make need.
+                3 swap                      \ reg1 ret-lst sta1 act0 | link 3 sta'
+                3 pick                      \ reg1 ret-lst sta1 act0 | link 3 sta' act0
+                cur-domain-xt execute       \ reg1 ret-lst sta1 act0 | link 3 sta' act0 domx
+                need-new                    \ reg1 ret-lst sta1 act0 | link ned
+                \ Store need.
+                4 pick need-list-push       \ reg1 ret-lst sta1 act0 | link
+                3drop                       \ reg1 ret-lst
+                nip                         \ ret-lst
+                exit
+            then
+            drop                        \ reg1 ret-lst sta1 act0 | link
         else
             drop                        \ reg1 ret-lst sta1 act0 | link
         then
@@ -1102,17 +1125,17 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
                                 \ reg1 ret-lst sta1 act0
 
-    \ Check for group expansion needs.
+    \ Check for group fill needs.
     dup action-get-groups       \ reg1 ret-lst sta1 act0 grp-lst
     list-get-links              \ reg1 ret-lst sta1 act0 link
 
     begin
         ?dup
     while
-        \ Get group expansion needs.
+        \ Get group fill needs.
         4 pick                      \ reg1 ret-lst sta1 act0 link reg1
         over link-get-data          \ reg1 ret-lst sta1 act0 link reg1 grpx
-        group-get-expansion-needs   \ reg1 ret-lst sta1 act0 link, nedx t | f
+        group-get-fill-needs        \ reg1 ret-lst sta1 act0 link, nedx t | f
 
         if
             \ Add needs to the return list.

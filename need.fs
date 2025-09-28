@@ -183,7 +183,7 @@ need-action  cell+ constant need-target     \ A state.
         1 of space ." State not in group" endof
         2 of space ." Confirm logical structure" endof
         3 of space ." Improve logical structure" endof
-        4 of space ." Expand group" endof
+        4 of space ." Fill group" endof
         ." Unrecognized type value" abort
     endcase
 ;

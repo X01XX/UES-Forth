@@ -825,43 +825,6 @@ rule-m11    cell+ constant rule-m10
     true
 ;
 
-\ Return a forward step for a rule.
-: rule-calc-forward-step ( smpl1 rul0 -- step true | false )
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-sample
-
-    \ Get a sample from rul0, and smpl1 initial state, if possible.
-    over sample-get-initial     \ smpl1 rul0 | smp-i
-    over rule-apply-to-state-f  \ smpl1 rul0 | smpl2 true | false
-    0= if
-        2drop false exit
-    then
-
-    \ Check if rule did not change the smpl1 initial state.
-    dup sample-r-ne-i           \ smpl1 rul0 | smpl2 flag
-    0= if
-        sample-deallocate
-        2drop false exit
-    then
-
-    \ Check if the smpl2 result is beween the smpl1 initial and result, inclusive,
-    \ except we know its not EQ smpl1 initial.
-    dup sample-get-result       \ smpl1 rul0 | smpl2 smp2-r
-    3 pick                      \ smpl1 rul0 | smpl2 smp2-r smpl1
-    sample-state-between        \ smpl1 rul0 | smpl2 flag
-    0= if
-        sample-deallocate
-        2drop false exit
-    then
-
-    \ Make a step
-    0 swap                      \ smpl1 rul0 | 0 smpl2
-    cur-action-xt execute       \ smpl1 rul0 | 0 smpl2 actx
-    step-new-xt execute         \ smpl1 rul0 | stpx
-    nip nip
-    true
-;
 
 \ Return true if a rule changes at least one bit.
 : rule-makes-change ( rul0 -- flag )
@@ -984,18 +947,13 @@ rule-m11    cell+ constant rule-m10
     true
 ;
 
-\ Return a backward step for a rule.
-\ The rule is restricted to the region formed by the sample states,
-\ to manage X->0 and X->1 rule bit positions.
-: rule-calc-backward-step ( smpl1 rul0 -- step true | false )
+\ Return a forward sample for starting sample and a rule.
+: rule-calc-forward-sample ( smpl1 rul0 -- smpl true | false )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-sample
 
-    \ cr ." rule-calc-backward-step: " dup .rule space over .sample cr
-
-    \ Restrict the possible rule initial state to the glidepath.
-    \ Affects the rule result region.
+    \ Restrict the rule initial and result region to the glidepath.
     over sample-to-region               \ smpl1 rul0 s-reg
     tuck swap                           \ smpl1 s-reg s-reg rul0
     rule-restrict-to-region             \ smpl1 s-reg, rul0' t | f
@@ -1008,46 +966,74 @@ rule-m11    cell+ constant rule-m10
         exit
     then
 
-    \ Check if rule may apply to the sample.
-    dup rule-calc-result-region         \ smpl1 rul0' r-reg (dl)
-    2 pick sample-get-result            \ smpl1 rul0' r-reg s-r
-    over region-superset-of-state       \ smpl1 rul0' r-reg flag
-    swap region-deallocate              \ smpl1 rul0' flag
+    \ Get a sample from rul0, and smpl1 initial state, if possible.
+    over sample-get-initial     \ smpl1 rul0' | smp-i
+    over rule-apply-to-state-f  \ smpl1 rul0' | smpl2 true | false
     0= if
-        rule-deallocate
+        2drop false exit
+    then
+
+    \ Check if rule did not change the smpl1 initial state.
+    dup sample-r-ne-i           \ smpl1 rul0' | smpl2 flag
+    0= if
+        sample-deallocate
+        2drop false exit
+    then
+
+    \ Return
+    swap rule-deallocate        \ smpl1 smpl2
+    nip                         \ smpl2
+    true
+;
+
+\ Return a backward sample for a startitg sample and rule.
+: rule-calc-backward-sample ( smpl1 rul0 -- step true | false )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-sample
+
+    \ cr ." rule-calc-backward-step: " dup .rule space over .sample cr
+
+    \ Restrict the rule initial and result region to the glidepath.
+    over sample-to-region               \ smpl1 rul0 s-reg
+    tuck swap                           \ smpl1 s-reg s-reg rul0
+    rule-restrict-to-region             \ smpl1 s-reg, rul0' t | f
+    if
+        swap region-deallocate          \ smpl1 rul0'
+    else
+        region-deallocate
         drop
         false
         exit
     then
 
-    \ Get initial value from rule.
+    \ Get sample from rule.
                                         \ smpl1 rul0'
     over sample-get-result              \ smpl1 rul0' s-r
     over                                \ smpl1 rul0' s-r rul0'
     rule-apply-to-state-b               \ smpl1 rul0', smpl2 t | f
     0= if
-        rule-deallocate
-        drop
-        false
+        rule-deallocate                 \ smpl1
+        drop                            \
+        false                           \ f
         exit
     then
-    swap rule-deallocate                \ smpl1 smpl2
 
     \ Check if rule did not change the smpl1 result state.
-    dup sample-r-ne-i                   \ smpl1 smpl2 flag
+    dup sample-r-ne-i                   \ smpl1 rul0' smpl2 flag
     0= if
-        sample-deallocate
-        drop
-        false
+        sample-deallocate               \ smpl1 rul0'
+        rule-deallocate                 \ smpl1
+        drop                            \
+        false                           \ f
         exit
     then
 
-    \ Make step.
-    nip 0 swap              \ 0 smpl2
-    cur-action-xt execute   \ 0 smpl2 actx
-    step-new-xt execute     \ stpx
-    \ Set to not-forward, that is, backward.
-    0 over step-set-forward-xt execute  \ stpx
+    \ Cleanup.
+    swap rule-deallocate                \ smpl1 smpl2
+
+    \ Return.
+    nip                                 \ smpl2
     true
 ;
 
@@ -1146,16 +1132,16 @@ rule-m11    cell+ constant rule-m10
 
 \ Get a predicted sample from a rule, by changes needed in a given sample,
 \ forward-chaining.
-: rule-get-sample-by-changes-f ( smpl2 rul0 -- smpl t | f )
+: rule-get-sample-by-changes-f ( smpl1 rul0 -- smpl t | f )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-sample
     over sample-r-ne-i 0= abort" sample does not change?"
 
     \ Check if rule has wanted changes.
-    over sample-calc-changes            \ s2 r0 cngs (dl)
-    swap                                \ s2 cngs r0
-    2dup rule-intersects-changes        \ s2 cngs r0 flag
+    over sample-calc-changes            \ smpl1 rul0 cngs (dl)
+    swap                                \ smpl1 cngs rul0
+    2dup rule-intersects-changes        \ smpl1 cngs r0 flag
     0= if
         drop
         changes-deallocate
@@ -1165,13 +1151,13 @@ rule-m11    cell+ constant rule-m10
     then
 
     \ Restrict rule to changes, like X->1 to 0->1, for 0->1 in changes.
-    over swap                           \ s2 cngs cngs r0
-    rule-restrict-to-changes            \ s2 cngs r0' (dl)
-    swap changes-deallocate             \ s2 r0' |
+    over swap                           \ smpl1 cngs cngs rul0
+    rule-restrict-to-changes            \ smpl1 cngs rul0' (dl)
+    swap changes-deallocate             \ smpl1 rul0' |
     
     \ Check forward path.
     over sample-get-initial dup         \ | sta-i sta-i
-    2 pick                              \ | sta-i sta-i r0'
+    2 pick                              \ | sta-i sta-i rul0'
     rule-calc-initial-region            \ | sta-i sta-i reg-i (dl)
     tuck region-superset-of-state       \ | sta-i reg-i flag
     0= if
@@ -1184,27 +1170,27 @@ rule-m11    cell+ constant rule-m10
 
     \ sta-i now known to intersect rule initial region.
                                         \ | sta-i
-    over rule-apply-to-state-f          \ | smpl2 t | f
+    over rule-apply-to-state-f          \ smpl1 rul0', smpl t | f
     0= abort" apply failed?"
 
     \ Clean up.
-    swap rule-deallocate                \ s2 smpl2
+    swap rule-deallocate                \ smpl1 smpl
     nip
     true
 ;
 
 \ Get a predicted sample from a rule, by changes needed in a given sample,
 \ backward-chaining.
-: rule-get-sample-by-changes-b ( smpl2 rul0 -- smpl t | f )
+: rule-get-sample-by-changes-b ( smpl1 rul0 -- smpl t | f )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-sample
     over sample-r-ne-i 0= abort" sample does not change?"
 
     \ Check if rule has wanted changes.
-    over sample-calc-changes            \ s2 r0 cngs (dl)
-    swap                                \ s2 cngs r0
-    2dup rule-intersects-changes        \ s2 cngs r0 flag
+    over sample-calc-changes            \ smpl1 rul0 cngs (dl)
+    swap                                \ smpl1 cngs rul0
+    2dup rule-intersects-changes        \ smpl1 cngs rul0 flag
     0= if
         drop
         changes-deallocate
@@ -1214,13 +1200,13 @@ rule-m11    cell+ constant rule-m10
     then
 
     \ Restrict rule to changes, like X->1 to 0->1, for 0->1 in changes.
-    over swap                           \ s2 cngs cngs r0
-    rule-restrict-to-changes            \ s2 cngs r0' (dl)
-    swap changes-deallocate             \ s2 r0' |
+    over swap                           \ smpl1 cngs cngs rul0
+    rule-restrict-to-changes            \ smpl1 cngs rul0' (dl)
+    swap changes-deallocate             \ smpl1 rul0' |
     
     \ Check backward path.
     over sample-get-result  dup         \ | sta-i sta-i
-    2 pick                              \ | sta-i sta-i r0'
+    2 pick                              \ | sta-i sta-i rul0'
     rule-calc-result-region             \ | sta-i sta-i reg-i (dl)
     tuck region-superset-of-state       \ | sta-i reg-i flag
     0= if
@@ -1233,11 +1219,11 @@ rule-m11    cell+ constant rule-m10
 
     \ sta-i now known to intersect rule initial region.
                                         \ | sta-i
-    over rule-apply-to-state-b          \ | smpl2 t | f
+    over rule-apply-to-state-b          \ smpl1 rul0', smpl t | f
     0= abort" apply failed?"
 
     \ Clean up.
-    swap rule-deallocate                \ s2 smpl2
+    swap rule-deallocate                \ smpl1 smpl
     nip
     true
 ;

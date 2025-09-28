@@ -189,8 +189,6 @@
         exit
     then
 
-
-
     2dup snumber?
     if
         nip nip
@@ -471,7 +469,7 @@
         cr ." Press Enter to randomly choose a need, if any." 
         cr ." ps - to Print Session, all domains, actions."
         cr ." cds <domain ID> <state> - Change Domain State, arbitrary."
-        cr ." tos <domain ID> <state> - Change Domain State, by finding and executing a plan."
+        cr ." tos <domain ID> <state> - TO domain State, by finding and executing a plan."
         cr ." psd <domain ID> <action ID> - Print square Detail."
         cr ." mu - Display Memory Use."
         cr ." <number> - Select a particular need."
