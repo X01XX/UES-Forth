@@ -16,8 +16,7 @@ Action dissimilar square pairs, whence the logical structure, is the starting po
 
 Square and group pn value is not stored, it is gleaned from the rulestore contents.
 
-I found that there can be a problem in getting closer non-adjacent incompatible pairs, of two-result states.
-I decided to make a fairly big change in the union of rules.
-Rule unions were by same change (0->1 + 1->0) mask, or same result, (X->1, X->0).
-Now rule unions are by same change mask only.
+Changed rule union logic for two-result states.
+If both orders of union work, instead of just one order, then
+try union by change mask ( 0->1 + 1->0 ) only.
 

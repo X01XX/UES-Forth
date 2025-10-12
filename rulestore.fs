@@ -167,7 +167,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     2dup rule-eq
     abort" rulestore-new-2: rules cannot be equal."
 
-    \ Check that the rule initial regions arore equal.
+    \ Check that the rule initial regions are equal.
     over rule-calc-initial-region   \ rul1 rul0 reg1
     over rule-calc-initial-region   \ rul1 rul0 reg1 reg0
     2dup region-eq 0=               \ rul1 rul0 reg1 reg0 flag
@@ -347,22 +347,100 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     then
 ;
 
+\ Attempt to form union of two pn-2 rulestores, matching
+\ rules 0 and 0 and 1 and 1.
+: rulestore-union-00-by-changes ( rs1 rs0 -- rs true | false )
+    over rulestore-get-rule-0
+    over rulestore-get-rule-0
+
+    rule-union-by-changes       \ rs1 rs0, rul00 true | false
+    0= if
+        2drop
+        false
+        exit
+    then
+
+    -rot                        \ rul00 rs1 rs0
+    rulestore-get-rule-1        \ rul00 rs1 rlu1
+    swap                        \ rul00 rul1 rs1
+    rulestore-get-rule-1        \ rul00 rul1 rul1
+
+    rule-union-by-changes       \ rul00, rul11 true | false
+    if                          \ rul00 rul11
+        rulestore-new-2
+        true
+    else                        \ rul00
+        rule-deallocate
+        false
+    then
+;
+
+\ Attempt to form union of two pn-2 rulestores, matching
+\ rules 0 and 1 and 1 and 0.
+: rulestore-union-10-by-changes ( rs1 rs0 -- rs true | false )
+    over rulestore-get-rule-1   \ rs1 rs0 rs1-1
+    over rulestore-get-rule-0   \ rs1 rs0 rs1-1 rs0-0
+
+    rule-union-by-changes       \ rs1 rs0, rul01 true | false
+    0= if
+        2drop
+        false
+        exit
+    then
+
+    -rot                        \ rul01 rs1 rs0
+    rulestore-get-rule-1        \ rul01 rs1 rs0-1
+    swap                        \ rul01 rs0-1 rs1
+    rulestore-get-rule-0        \ rul01 rs0-1 rs1-0
+
+    rule-union-by-changes       \ rul01, rul10 true | false
+    if                          \ rul01 rul10
+        rulestore-new-2
+        true
+    else                        \ rul01
+        rule-deallocate
+        false
+    then
+;
+
+: rulestore-union-by-changes ( rs1 rs0 -- rsx t | f )
+   \ Check args.
+    assert-tos-is-rulestore
+    assert-nos-is-rulestore
+
+    2dup rulestore-union-00-by-changes  \ rs1 rs2, rs3 true | false
+    if                                  \ rs1 rs2 rs3
+        nip nip true exit
+    then
+    
+    rulestore-union-10-by-changes       \ rs3 true | false
+;
+
 \ Return the union of two pn-2 rulestores.
 \ Check if one, of two, methods of matching works,
 \ but not none or both.
 : rulestore-union-2 ( rs1 rs0 -- rsx true | false )
-    \ Check args.
+   \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-rulestore
 
     2dup rulestore-union-00         \ rs1 rs2, rs3 true | false
-    if
-        nip nip                     \ rs3
-        true
-        exit
+    if                              \ rs1 rs2 rs3
+        -rot                        \ rs3 rs1 rs0
+        2dup rulestore-union-10     \ rs3 rs1 rs0 rs4 true | false
+        if                          \ rs3 rs1 rs0 rs4
+            \ cr ." too compatible" cr
+            rulestore-deallocate    \ rs3 rs1 rs0
+            rot                     \ rs1 rs0 rs3
+            rulestore-deallocate    \ rs1 rs0
+            rulestore-union-by-changes
+        else                        \ rs3 rs1 rs0
+            2drop                   \ rs3
+            true                    \ rs3 true
+        then
+    else                            \ rs1 rs2
+        rulestore-union-10          \ rs3 true | false
     then
-
-    rulestore-union-10              \ rs3 true | false
 ;
 
 \ Return the union of two rulestores.

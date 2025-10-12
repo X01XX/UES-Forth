@@ -84,7 +84,9 @@
 
     2dup rulestore-union                \ rs1 rs4, rsx true | false
     if
-        cr ." rulestore-union rs1 rs4 should not have succeeded" cr
+        rulestore-deallocate
+    else
+        cr ." rulestore-union rs1 rs4 did not succeed?" cr
         abort
     then
     rulestore-deallocate                \ rs1

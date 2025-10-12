@@ -433,12 +433,15 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
 \ Return a rulestore for a square, given a pn value.
 : _square-calc-rules ( pn1 sqr0 -- rulestore )
-    swap                            \ sqr0 pn
+    assert-tos-is-square
+    assert-nos-is-pn
+
+    swap                            \ sqr0 pn1
     case
     1 of                            \ sqr0
         \ Form a rule from the first result.
         0 swap                      \ 0 sqr0
-        dup square-get-result       \ sqr0 r0
+        tuck square-get-result      \ sqr0 r0
         swap square-get-state       \ r0 s-sta
         rule-new                    \ rul
         \ Make rulestore from the rule.
@@ -459,9 +462,10 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
         \ Make rulestore from the rules.
         rulestore-new-2             \ rulstr
     endof
-    \ Default                       \ sqr0
-    drop                            \
-    rulestore-new-0                 \ rulstr
+    #3 of
+        drop
+        rulestore-new-0             \ rulstr
+    endof
     endcase
 ;
 

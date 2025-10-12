@@ -551,7 +551,7 @@ rule-m11    cell+ constant rule-m10
 \ Valid result bit positions can be:
 \  Change:      0->1, 1->0, X->x (that is, x-not)
 \  No change:   0->0, 1->1, X->X
-: rule-union ( rul1 rul0 -- result true | false )
+: rule-union-by-changes ( rul1 rul0 -- result true | false )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -568,6 +568,77 @@ rule-m11    cell+ constant rule-m10
     \ Make union.
     rule-or                     \ rul
     true
+;
+
+\ Return the valid result of a rule union, or false.
+: rule-union ( rul1 rul0 -- result true | false )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-rule
+
+    \ Combine m00           \ rul1 rul0
+    over rule-get-m00       \ rul1 rul0 | 1m00
+    over rule-get-m00       \ rul1 rul0 | 1m00 0m00 
+    or                      \ rul1 rul0 | m00
+    -rot                    \ m00 | rul1 rul0
+
+    \ Combine m01           \ m00 | rul1 rul0
+    over rule-get-m01       \ m00 | rul1 rul0 | 1m01
+    over rule-get-m01       \ m00 | rul1 rul0 | 1m01 0m01 
+    or                      \ m00 | rul1 rul0 | m01
+    -rot                    \ m00 m01 | rul1 rul0
+
+    \ Combine m11           \ m00 m01 | rul1 rul0
+    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11
+    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11 0m11 
+    or                      \ m00 m01 | rul1 rul0 | m11
+    -rot                    \ m00 m01 m11 | rul1 rul0
+
+    \ Combine m10           \ m00 m01 m11 | rul1 rul0
+    rule-get-m10            \ m00 m01 m11 | rul1 0m10
+    swap rule-get-m10       \ m00 m01 m11 | 0m10 1m10 
+    or                      \ m00 m01 m11 m10
+
+    \ Start new rule.
+    _rule-allocate          \ m00 m01 m11 m10 rul
+
+    \ Set each field.
+    tuck _rule-set-m10      \ m00 m01 m11 rul
+    tuck _rule-set-m11      \ m00 m01 rul
+    tuck _rule-set-m01      \ m00 rul
+    tuck _rule-set-m00      \ rul
+
+    \ Check rule.
+
+    \ _rule-prune             \ rul
+    \ dup rule-all-bits-set   \ rul flag
+    \ if
+    \    true                 \ rul flag
+    \ else
+    \     rule-deallocate
+    \     false
+    \ then
+
+    \ Check for 0->X.
+    dup rule-get-m00
+    over rule-get-m01
+    and
+    if
+        rule-deallocate
+        false
+        exit
+    then
+
+    \ Check for 1->X.
+    dup rule-get-m11
+    over rule-get-m10
+    and
+    if
+        rule-deallocate
+        false
+    else
+        true
+    then
 ;
 
 \ Return a rule restricted to an intersecting initial region.
