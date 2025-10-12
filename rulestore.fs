@@ -3,7 +3,7 @@
 \ If two rules, order does not matter.
 
 #23173 constant rulestore-id
-     3 constant rulestore-struct-number-cells
+    #3 constant rulestore-struct-number-cells
 
 \ Struct fields
 0 constant rulestore-header     \ 16-bits [0] struct id [1] use count.
@@ -34,10 +34,6 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
     rulestore-id =     
-;
-
-: is-not-allocated-rulestore ( addr -- flag )
-    is-allocated-rulestore 0=
 ;
 
 \ Check TOS for rulestore, unconventional, leaves stack unchanged. 
@@ -204,7 +200,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     if
         rulestore-get-rule-1
         if
-            2
+            #2
         else
             1
         then
@@ -222,7 +218,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
     dup struct-get-use-count      \ reg0 count
 
-    2 <
+    #2 <
     if
         \ Deallocate/clear fields.
         dup rulestore-get-rule-0
@@ -287,7 +283,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         1 of
             rulestore-get-rule-0 rulestore-new-1
         endof
-        2 of
+        #2 of
             dup rulestore-get-rule-0
             swap rulestore-get-rule-1
             rulestore-new-2
@@ -317,7 +313,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     if                          \ rul00 rul11
         rulestore-new-2
         true
-    else                        \ rul0
+    else                        \ rul00
         rule-deallocate
         false
     then
@@ -335,7 +331,6 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         false
         exit
     then
-    \ cr ." ru 10 " dup .rule cr
 
     -rot                        \ rul01 rs1 rs0
     rulestore-get-rule-1        \ rul01 rs1 rs0-1
@@ -344,7 +339,6 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
     rule-union                  \ rul01, rul10 true | false
     if                          \ rul01 rul10
-        \ cr ." ru 01 " dup .rule cr
         rulestore-new-2
         true
     else                        \ rul01
@@ -362,23 +356,17 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     assert-nos-is-rulestore
 
     2dup rulestore-union-00         \ rs1 rs2, rs3 true | false
-    if                              \ rs1 rs2 rs3
-        -rot                        \ rs3 rs1 rs0
-        rulestore-union-10          \ rs3, rs4 true | false
-        if                          \ rs3 rs4
-            \ cr ." too compatible" cr
-            rulestore-deallocate
-            rulestore-deallocate
-            false
-        else                        \ rs3
-            true                    \ rs3 true
-        then
-    else                            \ rs1 rs2
-        rulestore-union-10          \ rs3 true | false
+    if
+        nip nip                     \ rs3
+        true
+        exit
     then
+
+    rulestore-union-10              \ rs3 true | false
 ;
 
 \ Return the union of two rulestores.
+
 : rulestore-union ( rs1 rs0 -- ret true | false )
     \ Check args.
     assert-tos-is-rulestore
@@ -406,7 +394,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
                 false
             then
         endof
-        2 of
+        #2 of
             rulestore-union-2
         endof
     endcase
@@ -463,53 +451,58 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     assert-nos-is-sample
 
     \ Init return list.
-    list-new -rot                       \ ret smpl1 ruls0 |
+    list-new                                \ smpl1 ruls0 stp-lst |
 
     \ Process rule 0.
-    2dup rulestore-get-rule-0           \ | smpl1 rul0
-    rule-get-sample-by-changes-f        \ | rul0-smpl t | f
-    if                                  \ | rul0-smpl
+    #2 pick                                 \ | smpl1
+    #2 pick rulestore-get-rule-0            \ | smpl1 rul0
+    rule-get-sample-by-changes-f            \ | r0-smpl t | f
+    if                                      \ | r0-smpl
         \ Check for alternate rule.
-        over rulestore-get-rule-1       \ | rul0-smpl rul1
-        if
-            over sample-get-initial     \ | rul0-smpl rul1 rul0-smpl-i
-            tuck swap                   \ | rul0-smpl rul0-smpl-i rul0-smpl-i rul1
-            rule-apply-to-state-f       \ | rul0-smpl rul0-smpl-i rul1-r
-            swap sample-new             \ | rul0-smpl rul1-smpl
-            swap                        \ | rul1-smpl rul0-smpl
-        else
-            0 swap                      \ | 0 rul0-smpl
+        #2 pick rulestore-get-rule-1        \ | r0-smpl rul1
+        ?dup
+
+        if                                  \ | r0-smpl rul1
+            over sample-get-initial         \ | r0-smpl rul1 r0-smpl-i (r0-smpl-i may be different from smpl1-i)
+            swap                            \ | r0-smpl r0-smpl-i rul1
+            rule-apply-to-state-f           \ | r0-smpl, r1-smpl t | f
+            0= abort" apply failed?"
+            swap                            \ | r1-smpl r0-smpl
+        else                                \ | r0-smpl
+            0 swap                          \ | 0 r0-smpl
         then
 
         \ Make step.
-        cur-action-xt execute           \ | 0/smpl1 rul0-smpl actx
-        step-new-xt execute             \ | stpx
-        3 pick                          \ | stpx ret
-        step-list-push-xt execute       \ |
+        cur-action-xt execute               \ | r1-smpl r0-smpl actx
+        step-new-xt execute                 \ | stpx
+        over                                \ | stpx stp-lst
+        step-list-push-xt execute           \ |
     then
-                                        \ ret smpl1 ruls0 |
+                                            \ smpl1 ruls0 stp-lst |
 
     \ Process rule 1.
-    dup rulestore-get-rule-1            \ | rul1
-    dup if
-        2 pick swap                     \ | smpl1 rul1
-        rule-get-sample-by-changes-f    \ | rul1-smpl t | f
-        if
-            2 pick sample-get-initial   \ | rul1-smpl smpl1-i 
-            2 pick                      \ | rul1-smpl smpl1-i ruls0
-            rulestore-get-rule-0        \ | rul1-smpl smpl1-i rul0
-            rule-apply-to-state-f       \ | rul1-smpl smpl1-i rul0-r
-            swap sample-new             \ | rul1-smpl rul0-smpl
-            swap                        \ | rul0-smpl rul1-smpl
-            cur-action-xt execute       \ | rul0-smpl rul1-smpl actx
-            swap step-new-xt execute    \ | stpx
-            3 pick                      \ | stpx ret
-            step-list-push-xt execute   \ |
+    over rulestore-get-rule-1               \ | rul1
+    ?dup
+    if
+        #3 pick swap                        \ | smpl1 rul1
+        rule-get-sample-by-changes-f        \ | r1-smpl t | f
+        if                                  \ | r1-smpl
+            #2 pick rulestore-get-rule-0    \ | r1-smpl rul0
+            over sample-get-initial         \ | r1-smpl rul0 r1-smpl-i (r1-smpl-i may be different from smpl1-i)
+            swap                            \ | r1-smpl r1-smpl-i rul0
+            rule-apply-to-state-f           \ | r1-smpl, r0-smpl t | f
+            0= abort" apply failed?"
+            swap                            \ | r0-smpl r1-smpl
+
+            \ Make step.
+            cur-action-xt execute           \ | r0-smpl r1-smpl actx
+            step-new-xt execute             \ | stpx
+            over                            \ | stpx ret-lst
+            step-list-push-xt execute       \ |
         then
-        2drop
-    else
-        3drop
     then
+                                        \ smpl1 ruls0 stp-lst |
+    nip nip                             \ stp-lst
 ;
 
 \ Given a rulestore and a desired sample, return a list
@@ -523,66 +516,82 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     assert-nos-is-sample
 
     \ Init return list.
-    list-new -rot                       \ ret smpl1 ruls0 |
+    list-new                            \ smpl1 ruls0 stp-lst |
 
     \ Process rule 0.
-    2dup                                \ | smpl1 ruls0
+    #2 pick                             \ | smpl1
+    #2 pick                             \ | smpl1 ruls0
     rulestore-get-rule-0                \ | smpl1 rul0
-    2dup                                \ | smpl1 rul0
-    rule-get-sample-by-changes-b        \ | smpl1 rul0 rul0-smpl t | f
+    rule-get-sample-by-changes-b        \ | r0-smpl t | f
     if
         \ Check alternate path.
-        3 pick rulestore-get-rule-1     \ | rul0-smpl rul1
-        dup
-        if                              \ | rul0-smpl rul1
+        #2 pick rulestore-get-rule-1    \ | r0-smpl rul1
+        ?dup
+        if                              \ | r0-smpl rul1
                                         \ The second rule may have a greatly different result compared to the first rule
                                         \ but they have the same initial region, so use rul0-smpl-i forward on rule1.
 
-            over sample-get-initial     \ | rul0-smpl rul1 rul0-smpl-i
-            tuck swap                   \ | rul0-smpl rul0-smpl-i rul0-smpl-i rul1
-            rule-apply-to-state-f       \ | rul0-smpl rul0-smpl-i rul1-r
-            swap sample-new             \ | rul0-smpl rul1-smpl
-
-            swap                        \ | rul1-smpl rul0-smpl
+            over sample-get-initial     \ | r0-smpl rul1 r0-smpl-i
+            swap                        \ | r0-smpl r0-smpl-i rul1
+            rule-apply-to-state-f       \ | r0-smpl, r1-smpl-i t | f
+            0= abort" Apply failed?"
+            swap                        \ | r1-smpl r0-smpl
         else
-            swap                        \ | 0 rul0-smpl
+            0 swap                      \ | 0 r0-smpl
         then
+
+        \ Make rule.
         cur-action-xt execute           \ | 0/rul1-smpl rul0-smpl actx
         step-new-xt execute             \ | stpx
-        3 pick                          \ | stpx ret
+        over                            \ | stpx stp-lst
         step-list-push-xt execute       \ |
-    else
-        2drop
     then
-                                        \ ret smpl1 ruls0 |
+                                        \ smpl1 ruls0 stp-lst |
 
     \ Process rule 1.
-    dup rulestore-get-rule-1            \ | rul1
-    dup if
-        2 pick swap                     \ | smpl1 rul1
+    over rulestore-get-rule-1           \ | rul1
+    ?dup
+    if
+        #3 pick swap                    \ | smpl1 rul1
 
         rule-get-sample-by-changes-b    \ | rul1-smpl t | f
         if                              \ | rul1-smpl
                                         \ The first rule may have a greatly different result compared to the second rule
                                         \ but they have the same initial region, so use rul1-smpl-i forward on rule0.
 
-            2 pick sample-get-initial   \ | rul1-smpl rul1-smpl-i
-            2 pick                      \ | rul1-smpl rul1-smpl-i ruls0
+            dup sample-get-initial      \ | rul1-smpl rul1-smpl-i
+            #3 pick                     \ | rul1-smpl rul1-smpl-i ruls0
             rulestore-get-rule-0        \ | rul1-smpl rul1-smpl-i rul0
-            rule-apply-to-state-f       \ | rul1-smpl rul1-smpl-i rul0-r
-            swap sample-new             \ | rul1-smpl rul0-smpl
-
-            
+            rule-apply-to-state-f       \ | rul1-smpl, rul0-smpl t | f
+            0= abort" Apply failed?"
+            \ Make step.
             swap                        \ | rul0-smpl rul1-smpl
             cur-action-xt execute       \ | rul0-smpl rul1-smpl actx
             swap step-new-xt execute    \ | stpx
-            3 pick                      \ | stpx ret
+            #3 pick                     \ | stpx stp-lst
             step-list-push-xt execute   \ |
-            2drop
-        else
-            3drop                       \ ret
         then
+    then
+                                        \ smpl1 ruls0 stp-lst |
+    nip nip                             \ stp-lst
+;
+
+\ Return a pn value, based on the number of rules stored in a rulestore.
+: rulestore-get-pn ( rul-str -- pn )
+    \ Check args.
+    assert-tos-is-rulestore
+
+    dup rulestore-get-rule-0            \ rul-str rul0
+    0= if
+        drop
+        #3
+        exit
+    then
+
+    rulestore-get-rule-1                \ rul1
+    if
+        #2
     else
-        3drop                           \ ret
+        1
     then
 ;

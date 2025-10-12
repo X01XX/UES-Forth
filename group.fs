@@ -4,7 +4,7 @@
     #5 constant group-struct-number-cells
 
 \ Struct fields
-0 constant group-header                                 \ id (16) use count (16) pn (8) pnc (8)
+0 constant group-header                                 \ id (16) use count (16) pnc (8)
 group-header        cell+ constant group-region-disp    \ The group region.
 group-region-disp   cell+ constant group-r-region-disp  \ A Region covered the group rules, often a proper subset of the group-region.
 group-r-region-disp cell+ constant group-squares-disp   \ A square list.
@@ -43,10 +43,6 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
     group-id =    
-;
-
-: is-not-allocated-group ( addr -- flag )
-    is-allocated-group 0=
 ;
 
 \ Check TOS for group, unconventional, leaves stack unchanged. 
@@ -101,40 +97,17 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     !                       \ Set field.
 ;
 
-: group-get-pn ( sqr0 -- pn )
-    \ Check arg.
-    assert-tos-is-group
-
-    4c@
-;
-
-: _group-set-pn ( pn1 sqr0 -- )
-    over 1 <
-    if
-        ." _group-set-pn: invalid pn value"
-        abort
-    then
-
-    over 3 >
-    if
-        ." _group-set-pn: invalid pn value"
-        abort
-    then
-
-    4c!
-;
-
 \ Return group 8-bit pnc value, as a bool.
 : group-get-pnc ( sqr0 -- bool )
     \ Check arg.
     assert-tos-is-group
 
-    5c@
+    4c@
     0<>     \ Change 255 to -1
 ;
 
 : _group-set-pnc ( pnc sqr -- )
-    5c!
+    4c!
 ;
 
 : group-get-rules ( sqr0 -- rulstr )
@@ -165,6 +138,34 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     !                       \ Set field.
 ;
 
+: group-get-pn ( grp0 -- pn )
+    \ Check arg.
+    assert-tos-is-group
+
+    group-get-rules
+    rulestore-get-pn
+;
+
+: _group-update-r-region ( reg1 grp0 -- )
+    \ Check arg.
+    assert-tos-is-group
+    assert-nos-is-region
+
+    dup group-get-r-region -rot \ reg-old reg1 grp0
+    _group-set-r-region         \ reg-old
+    region-deallocate           \ Deallocate last, so struct field is never invalid.
+;
+
+: _group-update-rules ( ruls1 grp0 -- )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-rulestore
+
+    dup group-get-rules -rot    \ ruls-old ruls1 grp0
+    _group-set-rules            \ ruls-old
+    rulestore-deallocate        \ Deallocate last, so struct field is never invalid.
+;
+
 \ End accessors.
 
 \ Return a new group, given a region and square-list.
@@ -190,16 +191,18 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     0 over                      \ s r addr 0 addr
     struct-set-use-count        \ s r addr
 
+
     \ Set region.
     tuck                        \ s addr r addr
     _group-set-region           \ s addr
 
     \ Set r-region
-    over square-list-region     \ s addr reg
+    over square-list-region     \ s addr, reg t | f
+    0= abort" region not found?"
     over _group-set-r-region    \ s addr
 
     \ Set rules
-    over square-list-get-rules  \ s addr result flag
+    over square-list-get-rules  \ s addr, ruls t | f
     0=
     if  dup group-get-region cr ." Group: " .region
         space ." Group squares cannot form rules."
@@ -208,10 +211,6 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     then
                                 \ s addr rules
     over _group-set-rules       \ s addr
-
-    \ Set pn
-    over square-list-highest-pn \ s addr pn
-    over _group-set-pn          \ s addr
 
     \ Set pnc
     \ over square-list-pnc        \ s addr pnc
@@ -239,7 +238,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 
     dup struct-get-use-count      \ grp0 count
 
-    2 <
+    #2 <
     if
         \ Deallocate instance.
         dup group-get-region region-deallocate
@@ -263,6 +262,9 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 ;
 
 : .group ( grp -- )
+    \ Check arg.
+    assert-tos-is-group
+
     ." Grp: "
     dup group-get-region .region
     space ." - "
@@ -273,8 +275,34 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     group-get-squares   .square-list-states
 ;
 
+\ Print a group region.
 : .group-region ( grp -- )
+    \ Check arg.
+    assert-tos-is-group
+
     group-get-region .region
+;
+
+\ Recalc a group r-region and rules.
+: group-recalc ( grp0 -- )
+    \ Check arg.
+    assert-tos-is-group
+
+    \ Generate pn-eq square-list to work on.
+    dup group-get-squares           \ grp0 sqr-lst
+    dup square-list-highest-pn      \ grp0 sqr-lst hpn
+    swap square-list-eq-pn          \ grp0 sqr-lst'
+
+    dup square-list-region          \ grp0 sqr-lst', regx t | f
+    0= abort" region not found?"
+    #2 pick _group-update-r-region  \ grp0 sqr-lst'
+
+    dup square-list-get-rules       \ grp0 sqr-lst', ruls t | f
+    0= abort" rules not found?"
+    #2 pick _group-update-rules     \ grp0 sqr-lst'
+
+    square-list-deallocate          \ grp0
+    drop                            \
 ;
 
 \ Check a square for effects on the r-region and rules.
@@ -290,58 +318,38 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     region-superset-of-state    \ sqr1 grp0 flag
     0= abort" square not in group?"
 
+    \ Check if square-pn is LT group-pn.
+    over square-get-pn          \ sqr1 grp0 s-pn
+    over group-get-pn           \ sqr1 grp0 s-pn g-pn
+    <                           \ sqr1 grp0 flag
+    if
+        2drop                   \
+        exit
+    then
+
+    \ Check if square-pn is GT group-pn.
+    over square-get-pn          \ sqr1 grp0 s-pn
+    over group-get-pn           \ sqr1 grp0 s-pn g-pn
+    >                           \ sqr1 grp0 flag
+    if
+        nip                     \ grp0
+        group-recalc            \
+        exit
+    then
+
+    \ Square pn = group pn.
+
     \ Check if square is outside of the current rule region.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-r-region     \ sqr1 grp0 sta sreg
     region-superset-of-state    \ sqr1 grp0 flag
     0= if
-                                \ sqr1 grp0
-        \ Check square pn
-        over square-get-pn      \ sqr1 grp0 s-pn
-        over group-get-pn       \ sqr1 grp0 s-pn g-pn
-        =
-        if
-            \ Expand group rule region.
-            over square-get-state   \ sqr1 grp0 sta
-            over group-get-r-region \ sqr1 grp0 sta sreg
-            tuck                    \ sqr1 grp0 sreg sta sreg
-            region-union-state      \ sqr1 grp0 sreg sreg2
-
-            \ Print change.
-            cr 2 pick group-get-region ." group " .region
-            space ." change r-region from " over .region
-            space ." to " dup .region cr
-
-            2 pick                  \ sqr1 grp0 sreg sreg2 grp0
-            _group-set-r-region     \ sqr1 grp0 sreg
-
-            \ Dealloc previous region.
-            region-deallocate       \ sqr1 grp0
-
-            \ Adjust rules, if pn < 3/U.
-            over square-get-pn      \ sqr1 grp0 s-pn
-            3 <>
-            if
-                dup group-get-rules     \ sqr1 grp0 rul-str
-                over                    \ sqr1 grp0 rul-str grp0
-                group-get-squares       \ sqr1 grp0 rul-str sqr-lst
-                \ cr dup ." sqr-lst: " .square-list cr
-                square-list-get-rules   \ sqr1 grp0 old-rul-str, new-rul-str true | false
-                0= abort" no rulestore from square-list?"
-
-                \ Print change.
-                cr 2 pick group-get-region ." group " .region
-                space ." change rules from " over .rulestore
-                space ." to " dup .rulestore cr
-            
-                2 pick                  \ sqr1 grp0 old-rul-str new-rul-str grp0
-                _group-set-rules        \ sqr1 grp0 old-rul-str
-                rulestore-deallocate    \ sqr1 grp0
-            then
-        then
+        nip                     \ grp0
+        group-recalc            \
+    else
+        2drop
     then
-                                    \ sqr1 grp0
-    2drop
+    
 ;
 
 \ Add a square to a group.
@@ -350,6 +358,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     assert-tos-is-group
     assert-nos-is-square
 
+    cr ." group " dup .group-region space ." adding square " over .square-state cr
     \ Check square belongs in group.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-region       \ sqr1 grp0 sta reg
@@ -414,7 +423,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     group-get-rules         \ rulestore
     rulestore-calc-changes  \ changes
 ;
-
+ 
 \ Return a list of possible forward-chaining steps, given a sample.
 \ Where the sample is in the group r-region.
 : group-calc-forward-steps ( smpl1 grp0 -- stp-lst )
@@ -426,30 +435,58 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     \ Init return list.
     list-new -rot           \ ret-lst smpl1 grp0
 
-    dup group-get-pn       \ ret-lst smpl1 grp0 pn
+    dup group-get-pn        \ ret-lst smpl1 grp0 pn
     case
+                            \ ret-lst smpl1 grp0 |
         1 of
-                                            \ ret-lst smpl1 grp0
-            group-get-rules                 \ ret-lst smpl1 grp-ruls
-            over                            \ ret-lst smpl1 grp-ruls | smpl1
-            over rulestore-get-rule-0       \ ret-lst smpl1 grp-ruls | smpl1 rul0
-            rule-calc-forward-sample        \ ret-lst smpl1 grp-ruls | smpl2 true | false
-            if                              \ ret-lst smpl1 grp-ruls | smpl2
-                \ Make step.
-                0 swap                      \ ret-lst smpl1 grp-ruls | 0 smpl2
-                cur-action-xt execute       \ ret-lst smpl1 grp-ruls | 0 smpl2 actx
-                step-new-xt execute         \ ret-lst smpl1 grp-ruls | stpx
-                \ Store step.
-                3 pick                      \ ret-lst smpl1 grp-ruls | stpx ret-lst
-                step-list-push-xt execute   \ ret-lst smpl1 grp-ruls
+                                            \ ret-lst smpl1 grp0 |
+            over                            \ ret-lst smpl1 grp0 | smpl1
+            0                               \ ret-lst smpl1 grp0 | smpl1 0
+            #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
+            rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
+            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx
+            action-make-forward-step-xt     \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx xt
+            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            if                              \ ret-lst smpl1 grp0 | stpx
+                nip nip                     \ ret-lst stpx
+                over                        \ ret-lst stpx ret-lst
+                step-list-push-xt execute   \ ret-lst
+            else                            \ ret-lst smpl1 grp0
+                2drop                       \ ret-lst
             then
-            2drop
         endof
-        2 of
-            cr ." group-calc-forward-steps: TODO" cr
-            2drop
+        #2 of
+            \ Check rule-0.
+                                            \ ret-lst smpl1 grp0 |
+            over                            \ ret-lst smpl1 grp0 | smpl1
+            over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
+            dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
+            swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
+            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-1 rul0 actx
+            action-make-forward-step-xt     \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0 actx xt
+            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            if                              \ ret-lst smpl1 grp0 | stpx
+                #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
+                execute                     \ ret-lst smpl1 grp0 |
+
+                \ Check rule-1. If rule-0 initial region is a superset of smpl1 initial state, so is the rule-1 initial region.
+                over                            \ ret-lst smpl1 grp0 | smpl1
+                over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
+                dup rulestore-get-rule-0        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-0
+                swap rulestore-get-rule-1       \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1
+                cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1 actx
+                action-make-forward-step-xt     \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1 actx xt
+                execute                         \ ret-lst smpl1 grp0 | stpx t | f
+                if                              \ ret-lst smpl1 grp0 | stpx
+                    #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
+                    execute                     \ ret-lst smpl1 grp0 |
+                then
+                2drop
+            else
+                2drop
+            then
         endof
-        3 of
+        #3 of
             2drop
         endof
         cr ." Invalid pn value" cr
@@ -474,26 +511,52 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     \ Process group by pn value.
     case
         1 of
-            group-get-rules                 \ ret-lst smpl1 grp-ruls
-            over                            \ ret-lst smpl1 grp-ruls smpl1
-            over rulestore-get-rule-0       \ ret-lst smpl1 grp-ruls smpl1 rul0
-            rule-calc-backward-sample       \ ret-lst smpl1 grp-ruls, smpl2 t | f
-            if                              \ ret-lst smpl1 grp-ruls | smpl2
-                \ Make step.
-                0 swap                      \ ret-lst smpl1 grp-ruls | 0 smpl2
-                cur-action-xt execute       \ ret-lst smpl1 grp-ruls | 0 smpl2 actx
-                step-new-xt execute         \ ret-lst smpl1 grp-ruls | stpx
-                \ Store step.
-                3 pick                      \ ret-lst smpl1 grp-ruls | stpx ret-lst
-                step-list-push-xt execute   \ ret-lst smpl1 grp-ruls
+                                                        \ ret-lst smpl1 grp0 |
+            over                            \ ret-lst smpl1 grp0 | smpl1
+            0                               \ ret-lst smpl1 grp0 | smpl1 0
+            #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
+            rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
+            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx
+            action-make-backward-step-xt    \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx xt
+            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            if                              \ ret-lst smpl1 grp0 | stpx
+                nip nip                     \ ret-lst stpx
+                over                        \ ret-lst stpx ret-lst
+                step-list-push-xt execute   \ ret-lst
+            else                            \ ret-lst smpl1 grp0
+                2drop                       \ ret-lst
+            then
+        endof
+        #2 of
+            \ Check rule-0. Rule-0 result region may be a superset of the smpl1 result state, while the rule-1 result region is not.
+                                            \ ret-lst smpl1 grp0 |
+            over                            \ ret-lst smpl1 grp0 | smpl1
+            over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
+            dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
+            swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
+            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-1 rul0 actx
+            action-make-backward-step-xt    \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0 actx xt
+            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            if                              \ ret-lst smpl1 grp0 | stpx
+                #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
+                execute                     \ ret-lst smpl1 grp0 |
+            then
+
+            \ Check rule 1.  Rule-1 result region may be a superset of the smpl1 result state, while the rule-0 result region is not.
+            over                            \ ret-lst smpl1 grp0 | smpl1
+            over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
+            dup rulestore-get-rule-0        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
+            swap rulestore-get-rule-1       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
+            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-1 rul0 actx
+            action-make-backward-step-xt    \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0 actx xt
+            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            if                              \ ret-lst smpl1 grp0 | stpx
+                #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
+                execute                     \ ret-lst smpl1 grp0 |
             then
             2drop
         endof
-        2 of
-            ." TODO try rule-1 with rule-0 as alt"
-            2drop
-        endof
-        3 of
+        #3 of
             2drop
         endof
     endcase
@@ -512,7 +575,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     dup group-get-pn                        \ smpl1 grp0 pn
 
     \ Handle unpredictable group.
-    3 = if
+    #3 = if
         2drop
         list-new
         exit
@@ -537,7 +600,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     dup group-get-pn                        \ smpl1 grp0 pn
 
     \ Handle unpredictable group.
-    3 = if
+    #3 = if
         2drop
         list-new
         exit
@@ -551,7 +614,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 ;
 
 \ Return a fill need, if any.
-: group-get-fill-needs ( reg1 grp0 -- ned t | f )
+: group-get-fill-need ( reg1 grp0 -- ned t | f )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-region
@@ -565,8 +628,11 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     rot                         \ grp0 grp-reg reg1
 
     \ Get group region intersection reachable region.
-    region-intersection         \ grp0, reg-int t | false
-    0= if
+    2dup                        \ grp0 grp-reg reg1 grp-reg reg1
+    region-intersection         \ grp0 grp-reg reg1, reg-int t | false
+    if
+        nip nip                 \ grp0 reg-int
+    else
         cr ." region " .region space ." does not intersect " .region cr
         abort
     then
@@ -585,22 +651,82 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
                                 \ reg-int grp-r-reg
     dup region-get-state-0 swap \ reg-int r-reg-sta0 grp-r-reg
     region-edge-mask            \ reg-int sta0 edg-msk
-    2 pick region-x-mask        \ reg-int sta0 edg-msk x-msk
+    #2 pick region-x-mask       \ reg-int sta0 edg-msk x-msk
     and                         \ reg-int sta0 cng-msk
     rot region-deallocate       \ sta0 cng-msk
     \ space ." cng-msk: " dup .value cr
     ?dup
     if
-        xor                         \ sta0'
+        xor                     \ sta0'
     
         \ Make need.
-        4 swap                      \ 4 sta0'
-        cur-action-xt execute       \ 4 sta0' actx
-        cur-domain-xt execute       \ 4 sta0' actx domx
-        need-new-xt execute         \ nedx
+        #4 swap                 \ 4 sta0'
+        cur-action-xt execute   \ 4 sta0' actx
+        action-make-need-xt     \ 4 sta0' actx xt
+        execute                 \ nedx
         true
     else
         drop
         false
     then
+;
+
+\ Return a need to confirm a group.
+: group-get-confirm-need ( grp0 -- ned t | f )
+    \ Check arg.
+    assert-tos-is-group
+
+    0 over group-get-squares    \ grp0 | 0 sqr-lst
+    list-get-item               \ grp0 | sqr-0
+    dup square-get-pnc          \ grp0 | sqr-0 pnc
+    0= if                       \ grp0 | sqr-0
+        \ Make need for square 0.
+        nip
+        square-get-state        \ sta-0
+        #5 swap                 \ 5 sta-0
+        cur-action-xt execute   \ 5 sta-0 actx
+        action-make-need-xt     \ 5 sta-0 actx xt
+        execute                 \ nedx
+        true
+        exit
+    else
+        drop                    \ grp0
+    then
+
+    \ Check group squares.
+    dup group-get-r-region      \ grp0 g-r-reg
+    over group-get-squares      \ grp0 g-r-reg sqr-lst
+    list-get-links              \ grp0 g-r-reg link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ grp0 g-r-reg link sqrx
+        dup square-get-pnc              \ grp0 g-r-reg link sqrx pnc
+        0= if                           \ grp0 g-r-reg link sqrx
+            dup square-get-state        \ grp0 g-r-reg link sqrx s-sta
+            #3 pick                     \ grp0 g-r-reg link sqrx s-sta g-r-reg
+            region-superset-of-state    \ grp0 g-r-reg link sqrx flag
+            0= if                       \ grp0 g-r-reg link sqrx
+                \ Make need.
+                square-get-state        \ | s-sta
+                #5 swap                 \ | 5 s-sta
+                cur-action-xt execute   \ | 5 s-sta actx
+                action-make-need-xt     \ | 5 s-sta actx xt
+                execute                 \ | nedx
+                nip nip nip             \ nedx
+                true
+                exit
+            else                        \ grp0 g-r-reg link sqrx
+                drop                    \ grp0 g-r-reg link
+            then
+        else                            \ grp0 g-r-reg link sqrx
+            drop                        \ grp0 g-r-reg link
+        then
+
+        link-get-next           \ grp0 g-r-reg link
+    repeat
+                                \ grp0 g-r-reg
+    2drop
+    false
 ;

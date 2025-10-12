@@ -114,14 +114,14 @@
 ;
 
 : rule-test-get-forward-sample ( smpl1 rul0 -- smpl true | false )
-    #11 4 sample-new                    \ smpl
+    #11 #4 sample-new                   \ smpl
     s" XX/XX/XX/Xx/" rule-from-string   \ smpl rul
     2dup                                \ smpl rul smpl rul
     rule-calc-forward-sample            \ smpl rul, smpl true | false
     if
         cr ." sample: " dup .sample cr
         dup sample-get-result
-        5 <> abort" Step result is not 5"
+        #5 <> abort" Step result is not 5"
         sample-deallocate
     else
         cr ." no sample" cr abort
@@ -133,9 +133,9 @@
 ;
 
 : rule-test-restrict-to-region
-    5 #15 region-new                     \ reg
+    #5 #15 region-new                   \ reg
     s" 01/X1/11/XX/" rule-from-string   \ reg rul
-    2dup rule-restrict-to-region       \ reg rul rul'
+    2dup rule-restrict-to-region        \ reg rul rul'
     if
     else
         cr ." rule restriction failed?" abort
@@ -156,13 +156,13 @@
 ;
 
 : rule-test-get-backward-sample
-    #15 5 sample-new                     \ smpl
+    #15 #5 sample-new                    \ smpl
     s" 01/X1/11/XX/" rule-from-string    \ smpl rul
     2dup rule-calc-backward-sample       \ smpl rul, stpx t | f
     if
         cr ." Sample found: " dup .sample cr
         dup sample-get-initial
-        7 <> abort" Sample initial not 7?"
+        #7 <> abort" Sample initial not 7?"
         sample-deallocate
     else
         ." sample not found" abort

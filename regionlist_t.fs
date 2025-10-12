@@ -56,7 +56,7 @@
 
     \ Check results.
 
-    dup list-get-length 2 <>
+    dup list-get-length #2 <>
     abort" list length invalid"
 
     s" 0X00" region-from-string     \ lst1 lst2 lst3 reg
@@ -88,23 +88,23 @@
 : region-list-test-states
     \ Make region-list list, using regions made with duplicate states.
     list-new                                \ lst1
-    4  7 region-new over region-list-push   \ lst1
-    4 #13 region-new over region-list-push  \ lst1
-    7 #13 region-new over region-list-push  \ lst1
+    #4  #7 region-new over region-list-push \ lst1
+    #4 #13 region-new over region-list-push \ lst1
+    #7 #13 region-new over region-list-push \ lst1
 
     dup region-list-states                  \ lst1 lst2
 
     dup list-get-length
-    3 <>
+    #3 <>
     abort" List length not 3?"
 
-    [ ' = ] literal 4 2 pick list-member
+    [ ' = ] literal #4 #2 pick list-member
     0= abort" 4 not in list?"
 
-    [ ' = ] literal 7 2 pick list-member
+    [ ' = ] literal #7 #2 pick list-member
     0= abort" 7 not in list?"
 
-    [ ' = ] literal #13 2 pick list-member
+    [ ' = ] literal #13 #2 pick list-member
     0= abort" 13 not in list?"
 
     list-deallocate
@@ -126,19 +126,19 @@
     s" X1X1" region-from-string             \ lst1 regx
     over region-list-push                   \ lst1
 
-    2 over                                  \ lst1 2 lst1
+    #2 over                                 \ lst1 2 lst1
     region-list-state-in-one-region         \ lst1 flag
     abort" 2 in one region?"
 
-    4 over                                  \ lst1 4 lst1
+    #4 over                                 \ lst1 4 lst1
     region-list-state-in-one-region         \ lst1 | flag
     abort" 4 in one region?"
 
-    6 over                                  \ lst1 6 lst1
+    #6 over                                 \ lst1 6 lst1
     region-list-state-in-one-region         \ lst1 flag
     0= abort" 6 not in one region?"
 
-    7 over                                  \ lst1 7 lst1
+    #7 over                                 \ lst1 7 lst1
     region-list-state-in-one-region         \ lst1 | flag
     abort" 7 in one region?"
 
@@ -163,10 +163,10 @@
 
     \ Make state list.
     list-new                                \ sta-lst
-    2 over list-push
-    4 over list-push
-    6 over list-push
-    7 over list-push
+     #2 over list-push
+     #4 over list-push
+     #6 over list-push
+     #7 over list-push
     #12 over list-push
     #13 over list-push
     #15 over list-push
@@ -187,16 +187,16 @@
     \ cr ." states in one region: " dup .list-raw cr
 
     dup list-get-length
-    3 <>
+    #3 <>
     abort" List length not 3?"
 
-    [ ' = ] literal 6 2 pick list-member
+    [ ' = ] literal #6 #2 pick list-member
     0= abort" 6 not in list?"
 
-    [ ' = ] literal #12 2 pick list-member
+    [ ' = ] literal #12 #2 pick list-member
     0= abort" 12 not in list?"
 
-    [ ' = ] literal #15 2 pick list-member
+    [ ' = ] literal #15 #2 pick list-member
     0= abort" 15 not in list?"
 
     list-deallocate

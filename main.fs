@@ -30,6 +30,7 @@ vocabulary UES
 
 \ Put new words into the UES vocabulary.
 UES definitions
+
 decimal
 
 \ Foundational.
@@ -88,21 +89,21 @@ cs
 
 : memory-use
     cr ." Memory use:"
-    cr 4 spaces ." Link mma:         " link-mma .mma-usage
-    cr 4 spaces ." List mma:         " list-mma .mma-usage
-    cr 4 spaces ." Region mma:       " region-mma .mma-usage
-    cr 4 spaces ." Rule mma:         " rule-mma .mma-usage
-    cr 4 spaces ." RuleStore mma:    " rulestore-mma .mma-usage
-    cr 4 spaces ." Square mma:       " square-mma .mma-usage
-    cr 4 spaces ." Sample mma:       " sample-mma .mma-usage
-    cr 4 spaces ." Changes mma:      " changes-mma .mma-usage
-    cr 4 spaces ." Group mma:        " group-mma .mma-usage
-    cr 4 spaces ." Need mma:         " need-mma .mma-usage
-    cr 4 spaces ." Step mma:         " step-mma .mma-usage
-    cr 4 spaces ." Plan mma:         " plan-mma .mma-usage
-    cr 4 spaces ." Action mma:       " action-mma .mma-usage
-    cr 4 spaces ." Domain mma:       " domain-mma .mma-usage
-    cr 4 spaces ." dstack: " .s
+    cr #4 spaces ." Link mma:         " link-mma .mma-usage
+    cr #4 spaces ." List mma:         " list-mma .mma-usage
+    cr #4 spaces ." Region mma:       " region-mma .mma-usage
+    cr #4 spaces ." Rule mma:         " rule-mma .mma-usage
+    cr #4 spaces ." RuleStore mma:    " rulestore-mma .mma-usage
+    cr #4 spaces ." Square mma:       " square-mma .mma-usage
+    cr #4 spaces ." Sample mma:       " sample-mma .mma-usage
+    cr #4 spaces ." Changes mma:      " changes-mma .mma-usage
+    cr #4 spaces ." Group mma:        " group-mma .mma-usage
+    cr #4 spaces ." Need mma:         " need-mma .mma-usage
+    cr #4 spaces ." Step mma:         " step-mma .mma-usage
+    cr #4 spaces ." Plan mma:         " plan-mma .mma-usage
+    cr #4 spaces ." Action mma:       " action-mma .mma-usage
+    cr #4 spaces ." Domain mma:       " domain-mma .mma-usage
+    cr #4 spaces ." dstack: " .s
 ;
 
 ' memory-use to memory-use-xt
@@ -142,20 +143,20 @@ include input_t.fs
 cr ." main.fs"
 
 \ Init array-stacks.
-601 link-mma-init
-202 list-mma-init
-403 region-mma-init
-304 rule-mma-init
-305 rulestore-mma-init
-206 square-mma-init
-250 sample-mma-init
- 50 changes-mma-init
-100 group-mma-init
-200 need-mma-init
-150 step-mma-init
-150 plan-mma-init
- 50 action-mma-init
- 25 domain-mma-init
+#601 link-mma-init
+#202 list-mma-init
+#403 region-mma-init
+#304 rule-mma-init
+#305 rulestore-mma-init
+#206 square-mma-init
+#250 sample-mma-init
+ #50 changes-mma-init
+#100 group-mma-init
+#200 need-mma-init
+#150 step-mma-init
+#150 plan-mma-init
+ #50 action-mma-init
+ #25 domain-mma-init
 
 \ Free heap memory before exiting.
 : free-heap ( -- )
@@ -183,7 +184,7 @@ cr ." main.fs"
     dup to current-session                      \ sess
 
     \ Add domain 0
-    4 domain-new                                \ sess dom
+    #4 domain-new                                \ sess dom
 
     \ Add actions to domain 0
     [ ' domain-0-act-1-get-sample ] literal     \ sess dom0 xt
@@ -197,12 +198,15 @@ cr ." main.fs"
 
     [ ' domain-0-act-4-get-sample ] literal     \ sess dom0 xt
     over domain-add-action                      \ sess dom0
-    
+
+    [ ' domain-0-act-5-get-sample ] literal     \ sess dom0 xt
+    over domain-add-action                      \ sess dom0
+
     \ Add a domain
     over session-add-domain                    \ sess
 
     \ Add domain 1
-    5 domain-new                                \ sess dom1
+    #5 domain-new                               \ sess dom1
 
     \ Add actions to domain 1
     [ ' domain-1-act-1-get-sample ] literal     \ sess dom1 xt
@@ -212,6 +216,12 @@ cr ." main.fs"
     over domain-add-action                      \ sess dom1
 
     [ ' domain-1-act-3-get-sample ] literal     \ sess dom1 xt
+    over domain-add-action                      \ sess dom1
+
+    [ ' domain-1-act-4-get-sample ] literal     \ sess dom1 xt
+    over domain-add-action                      \ sess dom1
+
+    [ ' domain-1-act-5-get-sample ] literal     \ sess dom1 xt
     over domain-add-action                      \ sess dom1
 
     \ Add last domain
@@ -229,12 +239,15 @@ cr ." main.fs"
         step-num 1+ to step-num
         
         \ Print header.
+        cr ." ***************************"
         cr ." Step: " step-num .
         space ." Current state: "
-        current-session .session-current-state
+        current-session .session-current-states
+        space ." Reachable "
+        current-session .session-reachable-regions
         cr
 
-        80 s" Enter command: q(uit), ... > " get-user-input
+        #80 s" Enter command: > " get-user-input
         \ cr .s cr
         depth 1 <>
         if
@@ -262,7 +275,7 @@ cr ." main.fs"
     to current-session                  \
 
     \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
-    4 domain-new                        \ dom
+    #4 domain-new                        \ dom
 
     current-session                     \ dom sess
     session-add-domain                  \ dom

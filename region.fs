@@ -45,10 +45,6 @@ region-state-0-disp cell+ constant region-state-1-disp
     region-id =     
 ;
 
-: is-not-allocated-region ( addr -- flag )
-    is-allocated-region 0=
-;
-
 \ Check TOS for region, unconventional, leaves stack unchanged. 
 : assert-tos-is-region ( arg0 -- arg0 )
     dup is-allocated-region 0=
@@ -63,7 +59,7 @@ region-state-0-disp cell+ constant region-state-1-disp
 
 \ Check 3OS for region, unconventional, leaves stack unchanged. 
 : assert-3os-is-region ( arg2 arg1 arg0 -- arg1 arg0 )
-    2 pick is-allocated-region 0=
+    #2 pick is-allocated-region 0=
     abort" NOS is not an allocated region"
 ;
 
@@ -124,7 +120,7 @@ region-state-0-disp cell+ constant region-state-1-disp
 
     \ Prepare to store states.
     -rot            \ addr u1 u2
-    2 pick          \ addr u1 u2 addr
+    #2 pick         \ addr u1 u2 addr
     tuck            \ addr u1 addr u2 addr
 
     \ Store states
@@ -170,7 +166,7 @@ region-state-0-disp cell+ constant region-state-1-disp
 
       \ Apply msb to state 2.
       over      \ Get msb.
-      4 pick    \ Get state2 and isolate 1 bit.
+      #4 pick   \ Get state2 and isolate 1 bit.
       and       \ Isolate state 2 bit corresponding to the msb.
 
       if
@@ -219,7 +215,7 @@ region-state-0-disp cell+ constant region-state-1-disp
 
     dup struct-get-use-count      \ reg0 count
 
-    2 <
+    #2 <
     if
         \ Deallocate instance.
         region-mma mma-deallocate
@@ -508,7 +504,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     assert-nos-is-value
 
     region-get-states           \ sta1 s1 s0
-    2 pick                      \ sta1 s1 s0 sta1
+    #2 pick                     \ sta1 s1 s0 sta1
     =                           \ sta1 s0 flag
     if                          \ sta1 s0
         2drop
@@ -525,7 +521,7 @@ region-state-0-disp cell+ constant region-state-1-disp
 : region-from-string ( addr n --  reg )
     0 swap 0 swap 0     \ addr 0 0 n 0
     do                  \ addr 0 0
-        2 pick i +
+        #2 pick i +
         c@
 
         dup [char] _ =
@@ -571,12 +567,12 @@ region-state-0-disp cell+ constant region-state-1-disp
         ?dup
     while
         dup link-get-data           \ reg0 ret-lst link data
-        3 pick                      \ reg0 ret-lst link data reg0
+        #3 pick                     \ reg0 ret-lst link data reg0
         region-superset-of-state    \ reg0 ret-lst link flag
         if
             \ Store the state into the return list.
             dup link-get-data       \ reg0 ret-lst link data
-            2 pick                  \ reg0 ret-lst link data ret-lst
+            #2 pick                 \ reg0 ret-lst link data ret-lst
             list-push               \ reg0 ret-lst link
         then
     
@@ -604,7 +600,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     abort" No need to translate?"
 
     dup region-get-state-0      \ sta1 reg0 rsta0
-    2 pick xor                  \ sta1 reg0 diff
+    #2 pick xor                 \ sta1 reg0 diff
     swap region-edge-mask       \ sta1 diff edge-msk
     and                         \ sta1 diff'
     xor                         \ sta' (in region)
@@ -629,5 +625,29 @@ region-state-0-disp cell+ constant region-state-1-disp
 
     \ Remove X bit positions from the mask.
     and                             \ dif-msk
+;
+
+\ Return the state far from a given state, within a region.
+: region-far-from-state ( sta1 reg0 - sta-far )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-value
+    2dup region-superset-of-state
+    0= abort" State is not in region?"
+
+    region-x-mask       \ sta1 x-msk
+    xor                 \ sta-far
+;
+
+\ Return true if a regions' two states are adjacent.
+: region-states-adjacent ( reg0 -- flag )
+    \ Check arg.
+    assert-tos-is-region
+
+    region-get-states       \ s1 s0
+
+    \ Check if X mask contains exactly one bit.
+    xor                     \ msk
+    value-1-bit-set         \ flag
 ;
 

@@ -5,8 +5,8 @@
 
     list-new                                    \ reg sqrs
 
-     3  3 square-new over square-list-push      \ reg sqrs
-     7  7 square-new over square-list-push      \ reg sqrs
+     #3  #3 square-new over square-list-push    \ reg sqrs
+     #7  #7 square-new over square-list-push    \ reg sqrs
     #12 #12 square-new over square-list-push    \ reg sqrs
     #13 #13 square-new over square-list-push    \ reg sqrs
 
@@ -14,11 +14,11 @@
 
     \ Check list length.
     dup list-get-length
-    2 <>
+    #2 <>
     abort" list length not 2?"
 
     \ Check the correct squares were returned.
-    7 over square-list-member
+    #7 over square-list-member
     0= abort" 7 NOT found"
 
     #13 over square-list-member
@@ -36,8 +36,8 @@
     s" X1X1" region-from-string                 \ reg
     list-new                                    \ reg sqrs
 
-     3  3 square-new over square-list-push      \ reg sqrs
-     7  7 square-new over square-list-push      \ reg sqrs
+     #3  #3 square-new over square-list-push    \ reg sqrs
+     #7  #7 square-new over square-list-push    \ reg sqrs
     #12 #12 square-new over square-list-push    \ reg sqrs
     #13 #13 square-new over square-list-push    \ reg sqrs
 
@@ -45,14 +45,14 @@
 
     \ Check list length.
     dup list-get-length
-    2 <>
+    #2 <>
     abort" list length not 2?"
 
     \ Check the correct squares were returned.
-    [ ' = ] literal 7 2 pick list-member
+    [ ' = ] literal #7 #2 pick list-member
     0= abort" 7 NOT found"
 
-    [ ' = ] literal #13 2 pick list-member
+    [ ' = ] literal #13 #2 pick list-member
     0= abort" 13 NOT found"
 
     \ Deallocate

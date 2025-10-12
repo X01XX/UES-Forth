@@ -1,7 +1,7 @@
 \ Implement a Session struct and functions.                                                                                             
 
 #31319 constant session-id
-     4 constant session-struct-number-cells
+    #4 constant session-struct-number-cells
 
 \ Struct fields
 0 constant session-header    \ 16-bits [0] struct id [1] use count
@@ -15,10 +15,6 @@ session-current-domain      cell+ constant session-needs                \ A need
 : is-allocated-session ( addr -- flag )
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
     session-id =    
-;
-
-: is-not-allocated-session ( addr -- flag )
-    is-allocated-session 0=
 ;
 
 \ Check TOS for session, unconventional, leaves stack unchanged. 
@@ -160,7 +156,7 @@ session-current-domain      cell+ constant session-needs                \ A need
         dup link-get-data           \ sess0 link dom
         \ Set current domain
         dup                         \ sess0 link dom dom
-        3 pick                      \ sess0 link dom dom sess0
+        #3 pick                     \ sess0 link dom dom sess0
         session-set-current-domain  \ sess0 link dom
         \ Print domain
         .domain
@@ -246,7 +242,8 @@ session-current-domain      cell+ constant session-needs                \ A need
     then
 ;
 
-: .session-current-state ( sess0 -- )
+\ Print a list of current states.
+: .session-current-states ( sess0 -- )
     \ Check args.
     assert-tos-is-session
 
@@ -259,12 +256,43 @@ session-current-domain      cell+ constant session-needs                \ A need
     while
         dup link-get-data           \  sess0 link domx
 
-        dup 3 pick session-set-current-domain
+        dup #3 pick session-set-current-domain
         
         domain-get-current-state    \ sess0 link stax
         .value
 
         link-get-next               \ sess0 link
+        dup if
+            space
+        then
+    repeat
+    ." )"
+                                    \ sess0
+    drop
+;
+
+\ Print a list of reachable regions.
+: .session-reachable-regions ( sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+
+    dup session-get-domains             \ sess0 dom-lst
+
+    list-get-links                      \ sess0 link
+    ." ("
+    begin
+        ?dup
+    while
+        dup link-get-data               \  sess0 link domx
+
+        dup #3 pick                     \ sess0 link domx domx sess0
+        session-set-current-domain      \ sess0 link domx
+
+        domain-calc-reachable-region    \ sess0 link regx
+        dup .region
+        region-deallocate               \ sess0 link
+
+        link-get-next                   \ sess0 link
         dup if
             space
         then
@@ -291,11 +319,11 @@ session-current-domain      cell+ constant session-needs                \ A need
     while
         dup link-get-data               \ sess0 reg-lst link domx
 
-        dup 4 pick                      \ sess0 reg-lst link domx domx sess0
+        dup #4 pick                      \ sess0 reg-lst link domx domx sess0
         session-set-current-domain      \ sess0 reg-lst link domx
 
         domain-calc-reachable-region    \ sess0 reg-lst link dom-reg
-        2 pick                          \ sess0 reg-lst link dom-reg reg-lst
+        #2 pick                         \ sess0 reg-lst link dom-reg reg-lst
         region-list-push-end            \ sess0 reg-lst link
 
         link-get-next
@@ -317,7 +345,7 @@ session-current-domain      cell+ constant session-needs                \ A need
     over session-calc-reachable-regions \ s0 ned-lst reg-lst
     tuck                                \ s0 reg-lst ned-lst reg-lst
 
-    3 pick                              \ s0 reg-lst ned-lst reg-lst s0
+    #3 pick                             \ s0 reg-lst ned-lst reg-lst s0
     session-get-domains                 \ s0 reg-lst ned-lst reg-lst dom-lst
 
     \ Prep for loop.
@@ -336,7 +364,7 @@ session-current-domain      cell+ constant session-needs                \ A need
 
         \ Set current domain
         dup                             \ s0 reg-lst ned-lst r-link d-link | regx domx domx
-        7 pick                          \ s0 reg-lst ned-lst r-link d-link | regx domx domx s0
+        #7 pick                         \ s0 reg-lst ned-lst r-link d-link | regx domx domx s0
         session-set-current-domain      \ s0 reg-lst ned-lst r-link d-link | regx domx
 
         \ Get domain needs.
@@ -344,7 +372,7 @@ session-current-domain      cell+ constant session-needs                \ A need
 
         \ Aggregate needs.
         dup                             \ s0 reg-lst ned-lst r-link d-link | d-neds d-neds
-        4 pick                          \ s0 reg-lst ned-lst r-link d-link | d-neds d-neds ned-lst
+        #4 pick                         \ s0 reg-lst ned-lst r-link d-link | d-neds d-neds ned-lst
         need-list-append                \ s0 reg-lst ned-lst r-link d-link | d-neds
 
         \ Clean up.
@@ -377,14 +405,16 @@ session-current-domain      cell+ constant session-needs                \ A need
         exit
     then
 
-    session-get-domains         \ u1 dom-lst
-    2dup list-get-length   \ u1 dom-lst u1 len
-    >= if
-        2drop
+    tuck session-get-domains    \ sess0 u1 dom-lst
+    2dup list-get-length        \ sess0 u1 dom-lst u1 len
+    >= if                       \ sess0 u1 dom-lst
+        3drop
         false
         exit
     then
 
-    list-get-item               \ dom
+    list-get-item               \ sess0 dom
+    tuck swap                   \ dom dom sess0
+    session-set-current-domain  \ dom
     true
 ;

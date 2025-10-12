@@ -31,7 +31,7 @@
 
 \ Check 3OS for value, unconventional, leaves stack unchanged. 
 : assert-3OS-is-value ( u ?? ?? -- u ?? ??)
-    2 pick is-not-value
+    #2 pick is-not-value
     abort" 3OS is not a valid value."
 ;
 
@@ -97,4 +97,41 @@
     xor                 \ dif0 dif1
     and                 \ dif-both
     0=                  \ flag
+;
+
+\ Return true if onlf one bit is set to one.
+: value-1-bit-set ( val0 -- flag )
+    \ Check for zero.
+    dup 0= if
+        drop
+        false
+        exit
+    then
+
+    value-isolate-lsb       \ rem bit
+    drop
+    0=
+;
+
+\ Return the bitwise "NOT" of an unsigned number,
+\ while remaining within the bounds of allowable bits.
+: !not ( u1 -- u2 )
+    cur-domain-xt execute       \ u1 dom
+    domain-get-all-bits-mask-xt \ u1 xt
+    execute                     \ u1 all-bits
+    tuck                        \ all u1 all
+    xor                         \ all u1'
+    and                         \ u1'' just to make sure.
+;
+
+\ Return the bitwise "NAND" of two unsigned numbers.
+\ while remaining within the bounds of allowable bits.
+: !nand ( u1 u2 -- u3 )
+    and !not
+;
+
+\ Return the bitwise "NOR" of two unsigned numbers.
+\ while remaining within the bounds of allowable bits.
+: !nor ( u1 u2 -- u3 )
+    or !not
 ;

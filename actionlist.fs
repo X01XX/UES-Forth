@@ -18,7 +18,7 @@
     assert-nos-is-action
 
     dup list-get-length         \ act act-lst len
-    2 pick                      \ act act-lst len act
+    #2 pick                     \ act act-lst len act
     action-set-inst-id          \ act act-lst
     over struct-inc-use-count   \ act act-lst (limited usefulness, so far, but follow convention)
     list-push-end

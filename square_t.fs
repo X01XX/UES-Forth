@@ -12,11 +12,11 @@
 
 : assert-square-pn-2 ( sqr0 -- sqr0 )
     dup square-get-pn
-    2 <>
+    #2 <>
     abort" square pn not 2"
 
     dup square-get-rules rulestore-number-rules
-    2 <>
+    #2 <>
     if
         ." square rulestore does not have 2 rules."
         abort
@@ -25,7 +25,7 @@
 
 : assert-square-pn-3 ( sqr0 -- sqr0 )
     dup square-get-pn
-    3 <>
+    #3 <>
     abort" square pn not 3"
 
         dup square-get-rules rulestore-number-rules
@@ -48,24 +48,24 @@
 
     cr ."    pn 1 to pnc = t"
 
-    4 5 square-new
+    #4 #5 square-new
     \ cr ." square: " dup .square  ."  stack " .s cr
     assert-square-pnc-f
     assert-square-pn-1
 
-    4 over square-add-result        \ sqr0 flag
+    #4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     abort" flag true?"
     assert-square-pnc-f
     assert-square-pn-1
 
-    4 over square-add-result        \ sqr0 flag
+    #4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     abort" flag true?"
     assert-square-pnc-f
     assert-square-pn-1
 
-    4 over square-add-result        \ sqr0 flag
+    #4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     0= abort" flag not true?"
     assert-square-pnc-t
@@ -73,7 +73,7 @@
 
     cr ."    pn 1 to U"
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     0= abort" flag not true?"
     assert-square-pnc-t
@@ -81,19 +81,19 @@
 
     cr ."    pn U to 1"
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     0= abort" flag not true?"
     assert-square-pnc-t
@@ -101,22 +101,22 @@
 
     cr ."    pn 1 to 2 to pnc = t"
 
-    4 5 square-new
+    #4 #5 square-new
     \ cr ." square: " dup .square  ."  stack " .s cr
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     0= abort" flag not true?"
     assert-square-pnc-f
     assert-square-pn-2
 
-    4 over square-add-result        \ sqr0 flag
+    #4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     abort" flag true?"
     assert-square-pnc-f
     assert-square-pn-2
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     0= abort" flag not true?"
     assert-square-pnc-t
@@ -124,7 +124,7 @@
 
     cr ."    pn 2 to U"
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     0= abort" flag not true?"
     assert-square-pnc-t
@@ -132,19 +132,19 @@
 
      cr ."    pn U to 2"
 
-    4 over square-add-result        \ sqr0 flag
+    #4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
-    3 over square-add-result        \ sqr0 flag
+    #3 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     abort" flag true?"
     assert-square-pnc-t
     assert-square-pn-3
 
-    4 over square-add-result        \ sqr0 flag
+    #4 over square-add-result        \ sqr0 flag
     \ cr ." square: " over .square ." cng " .bool ."  stack " .s cr
     0= abort" flag not true?"
     assert-square-pnc-t
@@ -175,23 +175,23 @@
     cr ." square-test-compare - start"
 
     cr ."    pn 1 to 1 compatible:"
-    4 5 square-new
-    5 6 square-new
+    #4 #5 square-new
+    #5 #6 square-new
     2dup square-compare
     assert-char-C
     square-deallocate
     square-deallocate
 
     cr ."    pn 1 to 1 incompatible:"
-    4 5 square-new
-    1 6 square-new
+    #4 #5 square-new
+    1 #6 square-new
     2dup square-compare
     assert-char-I
     square-deallocate
     square-deallocate
 
     cr ."    pn 2 to 2 compatible:"
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop  \ sqr5-5-a
     1 1 square-new
     #14 over square-add-result drop  \ sqr5-5-10 sqr-1-1-e
@@ -204,7 +204,7 @@
 
     cr ."    pn 2 to 2 incompatible:"
     \ Try incompatible.
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop  \ sqr5-5-a
     1 1 square-new
     0 over square-add-result drop  \ sqr1-1-0
@@ -215,9 +215,9 @@
     square-deallocate
     
     \ Try too compatible. Combination produces X0, X1 and XX, Xx.
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop  \ sqr5-5-a
-    9 9 square-new
+    #9 #9 square-new
     1 over square-add-result drop  \ sqr9-9-1
     2dup square-compare
     assert-char-I
@@ -226,9 +226,9 @@
     square-deallocate
 
     cr ."    pn 2 to 2 compatible:"
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop \ sqr5-5-a
-     5 over square-add-result drop  \ sqr5-5-a
+     #5 over square-add-result drop  \ sqr5-5-a
     #10 over square-add-result drop \ sqr5-5-a
     assert-square-pnc-t
 
@@ -246,9 +246,9 @@
 
     cr ."    pn 2 to 1 incompatible, GT 1 sample:"
     \ Try order 1.
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop \ sqr5-5-a
-     5 over square-add-result drop  \ sqr5-5-a
+     #5 over square-add-result drop  \ sqr5-5-a
     #10 over square-add-result drop \ sqr5-5-a
     assert-square-pnc-t
 
@@ -268,7 +268,7 @@
 
     cr ."    pn 2 to 1 compatible, 1 sample:"
     \ Try order 1.
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop  \ sqr5-5-a
 
     1 1 square-new
@@ -286,10 +286,10 @@
 
     cr ."    pn 2 to 1 sample, incompatible:"
     \ Try order 1.
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop  \ sqr5-5-a
 
-    9 1 square-new                  \ sqr-5-a sqr-1-9
+    #9 1 square-new                  \ sqr-5-a sqr-1-9
 
     2dup square-compare
     assert-char-I
@@ -304,10 +304,10 @@
 
     cr ."    pn 2 to 1 sample, too compatible:"
     \ Try order 1
-    5 5 square-new
-    4 over square-add-result drop  \ sqr5-5-4
+    #5 #5 square-new
+    #4 over square-add-result drop  \ sqr5-5-4
 
-    2 2 square-new                  \ sqr-5-a sqr-2-2
+    #2 #2 square-new                  \ sqr-5-a sqr-2-2
 
     2dup square-compare
     assert-char-I
@@ -322,9 +322,9 @@
 
     cr ."    pn 2 to 1 sample, more samples needed:"
     \ Try order 1.
-    5 5 square-new
+    #5 #5 square-new
     #10 over square-add-result drop  \ sqr5-5-a
-     5 over square-add-result drop  \ sqr5-5-a
+     #5 over square-add-result drop  \ sqr5-5-a
     #10 over square-add-result drop  \ sqr5-5-a
     assert-square-pnc-t
 
@@ -343,13 +343,13 @@
 
     cr ."    pn U to U compatible:"
     1 1 square-new
-    2 over square-add-result drop
-    3 over square-add-result drop
+    #2 over square-add-result drop
+    #3 over square-add-result drop
     assert-square-pn-3
 
-    1 2 square-new
-    2 over square-add-result drop
-    3 over square-add-result drop
+    1 #2 square-new
+    #2 over square-add-result drop
+    #3 over square-add-result drop
     assert-square-pn-3
 
     2dup square-compare
@@ -362,11 +362,11 @@
 
     \ Try order 1.
     1 1 square-new
-    2 over square-add-result drop
-    3 over square-add-result drop
+    #2 over square-add-result drop
+    #3 over square-add-result drop
     assert-square-pn-3
 
-    1 2 square-new
+    1 #2 square-new
 
     2dup square-compare
     assert-char-M
@@ -383,11 +383,11 @@
 
     \ Try order 1.
     1 1 square-new
-    2 over square-add-result drop
-    3 over square-add-result drop
+    #2 over square-add-result drop
+    #3 over square-add-result drop
     assert-square-pn-3
 
-    1 2 square-new
+    1 #2 square-new
     1 over square-add-result drop
     1 over square-add-result drop
     1 over square-add-result drop

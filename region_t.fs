@@ -12,7 +12,7 @@
     swap region-deallocate          \ reg1 reg-lst
     swap region-deallocate          \ reg-lst
 
-    dup list-get-length 2 <>
+    dup list-get-length #2 <>
     abort" List length not 2?"
 
     s" 10X0" region-from-string     \ reg-lst reg3
@@ -42,10 +42,10 @@
 : region-test-states-in
     \ Make state list.
     list-new                                \ sta-lst
-     2 over list-push
-     4 over list-push
-     6 over list-push
-     7 over list-push
+     #2 over list-push
+     #4 over list-push
+     #6 over list-push
+     #7 over list-push
     #12 over list-push
     #13 over list-push
     #15 over list-push
@@ -59,16 +59,16 @@
     \ cr ." states in: " dup .list-raw cr
 
     dup list-get-length
-    3 <>
+    #3 <>
     abort" List length not 3?"
 
-    [ ' = ] literal 7 2 pick list-member
+    [ ' = ] literal #7 #2 pick list-member
     0= abort" 7 not in list?"
 
-    [ ' = ] literal #13 2 pick list-member
+    [ ' = ] literal #13 #2 pick list-member
     0= abort" 13 not in list?"
 
-    [ ' = ] literal #15 2 pick list-member
+    [ ' = ] literal #15 #2 pick list-member
     0= abort" 15 not in list?"
 
     list-deallocate

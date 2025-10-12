@@ -22,7 +22,7 @@
     0 swap              \ c-start fl t-cnt c-end    \ c-cnt is a filler at this point, so -2rot works.
 
     \ Setup loop range
-    3 pick              \ c-start fl t-cnt c-end c-start
+    #3 pick             \ c-start fl t-cnt c-end c-start
     over                \ c-start fl t-cnt c-end c-start c-end
 
     \ Scan the string, end to start.
@@ -67,12 +67,12 @@
 
     \ Check length GT zero.
     dup                             \ c-start fl t-cnt c-end c-end
-    4 pick                          \ c-start fl t-cnt c-end c-end c-start
+    #4 pick                         \ c-start fl t-cnt c-end c-end c-start
     - 1+                            \ c-start fl t-cnt c-end t-cnt
     dup                             \ c-start fl t-cnt c-end t-cnt t-cnt
     if                              \ c-start fl t-cnt c-end t-cnt
         \ Pepare string definition.
-        4 pick                      \ c-start fl t-cnt c-end t-cnt t-start
+        #4 pick                     \ c-start fl t-cnt c-end t-cnt t-start
         swap                        \ c-start fl t-cnt c-end t-start t-cnt
 
         \ Store token def deeper into stack.
@@ -102,7 +102,7 @@
 
     \ See if a plan is needed.
     dup domain-get-current-state    \ ned act dom d-sta
-    3 pick need-get-target          \ ned act dom d-sta n-sta
+    #3 pick need-get-target         \ ned act dom d-sta n-sta
     =                               \ ned act dom flag
     if
         \ No plan needed, get sample.
@@ -110,11 +110,11 @@
         domain-get-sample           \ ned act dom sample
         sample-deallocate           \ ned act dom
         domain-get-inst-id
-        cr ." Dom: " .              \ ned act
+        cr ." Dom: " dec.           \ ned act
         .action cr                  \ ned
         drop                        \
     else                            \ ned act dom
-        2 pick need-get-target      \ ned act dom t-sta
+        #2 pick need-get-target     \ ned act dom t-sta
         over domain-get-current-state   \ ned act dom t-sta c-state
         sample-new                  \ ned act dom smpl
         2dup swap                   \ ned act dom smpl smpl dom
@@ -124,8 +124,8 @@
             if
                 cr ." plan succeeded" cr
                                         \ ned act dom smpl plan
-                3 pick                  \ ned act dom smpl plan act
-                3 pick                  \ ned act dom smpl plan act dom
+                #3 pick                 \ ned act dom smpl plan act
+                #3 pick                 \ ned act dom smpl plan act dom
                 domain-get-sample       \ ned act dom smpl plan smpl
                 sample-deallocate       \ ned act dom smpl plan
             else
@@ -145,27 +145,53 @@
 \ Zero-token logic, get/show/act-on needs.
 : do-zero-token-command ( -- true )
     current-session             \ sess
-    dup session-get-needs       \ sess ned-lst
+    session-get-needs           \ ned-lst
 
-    dup list-get-length         \ sess ned-lst len
-    ?dup 0=
+    dup list-get-length         \ ned-lst len
+    0=
     if
         \ ." No needs found" cr
-        2drop
-    else
-        random                      \ sess ned-lst indx
-
-        dup cr ." Need chosen: " . space
-        swap list-get-item          \ sess ned
-        dup .need cr                \ sess ned
-
-        nip                         \ ned
-        do-need                     \
+        drop
+        true
+        exit
     then
+
+    \ Look for a need that is satisfied by the current state.
+                                \ ned-lst
+    dup list-get-links          \ ned-lst link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ ned-lst link nedx
+        dup need-get-domain         \ ned-lst link nedx n-dom
+        domain-get-current-state    \ ned-lst link nedx dom-sta
+        over need-get-target        \ ned-lst link nedx dom-sta ned-sta
+        = if                        \ ned-lst link nedx
+            cr ." Need chosen: " space dup .need cr
+            nip nip                 \ nedx
+            do-need                 \
+            true
+            exit
+        else                        \ ned-lst link nedx
+            drop                    \ ned-lst link
+        then
+
+        link-get-next
+    repeat                          \ ned-lst
+
+    dup list-get-length             \ ned-lst len
+    random                          \ ned-lst indx
+
+    swap list-get-item              \ nedx
+    cr ." Need chosen: " space dup .need cr
+    do-need                         \
+
     true
 ;
 
 : do-one-token-commands ( c-addr c-cnt -- flag )
+    \ Quit.
     2dup s" q" str=
     if
         \ Clear token
@@ -174,6 +200,7 @@
         false
         exit
     then
+    \ Print Session.
     2dup s" ps" str=
     if
         2drop
@@ -205,7 +232,7 @@
         current-session                     \ n sess
         session-get-needs                   \ n ned-lst
         dup list-get-length                 \ n ned-lst ned-len
-        2 pick                              \ n ned-lst ned-len n
+        #2 pick                             \ n ned-lst ned-len n
         swap                                \ n ned-lst n ned-len
         >=
         if                                  \ n ned-lst flag
@@ -228,8 +255,47 @@
     true
 ;
 
-: do-three-token-commands ( c-addr c-cnt -- flag )
-    \ Change Domain State: cds domain-number state
+: do-two-token-commands ( c-addr c-cnt c-addr c-cnt -- flag )
+    \ Print Dmain.
+    2dup s" pd" str=
+    if
+        \ Drop command string.
+        2drop                                       \ c-addr c-cnt
+        \ Get domain ID.
+        snumber?
+        if
+            current-session session-find-domain     \ dom t | f
+            if
+                \ Set current domain.
+                dup current-session session-set-current-domain
+                .domain
+                true
+                exit
+            else
+                cr ." pd command: domain number invalid" cr
+                true
+                exit
+            then
+        else
+            cr ." pd command: domain number invalid" cr
+            true
+            exit
+        then
+
+        true
+        exit
+    then
+
+    cr ." Two-token command not recognized" cr
+    \ Clear tokens.
+    2drop
+    2drop
+    \ Return continue loop flag.
+    true
+;
+
+: do-three-token-commands ( c-addr c-cnt c-addr c-cnt c-addr c-cnt -- flag )
+    \ Change Domain State: cds <domain id> state
     2dup s" cds" str=
     if
         2drop
@@ -278,14 +344,14 @@
         exit
     then
 
-    \ Print square detail.
+    \ Print Square Detail: <domain id> <action id>
     2dup s" psd" str=
     if
         2drop
         \ Get domain ID.
         snumber?                                    \ ... dom-id t | f
         if
-            cr ." domain " dup . cr
+            \ cr ." domain " dup . cr
             current-session session-find-domain     \ ... dom t | f
             if
                 \ Set current domain.
@@ -308,17 +374,18 @@
         \ Get action.
         snumber?                                    \ ... dom, act-id t | f
         if
-            cr ." action " dup . cr
-            swap domain-find-action                 \ ... act t | f
+            \ cr ." action " dup . cr
+            swap tuck domain-find-action            \ ... dom, act t | f
             if
+                tuck swap                           \ ... act act dom
+                domain-set-current-action           \ ... act
                 action-get-squares                  \ ... sqr-lst
                 cr .square-list cr
                 true
                 exit
             else
                 cr ." psd command: action invalid" cr
-                true
-                exit
+                drop
             then
         else
             cr ." psd command: action invalid" cr
@@ -328,7 +395,7 @@
         exit
     then
 
-    \ To State: tos domain-number state
+    \ To State: tos <domain id> state
     2dup s" tos" str=
     if
         2drop
@@ -405,8 +472,207 @@
         exit
     then
 
+    \ Sample Current State: scs <domain-id> <action-id>
+    2dup s" scs" str=
+    if
+        2drop
+        \ Get domain ID.
+        snumber?                                    \ ... dom-id t | f
+        if
+            \ cr ." domain " dup . cr
+            current-session session-find-domain     \ ... dom t | f
+            if
+                \ Set current domain.
+                dup current-session session-set-current-domain
+
+                -rot                                \ ... dom c-addr cnt
+            else
+                cr ." scs command: domain number invalid" cr
+                2drop
+                true
+                exit
+            then
+        else
+            cr ." scs command: domain number invalid" cr
+            2drop
+            true
+            exit
+        then
+
+        \ Get action.
+        snumber?                                    \ dom, act-id t | f
+        if
+            \ cr ." action " dup . cr
+            swap tuck domain-find-action            \ dom, act t | f
+            if
+                swap 2dup                           \ act dom act dom
+                domain-set-current-action           \ act dom
+                dup domain-get-current-state        \ act dom cur-sta
+                rot                                 \ dom cur-sta act
+                action-get-sample                   \ dom smpl
+                dup sample-get-result               \ dom smpl smpl-r
+                rot                                 \ smpl smpl-r dom
+                domain-set-current-state            \ smpl
+                sample-deallocate                   \
+                true
+                exit
+            else
+                drop
+                cr ." scs command: action invalid" cr
+            then
+        else
+            drop
+        then
+        true
+        exit
+    then
+
+    \ Print Action.
+    2dup s" pa" str=
+    if
+        \ Drop command string.
+        2drop                                       \ c-addr c-cnt c-addr c-cnt
+        \ Get domain ID.
+        snumber?
+        if
+            current-session session-find-domain     \ c-addr c-cnt dom t | f
+            if
+                \ Set current domain.
+                dup current-session session-set-current-domain
+            else
+                cr ." pa command: domain number invalid" cr
+                2drop
+                true
+                exit
+            then
+        else
+            cr ." pa command: domain number invalid" cr
+            2drop
+            true
+            exit
+        then
+        -rot                                        \ dom c-addr c-cnt
+
+        \ Get action.
+        snumber?                                    \ dom, act-id t | f
+        if                                          \ dom act-id
+            over domain-find-action                 \ dom, act t | f
+            if                                      \ dom act
+                tuck swap                           \ act act dom
+                domain-set-current-action           \ act
+                .action
+                true
+                exit
+            else
+                cr ." pa command: action invalid" cr
+                drop
+                true
+                exit
+            then
+        else
+            cr ." pa command: action invalid" cr
+            drop
+            true
+            exit
+        then                    
+
+        true
+        exit
+    then
+
     cr ." Three-token command not recognized" cr
     \ Clear tokens.
+    2drop
+    2drop
+    2drop
+    \ Return continue loop flag.
+    true
+;
+
+: do-four-token-commands ( c-addr c-cnt c-addr c-cnt c-addr c-cnt c-addr c-cnt -- flag )
+    \ Sample Arbitrary State: ss <domain id> <action id> state
+    2dup s" sas" str=
+    if
+        2drop                                       \ sta-str act-id-str dom-id-str
+        \ Get domain ID.
+        snumber?                                    \ sta-str act-id-str dom-id t | f
+        if
+            \ cr ." domain " dup . cr
+            current-session session-find-domain     \ sta-str act-id-str dom t | f
+            if
+                \ Set current domain.
+                dup current-session session-set-current-domain
+
+                -rot                                \ sta-str dom act-id-str
+            else
+                cr ." sas command: domain number invalid" cr
+                2drop
+                2drop
+                true
+                exit
+            then
+        else
+            cr ." sas command: domain number invalid" cr
+            2drop
+            2drop
+            true
+            exit
+        then
+
+        \ Get action.
+        snumber?                                    \ sta-str dom, act-id t | f
+        if
+            \ cr ." action " dup . cr
+            swap tuck domain-find-action            \ sta-str dom, act t | f
+            if
+                swap 2dup                           \ sta-str act dom act dom
+                domain-set-current-action           \ sta-str act dom
+            else
+                cr ." sas command: action invalid" cr
+                3drop
+                true
+                exit
+            then
+        else
+            cr ." sas command: action invalid" cr
+            3drop
+            true
+            exit
+        then                                        \ sta-str act dom
+
+        \ Get state.
+        2swap                                       \ act dom sta-str
+        snumber?                                    \ act dom, sta t | f
+        if                                          \ act dom sta
+            dup is-not-value                        \ act dom sta flag
+            if
+                cr ." sas command: invalid state"
+                3drop
+                true
+                exit
+            then
+
+            2dup swap                           \ act dom sta sta dom
+            domain-set-current-state            \ act dom sta
+            rot                                 \ dom sta act
+            action-get-sample                   \ dom smpl
+            dup sample-get-result               \ dom smpl smpl-r
+            rot                                 \ smpl smpl-r dom
+            domain-set-current-state            \ smpl
+            sample-deallocate
+            true
+            exit
+        else                                        \ act dom
+            cr ." sas command: invalid state"
+            2drop
+            true
+            exit
+        then
+    then
+
+    cr ." Four-token command not recognized" cr
+    \ Clear tokens.
+    2drop
     2drop
     2drop
     2drop
@@ -433,9 +699,17 @@
             drop
             do-one-token-commands
         endof
-        3 of
+        #2 of
+            drop
+            do-two-token-commands
+        endof
+        #3 of
             drop
             do-three-token-commands
+        endof
+        #4 of
+            drop
+            do-four-token-commands
         endof
         \ Default.
         cr ." Token count does not correspond to any allowable command" cr
@@ -446,9 +720,23 @@
     endcase
 ;
 
-\ Get input of up to TOS characters from user, using PAD area.
+\ Get input of up to TOS characters from user, using the PAD area, up to a given number of characters.
 \ Evaluate the input.
-\ like: 80 s" Enter command: q(uit), ... > " get-user-input 
+\ like: 80 s" Enter command: > " get-user-input
+\
+\ If this aborts, various things can be done:
+\
+\ Print all domains, and actions.
+\   current-session  .session
+\
+\ Print Domain 1.
+\    1  current-session  session-find-domain  drop  .domain
+\
+\ Print Domain 1, Act 4.
+\    1  current-session  session-find-domain  drop  4  swap  domain-find-action  drop  .action
+\
+\ Print the squares of domain 1 action 4.
+\    1  current-session  session-find-domain  drop  4  swap  domain-find-action  drop  action-get-squares  .square-list
 : get-user-input ( n c-addr cnt -- )
 
         \ Display needs.
@@ -463,16 +751,23 @@
         else
             drop
             cr ." Needs:" cr .need-list cr  \ n c-addr cnt
+            cr ." Press Enter to randomly choose a need."
+            cr ." <number> - Select a particular need."
         then
 
         cr ." q - to quit"
-        cr ." Press Enter to randomly choose a need, if any." 
-        cr ." ps - to Print Session, all domains, actions."
-        cr ." cds <domain ID> <state> - Change Domain State, arbitrary."
-        cr ." tos <domain ID> <state> - TO domain State, by finding and executing a plan."
-        cr ." psd <domain ID> <action ID> - Print square Detail."
+        cr
+        cr ." ps - Print Session, all domains."
+        cr ." pd <domain id> - Print Domain."
+        cr ." pa <domain id> <action id> - Print Action."
+        cr ." cds <domain ID> <state> - Change Domain current State, to an arbitrary value."
+        cr ." tos <domain ID> <state> - TO domain State, from the current state, to an arbtrary value, by finding and executing a plan."
+        cr ." psd <domain ID> <action ID> - Print Square Detail, for a given domain/action."
+        cr ." scs <domain id> <action id> - Sample the Current State of a domain, with an action."
+        cr ." sas <domain id> <action id> <state> - Sample an Arbitrary State. Change domain current state, then sample with an action."
         cr ." mu - Display Memory Use."
-        cr ." <number> - Select a particular need."
+        cr
+        cr ." <state> will usually be like: %0101, leading zeros can be ommitted."
         cr
 
         \ Display the prompt.

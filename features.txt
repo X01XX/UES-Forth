@@ -12,6 +12,12 @@ square compare: pn 1 square rule cannot be compatible with both rules in a pn 2 
                 Change 9 possible pn comparisons into 4 functions, 1-1, 2-1, 2-2, 3-to-not-3.
                                                                    3-3 is Compatible without further tests.
 
-Action logical structure, dissimilar square pairs, is the starting point.
+Action dissimilar square pairs, whence the logical structure, is the starting point.
 
+Square and group pn value is not stored, it is gleaned from the rulestore contents.
+
+I found that there can be a problem in getting closer non-adjacent incompatible pairs, of two-result states.
+I decided to make a fairly big change in the union of rules.
+Rule unions were by same change (0->1 + 1->0) mask, or same result, (X->1, X->0).
+Now rule unions are by same change mask only.
 

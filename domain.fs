@@ -1,7 +1,7 @@
 \ Implement a Domain struct and functions.
 
 #31379 constant domain-id
-     4 constant domain-struct-number-cells
+    #4 constant domain-struct-number-cells
 
 \ Struct fields
 0 constant domain-header    \ 16-bits (16) struct id (16) use count (8) instance id (8) num-bits
@@ -32,10 +32,6 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     domain-id =    
 ;
 
-: is-not-allocated-domain ( addr -- flag )
-    is-allocated-domain 0=
-;
-
 \ Check TOS for domain, unconventional, leaves stack unchanged. 
 : assert-tos-is-domain ( arg0 -- arg0 )
     dup is-allocated-domain 0=
@@ -49,6 +45,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     over is-allocated-domain 0=
     abort" NOS is not an allocated domain"
 ;
+
+' assert-nos-is-domain to assert-nos-is-domain-xt
 
 \ Start accessors.
 
@@ -90,7 +88,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     over 0<
     abort" Invalid instance id"
 
-    over 255 >
+    over #255 >
     abort" Invalid instance id"
 
     \ Set inst id.
@@ -114,7 +112,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     over 1 <
     abort" Invalid number of bits."
 
-    over 64 >
+    over #64 >
     abort" Invalid number of bits."
 
     \ Set inst id.
@@ -142,7 +140,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     domain-get-num-bits     \ u1 dom0 1 nb
     1- lshift               \ u1 dom0 ms-bit
     1- 1 lshift 1+          \ u1 dom0 all-bits
-    2 pick                  \ u1 dom0 all-bits u1
+    #2 pick                 \ u1 dom0 all-bits u1
     tuck                    \ u1 dom0 u1 all-bits u1
     and                     \ u1 dom0 u1 U2
     <> abort" invalid state"
@@ -228,7 +226,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
 
     dup domain-get-inst-id
-    cr cr ." Dom: " .
+    cr cr ." Dom: " dec.
 
     dup domain-get-num-bits ." num-bits: " . space
     dup domain-get-actions
@@ -246,7 +244,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     dup struct-get-use-count      \ act0 count
 
-    2 <
+    #2 <
     if 
         \ Clear fields.
         dup domain-get-actions action-list-deallocate
@@ -298,16 +296,16 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     \ Get action sample.
     dup domain-get-current-state    \ act1 dom0 | d-sta
-    2 pick                          \ act1 dom0 | d-sta act1
+    #2 pick                         \ act1 dom0 | d-sta act1
     action-get-sample               \ act1 dom0 | smpl
 
     \ Set domain current state.
     dup sample-get-result           \ act1 dom0 | smpl sta
-    2 pick                          \ act1 dom0 | smpl sta dom 
+    #2 pick                         \ act1 dom0 | smpl sta dom 
     domain-set-current-state        \ act1 dom0 | smpl
 
-    over domain-get-inst-id cr ." Dom: " .      \ act1 dom0 | smpl
-    2 pick action-get-inst-id ." Act: " .       \ smpl
+    over domain-get-inst-id cr ." Dom: " dec.      \ act1 dom0 | smpl
+    #2 pick action-get-inst-id ." Act: " dec.      \ smpl
     dup .sample cr
     nip nip
 ;
@@ -326,7 +324,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
     assert-nos-is-region
 
-    dup domain-get-inst-id cr ." domain-get-needs: Dom: " .
+    \ dup domain-get-inst-id cr ." domain-get-needs: Dom: " .
     \ space ." reachable region: " over .region cr
 
     dup domain-get-current-state    \ reg1 dom0 sta
@@ -344,21 +342,19 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     while
         \ Set current action.
         dup link-get-data           \ reg1 sta dom0 ret-lst link actx
-        3 pick                      \ reg1 sta dom0 ret-lst link actx dom
+        #3 pick                     \ reg1 sta dom0 ret-lst link actx dom
         domain-set-current-action   \ reg1 sta dom0 ret-lst link
 
         \ Get action needs.
-        4 pick                      \ reg1 sta dom0 ret-lst link reg1
-        4 pick                      \ reg1 sta dom0 ret-lst link reg1 sta 
-        2 pick link-get-data        \ reg1 sta dom0 ret-lst link reg1 sta actx
+        #4 pick                     \ reg1 sta dom0 ret-lst link reg1
+        #4 pick                     \ reg1 sta dom0 ret-lst link reg1 sta 
+        #2 pick link-get-data       \ reg1 sta dom0 ret-lst link reg1 sta actx
         action-get-needs            \ reg1 sta dom0 ret-lst link act-neds
 
         \ Add needs to return list.
-        rot                         \ reg1 sta dom0 link act-neds ret-lst
-        2dup                        \ reg1 sta dom0 link act-neds ret-lst act-neds ret-lst
-        need-list-append            \ reg1 sta dom0 link act-neds ret-lst'
-        swap need-list-deallocate   \ reg1 sta dom0 link ret-lst'
-        swap                        \ reg1 sta dom0 ret-lst' link
+        dup #3 pick                 \ reg1 sta dom0 ret-lst link act-neds act-neds ret-lst
+        need-list-append            \ reg1 sta dom0 link act-neds
+        need-list-deallocate        \ reg1 sta dom0 link
 
         link-get-next
     repeat
@@ -385,7 +381,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         dup link-get-data          \ dom0 cng-agg link actx
 
         \ Set current action.
-        dup 4 pick                  \ dom0 cng-agg link actx actx dom
+        dup #4 pick                 \ dom0 cng-agg link actx actx dom
         domain-set-current-action   \ dom0 cng-agg link actx
 
         \ Get aggregate action changes.
@@ -474,12 +470,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     while                           \ smpl1 stp-lst dom0 link |
         dup link-get-data           \ | actx
         dup                         \ | actx actx
-        3 pick                      \ | actx actx dom
+        #3 pick                     \ | actx actx dom
         domain-set-current-action   \ | actx
-        4 pick swap                 \ | smpl1 actx
+        #4 pick swap                \ | smpl1 actx
         action-get-forward-steps    \ | act-stps
         dup                         \ | act-stps act-stps
-        4 pick step-list-append     \ | act-stps
+        #4 pick step-list-append    \ | act-stps
         step-list-deallocate        \ |
 
         link-get-next
@@ -538,7 +534,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
          then
 
         \ Check if this is the last step needed.
-        2 pick                      \ pln smpl2 dom0 | stpx smpl2
+        #2 pick                     \ pln smpl2 dom0 | stpx smpl2
         sample-get-result           \ pln smpl2 dom0 | stpx r-2
         over step-get-result        \ pln smpl2 dom0 | stpx smpl2-r stp-r
         = if                        \ pln smpl2 dom0 | stpx
@@ -556,11 +552,11 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Add step to plan.         \ pln smpl2 dom0 | stpx
         dup                         \ pln smpl2 dom0 | stpx stpx
-        4 pick                      \ pln smpl2 dom0 | stpx stpx pln
+        #4 pick                     \ pln smpl2 dom0 | stpx stpx pln
         plan-push-end-xt execute    \ pln smpl2 dom0 | stpx
         \ Create new sample.
         step-get-result             \ pln smpl2 dom0 | stp-r
-        2 pick sample-get-result    \ pln smpl2 dom0 | stp-r smpl-r
+        #2 pick sample-get-result   \ pln smpl2 dom0 | stp-r smpl-r
         swap                        \ pln smpl2 dom0 | smpl-r stp-r
         sample-new                  \ pln smpl2 dom0 | smpl3
         \ Clean up.
@@ -576,7 +572,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
     assert-nos-is-sample
 
-    3 0 do
+    #3 0 do
         2dup domain-get-plan2-f \ smpl1 dom0 | pln t | f
         if                      \ smpl1 dom0 | pln
             \ Clean up.
@@ -613,12 +609,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     while                           \ smpl1 stp-lst dom0 link |
         dup link-get-data           \ | actx
         dup                         \ | actx actx
-        3 pick                      \ | actx actx dom
+        #3 pick                     \ | actx actx dom
         domain-set-current-action   \ | actx
-        4 pick swap                 \ | smpl1 actx
+        #4 pick swap                \ | smpl1 actx
         action-get-backward-steps   \ | act-stps
         dup                         \ | act-stps act-stps
-        4 pick step-list-append     \ | act-stps
+        #4 pick step-list-append    \ | act-stps
         step-list-deallocate        \ |
 
         link-get-next
@@ -677,7 +673,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
          then
 
         \ Check if this is the last step needed.
-        2 pick                      \ pln smpl2 dom0 | stpx smpl2
+        #2 pick                     \ pln smpl2 dom0 | stpx smpl2
         sample-get-initial          \ pln smpl2 dom0 | stpx r-2
         over step-get-initial       \ pln smpl2 dom0 | stpx smpl2-r stp-r
         = if                        \ pln smpl2 dom0 | stpx
@@ -695,12 +691,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Add step to plan.         \ pln smpl2 dom0 | stpx
         dup                         \ pln smpl2 dom0 | stpx stpx
-        4 pick                      \ pln smpl2 dom0 | stpx stpx pln
+        #4 pick                     \ pln smpl2 dom0 | stpx stpx pln
         plan-push-xt execute        \ pln smpl2 dom0 | stpx
 
         \ Create new sample.
         step-get-initial            \ pln smpl2 dom0 | stp-r
-        2 pick sample-get-initial   \ pln smpl2 dom0 | stp-r smpl-r
+        #2 pick sample-get-initial  \ pln smpl2 dom0 | stp-r smpl-r
         sample-new                  \ pln smpl2 dom0 | smpl3
         \ Clean up.
         rot sample-deallocate       \ pln dom0 smpl3
@@ -715,7 +711,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
     assert-nos-is-sample
 
-    3 0 do
+    #3 0 do
         2dup domain-get-plan2-b \ smpl1 dom0 | pln t | f
         if                      \ smpl1 dom0 | pln
             \ Clean up.
@@ -743,7 +739,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
     assert-nos-is-sample
 
-    2 random
+    #2 random
     if
         \ Try forward-chaining.
         2dup domain-get-plan-f      \ smpl1 dom0 | p t | f
@@ -796,12 +792,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     while                               \ smpl1 stp-lst dom0 link |
         dup link-get-data               \ | actx
         dup                             \ | actx actx
-        3 pick                          \ | actx actx dom
+        #3 pick                         \ | actx actx dom
         domain-set-current-action       \ | actx
-        4 pick swap                     \ | smpl1 actx
+        #4 pick swap                    \ | smpl1 actx
         action-get-steps-by-changes-f   \ | act-stps
         dup                             \ | act-stps act-stps
-        4 pick step-list-append         \ | act-stps
+        #4 pick step-list-append        \ | act-stps
         step-list-deallocate            \ |
 
         link-get-next
@@ -824,13 +820,14 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     2dup                                    \ smpl1 dom0 | smpl1 dom0
     domain-get-steps-by-changes-f           \ smpl1 dom0 | stp-lst
     dup list-is-empty if
-        3drop
+        list-deallocate
+        2drop
         false
         exit
     then
 
     \ Prep for loop by single-bit change.
-    2 pick sample-calc-changes              \ smpl1 dom0 | stp-lst cngs
+    #2 pick sample-calc-changes             \ smpl1 dom0 | stp-lst cngs
     dup changes-split                       \ smpl1 dom0 | stp-lst cngs cng-lst
     swap changes-deallocate                 \ smpl1 dom0 | stp-lst cng-lst
     list-new swap                           \ smpl1 dom0 | stp-lst asym-lst cng-lst
@@ -844,7 +841,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Find steps that provide the one-bit change, but possibly others.
         dup link-get-data                   \ smpl1 dom0 | stp-lst asym-lst cng-lst link cng1
-        4 pick                              \ smpl1 dom0 | stp-lst asym-lst cng-lst link cng1 stp-lst
+        #4 pick                             \ smpl1 dom0 | stp-lst asym-lst cng-lst link cng1 stp-lst
         step-list-intersects-changes        \ smpl1 dom0 | stp-lst asym-lst cng-lst link stp-cng-lst
         dup list-get-length                 \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst len
 
@@ -862,11 +859,11 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Check if there are only steps that do not match the smpl1 initial state.
         dup                                 \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst
-        7 pick                              \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst smpl1
+        #7 pick                             \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst smpl1
         swap step-list-any-match-sample     \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst flag
         0= if                               \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst
             \ Save the steps.
-            dup 4 pick                      \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst sci-lst asym-lst
+            dup #4 pick                     \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst sci-lst asym-lst
             step-list-append                \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst
         then
         step-list-deallocate                \ smpl1 dom0 | stp-lst asym-lst cng-lst link
@@ -887,28 +884,28 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Get plan smpl1-i to smpl2-i.
         dup sample-get-initial              \ smpl1 dom0 | asym-lst stpx smpl2 s2-i
-        5 pick sample-get-initial           \ smpl1 dom0 | asym-lst stpx smpl2 s2-i s1-i
+        #5 pick sample-get-initial          \ smpl1 dom0 | asym-lst stpx smpl2 s2-i s1-i
         sample-new                          \ smpl1 dom0 | asym-lst stpx smpl2 smpl3
 
         dup                                 \ smpl1 dom0 | asym-lst stpx smpl2 smpl3 smpl3
-        5 pick                              \ smpl1 dom0 | asym-lst stpx smpl2 smpl3 smpl3 dom0
+        #5 pick                             \ smpl1 dom0 | asym-lst stpx smpl2 smpl3 smpl3 dom0
         domain-get-plan2-fb                 \ smpl1 dom0 | asym-lst stpx smpl2 smpl3, plan t | f
         if
             swap sample-deallocate          \ smpl1 dom0 | asym-lst stpx smpl2 plan1
 
             \ Get plan 2
-            5 pick sample-get-result        \ smpl1 dom0 | asym-lst stpx smpl2 plan1 s1-r
-            2 pick sample-get-result        \ smpl1 dom0 | asym-lst stpx smpl2 plan1 s1-r s2-r
+            #5 pick sample-get-result       \ smpl1 dom0 | asym-lst stpx smpl2 plan1 s1-r
+            #2 pick sample-get-result       \ smpl1 dom0 | asym-lst stpx smpl2 plan1 s1-r s2-r
             sample-new                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4
 
-            dup 6 pick                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4 smpl4 dom0
+            dup #6 pick                     \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4 smpl4 dom0
             domain-get-plan2-fb             \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4, plan2 t | f
             if                              \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4 plan2
                 swap sample-deallocate      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
 
                 \ Add step to plan1.
-                3 pick                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2 stpx
-                2 pick                      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2 stpx plan1
+                #3 pick                     \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2 stpx
+                #2 pick                     \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2 stpx plan1
                 plan-push-end-xt execute    \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
 
                 \ Add plan2
@@ -965,7 +962,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
 \ Return a action, given a action ID.
 : domain-find-action ( u1 dom0 -- act t | f )
-    cr ." domain-find-action: Dom: " dup domain-get-inst-id . space over . cr
+    \ cr ." domain-find-action: Dom: " dup domain-get-inst-id . space over . cr
     \ Check args.
     assert-tos-is-domain
     over 0 < if
@@ -974,15 +971,17 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         exit
     then
 
-    domain-get-actions          \ u1 act-lst
-    2dup list-get-length   \ u1 act-lst u1 len
-    >= if
-        2drop
+    tuck domain-get-actions \ dom0 u1 act-lst
+    2dup list-get-length    \ dom0 u1 act-lst u1 len
+    >= if                   \ dom0 u1 act-lst
+        3drop
         false
         exit
     then
 
-    list-get-item               \ dom
+    list-get-item               \ dom0 act
+    tuck swap                   \ act act dom0
+    domain-set-current-action   \ act
     true
 ;
 
@@ -1002,12 +1001,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     while                               \ smpl1 stp-lst dom0 link |
         dup link-get-data               \ | actx
         dup                             \ | actx actx
-        3 pick                          \ | actx actx dom
+        #3 pick                         \ | actx actx dom
         domain-set-current-action       \ | actx
-        4 pick swap                     \ | smpl1 actx
+        #4 pick swap                    \ | smpl1 actx
         action-get-steps-by-changes-b   \ | act-stps
         dup                             \ | act-stps act-stps
-        4 pick step-list-append         \ | act-stps
+        #4 pick step-list-append        \ | act-stps
         step-list-deallocate            \ |
 
         link-get-next

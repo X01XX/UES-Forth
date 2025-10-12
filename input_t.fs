@@ -3,7 +3,7 @@
 
     \ Straight-forward test.
     s" ab cde fghi" parse-user-input
-    3 <>
+    #3 <>
     abort" Three tokens not found"
 
     s" ab"   compare 0<> abort" ab not found"
@@ -14,7 +14,7 @@
 
     \ Double up separators, and at start and end.
     s"  ab cde  fghi " parse-user-input
-    3 <>
+    #3 <>
     abort" Three tokens not found"
 
     s" ab"   compare 0<> abort" ab not found"

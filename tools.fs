@@ -1,5 +1,3 @@
-decimal
-
 \ Exponential function, exponent s/b GE zero.
 \ If at the limit, 2 ^ 63, use "u." instead of "." to see the number.
 : exp ( n u -- u2 ) \ u3 = u1^u2,
@@ -28,7 +26,7 @@ decimal
 
 \ Set base to binary.
 : binary  ( -- ) \ Side effect: Session base is changed.
-    2 base !
+    #2 base !
 ;
 
 \ Return true if exactly one bit is set.
@@ -81,7 +79,7 @@ decimal
 \ Return true if a number is between two numbers.
 : between-inclusive ( target num1 num2 -- flag )
     2dup < if   \ num1 LT num2
-        2 pick swap     \ target num1 target num2
+        #2 pick swap     \ target num1 target num2
         \ Check target vs num2.
         > if
             2drop false exit
@@ -91,7 +89,7 @@ decimal
             false exit
           then
     else
-        2 pick swap     \ target num1 target num2
+        #2 pick swap     \ target num1 target num2
         \ Check target vs num2.
         < if
             2drop false exit
@@ -116,32 +114,32 @@ decimal
 
 \ Fetch the [1], 16 bits of a cell.
 : 1w@ ( addr -- u )
-    2 + uw@
+    #2 + uw@
 ;
 
 \ Store a number in the [1], 16 bits of a cell.
 : 1w! ( u addr -- )
-    2 + w!
+    #2 + w!
 ;
 
 \ Fetch the [2] 16 bits of a cell.
 : 2w@ ( addr -- u )
-    4 + uw@
+    #4 + uw@
 ;
 
 \ Store a number in the [2], 16 bits of a cell.
 : 2w! ( u addr -- )
-    4 + w!
+    #4 + w!
 ;
 
 \ Fetch the [3] 16 bits of a cell.
 : 3w@ ( addr -- u )
-    6 + uw@
+    #6 + uw@
 ;
 
 \ Store a number in the [3], 16 bits of a cell.
 : 3w! ( u addr -- )
-    6 + w!
+    #6 + w!
 ;
 
 \ Fetch the [0], 8 bits of a cell.
@@ -166,62 +164,62 @@ decimal
 
 \ Fetch the [2], 8 bits of a cell.
 : 2c@ ( addr -- u )
-    2 + c@
+    #2 + c@
 ;
 
 \ Store a number in the [2], 8 bits of a cell.
 : 2c! ( u addr -- )
-    2 + c!
+    #2 + c!
 ;
 
 \ Fetch the [3], 8 bits of a cell.
 : 3c@ ( addr -- u )
-    3 + c@
+    #3 + c@
 ;
 
 \ Store a number in the [3], 8 bits of a cell.
 : 3c! ( u addr -- )
-    3 + c!
+    #3 + c!
 ;
 
 \ Fetch the [4], 8 bits of a cell.
 : 4c@ ( addr -- u )
-    4 + c@
+    #4 + c@
 ;
 
 \ Store a number in the [4], 8 bits of a cell.
 : 4c! ( u addr -- )
-    4 + c!
+    #4 + c!
 ;
 
 \ Fetch the [5], 8 bits of a cell.
 : 5c@ ( addr -- u )
-    5 + c@
+    #5 + c@
 ;
 
 \ Store a number in the [5], 8 bits of a cell.
 : 5c! ( u addr -- )
-    5 + c!
+    #5 + c!
 ;
 
 \ Fetch the [6], 8 bits of a cell.
 : 6c@ ( addr -- u )
-    6 + c@
+    #6 + c@
 ;
 
 \ Store a number in the [6], 8 bits of a cell.
 : 6c! ( u addr -- )
-    6 + c!
+    #6 + c!
 ;
 
 \ Fetch the [7], 8 bits of a cell.
 : 7c@ ( addr -- u )
-    7 + c@
+    #7 + c@
 ;
 
 \ Store a number in the [7], 8 bits of a cell.
 : 7c! ( u addr -- )
-    7 + c!
+    #7 + c!
 ;
 
 \ Store a string on the stack to a given address.
@@ -302,7 +300,7 @@ decimal
     sp@
 
     \ Add seconds + minute-seconds.
-    time&date 2drop 2drop 60 * + +
+    time&date 2drop 2drop #60 * + +
 
     \ Add limit.
     over +

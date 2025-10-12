@@ -32,7 +32,7 @@
 
         \ Print need and count.
         cr
-        2 pick .
+        #2 pick #3 dec.r
         space
         .need
 
@@ -68,7 +68,7 @@
         ?dup
     while
         dup link-get-data   \ lst0 link nedx
-        2 pick              \ lst0 link nedx lst0
+        #2 pick             \ lst0 link nedx lst0
         need-list-push      \ lst0 link
 
         link-get-next

@@ -15,6 +15,7 @@
 : .step-list ( list0 -- )
     \ Check args.
     assert-tos-is-list
+
     [ ' .step ] literal swap .list
 ;
 
@@ -55,7 +56,7 @@
         ?dup
     while
         dup link-get-data   \ lst0 link nedx
-        2 pick              \ lst0 link nedx lst0
+        #2 pick             \ lst0 link nedx lst0
         step-list-push      \ lst0 link
 
         link-get-next
@@ -97,7 +98,7 @@
         step-intersects-sample  \ ret smpl1 link flag
         if
             dup link-get-data   \ ret smpl1 link step
-            3 pick              \ ret smpl1 link step ret
+            #3 pick             \ ret smpl1 link step ret
             step-list-push      \ ret smpl1 link
         then
 
@@ -125,7 +126,7 @@
         step-intersects-sample  \ ret smpl1 link flag
         0= if
             dup link-get-data   \ ret smpl1 link step
-            3 pick              \ ret smpl1 link step ret
+            #3 pick             \ ret smpl1 link step ret
             step-list-push      \ ret smpl1 link
         then
 
@@ -153,7 +154,7 @@
         step-intersects-changes \ ret cngs1 link flag
         if
             dup link-get-data   \ ret cngs1 link stpx
-            3 pick              \ ret cngs1 link stpx ret
+            #3 pick             \ ret cngs1 link stpx ret
             step-list-push      \ ret cngs1 link
         then
 

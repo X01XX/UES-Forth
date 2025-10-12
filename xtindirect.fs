@@ -39,6 +39,8 @@
 
 ' xtabort value assert-tos-is-domain-xt
 
+' xtabort value assert-nos-is-domain-xt
+
 ' xtabort value domain-get-plan-f-xt
 
 ' xtabort value domain-get-plan-b-xt
@@ -50,6 +52,12 @@
 ' xtabort value action-get-inst-id-xt
 
 ' xtabort value assert-nos-is-action-xt
+
+' xtabort value action-make-forward-step-xt
+
+' xtabort value action-make-backward-step-xt
+
+' xtabort value action-make-need-xt
 
 
 ' xtabort value region-subtract-xt

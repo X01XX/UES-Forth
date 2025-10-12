@@ -3,7 +3,7 @@
 \ This struct wholly manages the link struct.
 
 #17971 constant list-id
-     2 constant list-struct-number-cells
+    #2 constant list-struct-number-cells
 
 \ List struct fields.
 0 constant  list-header             \ 16-bits [0] struct id [1] use count [2] length.
@@ -26,10 +26,37 @@ list-header cell+ constant list-links
     abort" list-mma use GT 0"
 ;
 
+\  Return true if TOS is an allocated list.
+: is-allocated-list ( list -- flag )
+    \ Insure the given addr cannot be an invalid addr.
+    dup list-mma mma-within-array 0=
+    if
+        drop false exit
+    then
+
+    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+    list-id =       \ An unallocated instance should have an ID of zero.
+;
+
+\ Check TOS for list, unconventional, leaves stack unchanged. 
+: assert-tos-is-list ( lst -- lst )
+    dup is-allocated-list 0=
+    abort" TOS is not an allocated list."
+;
+
+\ Check NOS for list, unconventional, leaves stack unchanged. 
+: assert-nos-is-list ( arg1 arg0 -- arg1 arg0 )
+    over is-allocated-list 0=
+    abort" NOS is not an allocated list."
+;
+
 \ Start accessors.
 
 \ Get list length.
 : list-get-length ( list-addr -- u-length )
+    \ Check arg.
+    assert-tos-is-list
+
     2w@
 ;
 
@@ -40,6 +67,9 @@ list-header cell+ constant list-links
 
 \ Get list first link.
 : list-get-links ( list-addr -- list-links-value )
+    \ Check arg.
+    assert-tos-is-list
+
     list-links + @
 ;
 
@@ -66,39 +96,10 @@ list-header cell+ constant list-links
 
 \ End accessors.
 
-\  Return true if TOS is an allocated list.
-: is-allocated-list ( list -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup list-mma mma-within-array 0=
-    if
-        drop false exit
-    then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    list-id =       \ An unallocated instance should have an ID of zero.
-;
-
-\ Return true if TOS is not an allocated list.
-: is-not-allocated-list ( list -- flag )
-    is-allocated-list 0=
-;
-
-\ Check TOS for list, unconventional, leaves stack unchanged. 
-: assert-tos-is-list ( lst -- lst )
-    dup is-not-allocated-list
-    abort" TOS is not an allocated list."
-;
-
-\ Check NOS for list, unconventional, leaves stack unchanged. 
-: assert-nos-is-list ( arg1 arg0 -- arg1 arg0 )
-    over is-not-allocated-list
-    abort" NOS is not an allocated list."
-;
-
 \ Return an new list struct instance address.
 : list-new ( -- addr )
     \ Allocate space.
-    list-mma mma-allocate       \ list-addr
+    list-mma mma-allocate       \ src0 list-addr
 
     \ Init fields.
     list-id over struct-set-id  \ list-addr
@@ -206,7 +207,7 @@ list-header cell+ constant list-links
     if
         dup                 \ xt link link
         link-get-data       \ xt link data
-        2 pick              \ xt link data xt
+        #2 pick             \ xt link data xt
         execute             \ xt link
         link-get-next       \ xt link-next
     then
@@ -218,7 +219,7 @@ list-header cell+ constant list-links
         space
         dup                 \ xt link link
         link-get-data       \ xt link data
-        2 pick              \ xt link data xt
+        #2 pick             \ xt link data xt
         execute             \ xt link
         link-get-next       \ xt link-next
     repeat
@@ -238,7 +239,7 @@ list-header cell+ constant list-links
     while                   \ xt item link
         2dup                \ xt item link item link
         link-get-data       \ xt item link item link-data
-        4 pick              \ xt item link item link-data xt
+        #4 pick             \ xt item link item link-data xt
         execute             \ xt item link flag
         if
             \ Return true.
@@ -278,7 +279,7 @@ list-header cell+ constant list-links
     while                   \ xt item link
         2dup                \ xt item link item link
         link-get-data       \ xt item link item link-data
-        4 pick              \ xt item link item link-data xt
+        #4 pick             \ xt item link item link-data xt
         execute             \ xt item link flag
         if
             \ Return cell true.
@@ -324,12 +325,12 @@ list-header cell+ constant list-links
     while                   \ ret xt item link
         2dup                \ ret xt item link item link
         link-get-data       \ ret xt item link item link-data
-        4 pick              \ ret xt item link item link-data xt
+        #4 pick             \ ret xt item link item link-data xt
         execute             \ ret xt item link flag
         if
             \ Get data.
             dup link-get-data   \ ret xt item link data
-            4 pick              \ ret xt item link data ret
+            #4 pick             \ ret xt item link data ret
             list-push           \ ret xt item link
         then
         link-get-next       \ ret xt item link-next
@@ -354,7 +355,7 @@ list-header cell+ constant list-links
     \ Adjust first list pointer.
     dup list-get-links  \ lst0 link
     dup link-get-next   \ lst0 link link-next
-    2 pick              \ lst0 link link-next lst0
+    #2 pick             \ lst0 link link-next lst0
     _list-set-links     \ lst0 link
 
     \ Deallocate link.
@@ -395,9 +396,9 @@ list-header cell+ constant list-links
     dup list-get-links      \ xt item list | link
     dup link-get-data       \ xt item list | link data
 
-    3 pick                  \ xt item list | link data | item
+    #3 pick                 \ xt item list | link data | item
     over                    \ xt item list | link data | item data
-    6 pick                  \ xt item list | link data | item data xt
+    #6 pick                 \ xt item list | link data | item data xt
     execute                 \ xt item list | link data | flag
 
     if                      \ xt item list | link data
@@ -414,9 +415,9 @@ list-header cell+ constant list-links
         dup link-get-next   \ xt item list | last-link cur-link
         dup
     while                   \ xt item list | last-link cur-link
-        3 pick              \ xt item list | last-link cur-link | item
+        #3 pick             \ xt item list | last-link cur-link | item
         over link-get-data  \ xt item list | last-link cur-link | item data
-        6 pick              \ xt item list | last-link cur-link | item data xt
+        #6 pick             \ xt item list | last-link cur-link | item data xt
         execute             \ xt item list | last-link cur-link | flag
 
         if                  \ xt item list | last-link cur-link
@@ -532,7 +533,7 @@ list-header cell+ constant list-links
     dup 0 < 
     abort" invalid use count"
 
-    2 < 
+    #2 < 
     if  
         list-deallocate-uc-1
     else
@@ -560,14 +561,14 @@ list-header cell+ constant list-links
         dup                     \ xt list0 list-ret link1 link1
     while                       \ Check for link1 addr == zero.
                                 \ xt list0 list-ret link1
-        3 pick                  \ xt list0 list-ret link1 xt
+        #3 pick                 \ xt list0 list-ret link1 xt
         over link-get-data      \ xt list0 list-ret link1 xt data1
-        4 pick                  \ xt list0 list-ret link1 xt data1 list0
+        #4 pick                 \ xt list0 list-ret link1 xt data1 list0
         list-member 0=          \ xt list0 list-ret link1 flag
         if
                                 \ xt list0 list-ret link1
             dup link-get-data   \ xt list0 list-ret link1 data1
-            2 pick              \ xt list0 list-ret link1 data1 list-ret
+            #2 pick             \ xt list0 list-ret link1 data1 list-ret
             list-push           \ xt list0 list-ret link1
         then
                                 \ xt list0 list-ret link1
@@ -597,14 +598,14 @@ list-header cell+ constant list-links
         dup                     \ xt list1 list-ret link0 link0
     while                       \ Check for link1 addr == zero.
                                 \ xt list1 list-ret link0
-        3 pick                  \ xt list1 list-ret link0 xt
+        #3 pick                 \ xt list1 list-ret link0 xt
         over link-get-data      \ xt list1 list-ret link0 xt data0
-        3 pick                  \ xt list1 list-ret link0 xt data0 list-ret
+        #3 pick                 \ xt list1 list-ret link0 xt data0 list-ret
         list-member 0=          \ xt list1 list-ret link0 flag
         if
                                 \ xt list1 list-ret link0
             dup link-get-data   \ xt list1 list-ret link0 data0 list-ret
-            2 pick              \ xt list1 list-ret link0 data0 list-ret
+            #2 pick             \ xt list1 list-ret link0 data0 list-ret
             list-push           \ xt list1 list-ret link0
         then
         link-get-next           \ xt list1 list-ret link0-next
@@ -618,14 +619,14 @@ list-header cell+ constant list-links
         dup                     \ xt list-ret link1 link1
     while                       \ Check for link1 addr == zero.
                                 \ xt list-ret link1
-        2 pick                  \ xt list-ret link1 xt
+        #2 pick                 \ xt list-ret link1 xt
         over link-get-data      \ xt list-ret link0 xt data1
-        3 pick                  \ xt list-ret link0 xt data1 list-ret
+        #3 pick                 \ xt list-ret link0 xt data1 list-ret
         list-member 0=          \ xt list-ret link1 flag
         if
                                 \ xt list-ret link1
             dup link-get-data   \ xt list-ret link1 data1 list-ret
-            2 pick              \ xt list-ret link1 data1 list-ret
+            #2 pick             \ xt list-ret link1 data1 list-ret
             list-push           \ xt list-ret link1
         then
         link-get-next           \ xt list-ret link1-next
@@ -645,7 +646,7 @@ list-header cell+ constant list-links
         dup
     while
         dup link-get-data       \ xt link0 data0
-        2 pick                  \ xt link0 data0 xt
+        #2 pick                 \ xt link0 data0 xt
         execute                 \ xt link0
         link-get-next           \ xt link-next
     repeat
@@ -669,19 +670,19 @@ list-header cell+ constant list-links
         dup                     \ xt list0 list-ret link1 link1
     while                       \ Check for link1 addr == zero.
                                 \ xt list0 list-ret link1
-        3 pick                  \ xt list0 list-ret link1 xt
+        #3 pick                 \ xt list0 list-ret link1 xt
         over link-get-data      \ xt list0 list-ret link1 xt data1
-        4 pick                  \ xt list0 list-ret link1 xt data1 list0
+        #4 pick                 \ xt list0 list-ret link1 xt data1 list0
         list-member             \ xt list0 list-ret link1 flag
         if
                                 \ xt list0 list-ret link1
             dup link-get-data   \ xt list0 list-ret link1 data1
-            2 pick              \ xt list0 list-ret link1 data1 list-ret
+            #2 pick             \ xt list0 list-ret link1 data1 list-ret
 
             \ Avoid dups in list-ret
-            5 pick              \ xt list0 list-ret link1 data1 list-ret xt
-            2 pick              \ xt list0 list-ret link1 data1 list-ret xt data1
-            2 pick              \ xt list0 list-ret link1 data1 list-ret xt data1 list-ret
+            #5 pick             \ xt list0 list-ret link1 data1 list-ret xt
+            #2 pick             \ xt list0 list-ret link1 data1 list-ret xt data1
+            #2 pick             \ xt list0 list-ret link1 data1 list-ret xt data1 list-ret
             list-member         \ xt list0 list-ret link1 data1 list-ret flag
             if
                 2drop           \ xt list0 list-ret link1

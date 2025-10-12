@@ -122,13 +122,13 @@
     while
         dup link-get-data           \ ret-lst reg1 link sqrx
         square-get-state            \ ret-lst reg1 link stax
-        2 pick                      \ ret-lst reg1 link stax reg1
+        #2 pick                     \ ret-lst reg1 link stax reg1
         region-superset-of-state    \ ret-lst reg1 link flag
         if
             \ Add state to return list.
             dup link-get-data       \ ret-lst reg1 link sqrx
             square-get-state        \ ret-lst reg1 link stax
-            3 pick                  \ ret-lst reg1 link stax ret-lst
+            #3 pick                 \ ret-lst reg1 link stax ret-lst
             list-push               \ ret-lst reg1 link
         then
 
@@ -166,7 +166,6 @@
     \ Prep for loop.
     list-get-links              \ link
     1 swap                      \ max-pn link
-
     \ Scan square list.
     begin
         ?dup
@@ -174,33 +173,38 @@
         \ Check if current square pn in greater than the current max pn.
         dup link-get-data       \ max-pn link square
         square-get-pn           \ max-pn link sqr-pn
-        3 pick                  \ max-pn link sqr-pn max-pn
-        <                       \ max-pn link flag
+        #2 pick                 \ max-pn link sqr-pn max-pn
+        >                       \ max-pn link flag
         if                      \ max-pn link
-            \ Set the square pn to be the max pn.
+            \ Set max-pn
             nip                 \ link
-            dup link-get-data   \ link square
+            dup link-get-data   \ link sqrx
             square-get-pn       \ link sqr-pn
             swap                \ max-pn link
         then
-
         link-get-next           \ max-pn link
     repeat
-                            \ max-pn
+                                \ max-pn
 ;
 
-\ Return a region built from squares of the highest pn value, in a non-empty list.
-: square-list-region ( sqr-lst0 -- reg )
+\ Return a region built from squares of the highest pn value, in a list.
+: square-list-region ( sqr-lst0 -- reg t | f )
     \ Check arg.
     assert-tos-is-list
     dup list-is-empty
-    abort" List is empty?"
+    if
+        drop
+        false
+        exit
+    then
 
     \ Get highest pn value
     dup square-list-highest-pn swap \ pn sqr-lst
 
     \ Prep for loop.
     list-get-links                  \ pn link
+
+    \ Set ruturn region to null.
     0 swap                          \ pn reg link
 
     \ Scan square list.
@@ -210,10 +214,8 @@
         \ Check if square pn is equal to the max pn of the list.
         dup link-get-data               \ pn reg link sqr
         dup square-get-pn               \ pn reg link sqr s-pn
-        4 pick                          \ pn reg link sqr s-pn max-pn
-        <> if
-            drop                        \ pn reg link
-        else
+        #4 pick                         \ pn reg link sqr s-pn max-pn
+        = if
             square-get-state            \ pn reg link sta
             rot                         \ pn link sta reg
             dup 0=
@@ -237,25 +239,33 @@
                     swap                    \ pn reg2 link
                 then
             then
+        else
+            drop
         then
-        
+
         link-get-next           \ pn reg link
     repeat
                                 \ pn reg
     nip                         \ reg
+    true
 ;
 
-\ Return rules for a non-empty square-list, having no incompatible squares.
+\ Return rules for a square-list.
 : square-list-get-rules ( list0 -- rulestore true | false )
     \ Check arg.
     assert-tos-is-list
+
+    \ Check for empty list.
     dup list-is-empty
-    abort" List is empty?"
+    if
+        drop
+        false
+    then
 
     dup square-list-highest-pn      \ list0 max-pn
 
     \ Check for 3/U
-    dup 3 =
+    dup #3 =
     if
         2drop                       \
         rulestore-new-0             \ rul-str
@@ -276,7 +286,7 @@
         \ Check if the current square pn is equal to the max-pn.
         dup link-get-data           \ rul-str max-pn link sqr
         square-get-pn               \ rul-str max-pn link sqr-pn
-        2 pick                      \ rul-str max-pn link sqr-pn max-pn
+        #2 pick                     \ rul-str max-pn link sqr-pn max-pn
         =                           \ rul-str max-pn link flag
         
         if                          \ rul-str max-pn link
@@ -313,4 +323,29 @@
                                 \ rul-str max-pn
     drop                        \ rul-str
     true
+;
+
+\ Return members of a square-list equal having a given pn value.
+: square-list-eq-pn ( pn1 sqr-lst0 -- sqr-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-pn
+
+    list-new                    \ pn1 sqp-lst | ret-lst
+    over list-get-links         \ pn1 sqp-lst | ret-lst link
+    begin
+        ?dup
+    while
+        dup link-get-data       \ pn1 sqp-lst | ret-lst link sqrx
+        square-get-pn           \ pn1 sqp-lst | ret-lst link pn
+        #4 pick =               \ pn1 sqp-lst | ret-lst link flag
+        if
+            dup link-get-data   \ pn1 sqp-lst | ret-lst link sqrx
+            #2 pick             \ pn1 sqp-lst | ret-lst link sqrx
+            square-list-push    \ pn1 sqp-lst | ret-lst link
+        then
+
+        link-get-next           \ pn1 sqp-lst | ret-lst link
+    repeat
+    nip nip                     \ ret-lst
 ;

@@ -6,7 +6,7 @@
 \ a single domain.
 
 #23719 constant sample-id
-     3 constant sample-struct-number-cells
+    #3 constant sample-struct-number-cells
 
 \ Struct fields
 0 constant sample-header    \ 16-bits [0] struct id [1] use count.
@@ -42,20 +42,28 @@ sample-initial-disp cell+ constant sample-result-disp
     sample-id =     
 ;
 
-: is-not-allocated-sample ( addr -- flag )
-    is-allocated-sample 0=
-;
-
 \ Check TOS for sample, unconventional, leaves stack unchanged. 
-: assert-tos-is-sample ( arg0 -- arg0 )
+: assert-tos-is-sample ( smpl0 -- smpl0 )
     dup is-allocated-sample 0=
     abort" TOS is not an allocated sample"
 ;
 
 \ Check NOS for sample, unconventional, leaves stack unchanged. 
-: assert-nos-is-sample ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-sample ( smpl1 arg0 -- smpl1 arg0 )
     over is-allocated-sample 0=
     abort" NOS is not an allocated sample"
+;
+
+\ Check 3OS for sample, unconventional, leaves stack unchanged. 
+: assert-3os-is-sample ( smpl2 arg1 arg0 -- smpl2 arg1 arg0 )
+    #2 pick is-allocated-sample 0=
+    abort" 3OS is not an allocated sample"
+;
+
+\ Check 4OS for sample, unconventional, leaves stack unchanged. 
+: assert-4os-is-sample ( smpl3 arg2 arg1 arg0 -- smpl3 arg2 arg1 arg0 )
+    #3 pick is-allocated-sample 0=
+    abort" 4OS is not an allocated sample"
 ;
 
 \ Start accessors.
@@ -161,7 +169,7 @@ sample-initial-disp cell+ constant sample-result-disp
 
     dup struct-get-use-count      \ smp0 count
 
-    2 <
+    #2 <
     if 
         \ Clear fields.
         0 over _sample-set-initial

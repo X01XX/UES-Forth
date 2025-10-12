@@ -1,7 +1,7 @@
 \ Implement a plan struct and functions.
 
 #37379 constant plan-id                                                                                  
-     3 constant plan-struct-number-cells
+    #3 constant plan-struct-number-cells
 
 \ Struct fields
 0 constant plan-header                          \ id (16) use count (16)
@@ -35,10 +35,6 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
     plan-id =    
-;
-
-: is-not-allocated-plan ( addr -- flag )
-    is-allocated-plan 0=
 ;
 
 \ Check TOS for plan, unconventional, leaves stack unchanged. 
@@ -119,7 +115,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     assert-tos-is-plan
 
     dup plan-get-domain domain-get-inst-id
-    ." Dom: " . space
+    ." Dom: " dec. space
     plan-get-step-list .step-list
 ;
 
@@ -131,7 +127,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
     dup struct-get-use-count      \ stp0 count
 
-    2 <
+    #2 <
     if
         \ Deallocate instance.
         dup plan-get-step-list
@@ -184,7 +180,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     dup list-is-empty               \ stp1 pln0 | stp1 stp-lst flag
     0= if                           \ stp1 pln0 | stp1 stp-lst
         over step-get-initial       \ stp1 pln0 | stp1 stp-lst stp-i
-        3 pick                      \ stp1 pln0 | stp1 stp-lst stp-i pln
+        #3 pick                     \ stp1 pln0 | stp1 stp-lst stp-i pln
         plan-get-result-state       \ stp1 pln0 | stp1 stp-lst stp-i pln-r
         <> abort" steps do not link"
     then
@@ -222,7 +218,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     dup list-is-empty               \ stp1 pln0 | stp1 stp-lst flag
     0= if                           \ stp1 pln0 | stp1 stp-lst
         over step-get-result        \ stp1 pln0 | stp1 stp-lst stp-i
-        3 pick                      \ stp1 pln0 | stp1 stp-lst stp-i pln
+        #3 pick                     \ stp1 pln0 | stp1 stp-lst stp-i pln
         plan-get-initial-state      \ stp1 pln0 | stp1 stp-lst stp-i pln-r
         <> abort" steps do not link"
     then
@@ -246,7 +242,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     session-set-current-domain      \ pln0 dom
 
     dup domain-get-current-state    \ pln0 dom cur-sta
-    2 pick plan-get-initial-state   \ pln0 dom cur-sta pln-sta
+    #2 pick plan-get-initial-state  \ pln0 dom cur-sta pln-sta
     <> abort" Plan initial state does not match the domain current state"
 
                                     \ pln0 dom
@@ -258,7 +254,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
         \ Get action sample.
         dup link-get-data           \ pln0 dom link step
         dup step-get-action         \ pln0 dom link step actx
-        3 pick                      \ pln0 dom link step actx dom
+        #3 pick                     \ pln0 dom link step actx dom
         domain-get-sample           \ pln0 dom link step d-smpl
 
         \ Check if action sample is as expected.
@@ -292,7 +288,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
         ?dup
     while
         dup link-get-data   \ pln0 link stpx
-        2 pick              \ pln0 link stpx pln0
+        #2 pick             \ pln0 link stpx pln0
         plan-push-end       \ pln0 link
 
         link-get-next       \ pln0 link

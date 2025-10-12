@@ -1,8 +1,8 @@
 : state-test-not-a-or-not-b
-    4 5 state-not-a-or-not-b        \ list
+    #4 #5 state-not-a-or-not-b        \ list
     cr ." ~4 + ~5: " dup .region-list cr
 
-    3 6 state-not-a-or-not-b        \ list45 list36
+    #3 #6 state-not-a-or-not-b        \ list45 list36
     cr ." ~3 + ~6: " dup .region-list cr
 
     2dup region-list-region-intersections   \ list45 list36 ints

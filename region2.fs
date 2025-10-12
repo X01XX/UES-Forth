@@ -28,31 +28,31 @@
     \ Change x over 1 positions to 0 over 1, one position at a time.
                                     \ reg1 reg0 list
     over region-x-mask              \ reg1 reg0 list | xmask
-    3 pick region-1-mask            \ reg1 reg0 list | xmask 1mask
+    #3 pick region-1-mask           \ reg1 reg0 list | xmask 1mask
     and                             \ reg1 reg0 list | x1mask
 
     begin
         dup
     while
         isolate-a-bit               \ reg1 reg0 list | x1mask' one-bit
-        3 pick                      \ reg1 reg0 list | x1mask' one-bit reg0
+        #3 pick                     \ reg1 reg0 list | x1mask' one-bit reg0
         region-x-to-0               \ reg1 reg0 list | x1mask' reg0'
-        2 pick region-list-push     \ reg1 reg0 list | x1mask'
+        #2 pick region-list-push    \ reg1 reg0 list | x1mask'
     repeat
     drop                            \ reg1 reg0 list
 
     \ Change x over 0 positions to 1 over 0, one position at a time.
                                     \ reg1 reg0 list
     over region-x-mask              \ reg1 reg0 list | xmask
-    3 pick region-0-mask            \ reg1 reg0 list | xmask 0mask
+    #3 pick region-0-mask           \ reg1 reg0 list | xmask 0mask
     and                             \ reg1 reg0 list | x0mask
     begin
         dup
     while
         isolate-a-bit               \ reg1 reg0 list | x0mask' one-bit
-        3 pick                      \ reg1 reg0 list | x0mask' one-bit reg0
+        #3 pick                     \ reg1 reg0 list | x0mask' one-bit reg0
         region-x-to-1               \ reg1 reg0 list | x0mask' reg0'
-        2 pick region-list-push     \ reg1 reg0 list | x0mask'
+        #2 pick region-list-push    \ reg1 reg0 list | x0mask'
     repeat
     drop                            \ reg1 reg0 list
 
@@ -92,16 +92,16 @@
         exit
     then
 
-    3 pick                          \ sta1 reg0 list | xmask 1mask
+    #3 pick                         \ sta1 reg0 list | xmask 1mask
     and                             \ sta1 reg0 list | x1mask
 
     begin
         dup
     while
         isolate-a-bit               \ sta1 reg0 list | x1mask' one-bit
-        3 pick                      \ sta1 reg0 list | x1mask' one-bit reg0
+        #3 pick                     \ sta1 reg0 list | x1mask' one-bit reg0
         region-x-to-0               \ sta1 reg0 list | x1mask' reg0'
-        2 pick                      \ sta1 reg0 list | x1mask' reg0 list
+        #2 pick                     \ sta1 reg0 list | x1mask' reg0 list
         region-list-push            \ sta1 reg0 list | x1mask'
     repeat
     drop                            \ sta1 reg0 list
@@ -109,15 +109,15 @@
     \ Change x over 0 positions to 1 over 0, one position at a time.
                                     \ sta1 reg0 list
     over region-x-mask              \ sta1 reg0 list | xmask
-    3 pick !not                     \ sta1 reg0 list | xmask 0mask
+    #3 pick !not                    \ sta1 reg0 list | xmask 0mask
     and                             \ sta1 reg0 list | x0mask
     begin
         dup
     while
         isolate-a-bit               \ sta1 reg0 list | x0mask' one-bit
-        3 pick                      \ sta1 reg0 list | x0mask' one-bit reg0
+        #3 pick                     \ sta1 reg0 list | x0mask' one-bit reg0
         region-x-to-1               \ sta1 reg0 list | x0mask' reg0'
-        2 pick region-list-push     \ sta1 reg0 list | x0mask'
+        #2 pick region-list-push    \ sta1 reg0 list | x0mask'
     repeat
     drop                            \ sta1 reg0 list
 

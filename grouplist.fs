@@ -47,6 +47,7 @@
     assert-tos-is-list
     assert-nos-is-group
 
+    cr ." adding group " over .group-region cr
     over struct-inc-use-count
     list-push
 ;
@@ -59,6 +60,7 @@
     assert-tos-is-list
     assert-nos-is-region
 
+    cr ." removing group " over .region cr
     [ ' group-region-eq ] literal   \ reg list xt
     -rot                            \ xt reg list
     
@@ -82,12 +84,12 @@
         ?dup
     while
         dup link-get-data           \ sqr1 link grpx
-        2 pick                      \ sqr1 link grpx sqr1
+        #2 pick                     \ sqr1 link grpx sqr1
         square-get-state            \ sqr1 link grpx sta
         over group-get-region       \ sqr1 link grpx sta regx
         region-superset-of-state    \ sqr1 link grpx flag
         if
-            2 pick swap             \ sqr1 link sqr1 grpx
+            #2 pick swap            \ sqr1 link sqr1 grpx
             group-add-square        \ sqr1 link
         else
             drop                    \ sqr1 link
@@ -111,12 +113,12 @@
         ?dup
     while
         dup link-get-data           \ sqr1 link grpx
-        2 pick                      \ sqr1 link grpx sqr1
+        #2 pick                     \ sqr1 link grpx sqr1
         square-get-state            \ sqr1 link grpx sta
         over group-get-region       \ sqr1 link grpx sta regx
         region-superset-of-state    \ sqr1 link grpx flag
         if
-            2 pick swap             \ sqr1 link sqr1 grpx
+            #2 pick swap            \ sqr1 link sqr1 grpx
             group-check-square      \ sqr1 link
         else
             drop                    \ sqr1 link

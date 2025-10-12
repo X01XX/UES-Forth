@@ -214,8 +214,8 @@
     begin
         dup
     while
-        dup link-get-data   \ lst-n link region
-        2 pick              \ lst-n link region lst-n
+        dup link-get-data       \ lst-n link region
+        #2 pick                 \ lst-n link region lst-n
         region-list-push-end    \ lst-n link
         
         link-get-next       \ lst-n link
@@ -260,7 +260,7 @@
                     dup
                 while
                     dup link-get-data       \ ret-lst reg1 link r-lst link reg2
-                    5 pick                  \ ret-lst reg1 link r-lst link reg2 ret-lst
+                    #5 pick                 \ ret-lst reg1 link r-lst link reg2 ret-lst
                     region-list-push-nosubs \ ret-lst reg1 link r-lst link flag
                     drop                    \ ret-lst reg1 link r-lst link
                     link-get-next
@@ -270,7 +270,7 @@
             else
                 \ Add whole region to the result.
                 nip                         \ ret-lst reg1 link reg2
-                3 pick                      \ ret-lst reg1 link reg2 ret-lst
+                #3 pick                     \ ret-lst reg1 link reg2 ret-lst
                 region-list-push-nosubs     \ ret-lst reg1 link flag
                 drop                        \ ret-lst reg1 link
             then
@@ -359,18 +359,18 @@
     while
                                     \ ret-list list1 link0
         dup link-get-data           \ ret-list list1 link0 data0
-        2 pick list-get-links       \ ret-list list1 link0 data0 link1
+        #2 pick list-get-links      \ ret-list list1 link0 data0 link1
 
         begin
             dup
         while
             dup link-get-data       \ ret-list list1 link0 data0 link1 data1
-            2 pick                  \ ret-list list1 link0 data0 link1 data1 data0
+            #2 pick                 \ ret-list list1 link0 data0 link1 data1 data0
             region-intersection     \ ret-list list1 link0 data0 link1, reg-int true | false
             if
                                         \ ret-list list1 link0 data0 link1 reg-int
                 dup                     \ ret-list list1 link0 data0 link1 reg-int reg-int
-                6 pick                  \ ret-list list1 link0 data0 link1 reg-int reg-int ret-list
+                #6 pick                 \ ret-list list1 link0 data0 link1 reg-int reg-int ret-list
                 region-list-push-nosubs \ ret-list list1 link0 data0 link1 reg-int flag
                 if
                     drop
@@ -467,24 +467,24 @@
 
         \ Check region-state-0.
         dup region-get-state-0  \ ret-lst link reg sta0
-        3 pick                  \ ret-lst link reg sta0 ret-lst
+        #3 pick                 \ ret-lst link reg sta0 ret-lst
         [ ' = ] literal -rot    \ ret-lst link reg xt sta0 ret-lst
         list-member             \ ret-lst link reg flag
         0= if
             dup                 \ ret-lst link reg reg
             region-get-state-0  \ ret-lst link reg sta0
-            3 pick              \ ret-lst link reg sta0 ret-lst
+            #3 pick             \ ret-lst link reg sta0 ret-lst
             list-push           \ ret-lst link reg
         then
 
         \ Check region-state-1.
         dup region-get-state-1  \ ret-lst link reg sta1
-        3 pick                  \ ret-lst link reg sta1 ret-lst
+        #3 pick                 \ ret-lst link reg sta1 ret-lst
         [ ' = ] literal -rot    \ ret-lst link reg xt sta0 ret-lst
         list-member             \ ret-lst link reg flag
         0= if
             region-get-state-1  \ ret-lst link sta1
-            2 pick              \ ret-lst link sta1 ret-lst
+            #2 pick             \ ret-lst link sta1 ret-lst
             list-push           \ ret-lst link
         else
             drop                \ ret-lst link
@@ -559,11 +559,11 @@
         ?dup
     while
         dup link-get-data               \ reg-lst1 ret-lst link data
-        3 pick                          \ reg-lst1 ret-lst link data reg-lst
+        #3 pick                         \ reg-lst1 ret-lst link data reg-lst
         region-list-state-in-one-region \ reg-lst1 ret-lst link flag
         if
             dup link-get-data           \ reg-lst1 ret-lst link data
-            2 pick                      \ reg-lst1 ret-lst link data ret-lst
+            #2 pick                     \ reg-lst1 ret-lst link data ret-lst
             list-push                   \ reg-lst1 ret-lst link
         then
 
@@ -599,7 +599,7 @@
 
         \ Check if its in the other list.
         [ ' region-eq ] literal swap    \ lst1 link xt data
-        3 pick                          \ lst1 link xt data lst1
+        #3 pick                         \ lst1 link xt data lst1
         list-member                     \ lst1 link flag
 
         0= if
@@ -613,4 +613,37 @@
                                         \ lst1
     drop
     true
+;
+
+\ Return a list of regions a state is in.
+: region-list-regions-state-in ( sta1 lst0 -- reg-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-value
+
+    \ Init return list.
+    list-new -rot                       \ ret-lst sta lst0
+
+    \ Prep for loop.
+    list-get-links                      \ ret-lst sta link
+
+    \ Check each region.
+    begin
+        ?dup
+    while
+        \ Check the current region.
+        over                            \ ret-lst sta link sta1
+        over link-get-data              \ ret-lst sta link sta1 regx
+        region-superset-of-state        \ ret-lst sta link flag
+        if
+            \ Add the region to the return list.
+            dup link-get-data           \ ret-lst sta link regx
+            #3 pick                     \ ret-lst sta link regx ret-lst
+            region-list-push            \ ret-lst sta link
+        then
+
+        link-get-next
+    repeat
+
+    drop                                \ ret-lst
 ;

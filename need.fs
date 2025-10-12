@@ -1,7 +1,7 @@
 \ Implement a need struct and functions.
 
 #19717 constant need-id
-     4 constant need-struct-number-cells
+    #4 constant need-struct-number-cells
 
 \ Struct fields
 0 constant need-header                      \ struct id (16), use count (16), Type (8).
@@ -38,10 +38,6 @@ need-action  cell+ constant need-target     \ A state.
     need-id =     
 ;
 
-: is-not-allocated-need ( addr -- flag )
-    is-allocated-need 0=
-;
-
 \ Check TOS for need, unconventional, leaves stack unchanged. 
 : assert-tos-is-need ( arg0 -- arg0 )
     dup is-allocated-need 0=
@@ -52,6 +48,24 @@ need-action  cell+ constant need-target     \ A state.
 : assert-nos-is-need ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-need 0=
     abort" NOS is not an allocated need"
+;
+
+\ Check tos for valid need number.
+: assert-tos-is-need-number ( u0 )
+    dup 1 < abort" Invalid need number?"
+    dup #5 > abort" Invalid need number?"
+;
+
+\ Check nos for valid need number.
+: assert-nos-is-need-number ( u1 arg0 )
+    over 1 < abort" Invalid need number?"
+    over #5 > abort" Invalid need number?"
+;
+
+\ Check 3os for valid need number.
+: assert-3os-is-need-number ( u2 arg1 arg0 )
+    #2 pick 1 < abort" Invalid need number?"
+    #2 pick #5 > abort" Invalid need number?"
 ;
 
 \ Start accessors.
@@ -69,13 +83,14 @@ need-action  cell+ constant need-target     \ A state.
 : _need-set-domain ( dom1 ned0 -- )
     \ Check args.
     assert-tos-is-need
+    assert-nos-is-domain-xt execute
 
     need-domain +       \ Add offset.
     !                   \ Set first field.
 ;
  
 \ Return the action field from a need instance.
-: need-get-action ( ned0 -- dom )
+: need-get-action ( ned0 -- act )
     \ Check arg.
     assert-tos-is-need
 
@@ -84,16 +99,17 @@ need-action  cell+ constant need-target     \ A state.
 ;
  
 \ Set the action field from a need instance, use only in this file.
-: _need-set-action ( dom1 ned0 -- )
+: _need-set-action ( act1 ned0 -- )
     \ Check args.
     assert-tos-is-need
+    assert-nos-is-action-xt execute
 
     need-action +       \ Add offset.
     !                   \ Set first field.
 ;
 
 \ Return the target field from a need instance.
-: need-get-target ( ned0 -- dom )
+: need-get-target ( ned0 -- sta )
     \ Check arg.
     assert-tos-is-need
 
@@ -102,7 +118,7 @@ need-action  cell+ constant need-target     \ A state.
 ;
  
 \ Set the target field from a need instance, use only in this file.
-: _need-set-target ( dom1 ned0 -- )
+: _need-set-target ( ned0 -- )
     \ Check arg.
     assert-tos-is-need
 
@@ -118,20 +134,16 @@ need-action  cell+ constant need-target     \ A state.
 ;
 
 : _need-set-type ( typ1 ned0 -- )
-
-    over 1 <
-    abort" _need-set-type: invalid type value"
-
-    over 4 >
-    abort" _need-set-type: invalid type value"
+    assert-tos-is-need
+    assert-nos-is-need-number
 
     4c!
 ;
 
 \ End accessors.
 
-\ Create a need given a target.
-: need-new ( typ3 u2 act1 dom0 -- addr)
+\ Create a need given a need number, target, act and domain.
+: need-new ( typ3 u2 act1 dom0 -- addr) \ For non-test code, call action-make-need instead of this.
     \ Check args.
     assert-tos-is-domain-xt execute
     assert-nos-is-action-xt execute
@@ -167,9 +179,9 @@ need-action  cell+ constant need-target     \ A state.
     assert-tos-is-need
 
     ." Dom: "
-    dup need-get-domain domain-get-inst-id-xt execute . space
+    dup need-get-domain domain-get-inst-id-xt execute #3 dec.r space
     ." Act: "
-    dup need-get-action action-get-inst-id-xt execute . space
+    dup need-get-action action-get-inst-id-xt execute #3 dec.r space
 
     \ Set up for value print.
     dup need-get-domain
@@ -181,9 +193,10 @@ need-action  cell+ constant need-target     \ A state.
     need-get-type
     case
         1 of space ." State not in group" endof
-        2 of space ." Confirm logical structure" endof
-        3 of space ." Improve logical structure" endof
-        4 of space ." Fill group" endof
+       #2 of space ." Confirm logical structure" endof
+       #3 of space ." Improve logical structure" endof
+       #4 of space ." Fill group" endof
+       #5 of space ." Confirm group" endof
         ." Unrecognized type value" abort
     endcase
 ;
@@ -195,7 +208,7 @@ need-action  cell+ constant need-target     \ A state.
 
     dup struct-get-use-count      \ ned0 count
 
-    2 <
+    #2 <
     if
         \ Deallocate instance.
         need-mma mma-deallocate

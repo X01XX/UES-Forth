@@ -1,7 +1,7 @@
 \ Implement a Action struct and functions.                                                          
 
 #29717 constant action-id
-     6 constant action-struct-number-cells
+    #6 constant action-struct-number-cells
 
 \ Struct fields
 0 constant action-header    \ (16) struct id (16) use count (8) instance id 
@@ -40,10 +40,6 @@ action-groups               cell+ constant action-function              \ An xt 
     action-id =     
 ;
 
-: is-not-allocated-action ( addr -- flag )
-    is-allocated-action 0=
-;
-
 \ Check TOS for action, unconventional, leaves stack unchanged. 
 : assert-tos-is-action ( arg0 -- arg0 )
     dup is-allocated-action 0=
@@ -60,7 +56,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Check 3OS for action, unconventional, leaves stack unchanged. 
 : assert-3os-is-action ( arg2 arg1 arg0 -- arg2 arg1 arg0 )
-    2 pick is-allocated-action 0=
+    #2 pick is-allocated-action 0=
     abort" 3OS is not an allocated action"
 ;
 
@@ -86,7 +82,7 @@ action-groups               cell+ constant action-function              \ An xt 
     over 0<
     abort" Invalid instance id"
 
-    over 255 >
+    over #255 >
     abort" Invalid instance id"
 
     \ Set inst id.
@@ -279,10 +275,10 @@ action-groups               cell+ constant action-function              \ An xt 
         dup link-get-data               \ act0 old-ls new-ls old-gone link region
 
         \ If group exists, delete it.
-        5 pick                          \ act0 old-ls new-ls old-gone link region act0
+        #5 pick                         \ act0 old-ls new-ls old-gone link region act0
         _action-delete-group-if-exists  \ act0 old-ls new-ls old-gone link flag
         if
-            cr 4 spaces dup link-get-data .region
+            cr #4 spaces dup link-get-data .region
             space ." deleted group"
         then
 
@@ -294,8 +290,8 @@ action-groups               cell+ constant action-function              \ An xt 
 
     \ Get new regions.
     dup                                 \ act0 old-ls new-ls new-ls
-    2 pick                              \ act0 old-ls new-ls new-ls old-os
-    
+    #2 pick                             \ act0 old-ls new-ls new-ls old-os
+
     region-list-set-difference          \ act0 old-ls new-ls new-added
     cr ." New LS regions added: " dup .region-list cr
     region-list-deallocate              \ act0 old-ls new-ls 
@@ -307,15 +303,15 @@ action-groups               cell+ constant action-function              \ An xt 
     while
         dup link-get-data                   \ act0 old-ls new-ls link region
 
-        cr 4 spaces dup .region
+        cr #4 spaces dup .region
 
         \ Get states in region.
-        4 pick action-get-squares           \ act0 old-ls new-ls link region sqr-lst
+        #4 pick action-get-squares          \ act0 old-ls new-ls link region sqr-lst
         square-list-states-in-region        \ act0 old-ls new-ls link sta-lst1
 
         \ Get states only is one region.
         dup                                 \ act0 old-ls new-ls link sta-lst1 sta-lst1
-        3 pick                              \ act0 old-ls new-ls link sta-lst1 sta-lst1 new-ls
+        #3 pick                             \ act0 old-ls new-ls link sta-lst1 sta-lst1 new-ls
         region-list-states-in-one-region    \ act0 old-ls new-ls link sta-lst1 sta-lst2
         swap list-deallocate                \ act0 old-ls new-ls link sta-lst2
 
@@ -327,7 +323,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
             \ If group exists, delete it.
             dup link-get-data               \ act0 old-ls new-ls link region
-            4 pick                          \ act0 old-ls new-ls link region act0
+            #4 pick                         \ act0 old-ls new-ls link region act0
             _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
             if                              \ act0 old-ls new-ls link 
                 space ." deleted group"
@@ -338,14 +334,14 @@ action-groups               cell+ constant action-function              \ An xt 
 
             \ Check if group already exists
             dup link-get-data                   \ act0 old-ls new-ls link reg
-            4 pick                              \ act0 old-ls new-ls link reg act0
+            #4 pick                             \ act0 old-ls new-ls link reg act0
             action-get-groups                   \ act0 old-ls new-ls link reg grps
             group-list-member                   \ act0 old-ls new-ls link flag
             if                                  \ act0 old-ls new-ls link
                 space ." group already exists"
             else
                 dup link-get-data                   \ act0 old-ls new-ls link reg
-                4 pick                              \ act0 old-ls new-ls link reg act0
+                #4 pick                             \ act0 old-ls new-ls link reg act0
                 action-get-squares                  \ act0 old-ls new-ls link reg sqr-lst1
                 square-list-in-region               \ act0 old-ls new-ls link sqr-lst2
                 dup list-is-empty                   \ act0 old-ls new-ls link sqr-lst2 flag
@@ -355,7 +351,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
                     \ If group exists, delete it.
                     dup link-get-data               \ act0 old-ls new-ls link region
-                    4 pick                          \ act0 old-ls new-ls link region act0
+                    #4 pick                         \ act0 old-ls new-ls link region act0
                     _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
                     if                              \ act0 old-ls new-ls link 
                         space ." deleted group"
@@ -369,7 +365,7 @@ action-groups               cell+ constant action-function              \ An xt 
                         rulestore-deallocate        \ act0 old-ls new-ls link sqr-lst2
                         over link-get-data          \ act0 old-ls new-ls link sqr-lst2 reg
                         group-new                   \ act0 old-ls new-ls link grp
-                        4 pick action-get-groups    \ act0 old-ls new-ls link grp grp-lst
+                        #4 pick action-get-groups   \ act0 old-ls new-ls link grp grp-lst
                         group-list-push             \ act0 old-ls new-ls link
                     else                            \ act0 old-ls new-ls link sqr-lst2
                         space ." is NOT defining"
@@ -377,7 +373,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
                         \ If group exists, delete it.
                         dup link-get-data               \ act0 old-ls new-ls link region
-                        4 pick                          \ act0 old-ls new-ls link region act0
+                        #4 pick                         \ act0 old-ls new-ls link region act0
                         _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
                         if                              \ act0 old-ls new-ls link 
                             space ." deleted group"
@@ -460,15 +456,15 @@ action-groups               cell+ constant action-function              \ An xt 
     assert-tos-is-action
 
     dup action-get-inst-id
-    cr 5 spaces ." Act: " .
+    cr #5 spaces ." Act: " .
 
     dup action-get-squares
     dup list-get-length
-    ." num sqrs: " .
+    ." num sqrs: " dec.
     ." sqrs " .square-list-states
 
-    dup action-get-logical-structure cr 7 spaces ." LS: " .region-list
-    dup action-get-incompatible-pairs cr 7 spaces ." IP: " .region-list
+    dup action-get-logical-structure cr #7 spaces ." LS: " .region-list
+    dup action-get-incompatible-pairs cr #7 spaces ." IP: " .region-list
     \ cr ." Groups: "
     \ Print each group.
     action-get-groups list-get-links
@@ -482,6 +478,14 @@ action-groups               cell+ constant action-function              \ An xt 
     cr
 ;
 
+: .action-id ( act0 -- )
+    \ Check arg.
+    assert-tos-is-action
+
+    action-get-inst-id
+    .value
+;
+
 \ Deallocate a action.
 : action-deallocate ( act0 -- )
     \ Check arg.
@@ -489,7 +493,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     dup struct-get-use-count      \ act0 count
 
-    2 <
+    #2 <
     if 
         \ Clear fields.
         dup action-get-squares square-list-deallocate
@@ -524,17 +528,17 @@ action-groups               cell+ constant action-function              \ An xt 
         exit
     then
 
-    2 pick square-get-state                 \ retlst sqr1 act0 inclst sta1
+    #2 pick square-get-state                \ retlst sqr1 act0 inclst sta1
     over list-get-links                     \ retlst sqr1 act0 inclst sta1 link
     begin
         dup                                 \ retlst sqr1 act0 inclst sta1 link link
     while
         dup link-get-data square-get-state  \ retlst sqr1 act0 inclst sta1 link sta2
-        2 pick                              \ retlst sqr1 act0 inclst sta1 link sta2 sta1
+        #2 pick                             \ retlst sqr1 act0 inclst sta1 link sta2 sta1
         region-new                          \ retlst sqr1 act0 inclst sta1 link regx
 
         dup                                 \ retlst sqr1 act0 inclst sta1 link regx regx
-        7 pick                              \ retlst sqr1 act0 inclst sta1 link regx regx retlst
+        #7 pick                             \ retlst sqr1 act0 inclst sta1 link regx regx retlst
         region-list-push-nosups             \ retlst sqr1 act0 inclst sta1 link regx flag
         if
             drop
@@ -587,20 +591,20 @@ action-groups               cell+ constant action-function              \ An xt 
 
         \ Check if dup in action-incompatible-pairs
         dup                                         \ act0 inclst link regx regx
-        4 pick action-get-incompatible-pairs        \ act0 inclst link regx regx pair-lst
+        #4 pick action-get-incompatible-pairs       \ act0 inclst link regx regx pair-lst
         [ ' region-eq ] literal -rot                \ act0 inclst link regx xt regx pair-lst
         list-member                                 \ act0 inclst link regx flag
         if
             drop
         else
             dup                                     \ act0 inclst link regx regx
-            4 pick action-get-logical-structure     \ act0 inclst link regx regx LS-lst
+            #4 pick action-get-logical-structure    \ act0 inclst link regx regx LS-lst
             [ ' region-superset-of ] literal -rot   \ act0 inclst link regx xt regx LS-lst
             list-member                             \ act0 inclst link regx flag
             if
                 \ Add region to the action-incompatible-pairs  list.
-                cr ." Act: " 3 pick action-get-inst-id . space ." Adding incompatible pair: " dup region-get-states .value space .value cr
-                dup 4 pick                          \ act0 inclst link regx regx act0
+                cr ." Act: " #3 pick action-get-inst-id dec. space ." Adding incompatible pair: " dup region-get-states .value space .value cr
+                dup #4 pick                         \ act0 inclst link regx regx act0
                 action-get-incompatible-pairs       \ act0 inclst link regx regx incpairs
                 region-list-push-nosups             \ act0 inclst link regx flag
                 drop
@@ -610,12 +614,12 @@ action-groups               cell+ constant action-function              \ An xt 
                 state-not-a-or-not-b                \ act0 inclst link reg-lst
 
                 \ Calc new action-logical-structure.
-                3 pick action-get-logical-structure \ act0 inclst link reg-lst lsl-lst
+                #3 pick action-get-logical-structure    \ act0 inclst link reg-lst lsl-lst
                 2dup                                \ act0 inclst link reg-lst lsl-lst reg-lst lsl-lsn
                 region-list-region-intersections    \ act0 inclst link reg-lst lsl-lst new-reg-lst
 
                 \ Set new action-logical-structure.
-                5 pick                              \ act0 inclst link reg-lst lsl-lst new-reg-lst act0
+                #5 pick                             \ act0 inclst link reg-lst lsl-lst new-reg-lst act0
                 _action-update-logical-structure    \ act0 inclst link reg-lst lsl-lst
                 drop                                \ act0 inclst link reg-lst
                 region-list-deallocate              \ act0 inclst link
@@ -670,7 +674,7 @@ action-groups               cell+ constant action-function              \ An xt 
         region-get-states       \ ret-lst act0 link region s1 s0
 
         \ Get square 0.
-        4 pick                  \ ret-lst act0 link region s1 s0 act0
+        #4 pick                 \ ret-lst act0 link region s1 s0 act0
         action-find-square      \ ret-lst act0 link region s1 result
         0=
         abort" square not found?"
@@ -678,7 +682,7 @@ action-groups               cell+ constant action-function              \ An xt 
         swap                    \ ret-lst act0 link region sqr0 s1
 
         \ Get square 1.
-        4 pick                  \ ret-lst act0 link region sqr0 s1 act0
+        #4 pick                 \ ret-lst act0 link region sqr0 s1 act0
         action-find-square      \ ret-lst act0 link region sqr0 result
         0=
         abort" square not found?"
@@ -691,7 +695,7 @@ action-groups               cell+ constant action-function              \ An xt 
         if                      \ ret-lst act0 link region
             drop                \ ret-lst act0 link
         else
-            3 pick              \ ret-lst act0 link region ret-lst
+            #3 pick             \ ret-lst act0 link region ret-lst
             region-list-push    \ ret-lst act0 link
         then
 
@@ -704,7 +708,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Recalc action-logical-structure from action-incompatible-pairs.
 :  _action-recalc-logical-structure ( act0 -- )
-    \ cr ." _action-recalc-logical-structure - start" cr
+    cr ." _action-recalc-logical-structure - start" cr
     \ Check args.
     assert-tos-is-action
 
@@ -713,8 +717,8 @@ action-groups               cell+ constant action-function              \ An xt 
     cur-domain-xt execute                   \ act0 ls-new dom
     domain-get-max-region-xt execute        \ act0 ls-new max-reg
     over region-list-push                   \ act0 ls-new
-    
-    2 pick                                  \ act0 ls-new act0
+
+    #2 pick                                 \ act0 ls-new act0
     action-get-incompatible-pairs           \ act0 ls-new i-pairs
 
     list-get-links                          \ act0 ls-new link
@@ -750,25 +754,107 @@ action-groups               cell+ constant action-function              \ An xt 
     \ cr ." _action-recalc-logical-structure - end" cr
 ;
 
+\ Check if a changed square is between two incompatible square pairs,
+\ and is incompatible with either.
+\ It is assumed the state is not equal to any state defining any region in the incompatible pair list.
+: _action-check-incompatible-pairs2 ( sqr1 act0 -- )
+    \ cr ." _action-check-incompatible-pairs2: Act: " dup .action-id space ." sqr: " over .square-state cr
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-square
+
+    over square-get-state                   \ sqr1 act0 | sta
+    over action-get-incompatible-pairs      \ sqr1 act0 | sta ip-lst
+    region-list-regions-state-in            \ sqr1 act0 | reg-in-lst
+    dup list-is-empty                       \ sqr1 act0 | reg-in-lst flag
+    if
+        list-deallocate
+        2drop
+        cr ." _action-check-incompatible-pairs: exit early" cr
+        exit
+    then
+
+    \ Check each region.
+    dup list-get-links                          \ sqr1 act0 | reg-in-lst link
+    begin
+        ?dup
+    while
+        \ Check sqr1 against region state 0.
+        dup link-get-data                   \ sqr1 act0 | reg-in-lst link regx
+        region-get-state-0                  \ sqr1 act0 | reg-in-lst link s0
+        #3 pick action-find-square          \ sqr1 act0 | reg-in-lst link, r-sqr t | f
+        0= abort" square not found?"
+        #4 pick                             \ sqr1 act0 | reg-in-lst link r-sqr sqr1
+        square-compare                      \ sqr1 act0 | reg-in-lst link char
+        [char] I =                          \ sqr1 act0 | reg-in-lst link flag
+        if                                  \ sqr1 act0 | reg-in-lst link
+            cr ." sqrs incompat 0" cr
+            \ Add new incompatible pair.
+            #3 pick square-get-state        \ sqr1 act0 | reg-in-lst link sta1
+            over link-get-data              \ sqr1 act0 | reg-in-lst link sta1 regx
+            region-get-state-0              \ sqr1 act0 | reg-in-lst link sta1 s0
+            region-new                      \ sqr1 act0 | reg-in-lst link reg-new
+            #3 pick                         \ sqr1 act0 | reg-in-lst link reg-new act0
+            action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new ip-lst
+            region-list-push-nosups         \ sqr1 act0 | reg-in-lst link flag
+            drop                            \ sqr1 act0 | reg-in-lst link
+        else
+            cr ." sqrs NOT incompat 0" cr
+        then
+
+        \ Check sqr1 against region state 1.
+        dup link-get-data                   \ sqr1 act0 | reg-in-lst link regx
+        region-get-state-1                  \ sqr1 act0 | reg-in-lst link s1
+        #3 pick action-find-square          \ sqr1 act0 | reg-in-lst link, r-sqr t | f
+        0= abort" square not found?"
+        #4 pick                             \ sqr1 act0 | reg-in-lst link r-sqr sqr1
+        square-compare                      \ sqr1 act0 | reg-in-lst link char
+        [char] I =                          \ sqr1 act0 | reg-in-lst link flag
+        if                                  \ sqr1 act0 | reg-in-lst link
+            cr ." sqrs incompat 1" cr
+            \ Add new incompatible pair.
+            #3 pick square-get-state        \ sqr1 act0 | reg-in-lst link sta1
+            over link-get-data              \ sqr1 act0 | reg-in-lst link sta1 regx
+            region-get-state-1              \ sqr1 act0 | reg-in-lst link sta1 s1
+            region-new                      \ sqr1 act0 | reg-in-lst link reg-new
+            #3 pick                         \ sqr1 act0 | reg-in-lst link reg-new act0
+            action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new ip-lst
+            region-list-push-nosups         \ sqr1 act0 | reg-in-lst link flag
+            drop                            \ sqr1 act0 | reg-in-lst link
+        else
+            cr ." sqrs NOT incompat 1" cr
+        then
+
+        link-get-next
+    repeat
+
+    region-list-deallocate                  \ sqr1 act0
+    nip                                     \ act0
+    _action-recalc-logical-structure
+;
+
 \ Check incompatble pairs are still incompatible,
-\ given a squrare that has recently changed pn or pnc.
+\ given a square that has recently changed pn or pnc.
 : _action-check-incompatible-pairs ( sqr1 act0 -- )
-    \ cr ." _action-check-incompatible-pairs - start" cr
+    \ cr ." _action-check-incompatible-pairs: Act: " dup .action-id space ." sqr: " over .square-state cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
 
     \ Get regions that use the state
-    swap square-get-state               \ act0 sta
-    over action-get-incompatible-pairs  \ act0 sta reg-lst
-    region-list-uses-state              \ act0 reg-lst-in
+    over square-get-state               \ sqr1 act0 sta
+    over                                \ sqr1 act0 sta act0
+    action-get-incompatible-pairs       \ sqr1 act0 sta ip-lst
+    region-list-uses-state              \ sqr1 act0 reg-lst-in
 
-    dup list-is-empty                   \ act0 reg-lst-in flag
+    dup list-is-empty                   \ sqr1 act0 reg-lst-in flag
     if
-        list-deallocate                 \ act0
-        drop
-        \ cr ." _action-check-incompatible-pairs - end" cr
+        list-deallocate                 \ sqr1 act0
+        _action-check-incompatible-pairs2
+       \  cr ." _action-check-incompatible-pairs - end 1" cr
         exit
+    else                                \ sqr1 act0 reg-lst-in
+        rot drop                        \ act0 reg-lst-in
     then
 
     \ Some regions found, check them.   \ act0 reg-lst-in
@@ -780,7 +866,7 @@ action-groups               cell+ constant action-function              \ An xt 
         list-deallocate
         region-list-deallocate
         drop
-        \ cr ." _action-check-incompatible-pairs - end" cr
+       \  cr ." _action-check-incompatible-pairs - end 2" cr
         exit
     then
 
@@ -797,7 +883,7 @@ action-groups               cell+ constant action-function              \ An xt 
         dup link-get-data               \ act0 reg-lst-not-i link region
         cr ." state " dup region-get-states .value space ." and " .value space ." are no longer incompatible" cr
         [ ' region-eq ] literal swap    \ act0 reg-lst-not-i link xt region
-        4 pick                          \ act0 reg-lst-not-i link xt region act0
+        #4 pick                         \ act0 reg-lst-not-i link xt region act0
         action-get-incompatible-pairs   \ act0 reg-lst-not-i link xt region pair-list
         list-remove                     \ act0 reg-lst-not-i link reg? flag
         0=
@@ -812,7 +898,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     \ Recalc logical-structure
     _action-recalc-logical-structure
-    \ cr ." _action-check-incompatible-pairs - end" cr
+    \ cr ." _action-check-incompatible-pairs - end 3" cr
 ;
 
 \ Add a sample.
@@ -831,10 +917,10 @@ action-groups               cell+ constant action-function              \ An xt 
     assert-tos-is-action
     assert-nos-is-sample
 
-    cr ." Act: " dup action-get-inst-id . space ." adding sample: " over .sample cr
+    cr ." Act: " dup action-get-inst-id dec. space ." adding sample: " over .sample cr
 
     over sample-get-initial     \ smpl1 act0 s-i
-    over action-get-squares     \ smpl1 act0 s-i act0
+    over action-get-squares     \ smpl1 act0 s-i sqr-lst
     square-list-find            \ smpl1 act0, sqr true | false
     if
                                 \ smpl1 act0 sqr
@@ -853,19 +939,19 @@ action-groups               cell+ constant action-function              \ An xt 
         else
             2drop
         then
-    else
+    else                        \ smpl1 act0
         \ Add new square.
         swap                    \ act0 smpl1
         square-from-sample      \ act0 sqr
         dup                     \ act0 sqr sqr
-        2 pick                  \ act0 sqr sqr act0
+        #2 pick                 \ act0 sqr sqr act0
         action-get-squares      \ act0 sqr sqr sqrlst
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
         2dup                    \ sqr act0 sqr act0
         _action-check-square    \ sqr act0
         dup action-get-groups   \ sqr act0 grp-lst
-        2 pick                  \ sqr act0 grp-lst sqr
+        #2 pick                 \ sqr act0 grp-lst sqr
         square-get-state        \ sqr act0 grp-lst sta
         over                    \ sqr act0 grp-lst sta grp-lst
         group-list-state-in-group   \ sqr act0 grp-lst flag
@@ -892,7 +978,7 @@ action-groups               cell+ constant action-function              \ An xt 
                 3drop
             then
         else
-            2 pick              \ sqr act0 grp-lst sqr
+            #2 pick             \ sqr act0 grp-lst sqr
             swap                \ sqr act0 sqr grp-lst
             group-list-add-square
             2drop
@@ -900,6 +986,75 @@ action-groups               cell+ constant action-function              \ An xt 
     then
     \ cr ." action-add-sample - end" cr
 ;
+
+\ Return true if a state is confirmed with a pnc square.
+: action-state-confirmed ( sta1 act0 -- flag )
+     \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+
+    action-get-squares      \ sta1 sqr-lst
+    square-list-find        \ sqr t | f
+    if
+        square-get-pnc      \ pnc
+    else
+        false               \ false
+    then
+;
+
+\ Return true if a region is confirmed with two pnc squares.
+: action-region-confirmed ( reg1 act0 -- flag )
+     \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+
+    over region-get-state-0     \ reg1 act0 reg-sta-0
+    over action-state-confirmed \ reg1 act0 flag
+    0= if
+        2drop false
+        exit
+    then
+
+    swap region-get-state-1     \ act0 reg-sta-1
+    swap action-state-confirmed \ flag
+;
+
+\ Return the square-compare value of the two states in a region, with different states.
+: action-region-states-compare ( reg1 act0 -- flag )
+     \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+
+    swap region-get-states          \ act0 s1 s0
+    2dup = abort" region states are equal?"
+    
+    \ Get first state square.
+    #2 pick                         \ act0 s1 s0 act0
+    action-find-square              \ act0 s1, sqr0 t | f
+    if                              \ act0 s1 sqr0
+        \ sqr0 found.
+        swap                        \ act0 sqr0 s1
+        rot                         \ sqr0 s1 act0
+        action-find-square          \ sqr0, sqr1 t | f
+        if                          \ sqr0 sqr1
+            \ sqr1 found
+            square-compare          \ char
+            exit
+        else                        \ sqr0
+            \ sqr1 not found
+            drop
+            [char] M
+            exit
+        then
+    else                            \ act0 s1
+        \ sqr0 not found.
+        2drop
+        [char] M
+        exit
+    then
+     
+;
+
 
 \ Return true if two actions are equal.
 : action-eq ( act1 act0 -- flag )
@@ -961,6 +1116,34 @@ action-groups               cell+ constant action-function              \ An xt 
     =
 ;
 
+\ Return a need given a need number and target.
+\ Check target is not a pnc square.
+: action-make-need ( u2 sta1 act0 -- need )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+    assert-3os-is-need-number
+
+    2dup                    \ u2 sta1 act0 sta1 act0
+    action-find-square      \ u2 sta1 act0, sqr t | f
+    if
+        square-get-pnc      \ u2 sta1 act0 bool
+        if
+            cr
+            ." Act: " action-get-inst-id dec. space
+            ." targ: " .value space
+            ." need type: " . space
+            ." square pnc?"
+            cr
+            abort
+        then
+    then
+    cur-domain-xt execute   \ u2 sta1 act0 domx
+    need-new                \ need
+;
+
+' action-make-need to action-make-need-xt
+
 \ Return a list of needs for an action, given the current state
 \ and the reachable region.
 : action-get-needs ( reg1 sta1 act0 -- ned-lst )
@@ -974,109 +1157,66 @@ action-groups               cell+ constant action-function              \ An xt 
     \ space ." Act: " dup action-get-inst-id . space ." get-needs for " over .value space ." TODO"
     \ cr
 
-    \ Check if the current state is not in a group.
-    list-new -rot               \ reg1 ret-lst sta1 act0 |
-    over                        \ reg1 ret-lst sta1 act0 | sta1
-    over action-get-groups      \ reg1 ret-lst sta1 act0 | sta1 grp-lst
-    group-list-state-in-group-r \ reg1 ret-lst sta1 act0 | flag
-    0= if
-        \ Check if no square.
-        2dup action-find-square \ reg1 ret-lst sta1 act0 | sqr t | f
-        if
-            \ Check square pnc.
-            square-get-pnc          \ reg1 ret-lst sta1 act0 | pnc
-            0=                      \ reg1 ret-lst sta1 act0 | flag (not pnc)
-        else                        \ no square.
-            true                    \ reg1 ret-lst sta1 act0 | t
-        then
-        if
-                                    \ reg1 ret-lst sta1 act0 |
-            \ Make need.
-            1                       \ reg1 ret-lst sta1 act0 | 1 (type)
-            2 pick                  \ reg1 ret-lst sta1 act0 | 1 sta
-            2 pick                  \ reg1 ret-lst sta1 act0 | 1 sta act0
-            cur-domain-xt execute   \ reg1 ret-lst sta1 act0 | 1 sta act0 dom0
-            need-new                \ reg1 ret-lst sta1 act0 | ned
-            \ Store need.
-            3 pick                  \ reg1 ret-lst sta1 act0 | ned ret-lst
-            need-list-push          \ reg1 ret-lst sta1 act0 |
-
-            \ Return need-list.
-            2drop                   \ reg1 ret-lst
-            nip                     \ ret-lst
-            exit
-        then
-    then
+    \ Init return need list.
+    list-new -rot                                   \ reg1 ret-lst sta1 act0 |
 
     \ Check for squares in action-incompatible-pairs that are not pnc.
-    dup action-get-incompatible-pairs   \ reg1 ret-lst sta1 act0 | par-lst
-    list-get-links              \ reg1 ret-lst sta1 act0 | link
+    dup action-get-incompatible-pairs               \ reg1 ret-lst sta1 act0 | par-lst
+    list-get-links                                  \ reg1 ret-lst sta1 act0 | link
     begin
         ?dup
     while
-        dup link-get-data       \ reg1 ret-lst sta1 act0 | link regx
-        region-get-states       \ reg1 ret-lst sta1 act0 | link s0 s1
-        3 pick                  \ reg1 ret-lst sta1 act0 | link s0 s1 act0
-        action-get-squares      \ reg1 ret-lst sta1 act0 | link s0 s1 sqr-lst
-        tuck                    \ reg1 ret-lst sta1 act0 | link s0 sqr-lst s1 sqr-lst
-        \ Check s1
-        square-list-find        \ reg1 ret-lst sta1 act0 | link s0 sqr-lst, sqrx true | false
-        if                      \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx
-            dup square-get-pnc  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx pnc
-            0= if                       \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx
-                \ Check if target is in the reachable region.
-                dup square-get-state        \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx sta
-                8 pick                      \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx sta reg1
-                region-superset-of-state    \ reg1 ret-lst sta1 act0 | link s0 sqr-lst sqrx flag
-                if
-                    \ Make need.
-                    2 swap                  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 sqrx
-                    square-get-state        \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax
-                    5 pick                  \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0
-                    cur-domain-xt execute   \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | 2 stax act0 dom
-                    need-new                \ reg1 ret-lst sta1 act0 | link s0 sqr-lst | ned
-                    \ Store need.
-                    6 pick need-list-push   \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
-                    2drop 3drop             \ reg1 ret-lst
-                    nip                     \ ret-lst
-                    exit
-                then
-                drop                    \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
-            else
-                drop                    \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
+        dup link-get-data region-get-state-0        \ reg1 ret-lst sta1 act0 | link s0
+        #2 pick                                     \ reg1 ret-lst sta1 act0 | link s0 act0
+        \ Skip if state is represented by a square, with pnc = true.
+        action-state-confirmed                      \ reg1 ret-lst sta1 act0 | link flag
+        0= if                                       \ reg1 ret-lst sta1 act0 | link
+            \ State not confirmed.   Check if state is reachable, or equal current state.
+            dup link-get-data region-get-state-0    \ reg1 ret-lst sta1 act0 | link s0
+            dup #6 pick region-superset-of-state    \ reg1 ret-lst sta1 act0 | link s0 flag
+            swap #4 pick                            \ reg1 ret-lst sta1 act0 | link flag s0 sta1
+            =                                       \ reg1 ret-lst sta1 act0 | link flag flag
+            or                                      \ reg1 ret-lst sta1 act0 | link flag
+    
+            if
+                \ Make need.
+                dup link-get-data region-get-state-0    \ reg1 ret-lst sta1 act0 | link s0
+                #2 swap                                 \ reg1 ret-lst sta1 act0 | link 2 s0
+                #3 pick                                 \ reg1 ret-lst sta1 act0 | link 2 s0 act0
+                action-make-need                        \ reg1 ret-lst sta1 act0 | link ned
+                \ Store need.
+                #4 pick need-list-push                  \ reg1 ret-lst sta1 act0 | link
+                \ 3drop                                   \ reg1 ret-lst
+                \ nip                                     \ ret-lst
+                \ exit
             then
-        else
-            ." Square not found?" abort
         then
-                                        \ reg1 ret-lst sta1 act0 | link s0 sqr-lst
-        \ Check s0
-        square-list-find                \ reg1 ret-lst sta1 act0 | link, sqrx true | false
-        if                              \ reg1 ret-lst sta1 act0 | link sqrx
-            dup square-get-pnc          \ reg1 ret-lst sta1 act0 | link sqrx pnc
-            0= if                       \ reg1 ret-lst sta1 act0 | link sqrx
-                \ Check if target is in the reachable region.
-                dup square-get-state        \ reg1 ret-lst sta1 act0 | link sqrx sta
-                6 pick                      \ reg1 ret-lst sta1 act0 | link sqrx sta reg1
-                region-superset-of-state    \ reg1 ret-lst sta1 act0 | link sqrx flag
-                if
-                    \ Make need.
-                    2 swap                  \ reg1 ret-lst sta1 act0 | link | 2 sqrx
-                    square-get-state        \ reg1 ret-lst sta1 act0 | link | 2 stax
-                    3 pick                  \ reg1 ret-lst sta1 act0 | link | 2 stax act0
-                    cur-domain-xt execute   \ reg1 ret-lst sta1 act0 | link | 2 stax act0 dom
-                    need-new                \ reg1 ret-lst sta1 act0 | link | ned
-                    \ Store need.
-                    4 pick need-list-push   \ reg1 ret-lst sta1 act0 | link
-                    3drop                   \ reg1 ret-lst
-                    nip                     \ ret-lst
-                    exit
-                then
-                drop                    \ reg1 ret-lst sta1 act0 | link
-            else
-                drop                    \ reg1 ret-lst sta1 act0 | link
+                                                    \ reg1 ret-lst sta1 act0 | link
+        dup link-get-data region-get-state-1        \ reg1 ret-lst sta1 act0 | link s1
+        #2 pick                                     \ reg1 ret-lst sta1 act0 | link s1 act0
+        \ Skip if state is represented by a square, with pnc = true.
+        action-state-confirmed                      \ reg1 ret-lst sta1 act0 | link flag
+        0= if                                       \ reg1 ret-lst sta1 act0 | link
+            \ State not confirmed.   Check if state is reachable.
+            dup link-get-data region-get-state-1    \ reg1 ret-lst sta1 act0 | link s1
+
+            dup #6 pick region-superset-of-state    \ reg1 ret-lst sta1 act0 | link s1 flag
+            swap #4 pick                            \ reg1 ret-lst sta1 act0 | link flag s1 sta1
+            =                                       \ reg1 ret-lst sta1 act0 | link flag flag
+            or                                      \ reg1 ret-lst sta1 act0 | link flag
+
+            if
+                \ Make need.
+                dup link-get-data region-get-state-1    \ reg1 ret-lst sta1 act0 | link s1
+                #2 swap                                 \ reg1 ret-lst sta1 act0 | link 2 s1
+                #3 pick                                 \ reg1 ret-lst sta1 act0 | link 2 s1 act0
+                action-make-need                        \ reg1 ret-lst sta1 act0 | link ned
+                \ Store need.
+                #4 pick need-list-push                  \ reg1 ret-lst sta1 act0 | link
+                \ 3drop                                   \ reg1 ret-lst
+                \ nip                                     \ ret-lst
+                \ exit
             then
-        else
-            ." Square not found?" abort
         then
 
         link-get-next           \ reg1 ret-lst sta1 act0 | link
@@ -1088,42 +1228,85 @@ action-groups               cell+ constant action-function              \ An xt 
     begin
         ?dup
     while
+        \ Check if region states are non-adjacent.
         dup link-get-data               \ reg1 ret-lst sta1 act0 | link regx
-
-        \ Check if region states are non-adjacent.  That is, GT 1 X bit.
-        region-x-mask                   \ reg1 ret-lst sta1 act0 | link x-msk
-        isolate-a-bit                   \ reg1 ret-lst sta1 act0 | link rem bit
-        swap                            \ reg1 ret-lst sta1 act0 | link bit rem
-        0<> if                          \ reg1 ret-lst sta1 act0 | link bit
-            \ Get a state between the states that define the region. TODO use better selection method.
-            over link-get-data          \ reg1 ret-lst sta1 act0 | link bit regx
-            region-get-state-0          \ reg1 ret-lst sta1 act0 | link bit r-sta-0
-            xor                         \ reg1 ret-lst sta1 act0 | link sta'
-
-            \ Check if target is in the reachable region.
-            dup                         \ reg1 ret-lst sta1 act0 | link sta' sta'
-            6 pick                      \ reg1 ret-lst sta1 act0 | link sta' sta' reg1
-            region-superset-of-state    \ reg1 ret-lst sta1 act0 | link sta' flag
+        region-states-adjacent          \ reg1 ret-lst sta1 act0 | link flag
+        0= if                           \ reg1 ret-lst sta1 act0 | link
+            \ Check if region states are represented by squares with pnc = true.
+            dup link-get-data           \ reg1 ret-lst sta1 act0 | link regx
+            #2 pick                     \ reg1 ret-lst sta1 act0 | link regx act0
+            action-region-confirmed     \ reg1 ret-lst sta1 act0 | link flag
             if
-                \ Make need.
-                3 swap                      \ reg1 ret-lst sta1 act0 | link 3 sta'
-                3 pick                      \ reg1 ret-lst sta1 act0 | link 3 sta' act0
-                cur-domain-xt execute       \ reg1 ret-lst sta1 act0 | link 3 sta' act0 domx
-                need-new                    \ reg1 ret-lst sta1 act0 | link ned
-                \ Store need.
-                4 pick need-list-push       \ reg1 ret-lst sta1 act0 | link
-                3drop                       \ reg1 ret-lst
-                nip                         \ ret-lst
-                exit
+                \ Get a state between the states that define the region. TODO use better selection method.
+
+                \    Get a single, arbitray, bit, from a mask of dirrerent bits between the two states.
+                dup link-get-data           \ reg1 ret-lst sta1 act0 | link regx
+                region-get-states xor       \ reg1 ret-lst sta1 act0 | link dif-msk
+                value-isolate-lsb nip       \ reg1 ret-lst sta1 act0 | link bit
+
+                \    Calc the state between.
+                over link-get-data          \ reg1 ret-lst sta1 act0 | link bit regx
+                region-get-state-0          \ reg1 ret-lst sta1 act0 | link bit r-sta-0
+                xor                         \ reg1 ret-lst sta1 act0 | link sta'
+
+                \ Check if target is in the reachable region, or equal the current state.
+                dup                         \ reg1 ret-lst sta1 act0 | link sta' sta'
+                #6 pick                     \ reg1 ret-lst sta1 act0 | link sta' sta' reg1
+                region-superset-of-state    \ reg1 ret-lst sta1 act0 | link sta' flag
+                over                        \ reg1 ret-lst sta1 act0 | link sta' flag sta'
+                #5 pick =                   \ reg1 ret-lst sta1 act0 | link sta' flag flag2
+                or                          \ reg1 ret-lst sta1 act0 | link sta' flag
+                if
+                    \ cr ." make need for non-adjacent incompatible pair " .value space ." in " dup link-get-data .region cr
+                    \ Make need.
+                    #3 swap                     \ reg1 ret-lst sta1 act0 | link 3 sta'
+                    #3 pick                     \ reg1 ret-lst sta1 act0 | link 3 sta' act0
+                    action-make-need            \ reg1 ret-lst sta1 act0 | link ned
+                    \ Store need.
+                    #4 pick need-list-push      \ reg1 ret-lst sta1 act0 | link
+                    3drop                       \ reg1 ret-lst
+                    nip                         \ ret-lst
+                    exit
+                else
+                    drop                        \ reg1 ret-lst sta1 act0 | link
+                then
             then
-            drop                        \ reg1 ret-lst sta1 act0 | link
-        else
-            drop                        \ reg1 ret-lst sta1 act0 | link
         then
 
         link-get-next           \ reg1 ret-lst sta1 act0 | link
     repeat
                                 \ reg1 ret-lst sta1 act0
+
+    \ Check if the current state is not in a group, and is not represented by a pnc square.
+    over                        \ reg1 ret-lst sta1 act0 | sta1
+    over action-get-groups      \ reg1 ret-lst sta1 act0 | sta1 grp-lst
+    group-list-state-in-group-r \ reg1 ret-lst sta1 act0 | flag
+    0= if
+        \ Check if square, set make-need flag.
+        2dup action-find-square \ reg1 ret-lst sta1 act0 | sqr t | f
+        if
+            square-get-pnc          \ reg1 ret-lst sta1 act0 | pnc
+            0=
+        else                        \ no square.
+            true                    \ reg1 ret-lst sta1 act0 | t
+        then
+        if
+                                    \ reg1 ret-lst sta1 act0 |
+            \ Make need.
+            1                       \ reg1 ret-lst sta1 act0 | 1 (type)
+            #2 pick                 \ reg1 ret-lst sta1 act0 | 1 sta
+            #2 pick                 \ reg1 ret-lst sta1 act0 | 1 sta act0
+            action-make-need        \ reg1 ret-lst sta1 act0 | ned
+            \ Store need.
+            #3 pick                 \ reg1 ret-lst sta1 act0 | ned ret-lst
+            need-list-push          \ reg1 ret-lst sta1 act0 |
+
+            \ Return need-list.
+            2drop                   \ reg1 ret-lst
+            nip                     \ ret-lst
+            exit
+        then
+    then
 
     \ Check for group fill needs.
     dup action-get-groups       \ reg1 ret-lst sta1 act0 grp-lst
@@ -1132,15 +1315,46 @@ action-groups               cell+ constant action-function              \ An xt 
     begin
         ?dup
     while
-        \ Get group fill needs.
-        4 pick                      \ reg1 ret-lst sta1 act0 link reg1
+        \ Get group fill need.
+        #4 pick                     \ reg1 ret-lst sta1 act0 link reg1
         over link-get-data          \ reg1 ret-lst sta1 act0 link reg1 grpx
-        group-get-fill-needs        \ reg1 ret-lst sta1 act0 link, nedx t | f
+        group-get-region            \ reg1 ret-lst sta1 act0 link reg1 grp-reg
+        region-intersects           \ reg1 ret-lst sta1 act0 link flag
+        if
+            #4 pick                 \ reg1 ret-lst sta1 act0 link reg1
+            over link-get-data      \ reg1 ret-lst sta1 act0 link reg1 grpx
+            group-get-fill-need     \ reg1 ret-lst sta1 act0 link, nedx t | f
+            if
+                \ Add need to the return list.
+                #4 pick                 \ reg1 ret-lst sta1 act0 link nedx ret-lst
+                need-list-push          \ reg1 ret-lst sta1 act0 link
+                3drop                   \ reg1 ret-lst
+                nip                     \ ret-lst
+                exit
+            then
+        then
+
+        link-get-next
+    repeat
+                                \ reg1 ret-lst sta1 act0
+
+    \ Check for group confirm needs.
+    dup action-get-groups       \ reg1 ret-lst sta1 act0 grp-lst
+    list-get-links              \ reg1 ret-lst sta1 act0 link
+
+    begin
+        ?dup
+    while
+        \ Get group confirm need.
+        dup link-get-data           \ reg1 ret-lst sta1 act0 link grpx
+        group-get-confirm-need      \ reg1 ret-lst sta1 act0 link, nedx t | f
 
         if
             \ Add needs to the return list.
-            4 pick                  \ reg1 ret-lst sta1 act0 link nedx ret-lst
+            #4 pick                 \ reg1 ret-lst sta1 act0 link nedx ret-lst
             need-list-push          \ reg1 ret-lst sta1 act0 link
+            3drop nip
+            exit
         then
 
         link-get-next
@@ -1165,7 +1379,7 @@ action-groups               cell+ constant action-function              \ An xt 
     while
         dup link-get-data           \ cngs link grp
         dup group-get-pn            \ cngs link grp pn
-        3 < if
+        #3 < if
                                     \ cngs link grp
             group-calc-changes      \ cngs link grp-cngs
             rot                     \ link grp-cngs cngs
@@ -1204,7 +1418,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
         \ Check if group might apply.
         dup group-get-pn            \ ret-lst smpl1 link smpl1 grpx pn
-        3 <                         \ ret-lst smpl1 link smpl1 grpx flag
+        #3 <                        \ ret-lst smpl1 link smpl1 grpx flag
         if
             over sample-get-initial     \ ret-lst smpl1 link smpl1 grpx stax
             over group-get-r-region     \ ret-lst smpl1 link smpl1 grpx stax regx
@@ -1212,7 +1426,7 @@ action-groups               cell+ constant action-function              \ An xt 
             if
                 group-calc-forward-steps        \ ret-lst smpl1 link grp-stp-lst
                 dup                             \ ret-lst smpl1 link grp-stp-lst grp-stp-lst
-                4 pick                          \ ret-lst smpl1 link grp-stp-lst grp-stp-lst ret-lst
+                #4 pick                         \ ret-lst smpl1 link grp-stp-lst grp-stp-lst ret-lst
                 step-list-append-xt execute     \ ret-lst smpl1 link grp-stp-lst
                 step-list-deallocate-xt execute \ ret-lst smpl1 link
             else
@@ -1253,7 +1467,7 @@ action-groups               cell+ constant action-function              \ An xt 
         \ Get backward steps, step-list returned may be empty.
         group-calc-backward-steps           \ ret smpl1 link stp-lst
         dup                                 \ ret smpl1 link stp-lst stp-lst
-        4 pick                              \ ret smpl1 link stp-lst stp-lst ret
+        #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
         step-list-append-xt execute         \ ret smpl1 link stp-lst
         step-list-deallocate-xt execute     \ ret smpl1 link
 
@@ -1286,7 +1500,7 @@ action-groups               cell+ constant action-function              \ An xt 
         \ Get steps, step-list returned may be empty.
         group-get-steps-by-changes-f        \ ret smpl1 link stp-lst
         dup                                 \ ret smpl1 link stp-lst stp-lst
-        4 pick                              \ ret smpl1 link stp-lst stp-lst ret
+        #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
         step-list-append-xt execute         \ ret smpl1 link stp-lst
         step-list-deallocate-xt execute     \ ret smpl1 link
 
@@ -1319,7 +1533,7 @@ action-groups               cell+ constant action-function              \ An xt 
         \ Get steps, step-list returned may be empty.
         group-get-steps-by-changes-b        \ ret smpl1 link stp-lst
         dup                                 \ ret smpl1 link stp-lst stp-lst
-        4 pick                              \ ret smpl1 link stp-lst stp-lst ret
+        #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
         step-list-append-xt execute         \ ret smpl1 link stp-lst
         step-list-deallocate-xt execute     \ ret smpl1 link
 
@@ -1329,3 +1543,91 @@ action-groups               cell+ constant action-function              \ An xt 
     drop                            \ ret
     \ cr ." action-get-steps-by-changes-f: " dup .step-list-xt execute cr
 ;
+
+\ Return a forward-chaining step, given a sample, rule and alternate-rule.
+: action-make-forward-step ( smpl3 alt-rul2 rul1 act0 -- stp true | false )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-rule
+    #2 pick if
+        assert-3os-is-rule
+    then
+    assert-4os-is-sample
+
+    \ Get rue forward sample.
+    #3 pick #2 pick                 \ smpl3 alt-rul2 rul1 act0 | smpl3 rul1
+    rule-calc-forward-sample        \ smpl3 alt-rul2 rul1 act0 | rul1-smpl t | f
+    0= if                           \ smpl3 alt-rul2 rul1 act0
+        2drop
+        2drop
+        false                       \ false
+        exit
+    then
+
+    \ Get alt-rule forward sample, if any.
+                                    \ smpl3 alt-rul2 rul1 act0 | rul1-smpl
+    #3 pick                         \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
+    dup 0<>
+    if                              \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
+        \ Calc alternate sample, not bounded by smpl3.
+        over sample-get-initial     \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2 smpl-i
+        swap                        \ smpl3 alt-rul2 rul1 act0 | rul1-smpl smpl-i alt-rul2
+        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 act0 | rul1-smpl, alt-rul2-smpl t | f
+        0= if                       
+            ." Alt sample failed?" abort
+        then
+    \ else                          \ smpl3 alt-rul2 rul1 act0 | rul1-smpl 0
+    then                            \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2-smpl
+
+    swap                            \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl
+    #2 pick                         \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl act0
+    step-new-xt execute             \ smpl3 alt-rul2 rul1 act0 | stpx
+    nip nip nip nip                 \ stpx
+    true                            \ stpx true
+;
+
+' action-make-forward-step to action-make-forward-step-xt
+
+\ Return a backward-chaining step, given a sample, rule and alternate-rule.
+: action-make-backward-step ( smpl3 alt-rul2 rul1 act0 -- stp true | false )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-rule
+    #2 pick if
+        assert-3os-is-rule
+    then
+    assert-4os-is-sample
+
+    \ Get rue forward sample.
+    #3 pick #2 pick                 \ smpl3 alt-rul2 rul1 act0 | smpl3 rul1
+    rule-calc-backward-sample       \ smpl3 alt-rul2 rul1 act0 | rul1-smpl t | f
+    0= if                           \ smpl3 alt-rul2 rul1 act0
+        2drop
+        2drop
+        false                       \ false
+        exit
+    then
+
+    \ Get alt-rule forward sample, if any.
+                                    \ smpl3 alt-rul2 rul1 act0 | rul1-smpl
+    #3 pick                         \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
+    dup 0<>
+    if                              \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
+        \ Calc alternate sample, not bounded by smpl3.
+        over sample-get-initial     \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2 smpl-i
+        swap                        \ smpl3 alt-rul2 rul1 act0 | rul1-smpl smpl-i alt-rul2
+        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 act0 | rul1-smpl, alt-rul2-smpl t | f
+        0= if                       
+            ." Alt sample failed?" abort
+        then
+    \ else                          \ smpl3 alt-rul2 rul1 act0 | rul1-smpl 0
+    then                            \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2-smpl
+
+    swap                            \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl
+    #2 pick                         \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl act0
+    step-new-xt execute             \ smpl3 alt-rul2 rul1 act0 | stpx
+    nip nip nip nip                 \ stpx
+    true                            \ stpx true
+;
+
+' action-make-backward-step to action-make-backward-step-xt

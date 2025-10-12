@@ -1,7 +1,7 @@
 \ Implement a step struct and functions.
 
 #37171 constant step-id                                                                                  
-     4 constant step-struct-number-cells
+    #4 constant step-struct-number-cells
 
 \ Struct fields.
 0 constant step-header                          \ id (16) use count (16) forward flag (8)
@@ -38,10 +38,6 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
     step-id =    
-;
-
-: is-not-allocated-step ( addr -- flag )
-    is-allocated-step 0=
 ;
 
 \ Check TOS for step, unconventional, leaves stack unchanged. 
@@ -243,10 +239,13 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     over                    \ stp0 smpl stp0
     .step-sample            \ stp0
 
-    step-get-alt-sample     \ stp0 smpl-alt
+    dup step-get-alt-sample     \ stp0 smpl-alt
     ?dup
     if
-        space ." Alt: " over .step-sample
+        swap                    \ smps-alt stp0
+        space ." Alt: " .step-sample
+    else
+        drop
     then
 ;
 
@@ -259,7 +258,7 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 
     dup struct-get-use-count      \ stp0 count
 
-    2 <
+    #2 <
     if
         \ Deallocate instance.
         dup step-get-sample

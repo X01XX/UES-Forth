@@ -37,34 +37,6 @@ changes-m01-disp    cell+ constant changes-m10-disp
     abort" changes-mma use GT 0"
 ;
 
-\ Start accessors.
-
-\ Return the m01 field of a changes instance.
-: changes-get-m01 ( cngs0 -- u)
-    changes-m01-disp +  \ Add offset.
-    @                   \ Fetch the field.
-;
-
-\ Set the m01 field of a changes instance, use only in this file. 
-: _changes-set-m01 ( u1 cngs0 -- )
-    changes-m01-disp +  \ Add offset.
-    !                   \ Set the field.
-;
-
-\ Return the m10 field of a changes instance.
-: changes-get-m10 ( cngs0 -- u)
-    changes-m10-disp +  \ Add offset.
-    @                   \ Fetch the field.
-;
-
-\ Set the m10 field of a changes instance, use only in this file. 
-: _changes-set-m10 ( u1 cngs0 -- )
-    changes-m10-disp +  \ Add offset.
-    !                   \ Set the field.
-;
-
-\ End accessors.
-
 \ Check instance type.
 
 : is-allocated-changes ( addr -- flag )
@@ -76,10 +48,6 @@ changes-m01-disp    cell+ constant changes-m10-disp
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
     changes-id =     
-;
-
-: is-not-allocated-changes ( addr -- flag )
-    is-allocated-changes 0=
 ;
 
 \ Check TOS for changes, unconventional, leaves stack unchanged. 
@@ -94,7 +62,39 @@ changes-m01-disp    cell+ constant changes-m10-disp
     abort" NOS is not an allocated changes."
 ;
 
-\ Allocate a changes, setting id and use count only, use only in this file. 
+\ Start accessors.
+
+\ Return the m01 field of a changes instance.
+: changes-get-m01 ( cngs0 -- u)
+    \ Check arg.
+    assert-tos-is-changes
+
+    changes-m01-disp +  \ Add offset.
+    @                   \ Fetch the field.
+;
+
+\ Set the m01 field of a changes instance, use only in this file. 
+: _changes-set-m01 ( u1 cngs0 -- )
+    changes-m01-disp +  \ Add offset.
+    !                   \ Set the field.
+;
+
+\ Return the m10 field of a changes instance.
+: changes-get-m10 ( cngs0 -- u)
+    \ Check arg.
+    assert-tos-is-changes
+
+    changes-m10-disp +  \ Add offset.
+    @                   \ Fetch the field.
+;
+
+\ Set the m10 field of a changes instance, use only in this file. 
+: _changes-set-m10 ( u1 cngs0 -- )
+    changes-m10-disp +  \ Add offset.
+    !                   \ Set the field.
+;
+
+\ End accessors.
 
 \ Allocate a changes, setting id and use count only, use only in this file. 
 : _changes-allocate ( -- cngs0 )
@@ -132,7 +132,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
 
     dup struct-get-use-count      \ cngs0 count
 
-    2 <
+    #2 <
     if
         \ Deallocate instance.
         changes-mma mma-deallocate
@@ -167,7 +167,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
     2dup changes-get-m10        \ sta1 cngs0 sta1 m10
     and                         \ sta1 cngs0 msk10
     swap changes-get-m01        \ sta1 msk10 m01
-    2 pick !not                 \ sta1 msk10 m01 ~sta1
+    #2 pick !not                \ sta1 msk10 m01 ~sta1
     and                         \ sta1 msk10 msk01
     or                          \ sta1 msk
     xor                         \ result state
@@ -204,7 +204,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
     region-get-state-0          \ edg-msk fs0 ts0
     2dup invert                 \ edg-msk fs0 ts0 fs0 ~ts0
     and                         \ edg-msk fs0 ts0 m10 
-    3 pick and                  \ edg-msk fs0 ts0 m10'
+    #3 pick and                 \ edg-msk fs0 ts0 m10'
     -rot                        \ edg-msk m10' fs0 ts0
     swap invert and             \ edg-msk m10' m01
     rot and                     \ m10' m01'
