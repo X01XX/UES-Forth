@@ -76,14 +76,16 @@
     then
     rulestore-deallocate                \ rs1
 
-    \ Test two pn-2 rulestores that should not form a union, due to too much compatibility.
+    \ Test two pn-2 rulestores that should form a union, using change mask only.
     s" 11/11/11/00/" rule-from-string   \ rs1 rul1
     s" 11/11/11/01/" rule-from-string   \ rs1 rul1 rul2
     rulestore-new-2                     \ rs1 rs4
+    cr ." rulestore1: " over .rulestore cr
     cr ." rulestore4: " dup .rulestore cr
 
     2dup rulestore-union                \ rs1 rs4, rsx true | false
     if
+    cr ." union:      " dup .rulestore cr
         rulestore-deallocate
     else
         cr ." rulestore-union rs1 rs4 did not succeed?" cr

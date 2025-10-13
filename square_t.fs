@@ -213,17 +213,6 @@
 
     square-deallocate
     square-deallocate
-    
-    \ Try too compatible. Combination produces X0, X1 and XX, Xx.
-    #5 #5 square-new
-    #10 over square-add-result drop  \ sqr5-5-a
-    #9 #9 square-new
-    1 over square-add-result drop  \ sqr9-9-1
-    2dup square-compare
-    assert-char-I
-
-    square-deallocate
-    square-deallocate
 
     cr ."    pn 2 to 2 compatible:"
     #5 #5 square-new

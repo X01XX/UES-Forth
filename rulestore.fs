@@ -424,23 +424,24 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     assert-tos-is-rulestore
     assert-nos-is-rulestore
 
-    2dup rulestore-union-00         \ rs1 rs2, rs3 true | false
-    if                              \ rs1 rs2 rs3
-        -rot                        \ rs3 rs1 rs0
-        2dup rulestore-union-10     \ rs3 rs1 rs0 rs4 true | false
-        if                          \ rs3 rs1 rs0 rs4
-            \ cr ." too compatible" cr
-            rulestore-deallocate    \ rs3 rs1 rs0
-            rot                     \ rs1 rs0 rs3
-            rulestore-deallocate    \ rs1 rs0
-            rulestore-union-by-changes
-        else                        \ rs3 rs1 rs0
-            2drop                   \ rs3
-            true                    \ rs3 true
-        then
-    else                            \ rs1 rs2
-        rulestore-union-10          \ rs3 true | false
+    \ Try union by change-mask only.
+    2dup rulestore-union-by-changes \ rs1 rs0, rs3 t | f
+    if                              \ rs1 rs0 rs3
+        nip nip
+        true
+        exit
     then
+
+    \ Try union by change-mask and same-result, order 1.
+    2dup rulestore-union-00         \ rs1 rs2, rs3 true | false
+    if                              \ rs1 rs0 rs3
+        nip nip
+        true
+        exit
+    then
+
+    \ Try union by change-mask and same-result, order 2.
+    rulestore-union-10         \ rs3 true | false
 ;
 
 \ Return the union of two rulestores.
