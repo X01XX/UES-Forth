@@ -1,3 +1,5 @@
+Features, as compared with UES-Rust and UES-LISP.
+
 Uses home-grown memory management.
     Uses heap memory for data (allocate) instead of memory within the dictionary (alloc).
 
@@ -17,6 +19,9 @@ Action dissimilar square pairs, whence the logical structure, is the starting po
 Square and group pn value is not stored, it is gleaned from the rulestore contents.
 
 Changed rule union logic for two-result states.
-If both orders of union work, instead of just one order, then
-try union by change mask ( 0->1 + 1->0 ) only.
+First try union by change mask ( 0->1 + 1->0 ) only, possibly creating X->X and X->x bit positions.
+Next try union by change-mask and same-result, possibly creating X->1 and X->0 bit positions.
+
+I once was testing a problem, and I had a very clear perception of state samples going from two (in-order) results,
+then to unpredictable, then back to two. In the end, I decided it was unpredictable.
 
