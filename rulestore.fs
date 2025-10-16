@@ -622,6 +622,8 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         \ Make rule.
         cur-action-xt execute           \ | 0/rul1-smpl rul0-smpl actx
         step-new-xt execute             \ | stpx
+        false over                      \ | stpx f stpx
+        step-set-forward-xt execute     \ | stpx
         over                            \ | stpx stp-lst
         step-list-push-xt execute       \ |
     then
@@ -647,6 +649,8 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
             swap                        \ | rul0-smpl rul1-smpl
             cur-action-xt execute       \ | rul0-smpl rul1-smpl actx
             swap step-new-xt execute    \ | stpx
+            false over                  \ | stpx f stpx
+            step-set-forward-xt execute \ | stpx
             #3 pick                     \ | stpx stp-lst
             step-list-push-xt execute   \ |
         then

@@ -173,6 +173,47 @@
     cr ." rule-test-get-backward-step - Ok" cr
 ;
 
+: rule-test-adjust-xb
+    \ Test primary effects.
+    %0010 %0100 changes-new             \ cngs
+    cr dup .changes
+    s" X1/X1/X0/X0/" rule-from-string   \ cngs rulx
+    cr dup .rule
+    2dup rule-adjust-xb                 \ cngs rulx rulx'
+    cr dup .rule cr
+    s" 11/01/10/00/" rule-from-string   \ cngs rulx rulx' rul-t
+    2dup rule-eq                        \ cngs rulx rulx' rul-t flag
+    0= abort" rules not eq 1?"
+
+    rule-deallocate
+    rule-deallocate
+    rule-deallocate                     \ cngs
+
+    \ Test non-changes, 2.
+    cr dup .changes
+    s" 01/01/10/10/" rule-from-string   \ cngs rulx
+    cr dup .rule
+    2dup rule-adjust-xb                 \ cngs rulx rulx'
+    cr dup .rule cr
+    2dup rule-eq                        \ cngs rulx rulx' flag
+    0= abort" rules not eq 2?"
+    rule-deallocate
+    rule-deallocate                     \ cngs
+
+    \ Test non-changes, 3.
+    cr dup .changes
+    s" Xx/Xx/Xx/Xx/" rule-from-string   \ cngs rulx
+    cr dup .rule
+    2dup rule-adjust-xb                 \ cngs rulx rulx'
+    cr dup .rule cr
+    2dup rule-eq                        \ cngs rulx rulx' flag
+    0= abort" rules not eq 3?"
+    rule-deallocate
+    rule-deallocate                     \ cngs
+
+    changes-deallocate
+;
+
 : rule-tests
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
@@ -180,5 +221,6 @@
     rule-test-get-forward-sample
     rule-test-restrict-to-region
     rule-test-get-backward-sample
+    rule-test-adjust-xb
 ;
 

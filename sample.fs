@@ -197,7 +197,7 @@ sample-initial-disp cell+ constant sample-result-disp
 ;
 
 \ Return true if a sample result state is NE the initial state.
-: sample-r-ne-i ( smpl -- flag )
+: sample-any-change ( smpl -- flag )
     \ Check arg.
     assert-tos-is-sample
 

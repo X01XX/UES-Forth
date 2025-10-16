@@ -708,7 +708,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Recalc action-logical-structure from action-incompatible-pairs.
 :  _action-recalc-logical-structure ( act0 -- )
-    cr ." _action-recalc-logical-structure - start" cr
+   \  cr ." _action-recalc-logical-structure - start" cr
     \ Check args.
     assert-tos-is-action
 
@@ -770,7 +770,7 @@ action-groups               cell+ constant action-function              \ An xt 
     if
         list-deallocate
         2drop
-        cr ." _action-check-incompatible-pairs: exit early" cr
+        \ cr ." _action-check-incompatible-pairs: exit early" cr
         exit
     then
 
@@ -1626,6 +1626,8 @@ action-groups               cell+ constant action-function              \ An xt 
     swap                            \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl
     #2 pick                         \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl act0
     step-new-xt execute             \ smpl3 alt-rul2 rul1 act0 | stpx
+    false over                      \ smpl3 alt-rul2 rul1 act0 | stpx f stpx
+    step-set-forward-xt execute     \ smpl3 alt-rul2 rul1 act0 | stpx
     nip nip nip nip                 \ stpx
     true                            \ stpx true
 ;

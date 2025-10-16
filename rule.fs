@@ -777,6 +777,9 @@ rule-m11    cell+ constant rule-m10
     rule-get-m10 1 lshift over _rule-set-m10
 ;
 
+\ Givin initial and result chars,
+\ left-shift all rule masks, set the right-most rule mask
+\ bit positions.  For the rule-from-string function.
 : rule-adjust-masks ( ci cr rul0 -- )
     \ Check arg
     assert-tos-is-rule
@@ -902,7 +905,7 @@ rule-m11    cell+ constant rule-m10
     -rot                            \ sta1 m10 sta1 rul0
     rule-get-m01                    \ sta1 m10 sta1 r-m01
     swap invert and                 \ sta1 m10 m01
-    or                              \ sta1 msk
+    or                              \ sta1 change-msk
     over xor                        \ sta1 sta2
     swap                            \ sta2 sta1
     sample-new                      \ smpl
@@ -997,36 +1000,129 @@ rule-m11    cell+ constant rule-m10
     then
 ;
 
+\ Given wanted changes, mask out unwanted parts of X->0 and X->1 bit positions.
+\ For backward chaining.
+: rule-adjust-xb ( cngs1 rul0 -- rul )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-changes
+    over changes-get-masks and 0<> abort" changes cannot be doubled up"
+
+    \ Get mx0.
+    dup rule-get-m10                \ cngs1 rul0 | r-m10
+    over rule-get-m00               \ cngs1 rul0 | r-m10 r-m00
+    and                             \ cngs1 rul0 | mx0
+    ?dup if
+
+        \ Get m10'
+        #2 pick changes-get-m10     \ cngs1 rul0 | mx0 c-m10
+        invert                      \ cngs1 rul0 | mx0 c-m10-not
+        and                         \ cngs1 rul0 | m00-wanted
+        invert                      \ cngs1 rul0 | m10-mask-off
+        over rule-get-m10           \ cngs1 rul0 | m10-mask-off r-m10
+        and                         \ cngs1 rul0 | m10'
+        -rot                        \ m10' cngs1 rul0 |
+
+        \ Get mx0.
+        dup rule-get-m10            \ cngs1 rul0 | r-m10
+        over rule-get-m00           \ cngs1 rul0 | r-m10 r-m00
+        and                         \ cngs1 rul0 | mx0
+
+        \ Get m00'.
+        #2 pick changes-get-m10     \ cngs1 rul0 | mx0 c-m10
+        and                         \ cngs1 rul0 | m10-wanted
+        invert                      \ cngs1 rul0 | m00-mask-off
+        over rule-get-m00           \ cngs1 rul0 | m00-mask-off r-m00
+        and                         \ cngs1 rul0 | m00'
+        -rot                        \ m10' m00' cngs1 rul0 |
+    else
+        dup rule-get-m10 -rot       \ m10 cngs rul0
+        dup rule-get-m00 -rot       \ m10 m00 cngs rul0
+    then
+
+    \ Get mx1
+    dup rule-get-m01                \ cngs1 rul0 | r-m01
+    over rule-get-m11               \ cngs1 rul0 | r-m01 r-m11
+    and                             \ cngs1 rul0 | mx1
+
+    ?dup if
+        \ Get m11'
+        #2 pick changes-get-m01     \ cngs1 rul0 | mx1 c-m01
+        and                         \ cngs1 rul0 | m01-wanted
+        invert                      \ cngs1 rul0 | m11-mask-off
+        over rule-get-m11           \ cngs1 rul0 | m11-mask-off r-m11
+        and                         \ cngs1 rul0 | m11'
+        -rot                        \ m10' m00' m11' cngs1 rul0 |
+
+        \ Get mx1.
+        dup rule-get-m01            \ cngs1 rul0 | r-m01
+        over rule-get-m11           \ cngs1 rul0 | r-m01 r-m11
+        and                         \ cngs1 rul0 | mx1
+
+        \ Get m01'.
+        #2 pick changes-get-m01     \ cngs1 rul0 | mx1 c-m01
+        invert                      \ cngs1 rul0 | mx1 c-m01-not
+        and                         \ cngs1 rul0 | m11-wanted
+        invert                      \ cngs1 rul0 | m01-mask-off
+        over rule-get-m01           \ cngs1 rul0 | m01-mask-off r-m01
+        and                         \ cngs1 rul0 | m01'
+        -rot                        \ m10' m00' m11' m01' cngs1 rul0 |
+    else
+        dup rule-get-m11 -rot       \ m10 m00 m11 cngs rul0
+        dup rule-get-m01 -rot       \ m10 m00 m11 m01 cngs rul0
+    then
+
+    \ Clean up.
+    2drop
+
+    \ Build result rule.
+    _rule-allocate              \ m10' m00' m11' m01' rul
+    tuck _rule-set-m01          \ m10' m00' m11' rul
+    tuck _rule-set-m11          \ m10' m00' rul
+    tuck _rule-set-m00          \ m10' rul
+    tuck _rule-set-m10          \ rul
+;
+
 \ Apply a rule to a given state, backward-chaining, returning a sample.
 \ For X->0, the result will be 1->0.
 \ For X->1, the result will be 0->1.
-: rule-apply-to-state-b ( sta1 rul0 -- smpl true | false )
+: rule-apply-to-state-b ( smpl1 rul0 -- smpl true | false )
     \ Check args.
     assert-tos-is-rule
-    assert-nos-is-value
+    assert-nos-is-sample
 
     \ Check if the state is not in the rule result region.
-    2dup                            \ sta1 rul0 | sta1 rul0
-    rule-calc-result-region         \ sta1 rul0 | sta1 regx (dl)
-    tuck                            \ sta1 rul0 | regx sta1 regx
-    region-superset-of-state        \ sta1 rul0 | regx flag
-    swap region-deallocate          \ sta1 rul0 | flag
+    over sample-get-result          \ smpl1 rul0 | sta-r
+    over                            \ smpl1 rul0 | sta-r rul0
+    rule-calc-result-region         \ smpl1 rul0 | sta-r regx (dl)
+    tuck                            \ smpl1 rul0 | regx sta-r regx
+    region-superset-of-state        \ smpl1 rul0 | regx flag
+    swap region-deallocate          \ smpl1 rul0 | flag
     0= if
         2drop false exit
     then
 
+    \ Massage rule Xb positions.
+    over sample-calc-changes dup    \ smpl1 rul0 | s-cngs s-cngs
+    rot rule-adjust-xb              \ smpl1 s-cngs rul0'
+    swap changes-deallocate         \ smpl1 rul0' |
+    
+
     \ Get m10 mask that affects the given state.
-                                    \ sta1 rul0
-    over swap                       \ sta1 sta1 rul0
-    over invert                     \ sta1 sta1 rul0 sta1'
-    over rule-get-m10 and           \ sta1 sta1 rul0 m10'
-    -rot                            \ sta1 m10' sta1 rul0action-get-steps-by-changes
+    swap sample-get-result swap     \ sta-r rul0' |
+                                    \ sta-r rul0' |
+    over                            \ sta-r rul0' | sta-r
+    !not                            \ sta-r rul0' | sta-r'
+    over rule-get-m10 and           \ sta-r rul0' | m10'
 
     \ Get m01 mask that affects the given state.
-    rule-get-m01                    \ sta1 m10 sta1 r-m01
-    and                             \ sta1 m10 m01
-    or                              \ sta1 msk
-    over xor                        \ sta1 sta2
+    over rule-get-m01               \ sta-r rul0' | m10' m01
+    #3 pick and                     \ sta-r rul0' | m10' m01'
+
+    \ Get sample.
+    or                              \ sta-r rul0' | change-msk
+    swap rule-deallocate            \ sta-r change-mask
+    over xor                        \ sta-r sta-i
     sample-new                      \ smpl
     true
 ;
@@ -1058,7 +1154,7 @@ rule-m11    cell+ constant rule-m10
     then
 
     \ Check if rule did not change the smpl1 initial state.
-    dup sample-r-ne-i           \ smpl1 rul0' | smpl2 flag
+    dup sample-any-change         \ smpl1 rul0' | smpl2 flag
     0= if
         sample-deallocate
         2drop false exit
@@ -1070,7 +1166,7 @@ rule-m11    cell+ constant rule-m10
     true
 ;
 
-\ Return a backward sample for a startitg sample and rule.
+\ Return a backward sample for a starting sample and rule.
 : rule-calc-backward-sample ( smpl1 rul0 -- step true | false )
     \ Check args.
     assert-tos-is-rule
@@ -1093,8 +1189,9 @@ rule-m11    cell+ constant rule-m10
 
     \ Get sample from rule.
                                         \ smpl1 rul0'
-    over sample-get-result              \ smpl1 rul0' s-r
-    over                                \ smpl1 rul0' s-r rul0'
+    \ over sample-get-result              \ smpl1 rul0' s-r
+    \ over                                \ smpl1 rul0' s-r rul0'
+    2dup                                \ smpl1 rul0 smpl rul0
     rule-apply-to-state-b               \ smpl1 rul0', smpl2 t | f
     0= if
         rule-deallocate                 \ smpl1
@@ -1104,7 +1201,7 @@ rule-m11    cell+ constant rule-m10
     then
 
     \ Check if rule did not change the smpl1 result state.
-    dup sample-r-ne-i                   \ smpl1 rul0' smpl2 flag
+    dup sample-any-change                  \ smpl1 rul0' smpl2 flag
     0= if
         sample-deallocate               \ smpl1 rul0'
         rule-deallocate                 \ smpl1
@@ -1142,61 +1239,6 @@ rule-m11    cell+ constant rule-m10
     and 0<>
 ;
 
-\ Restrict a rule to a changes instance.
-\ Xs in the rules' initial region, corresponding to a changes bit,
-\ will become non-X.
-\ For a 0 bit in a state, corresponding to a X->1 bit in a rule,
-\ you don't need 0->1 then X->0, 0->0 will do.
-: rule-restrict-to-changes  ( cngs1 rul0 -- rul )
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-changes
-    \ Check cm10 & cm01 is zero.
-    over changes-get-masks and 0<> abort" changes cannot be doubled up"
-
-    \ Init return rule.
-    0 0 rule-new                \ cngs1 rul0 rul0' |
-
-    \ Get m01 set in changes and rule.
-    #2 pick changes-get-m01     \ | cm01
-    #2 pick rule-get-m01        \ | cm01 r01
-    and                         \ | m01'
-
-    \ Invert to mask out bits.
-    invert                      \ | ~m01'
-
-    \ Calc return rule m10.
-    #2 pick rule-get-m10        \ | ~m01' rm10
-    over and                    \ | ~m01' rm10'
-    #2 pick _rule-set-m10       \ | ~m01'
-
-    \ Calc return rule m11.
-    #2 pick rule-get-m11        \ | ~m01' rm11
-    and                         \ | rm11'
-    over _rule-set-m11          \ |
-
-    \ Get m10 set in changes and rule.
-    #2 pick changes-get-m10     \ | cm10
-    #2 pick rule-get-m10        \ | cm10 r10
-    and                         \ | m01'
-
-    \ Invert to mask out bits.
-    invert                      \ | ~m10'
-
-    \ Calc return rule m01.
-    #2 pick rule-get-m01        \ | ~m10' rm01
-    over and                    \ | ~m10' rm01'
-    #2 pick _rule-set-m01       \ | ~m10'
-
-    \ Calc return rule m00.
-    #2 pick rule-get-m00        \ | ~m10' rm00
-    and                         \ | rm00'
-    over _rule-set-m00          \ |
-
-    \ Return                    \ cngs1 rul0 rul'
-    nip nip
-;
-
 \ Return true if a rules' change intersects a changes' changes.
 : rule-intersects-changes ( csgs1 rul0 -- flag )
     \ Check args.
@@ -1220,12 +1262,12 @@ rule-m11    cell+ constant rule-m10
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-sample
-    over sample-r-ne-i 0= abort" sample does not change?"
+    over sample-any-change 0= abort" sample does not change?"
 
     \ Check if rule has wanted changes.
     over sample-calc-changes            \ smpl1 rul0 cngs (dl)
     swap                                \ smpl1 cngs rul0
-    2dup rule-intersects-changes        \ smpl1 cngs r0 flag
+    2dup rule-intersects-changes        \ smpl1 cngs rul0 flag
     0= if
         drop
         changes-deallocate
@@ -1234,14 +1276,11 @@ rule-m11    cell+ constant rule-m10
         exit
     then
 
-    \ Restrict rule to changes, like X->1 to 0->1, for 0->1 in changes.
-    over swap                           \ smpl1 cngs cngs rul0
-    rule-restrict-to-changes            \ smpl1 cngs rul0' (dl)
-    swap changes-deallocate             \ smpl1 rul0' |
+    swap changes-deallocate             \ smpl1 rul0 |
     
     \ Check forward path.
     over sample-get-initial dup         \ | sta-i sta-i
-    #2 pick                             \ | sta-i sta-i rul0'
+    #2 pick                             \ | sta-i sta-i rul0
     rule-calc-initial-region            \ | sta-i sta-i reg-i (dl)
     tuck region-superset-of-state       \ | sta-i reg-i flag
     0= if
@@ -1254,11 +1293,11 @@ rule-m11    cell+ constant rule-m10
 
     \ sta-i now known to intersect rule initial region.
                                         \ | sta-i
-    over rule-apply-to-state-f          \ smpl1 rul0', smpl t | f
+    over rule-apply-to-state-f          \ smpl1 rul0, smpl t | f
     0= abort" apply failed?"
 
     \ Clean up.
-    swap rule-deallocate                \ smpl1 smpl
+    nip                                 \ smpl1 smpl
     nip
     true
 ;
@@ -1269,7 +1308,7 @@ rule-m11    cell+ constant rule-m10
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-sample
-    over sample-r-ne-i 0= abort" sample does not change?"
+    over sample-any-change 0= abort" sample does not change?"
 
     \ Check if rule has wanted changes.
     over sample-calc-changes            \ smpl1 rul0 cngs (dl)
@@ -1285,7 +1324,7 @@ rule-m11    cell+ constant rule-m10
 
     \ Restrict rule to changes, like X->1 to 0->1, for 0->1 in changes.
     over swap                           \ smpl1 cngs cngs rul0
-    rule-restrict-to-changes            \ smpl1 cngs rul0' (dl)
+    rule-adjust-xb                      \ smpl1 cngs rul0' (dl)
     swap changes-deallocate             \ smpl1 rul0' |
     
     \ Check backward path.
@@ -1303,11 +1342,14 @@ rule-m11    cell+ constant rule-m10
 
     \ sta-i now known to intersect rule initial region.
                                         \ | sta-i
-    over rule-apply-to-state-b          \ smpl1 rul0', smpl t | f
+    over rule-apply-to-state-f          \ smpl1 rul0', smpl t | f
     0= abort" apply failed?"
+    false over                          \ smpl1 rul0' smpl f smpl
+    step-set-forward-xt execute         \ smpl1 rul0' smpl
 
     \ Clean up.
     swap rule-deallocate                \ smpl1 smpl
     nip
     true
 ;
+
