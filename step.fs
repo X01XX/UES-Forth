@@ -46,6 +46,8 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     abort" TOS is not an allocated step"
 ;
 
+' assert-tos-is-step to assert-tos-is-step-xt
+
 \ Check NOS for step, unconventional, leaves stack unchanged. 
 : assert-nos-is-step ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-step 0=
@@ -296,4 +298,88 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     swap changes-deallocate     \ flag
 ;
 
+\ Return a forward-chaining step, given a rule, alternate-rule (may be zero) and sample.
+: step-new-by-rule-f ( smpl3 alt-rul2 rul1 -- stp true | false )
+    \ Check args.
+    assert-tos-is-rule
+    over if
+        assert-nos-is-rule
+    then
+    assert-3os-is-sample
 
+    \ Get rule forward sample.
+    #2 pick over                    \ smpl3 alt-rul2 rul1 | smpl3 rul1
+    rule-calc-forward-sample        \ smpl3 alt-rul2 rul1 | rul1-smpl t | f
+    0= if                           \ smpl3 alt-rul2 rul1
+        3drop
+        false                       \ false
+        exit
+    then
+
+    \ Get alt-rule forward sample, if any.
+                                    \ smpl3 alt-rul2 rul1 | rul1-smpl
+    #2 pick                         \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
+    dup 0<>
+    if                              \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
+        \ Calc alternate sample, not bounded by smpl3.
+        over sample-get-initial     \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2 smpl-i
+        swap                        \ smpl3 alt-rul2 rul1 | rul1-smpl smpl-i alt-rul2
+        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 | rul1-smpl, alt-rul2-smpl t | f
+        0= if                       
+            ." Alt sample failed?" abort
+        then
+    \ else                          \ smpl3 alt-rul2 rul1 | rul1-smpl 0
+    then                            \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2-smpl
+
+    swap                            \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl
+    cur-action-xt execute           \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl act0
+    step-new-xt execute             \ smpl3 alt-rul2 rul1 | stpx
+    nip nip nip                     \ stpx
+    true                            \ stpx true
+;
+
+' step-new-by-rule-f to step-new-by-rule-f-xt
+
+\ Return a backward-chaining step, given a rule, alternate-rule (may be zero), and sample.
+: step-new-by-rule-b ( smpl3 alt-rul2 rul1 -- stp true | false )
+    \ Check args.
+    assert-tos-is-rule
+    over if
+        assert-nos-is-rule
+    then
+    assert-3os-is-sample
+
+    \ Get rule forward sample.
+    #2 pick over                    \ smpl3 alt-rul2 rul1 | smpl3 rul1
+    rule-calc-backward-sample       \ smpl3 alt-rul2 rul1 | rul1-smpl t | f
+    0= if                           \ smpl3 alt-rul2 rul1
+        3drop
+        false                       \ false
+        exit
+    then
+
+    \ Get alt-rule forward sample, if any.
+                                    \ smpl3 alt-rul2 rul1 | rul1-smpl
+    #2 pick                         \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
+    dup 0<>
+    if                              \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
+        \ Calc alternate sample, not bounded by smpl3.
+        over sample-get-initial     \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2 smpl-i
+        swap                        \ smpl3 alt-rul2 rul1 | rul1-smpl smpl-i alt-rul2
+        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 | rul1-smpl, alt-rul2-smpl t | f
+        0= if                       
+            ." Alt sample failed?" abort
+        then
+    \ else                          \ smpl3 alt-rul2 rul1 | rul1-smpl 0
+    then                            \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2-smpl
+
+    swap                            \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl
+    cur-action-xt execute           \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl act0
+    step-new-xt execute             \ smpl3 alt-rul2 rul1 | stpx
+    false over                      \ smpl3 alt-rul2 rul1 | stpx f stpx
+    step-set-forward-xt execute     \ smpl3 alt-rul2 rul1 | stpx
+    nip nip nip                     \ stpx
+    true                            \ stpx true
+;
+
+' step-new-by-rule-b to step-new-by-rule-b-xt

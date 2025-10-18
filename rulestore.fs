@@ -661,7 +661,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
 \ Return a pn value, based on the number of rules stored in a rulestore.
 : rulestore-get-pn ( rul-str -- pn )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-rulestore
 
     dup rulestore-get-rule-0            \ rul-str rul0
@@ -676,5 +676,31 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         #2
     else
         1
+    then
+;
+
+\ Return true if rulestore has at least one needed change.
+: rulestore-has-any-change ( cngs1 rul-str0 -- flag )
+    \ Check args.
+    assert-tos-is-rulestore
+    assert-nos-is-changes
+
+    \ Check rule 0.
+    2dup                        \ cngs1 rul-str0 cngs1 rul-str0
+    rulestore-get-rule-0        \ cngs1 rul-str0 cngs1 rul-0
+    rule-has-any-change         \ cngs1 rul-str0 flag
+    if
+        2drop                   \
+        true                    \ true
+        exit
+    then
+
+    \ Check rule 1.             \ cngs1 rul-str0
+    rulestore-get-rule-1        \ cngs1 rul-1
+    ?dup if
+        rule-has-any-change     \ flag
+    else
+        drop                    \
+        false                   \ false
     then
 ;

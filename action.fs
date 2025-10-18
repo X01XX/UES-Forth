@@ -1405,7 +1405,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
-    \ space ." action-get-steps: " over .sample
+    \ space ." action-get-forward-steps: " over .sample
 
     list-new -rot                   \ ret-lst smpl1 act0
     action-get-groups               \ ret-lst smpl1 grp-lst
@@ -1488,26 +1488,34 @@ action-groups               cell+ constant action-function              \ An xt 
     \ space ." Act: " dup action-get-inst-id .
     \ cr space ." action-get-steps-by-changes-f: " over .sample
 
-    list-new -rot                   \ ret smpl1 act0
-    action-get-groups               \ ret smpl1 grp-lst
-    list-get-links                  \ ret smpl1 link
+    over sample-calc-changes            \ smpl1 act0 cngs
+    list-new                            \ smpl1 act0 cngs ret
+    rot action-get-groups               \ smpl1 cngs ret | grp-lst
+    list-get-links                      \ smpl1 cngs ret | link
     begin
         ?dup
     while
-        over                        \ ret smpl1 link smpl1
-        over link-get-data          \ ret smpl1 link smpl1 grpx
+        #2 pick                     \ smpl1 cngs ret | link cngs
+        over link-get-data          \ smpl1 cngs ret | link cngs grpx
+        group-has-any-change        \ smpl1 cngs ret | link flag
+        if
+            \ Group has wanted changes.
+            #3 pick                 \ smpl1 cngs ret | link smpl1
+            over link-get-data      \ smpl1 cngs ret | link smpl1 grpx
+                
+            \ Get steps, step-list returned may be empty.
+            group-get-steps-by-changes-f        \ smpl1 cngs ret | link stp-lst
+            dup                                 \ smpl1 cngs ret | link stp-lst stp-lst
+            #3 pick                             \ smpl1 cngs ret | link stp-lst stp-lst ret
+            step-list-append-xt execute         \ smpl1 cngs ret | link stp-lst
+            step-list-deallocate-xt execute     \ smpl1 cngs ret | link
+        then
 
-        \ Get steps, step-list returned may be empty.
-        group-get-steps-by-changes-f        \ ret smpl1 link stp-lst
-        dup                                 \ ret smpl1 link stp-lst stp-lst
-        #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
-        step-list-append-xt execute         \ ret smpl1 link stp-lst
-        step-list-deallocate-xt execute     \ ret smpl1 link
-
-        link-get-next               \ ret smpl1 link
+        link-get-next               \ smpl1 cngs ret link
     repeat
-                                    \ ret smpl1
-    drop                            \ ret
+                                    \ smpl1 cngs ret
+    swap changes-deallocate         \ smpl1 ret
+    nip                             \ ret
     \ cr ." action-get-steps-by-changes-f: " dup .step-list-xt execute cr
 ;
 
@@ -1544,92 +1552,3 @@ action-groups               cell+ constant action-function              \ An xt 
     \ cr ." action-get-steps-by-changes-f: " dup .step-list-xt execute cr
 ;
 
-\ Return a forward-chaining step, given a sample, rule and alternate-rule.
-: action-make-forward-step ( smpl3 alt-rul2 rul1 act0 -- stp true | false )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-rule
-    #2 pick if
-        assert-3os-is-rule
-    then
-    assert-4os-is-sample
-
-    \ Get rue forward sample.
-    #3 pick #2 pick                 \ smpl3 alt-rul2 rul1 act0 | smpl3 rul1
-    rule-calc-forward-sample        \ smpl3 alt-rul2 rul1 act0 | rul1-smpl t | f
-    0= if                           \ smpl3 alt-rul2 rul1 act0
-        2drop
-        2drop
-        false                       \ false
-        exit
-    then
-
-    \ Get alt-rule forward sample, if any.
-                                    \ smpl3 alt-rul2 rul1 act0 | rul1-smpl
-    #3 pick                         \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
-    dup 0<>
-    if                              \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
-        \ Calc alternate sample, not bounded by smpl3.
-        over sample-get-initial     \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2 smpl-i
-        swap                        \ smpl3 alt-rul2 rul1 act0 | rul1-smpl smpl-i alt-rul2
-        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 act0 | rul1-smpl, alt-rul2-smpl t | f
-        0= if                       
-            ." Alt sample failed?" abort
-        then
-    \ else                          \ smpl3 alt-rul2 rul1 act0 | rul1-smpl 0
-    then                            \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2-smpl
-
-    swap                            \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl
-    #2 pick                         \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl act0
-    step-new-xt execute             \ smpl3 alt-rul2 rul1 act0 | stpx
-    nip nip nip nip                 \ stpx
-    true                            \ stpx true
-;
-
-' action-make-forward-step to action-make-forward-step-xt
-
-\ Return a backward-chaining step, given a sample, rule and alternate-rule.
-: action-make-backward-step ( smpl3 alt-rul2 rul1 act0 -- stp true | false )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-rule
-    #2 pick if
-        assert-3os-is-rule
-    then
-    assert-4os-is-sample
-
-    \ Get rue forward sample.
-    #3 pick #2 pick                 \ smpl3 alt-rul2 rul1 act0 | smpl3 rul1
-    rule-calc-backward-sample       \ smpl3 alt-rul2 rul1 act0 | rul1-smpl t | f
-    0= if                           \ smpl3 alt-rul2 rul1 act0
-        2drop
-        2drop
-        false                       \ false
-        exit
-    then
-
-    \ Get alt-rule forward sample, if any.
-                                    \ smpl3 alt-rul2 rul1 act0 | rul1-smpl
-    #3 pick                         \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
-    dup 0<>
-    if                              \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2
-        \ Calc alternate sample, not bounded by smpl3.
-        over sample-get-initial     \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2 smpl-i
-        swap                        \ smpl3 alt-rul2 rul1 act0 | rul1-smpl smpl-i alt-rul2
-        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 act0 | rul1-smpl, alt-rul2-smpl t | f
-        0= if                       
-            ." Alt sample failed?" abort
-        then
-    \ else                          \ smpl3 alt-rul2 rul1 act0 | rul1-smpl 0
-    then                            \ smpl3 alt-rul2 rul1 act0 | rul1-smpl alt-rul2-smpl
-
-    swap                            \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl
-    #2 pick                         \ smpl3 alt-rul2 rul1 act0 | alt-rul2-smpl rul1-smpl act0
-    step-new-xt execute             \ smpl3 alt-rul2 rul1 act0 | stpx
-    false over                      \ smpl3 alt-rul2 rul1 act0 | stpx f stpx
-    step-set-forward-xt execute     \ smpl3 alt-rul2 rul1 act0 | stpx
-    nip nip nip nip                 \ stpx
-    true                            \ stpx true
-;
-
-' action-make-backward-step to action-make-backward-step-xt

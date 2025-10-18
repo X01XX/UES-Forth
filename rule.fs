@@ -1083,9 +1083,10 @@ rule-m11    cell+ constant rule-m10
     tuck _rule-set-m10          \ rul
 ;
 
-\ Apply a rule to a given state, backward-chaining, returning a sample.
-\ For X->0, the result will be 1->0.
-\ For X->1, the result will be 0->1.
+\ Apply a rule to the result state of a given sample, backward-chaining, returning a sample.
+\ A sample is passed, instead of a state, to allow pruning X->b bit positions.
+\ For X->0, the result will be 1->0 if the change is needed, otherwise 0->0.
+\ For X->1, the result will be 0->1 if the change is needed, otherwise 1->1.
 : rule-apply-to-state-b ( smpl1 rul0 -- smpl true | false )
     \ Check args.
     assert-tos-is-rule
@@ -1099,14 +1100,15 @@ rule-m11    cell+ constant rule-m10
     region-superset-of-state        \ smpl1 rul0 | regx flag
     swap region-deallocate          \ smpl1 rul0 | flag
     0= if
-        2drop false exit
+        2drop
+        false
+        exit
     then
 
     \ Massage rule Xb positions.
     over sample-calc-changes dup    \ smpl1 rul0 | s-cngs s-cngs
     rot rule-adjust-xb              \ smpl1 s-cngs rul0'
     swap changes-deallocate         \ smpl1 rul0' |
-    
 
     \ Get m10 mask that affects the given state.
     swap sample-get-result swap     \ sta-r rul0' |
@@ -1133,35 +1135,37 @@ rule-m11    cell+ constant rule-m10
     assert-tos-is-rule
     assert-nos-is-sample
 
-    \ Restrict the rule initial and result region to the glidepath.
-    over sample-to-region               \ smpl1 rul0 s-reg
-    tuck swap                           \ smpl1 s-reg s-reg rul0
-    rule-restrict-to-region             \ smpl1 s-reg, rul0' t | f
-    if
-        swap region-deallocate          \ smpl1 rul0'
-    else
-        region-deallocate
-        drop
+    \ Get a sample from rul0, and smpl1 initial state, if possible.
+    over sample-get-initial     \ smpl1 rul0 | smp-i
+    over rule-apply-to-state-f  \ smpl1 rul0 | smpl2 true | false
+    0= if
+        2drop
         false
         exit
     then
 
-    \ Get a sample from rul0, and smpl1 initial state, if possible.
-    over sample-get-initial     \ smpl1 rul0' | smp-i
-    over rule-apply-to-state-f  \ smpl1 rul0' | smpl2 true | false
-    0= if
-        2drop false exit
-    then
-
     \ Check if rule did not change the smpl1 initial state.
-    dup sample-any-change         \ smpl1 rul0' | smpl2 flag
+    dup sample-any-change         \ smpl1 rul0 | smpl2 flag
     0= if
         sample-deallocate
-        2drop false exit
+        2drop
+        false
+        exit
+    then
+
+    \ Check if the sample result state is within the given sample.
+    dup sample-get-result       \ smpl1 rul0 | smpl2 s-r
+    #3 pick                     \ smpl1 rul0 | smpl2 s-r smpl1
+    sample-state-between        \ smpl1 rul0 | smpl2 flag
+    0= if
+        sample-deallocate
+        2drop
+        false
+        exit
     then
 
     \ Return
-    swap rule-deallocate        \ smpl1 smpl2
+    nip                         \ smpl1 smpl2
     nip                         \ smpl2
     true
 ;
@@ -1174,47 +1178,39 @@ rule-m11    cell+ constant rule-m10
 
     \ cr ." rule-calc-backward-step: " dup .rule space over .sample cr
 
-    \ Restrict the rule initial and result region to the glidepath.
-    over sample-to-region               \ smpl1 rul0 s-reg
-    tuck swap                           \ smpl1 s-reg s-reg rul0
-    rule-restrict-to-region             \ smpl1 s-reg, rul0' t | f
-    if
-        swap region-deallocate          \ smpl1 rul0'
-    else
-        region-deallocate
-        drop
-        false
-        exit
-    then
-
     \ Get sample from rule.
-                                        \ smpl1 rul0'
-    \ over sample-get-result              \ smpl1 rul0' s-r
-    \ over                                \ smpl1 rul0' s-r rul0'
     2dup                                \ smpl1 rul0 smpl rul0
     rule-apply-to-state-b               \ smpl1 rul0', smpl2 t | f
     0= if
-        rule-deallocate                 \ smpl1
-        drop                            \
+        2drop                           \
         false                           \ f
         exit
     then
 
     \ Check if rule did not change the smpl1 result state.
-    dup sample-any-change                  \ smpl1 rul0' smpl2 flag
+    dup sample-any-change               \ smpl1 rul0' smpl2 flag
     0= if
         sample-deallocate               \ smpl1 rul0'
-        rule-deallocate                 \ smpl1
-        drop                            \
+        2drop                           \
         false                           \ f
         exit
     then
 
-    \ Cleanup.
-    swap rule-deallocate                \ smpl1 smpl2
+    \ Check if the sample initial state is within the given sample.
+    dup sample-get-initial      \ smpl1 rul0 | smpl2 s-i
+    #3 pick                     \ smpl1 rul0 | smpl2 s-i smpl1
+    sample-state-between        \ smpl1 rul0 | smpl2 flag
+    0= if
+        sample-deallocate
+        2drop
+        false
+        exit
+    then
 
-    \ Return.
-    nip                                 \ smpl2
+    \ Cleanup.
+    nip nip                                 \ smpl2
+
+    \ Return
     true
 ;
 
@@ -1353,3 +1349,24 @@ rule-m11    cell+ constant rule-m10
     true
 ;
 
+\ Return true if rule has at least one needed change.
+: rule-has-any-change ( cngs1 rul0 -- flag )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-changes
+
+    over changes-get-m01        \ cngs1 rul0 c-m01
+    over rule-get-m01           \ cngs1 rul0 c-m01 r-m01
+    and                         \ cngs1 rul0 same-ones-mask
+    0<> if
+        2drop                   \
+        true                    \ true
+        exit
+    then
+
+                                \ cngs1 rul0
+    rule-get-m10                \ cngs1 r-m10
+    swap changes-get-m10        \ r-m10 c-m10
+    and                         \ same-ones-mask
+    0<>                         \ flag
+;

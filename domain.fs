@@ -512,6 +512,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 \ Form a plan by getting successive steps closer, between
 \ a sample initial state to a sample result state.
 : domain-get-plan2-f ( smpl1 dom0 -- plan true | false )
+    \ cr ." domain-get-plan2-f" cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
@@ -561,7 +562,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         sample-new                  \ pln smpl2 dom0 | smpl3
         \ Clean up.
         rot sample-deallocate       \ pln dom0 smpl3
-        swap                        \ pln smpl3 dom
+        swap                        \ pln smpl3 dom0
     again
 ;
 
@@ -651,6 +652,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 \ Form a plan by getting successive steps closer, between
 \ a sample result state to a sample initial state.
 : domain-get-plan2-b ( smpl1 dom0 -- plan true | false )
+    \ cr ." domain-get-plan2-b" cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-sample
@@ -674,8 +676,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Check if this is the last step needed.
         #2 pick                     \ pln smpl2 dom0 | stpx smpl2
-        sample-get-initial          \ pln smpl2 dom0 | stpx r-2
-        over step-get-initial       \ pln smpl2 dom0 | stpx smpl2-r stp-r
+        sample-get-initial          \ pln smpl2 dom0 | stpx s-i
+        over step-get-initial       \ pln smpl2 dom0 | stpx s-i stp-i
         = if                        \ pln smpl2 dom0 | stpx
             \ Clean up.
             swap drop               \ pln smpl2 stpx
@@ -825,7 +827,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         false
         exit
     then
-
+    
     \ Prep for loop by single-bit change.
     #2 pick sample-calc-changes             \ smpl1 dom0 | stp-lst cngs
     dup changes-split                       \ smpl1 dom0 | stp-lst cngs cng-lst
@@ -838,6 +840,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     begin
         ?dup
     while                                   \ smpl1 dom0 | stp-lst asym-lst cng-lst link
+        assert-tos-is-link
 
         \ Find steps that provide the one-bit change, but possibly others.
         dup link-get-data                   \ smpl1 dom0 | stp-lst asym-lst cng-lst link cng1
@@ -863,8 +866,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         swap step-list-any-match-sample     \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst flag
         0= if                               \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst
             \ Save the steps.
-            dup #4 pick                     \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst sci-lst asym-lst
-            step-list-append                \ smpl1 dom0 | stp-lst asym-lst cng-lst link sci-lst
+            dup #4 pick                     \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst asym-lst
+            step-list-append                \ smpl1 dom0 | stp-lst asym-lst cng-lst link sc-lst
         then
         step-list-deallocate                \ smpl1 dom0 | stp-lst asym-lst cng-lst link
 
@@ -874,7 +877,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     changes-list-deallocate                 \ smpl1 dom0 | stp-lst asym-lst
     swap step-list-deallocate               \ smpl1 dom0 | asym-lst
 
-    dup list-get-length                     \ smpl1 dom0 | asym-lst
+    dup list-get-length                     \ smpl1 dom0 | asym-lst len
     0<> if
         \ Randomly choose a step.
         dup list-get-length                 \ smpl1 dom0 | asym-lst len
@@ -916,7 +919,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                 cr ." plan found (afc): " dup .plan-xt execute cr
                 nip nip                     \ smpl1 dom0 | asym-lst plan1
                 swap step-list-deallocate   \ smpl1 dom0 plan1
-                nip nip                     \ plan1        
+                nip nip                     \ plan1
                 true
                 exit
             else                            \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4
@@ -926,6 +929,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                 step-list-deallocate        \ smpl1 dom0
                 2drop
                 false
+                \ cr ." domain-asymmetric-chaining-f: exit 4 " .s cr
                 exit
             then
         else
@@ -935,6 +939,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             step-list-deallocate            \ smpl1 dom0
             2drop
             false
+            \ cr ." domain-asymmetric-chaining-f: exit 5 " .s cr
             exit
         then
     else
@@ -955,7 +960,6 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     if
         nip nip true                    \ plan t
     else
-        \ cr ." domain-get-plan: at 1" cr
         domain-asymmetric-chaining-f    \ plan t | f
     then
 ;

@@ -16,11 +16,11 @@
 \ Sample Action Session Domain Need   Changes
 \ 23719, 29717, 31319,  31379, 19717, 31973
 \
-\ Step   Plan   Step2  Plan2
-\ 37171, 37379, 41719, 41737
+\ Step   Plan   Step2  Plan   Group
+\ 37171, 37379, 41719, 41737, 43717
 \
 \ Struct ids not yet used:
-\ 43717, 47137, 47317, 53171,
+\ 47137, 47317, 53171,
 \ 53173, 53197, 53717, 53719, 53731,
 \ 59797, 61379, 61717, 61979.
 
@@ -200,6 +200,9 @@ cr ." main.fs"
     over domain-add-action                      \ sess dom0
 
     [ ' domain-0-act-5-get-sample ] literal     \ sess dom0 xt
+    over domain-add-action                      \ sess dom0
+
+    [ ' domain-0-act-6-get-sample ] literal     \ sess dom0 xt
     over domain-add-action                      \ sess dom0
 
     \ Add a domain

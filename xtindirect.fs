@@ -53,10 +53,6 @@
 
 ' xtabort value assert-nos-is-action-xt
 
-' xtabort value action-make-forward-step-xt
-
-' xtabort value action-make-backward-step-xt
-
 ' xtabort value action-make-need-xt
 
 
@@ -83,6 +79,12 @@
 
 ' xtabort value step-set-forward-xt
 
+' xtabort value step-new-by-rule-f-xt
+
+' xtabort value step-new-by-rule-b-xt
+
+' xtabort value assert-tos-is-step-xt
+
 
 ' xtabort value plan-new-xt
 
@@ -96,6 +98,11 @@
 
 ' xtabort value plan-append-xt
 
+' xtabort value assert-tos-is-plan-xt
+
+' xtabort value assert-nos-is-plan-xt
+
+' xtabort value assert-3os-is-plan-xt
 
 ' xtabort value need-new-xt
 

@@ -1,6 +1,6 @@
 \ Implement a group struct and functions.
 
-#23197 constant group-id                                                                                  
+#43717 constant group-id                                                                                  
     #5 constant group-struct-number-cells
 
 \ Struct fields
@@ -423,9 +423,9 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     group-get-rules         \ rulestore
     rulestore-calc-changes  \ changes
 ;
- 
+
 \ Return a list of possible forward-chaining steps, given a sample.
-\ Where the sample is in the group r-region.
+\ Return 0, 1 or 2 forward steps.
 : group-calc-forward-steps ( smpl1 grp0 -- stp-lst )
     \ Check args.
     assert-tos-is-group
@@ -444,9 +444,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
             0                               \ ret-lst smpl1 grp0 | smpl1 0
             #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
             rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
-            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx
-            action-make-forward-step-xt     \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx xt
-            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-f-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 nip nip                     \ ret-lst stpx
                 over                        \ ret-lst stpx ret-lst
@@ -462,9 +460,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
             over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
             dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
             swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-1 rul0 actx
-            action-make-forward-step-xt     \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0 actx xt
-            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-f-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
                 execute                     \ ret-lst smpl1 grp0 |
@@ -474,9 +470,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
                 over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
                 dup rulestore-get-rule-0        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-0
                 swap rulestore-get-rule-1       \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1
-                cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1 actx
-                action-make-forward-step-xt     \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1 actx xt
-                execute                         \ ret-lst smpl1 grp0 | stpx t | f
+                step-new-by-rule-f-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
                 if                              \ ret-lst smpl1 grp0 | stpx
                     #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
                     execute                     \ ret-lst smpl1 grp0 |
@@ -511,14 +505,12 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     \ Process group by pn value.
     case
         1 of
-                                                        \ ret-lst smpl1 grp0 |
+                                            \ ret-lst smpl1 grp0 |
             over                            \ ret-lst smpl1 grp0 | smpl1
             0                               \ ret-lst smpl1 grp0 | smpl1 0
             #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
             rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
-            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx
-            action-make-backward-step-xt    \ ret-lst smpl1 grp0 | smpl1 0 rul-0 actx xt
-            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-b-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 nip nip                     \ ret-lst stpx
                 over                        \ ret-lst stpx ret-lst
@@ -534,27 +526,29 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
             over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
             dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
             swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-1 rul0 actx
-            action-make-backward-step-xt    \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0 actx xt
-            execute                         \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-b-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
                 execute                     \ ret-lst smpl1 grp0 |
             then
 
             \ Check rule 1.  Rule-1 result region may be a superset of the smpl1 result state, while the rule-0 result region is not.
-            over                            \ ret-lst smpl1 grp0 | smpl1
-            over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
-            dup rulestore-get-rule-0        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
-            swap rulestore-get-rule-1       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-            cur-action-xt execute           \ ret-lst smpl1 grp0 | smpl1 rul-1 rul0 actx
-            action-make-backward-step-xt    \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0 actx xt
-            execute                         \ ret-lst smpl1 grp0 | stpx t | f
-            if                              \ ret-lst smpl1 grp0 | stpx
-                #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
-                execute                     \ ret-lst smpl1 grp0 |
+            dup  group-get-rules                \ ret-lst smpl1 grp0 | grp-ruls
+            rulestore-get-rule-1                \ ret-lst smpl1 grp0 | rul-1
+            ?dup if
+                #2 pick swap                    \ ret-lst smpl1 grp0 | smpl1 rul-1
+                #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 rul-1 grp-ruls
+                rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
+                swap                            \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1
+                step-new-by-rule-b-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
+                if                              \ ret-lst smpl1 grp0 | stpx
+                    #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx ret-lst xt
+                    execute                     \ ret-lst smpl1 grp0 |
+                then
+                2drop
+            else
+                2drop                           \ ret-lst
             then
-            2drop
         endof
         #3 of
             2drop
@@ -583,7 +577,6 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 
     group-get-rules                         \ smpl ruls
     rulestore-get-steps-by-changes-f        \ stp-lst
-    \ cr ." at 4 " .s cr
 
     \ cr   ." -> " dup .step-list-xt execute cr
 ;
@@ -729,4 +722,21 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
                                 \ grp0 g-r-reg
     2drop
     false
+;
+
+\ Return true if a group has at least one needed change.
+: group-has-any-change ( cngs1 grp0 -- flag )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-changes
+
+    dup group-get-pn            \ cngs1 grp0 pn
+    3 = if
+        2drop
+        false
+        exit
+    then
+
+    group-get-rules             \ cngs1 rul-str
+    rulestore-has-any-change    \ flag
 ;

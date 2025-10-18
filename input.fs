@@ -108,17 +108,17 @@
         \ No plan needed, get sample.
         2dup                        \ ned act dom act dom
         domain-get-sample           \ ned act dom sample
-        sample-deallocate           \ ned act dom
+        sample-deallocate               \ ned act dom
         domain-get-inst-id
-        cr ." Dom: " dec.           \ ned act
-        .action cr                  \ ned
-        drop                        \
-    else                            \ ned act dom
-        #2 pick need-get-target     \ ned act dom t-sta
+        cr ." Dom: " dec.               \ ned act
+        .action cr                      \ ned
+        drop                            \
+    else                                \ ned act dom
+        #2 pick need-get-target         \ ned act dom t-sta
         over domain-get-current-state   \ ned act dom t-sta c-state
-        sample-new                  \ ned act dom smpl
-        2dup swap                   \ ned act dom smpl smpl dom
-        domain-get-plan    \ ned act dom smpl, plan true | false
+        sample-new                      \ ned act dom smpl
+        2dup swap                       \ ned act dom smpl smpl dom
+        domain-get-plan                 \ ned act dom smpl, plan true | false
         if
             dup plan-run                \ ned act dom smpl plan flag
             if

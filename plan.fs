@@ -43,11 +43,23 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     abort" TOS is not an allocated plan"
 ;
 
+' assert-tos-is-plan to assert-tos-is-plan-xt
+
 \ Check NOS for plan, unconventional, leaves stack unchanged. 
 : assert-nos-is-plan ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-plan 0=
     abort" NOS is not an allocated plan"
 ;
+
+' assert-nos-is-plan to assert-nos-is-plan-xt
+
+\ Check 3OS for plan, unconventional, leaves stack unchanged. 
+: assert-3os-is-plan ( pln2 arg1 arg0 -- arg1 arg0 )
+    #2 pick is-allocated-plan 0=
+    abort" 3OS is not an allocated plan"
+;
+
+' assert-3os-is-plan to assert-3os-is-plan-xt
 
 \ Start accessors.
 
@@ -167,11 +179,46 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     again
 ;
 
+\ Check plan for any result equal to a given result.
+: plan-contains-result ( sta1 pln0 -- flag )
+    dup plan-get-step-list          \ sta1 pln0 stp-lst
+    list-get-links                  \ sta1 pln0 link
+    begin
+        ?dup
+    while
+        \ Get step
+        dup link-get-data           \ sta1 pln0 link step
+        step-get-sample             \ sta1 pln0 link smpl
+        sample-get-result           \ sta1 pln0 link s-r
+        #3 pick                     \ sta1 pln0 link s-r sta1
+        =                           \ sta1 pln0 link flag
+        if
+            3drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                    \ sta1 pln0
+    2drop
+    false
+;
+
 \ Push a step to the end of a plan.
 : plan-push-end ( stp1 pln0 -- )
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-step
+
+    over step-get-sample            \ stp1 pln0 smpl
+    sample-get-result               \ stp1 pln0 s-r
+    over                            \ stp1 pln0 s-r pln0
+    plan-contains-result            \ stp1 pln0 flag
+    if
+        cr ." plan: " .plan space ." contains result of step: " .step cr
+        abort
+    then
 
     over                            \ stp1 pln0 | stp1
     over plan-get-step-list         \ stp1 pln0 | stp1 stp-lst
@@ -210,6 +257,15 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     assert-tos-is-plan
     assert-nos-is-step
     \ cr ." plan-push: " over .step space dup .plan cr
+
+    over step-get-sample            \ stp1 pln0 smpl
+    sample-get-result               \ stp1 pln0 s-r
+    over                            \ stp1 pln0 s-r pln0
+    plan-contains-result            \ stp1 pln0 flag
+    if
+        cr ." plan: " .plan space ." contains result of step: " .step cr
+        abort
+    then
 
     over                            \ stp1 pln0 | stp1
     over plan-get-step-list         \ stp1 pln0 | stp1 stp-lst

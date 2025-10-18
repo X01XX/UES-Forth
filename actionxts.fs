@@ -143,6 +143,20 @@
     sample-new
 ;
 
+\ Exhibit X->0 and X->1 bit positions.
+: domain-0-act-6-get-sample ( res1 flag1 cur0 -- sample )
+    \ Check args
+    assert-tos-is-value
+
+    nip nip
+    dup
+    %0100 or
+    %1110 and
+    swap
+
+    sample-new
+;
+
 \ Perform an action for Domain 1, Act 1, given:
 \ Current state.
 \ Flag, true if there is a previous result.
