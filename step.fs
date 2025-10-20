@@ -358,6 +358,10 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
         exit
     then
 
+    \ Check sample is NE smpl3 result state, and between, inclusive the two sample states.
+    
+    
+                                    \ smpl3 alt-rul2 rul1 | rul1-smpl
     \ Get alt-rule forward sample, if any.
                                     \ smpl3 alt-rul2 rul1 | rul1-smpl
     #2 pick                         \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2

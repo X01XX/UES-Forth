@@ -143,7 +143,7 @@ include input_t.fs
 cr ." main.fs"
 
 \ Init array-stacks.
-#601 link-mma-init
+#2000 link-mma-init
 #202 list-mma-init
 #403 region-mma-init
 #304 rule-mma-init
@@ -225,6 +225,9 @@ cr ." main.fs"
     over domain-add-action                      \ sess dom1
 
     [ ' domain-1-act-5-get-sample ] literal     \ sess dom1 xt
+    over domain-add-action                      \ sess dom1
+
+    [ ' domain-1-act-6-get-sample ] literal     \ sess dom1 xt
     over domain-add-action                      \ sess dom1
 
     \ Add last domain

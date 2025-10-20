@@ -1398,6 +1398,9 @@ action-groups               cell+ constant action-function              \ An xt 
 ;
 
 \ Return a list of possible forward-chaining steps, given a sample.
+\ Only steps with result states between the the sample initial state, exclusive,
+\ and the sample result state, inclusive, will be returned.
+\ See child function rule-calc-forward-sample.
 : action-get-forward-steps ( smpl1 act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action
@@ -1446,6 +1449,9 @@ action-groups               cell+ constant action-function              \ An xt 
 ;
 
 \ Return a list of possible forward-chaining steps, given a sample.
+\ Only steps with initial state between the the sample result state, exclusive,
+\ and the sample initial state, inclusive, will be returned.
+\ See child function rule-calc-backward-sample.
 : action-get-backward-steps ( smpl1 act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action

@@ -265,3 +265,37 @@
 
     sample-new
 ;
+
+\ Do an act with three possible changes, to appear unpredictable.
+: domain-1-act-6-get-sample ( res1 flag1 cur0 -- sample )
+    \ Check args
+    assert-tos-is-value
+    assert-nos-is-bool
+    assert-3os-is-value
+
+                            \ res1 flag1 cur0
+    swap                    \ res1 cur0 flag1
+    if                      \ res1 cur0, there is a previous result for this state.
+        tuck                \ cur0 res1 cur0
+        xor                 \ cur0 last-change
+
+        case
+            1 of
+                dup #2 xor
+            endof
+            2 of
+                dup #4 xor
+            endof
+            4 of
+                dup 1 xor
+            endof
+        endcase
+    else                    \ res1 cur0, there is no previous result for this state. 
+        nip                 \ cur0
+        #2 random           \ cur0 0|1
+        1+ over xor         \ cur0 rslt
+    then
+    swap                    \ rslt cur0
+
+    sample-new
+;
