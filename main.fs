@@ -85,6 +85,11 @@ include plan.fs
 include planlist.fs
 include input.fs
 
+include regionlistcorr.fs
+include regionlistcorr_t.fs
+include rlclist.fs
+include rlclist_t.fs
+
 cs
 
 : memory-use
@@ -272,7 +277,9 @@ cr ." main.fs"
 
 \ Set up a test domain and action.
 \ To supply number bits, max region, ms-bit, all-bits, domain-id, action-id.
-\ To run tests outside of all-tests, run this first.
+\
+\ To run tests outside of all-tests, run this first, followed by test-end
+\
 : test-init
 
     \ Set up session.
@@ -281,10 +288,26 @@ cr ." main.fs"
     to current-session                  \
 
     \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
-    #4 domain-new                        \ dom
-
+    #4 domain-new                       \ dom
     current-session                     \ dom sess
     session-add-domain                  \ dom
+
+    #5 domain-new                       \ dom
+    current-session                     \ dom sess
+    session-add-domain                  \ dom
+
+    \ Set current domain to the first.
+    \ Most tests assume a 4-bit domain.
+    0 set-domain
+;
+
+: test-end
+    memory-use
+    cr cr ." Deallocating ..." cr
+    current-session session-deallocate
+
+    memory-use
+    test-none-in-use
 ;
 
 : all-tests
@@ -293,27 +316,31 @@ cr ." main.fs"
     test-init
 
     square-tests
-    depth 0<> abort" Test a stack not empty"
+    depth 0<> abort" Square stack tests not empty"
     square-list-tests
-    depth 0<> abort" Test b stack not empty"
+    depth 0<> abort" Square-list tests stack not empty"
     region-tests
-    depth 0<> abort" Test c stack not empty"
+    depth 0<> abort" Region tests stack not empty"
     region-list-tests
-    depth 0<> abort" Test d stack not empty"
+    depth 0<> abort" Region-list tests stack not empty"
     rule-tests
-    depth 0<> abort" Test e stack not empty"
+    depth 0<> abort" Rule tests stack not empty"
     action-tests
-    depth 0<> abort" Test f stack not empty"
+    depth 0<> abort" Action tests stack not empty"
     rulestore-tests
-    depth 0<> abort" Test g stack not empty"
+    depth 0<> abort" Rulestore tests stack not empty"
     state-tests
-    depth 0<> abort" Test h stack not empty"
-    input-test-parse-user-input
+    depth 0<> abort" State tests stack not empty"
+    input-test-parse-string
+    depth 0<> abort" Input tests stack not empty"
 
-    memory-use
-    cr cr ." Deallocating ..." cr
-    current-session session-deallocate
+    \ Tests that assume a 4-bit domain-0 and a 5-bit domain-1 should be last,
+    \ as they may change the current domain.
+    region-list-corr-tests
+    depth 0<> abort" Session tests stack not empty"
 
-    memory-use
-    test-none-in-use
+    rlc-tests
+    depth 0<> abort" Session tests stack not empty"
+    
+    test-end
 ;

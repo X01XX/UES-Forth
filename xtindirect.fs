@@ -41,6 +41,9 @@
 
 ' xtabort value assert-nos-is-domain-xt
 
+' xtabort value domain-get-num-bits-xt
+
+
 ' xtabort value domain-get-plan-f-xt
 
 ' xtabort value domain-get-plan-b-xt
@@ -106,3 +109,4 @@
 
 ' xtabort value need-new-xt
 
+' xtabort value rlc-list-deallocate-xt

@@ -315,3 +315,7 @@
     swap mod
 ;
 
+\ Return true if three numbers are not all equal.
+: 3<> ( u2 u1 u0 -- bool )
+    over = -rot = and 0=
+;

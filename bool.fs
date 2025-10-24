@@ -1,22 +1,16 @@
-
-\ Return the bitwise "NXOR" of two unsigned numbers.
-\ while remaining within the bounds of allowable bits.
-: !nxor ( u1 u2 -- u3 )
-    xor !not
-;
+' 0= alias is-false
 
 \ Check TOS for bool, unconventional, leaves stack unchanged. 
 : assert-tos-is-bool ( u -- )
-    dup 0=
+    dup is-false
     over -1 =
     or
-    0=
-    abort" TOS is not bool"
+    is-false abort" TOS is not bool"
 ;
 
 \ Check NOS for bool, unconventional, leaves stack unchanged. 
 : assert-nos-is-bool ( u ?? -- )
-    over dup 0=
+    over dup is-false
     swap -1 =
     or
     0=
@@ -25,7 +19,7 @@
 
 \ Check 3OS for bool, unconventional, leaves stack unchanged. 
 : assert-3os-is-bool ( u ?? ?? -- )
-    #2 pick dup 0=
+    #2 pick dup is-false
     swap -1 =
     or
     0=
@@ -36,7 +30,7 @@
     \ Check arg.
     assert-tos-is-bool
 
-    0=
+    is-false
     if
         ." f"
     else

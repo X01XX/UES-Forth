@@ -1,9 +1,17 @@
 \ Functions for need lists.
 
 \ Deallocate a need list.
-: need-list-deallocate ( list0 -- )
-    [ ' need-deallocate ] literal over list-apply   \ Deallocate need instances in the list.
-    list-deallocate                                 \ Deallocate list and links.
+: need-list-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    2 < if
+        \ Deallocate need instances in the list.
+        [ ' need-deallocate ] literal over          \ lst0 xt lst0
+        list-apply                                  \ lst0
+    then
+
+    \ Deallocate the list.
+    list-deallocate                                 \
 ;
 
 \ Return the union of two need lists.

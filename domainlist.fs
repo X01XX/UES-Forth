@@ -1,10 +1,17 @@
+\ Functions for domain lists.
 
-: domain-list-deallocate ( domlst0 -- )
-    \ Check arg.
-    assert-tos-is-list
+\ Deallocate a domain list.                                                                                                             
+: domain-list-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    2 < if
+        \ Deallocate domain instances in the list.
+        [ ' domain-deallocate ] literal over        \ lst0 xt lst0
+        list-apply                                  \ lst0
+    then
 
-    [ ' domain-deallocate ] literal over list-apply    \ Deallocate domain instances in the list.
-    list-deallocate                                     \ Deallocate list and links.
+    \ Deallocate the list.
+    list-deallocate                                 \
 ;
 
 : domain-list-push-end ( domx dom-lst -- )

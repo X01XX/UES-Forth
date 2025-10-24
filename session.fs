@@ -418,3 +418,25 @@ session-current-domain      cell+ constant session-needs                \ A need
     session-set-current-domain  \ dom
     true
 ;
+
+\ Return the number of domains.
+: session-get-number-domains ( -- u )
+    current-session
+    session-get-domains
+    list-get-length
+;
+
+: set-domain ( u1 )
+    current-session             \ u1 sess
+    tuck session-get-domains    \ sess u1 dom-lst
+    list-get-item               \ sess dom
+    swap                        \ dom sess
+    session-set-current-domain
+;
+
+: session-get-domain-links ( -- link )
+    current-session
+    session-get-domains
+    list-get-links
+;
+

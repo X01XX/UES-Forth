@@ -39,15 +39,21 @@ list-header cell+ constant list-links
 ;
 
 \ Check TOS for list, unconventional, leaves stack unchanged. 
-: assert-tos-is-list ( lst -- lst )
+: assert-tos-is-list ( lst0 -- lst0 )
     dup is-allocated-list 0=
     abort" TOS is not an allocated list."
 ;
 
 \ Check NOS for list, unconventional, leaves stack unchanged. 
-: assert-nos-is-list ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-list ( lst1 arg0 -- lst1 arg0 )
     over is-allocated-list 0=
     abort" NOS is not an allocated list."
+;
+
+\ Check 3OS for list, unconventional, leaves stack unchanged. 
+: assert-3os-is-list ( lst2 arg1 arg0 -- lst2 arg1 arg0 )
+    #2 pick is-allocated-list 0=
+    abort" 3OS is not an allocated list."
 ;
 
 \ Start accessors.

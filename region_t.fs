@@ -3,8 +3,8 @@
 : region-test-region-subtract
     \ cr ." region-test-region-subtract - start"
 
-    s" X10X" region-from-string     \ reg1
-    s" 1XX0" region-from-string     \ reg1 reg2
+    s" X10X" region-from-string-a   \ reg1
+    s" 1XX0" region-from-string-a   \ reg1 reg2
 
     2dup                            \ reg1 reg2 reg1 reg2
     region-subtract                 \ reg1 reg2 reg-lst
@@ -15,7 +15,7 @@
     dup list-get-length #2 <>
     abort" List length not 2?"
 
-    s" 10X0" region-from-string     \ reg-lst reg3
+    s" 10X0" region-from-string-a   \ reg-lst reg3
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
     region-list-member              \ reg-lst reg3 flag
@@ -24,7 +24,7 @@
                                     \ reg-lst reg3
     region-deallocate               \ reg-lst
 
-    s" 1X10" region-from-string     \ reg-lst reg3
+    s" 1X10" region-from-string-a   \ reg-lst reg3
 
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
@@ -51,7 +51,7 @@
     #15 over list-push
 
     \ Make region
-    s" XXX1" region-from-string             \ sta-lst reg
+    s" XXX1" region-from-string-a           \ sta-lst reg
 
     \ Get states in region
     2dup region-states-in                   \ sta-lst reg sta-lst2

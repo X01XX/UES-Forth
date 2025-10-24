@@ -1,7 +1,7 @@
 \ Tests for the rule struct functions.
 
 : rule-test-restrict-initial-region
-    s" 011X" region-from-string     \ reg1
+    s" 011X" region-from-string-a   \ reg1
 
     s" XX/11/X0/10/" rule-from-string  \ reg1 rul1 
 
@@ -22,7 +22,7 @@
 ;
 
 : rule-test-restrict-result-region
-    s" 0X00" region-from-string         \ reg1
+    s" 0X00" region-from-string-a       \ reg1
 
     s" XX/11/X0/10/" rule-from-string   \ reg1 rul1
 
@@ -39,7 +39,7 @@
     rule-deallocate
     region-deallocate
 
-    s" 0101" region-from-string         \ reg1
+    s" 0101" region-from-string-a       \ reg1
 
     s" Xx/Xx/XX/XX/" rule-from-string   \ reg1 rul1
 
@@ -50,7 +50,7 @@
     rule-deallocate
     region-deallocate
 
-    s" 0101" region-from-string         \ reg1
+    s" 0101" region-from-string-a       \ reg1
 
     s" X0/X1/XX/XX/" rule-from-string   \ reg1 rul1
 

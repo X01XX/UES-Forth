@@ -1,9 +1,17 @@
 \ Functions for plan lists.
 
 \ Deallocate a plan list.
-: plan-list-deallocate ( list0 -- )
-    [ ' plan-deallocate ] literal over list-apply   \ Deallocate plan instances in the list.
-    list-deallocate                                 \ Deallocate list and links.
+: plan-list-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    2 < if
+        \ Deallocate plan instances in the list.
+        [ ' plan-deallocate ] literal over          \ lst0 xt lst0
+        list-apply                                  \ lst0
+    then
+
+    \ Deallocate the list.
+    list-deallocate                                 \
 ;
 
 \ Print a plan-list

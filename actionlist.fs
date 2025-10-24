@@ -1,4 +1,4 @@
-
+\ Functions for action lists.
 
 : .action-list ( actlst0 -- )
     \ Check args.
@@ -7,9 +7,18 @@
     [ ' .action ] literal swap list-apply
 ;
 
-: action-list-deallocate ( actlst0 -- )
-    [ ' action-deallocate ] literal over list-apply \ Deallocate action instances in the list.
-    list-deallocate                                 \ Deallocate list and links.
+\ Deallocate an action list.
+: action-list-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    2 < if
+        \ Deallocate action instances in the list.
+        [ ' action-deallocate ] literal over        \ lst0 xt lst0
+        list-apply                                  \ lst0
+    then
+
+    \ Deallocate the list.
+    list-deallocate                                 \
 ;
 
 : action-list-push-end ( actx act-lst -- )

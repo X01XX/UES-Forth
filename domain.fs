@@ -103,7 +103,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Get intst ID.
     5c@
 ;
- 
+
+' domain-get-num-bits to domain-get-num-bits-xt
+
 \ Set the number bits used by a domain instance, use only in this file.
 : _domain-set-num-bits ( u1 dom0 -- )
     \ Check args.
@@ -1019,4 +1021,17 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     nip                                 \ stp-lst
 ;
 
+\ Set the current domain.
+: domain-set-current ( dom0 -- )
+    current-session
+    session-set-current-domain-xt execute
+;
+
+: domain-get-max-region ( dom0 -- regx )
+    \ Check-arg.
+    assert-tos-is-domain
+
+    domain-get-all-bits-mask    \ msk
+    0 region-new                \ regx
+;
 

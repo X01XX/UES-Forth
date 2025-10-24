@@ -1,12 +1,17 @@
 \ Functions for step lists.
 
-\ Deallocate a step list.
-: step-list-deallocate ( list0 -- )
-    \ Check arg.
-    assert-tos-is-list
+\ Deallocate a step list.                                                                                                             
+: step-list-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    2 < if
+        \ Deallocate step instances in the list.
+        [ ' step-deallocate ] literal over          \ lst0 xt lst0
+        list-apply                                  \ lst0
+    then
 
-    [ ' step-deallocate ] literal over list-apply   \ Deallocate step instances in the list.
-    list-deallocate                                 \ Deallocate list and links.
+    \ Deallocate the list.
+    list-deallocate                                 \
 ;
 
 ' step-list-deallocate to step-list-deallocate-xt

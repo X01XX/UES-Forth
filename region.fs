@@ -106,26 +106,27 @@ region-state-0-disp cell+ constant region-state-1-disp
 
 \ Create a region from two numbers on the stack, without checking their validity.
 \ Split from region-new to allow adding an act0 in domain-new.
+\ The order of the values will determine how an X bit is displayed, 1 0 = x, 0 1 = X.
 : region-new2 ( u1 u0 -- addr)
 
     \ Allocate space.
-    region-mma mma-allocate     \ u1 u2 addr
+    region-mma mma-allocate     \ u1 u0 addr
 
     \ Store id.
-    region-id over              \ u1 u2 addr id addr
-    struct-set-id               \ u1 u2 addr
+    region-id over              \ u1 u0 addr id addr
+    struct-set-id               \ u1 u0 addr
 
     \ Init use count.
     0 over struct-set-use-count
 
     \ Prepare to store states.
-    -rot            \ addr u1 u2
-    #2 pick         \ addr u1 u2 addr
-    tuck            \ addr u1 addr u2 addr
+    -rot            \ addr u1 u0
+    #2 pick         \ addr u1 u0 addr
+    tuck            \ addr u1 addr u0 addr
 
     \ Store states
-    _region-set-state-1     \ addr u1 addr
-    _region-set-state-0     \ addr
+    _region-set-state-0     \ addr u1 addr
+    _region-set-state-1     \ addr
 ;
 
 \ Create a region from two numbers on the stack.
@@ -518,34 +519,74 @@ region-state-0-disp cell+ constant region-state-1-disp
 
 \ Get a region from a string.
 \ Valid chars are 0, 1, X, x, and underscore as separator.
-: region-from-string ( addr n --  reg )
-    0 swap 0 swap 0     \ addr 0 0 n 0
-    do                  \ addr 0 0
+\ The number of valid characters must equal the number of bits in the current domain.
+: region-from-string ( addr n --  reg t | f)
+    \ Init character counter.
+    0 -rot              \ cnt addr n
+
+    \ Init state 0, state 1, and do initial value. All bit positions are 0/0.
+    0 swap 0 swap 0     \ cnt addr 0 0 n 0
+    do                  \ cnt addr 0 0
         #2 pick i +
         c@
 
-        dup [char] _ =
-        if
-            drop            \ addr n c s0 s1
-        else
-            \ Save char.    \ addr n c s0 s1 char
-            -rot            \ addr n c char s0 s1
-            \ Shift each region state.
-            swap 1 lshift swap 1 lshift
-            \ Get char back to TOS.
-            rot             \ addr n c s0 s1 char
-            \ Process character.
-            case
-                [char] 0 of endof
-                [char] 1 of swap 1+ swap 1+ endof
-                [char] X of swap 1+ swap endof
-                [char] x of 1+ endof
-                cr ." unexpected char" abort
-            endcase
-        then
+        \ Process character.
+        case
+            [char] 0 of
+                        \ Left shift state 0, state 1.
+                        swap 1 lshift swap 1 lshift
+                        \ Leave bit positions as 0/0.
+                        \ Update char counter.
+                        2swap swap 1+ swap 2swap
+                    endof
+            [char] 1 of
+                        \ Left shift state 0, state 1.
+                        swap 1 lshift swap 1 lshift
+                        \ Set bit positions to 1/1.
+                        swap 1+ swap 1+
+                        \ Update char counter.
+                        2swap swap 1+ swap 2swap
+                    endof
+            [char] X of
+                        \ Left shift state 0, state 1.
+                        swap 1 lshift swap 1 lshift
+                        \ Set bit positions to 1/0.
+                        swap 1+ swap
+                        \ Update char counter.
+                        2swap swap 1+ swap 2swap
+                    endof
+            [char] x of
+                        \ Left shift state 0, state 1.
+                        swap 1 lshift swap 1 lshift
+                        \ Set bit positions to 0/1.
+                        1+
+                        \ Update char counter.
+                        2swap swap 1+ swap 2swap
+                    endof
+                \ Ignore unrecognized characters.
+        endcase
     loop
+                            \ cnt addr s1 s0
+    \ Check counter.
+    2swap                   \ s1 s0 cnt addr
+    drop                    \ s1 s0 cnt
+    cur-domain-xt execute   \ s1 s0 cnt dom
+    domain-get-num-bits-xt  \ s1 s0 cnt xt
+    execute                 \ s1 s0 cnt nb
+    <> if                   \ s1 s0
+        2drop
+        false
+        exit
+    then
+                            \ s1 s0
     region-new
-    nip
+    true
+;
+
+\ Get region from a string, abort if the attemp failed.
+: region-from-string-a ( addr n --  reg )
+    region-from-string      \ reg t | f
+    0= abort" region-from-string failed?"
 ;
 
 \ Return states that are in a region.
@@ -582,17 +623,9 @@ region-state-0-disp cell+ constant region-state-1-disp
     nip                             \ ret-lst
 ;
 
-\ Return a maximum region, given a number of bits.
-\ Purely to allow adding a act0 in domain-new.
-: max-region ( nb0 -- reg )
-    all-bits 0
-
-    region-new2
-;
-
 \ Return a state in a region, requiring the least changes from a state
 \ outside of the region.
-: region-translate-state    ( sta1 reg0 -- sta )                                                                                                           
+: region-translate-state    ( sta1 reg0 -- sta )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-value
@@ -625,6 +658,16 @@ region-state-0-disp cell+ constant region-state-1-disp
 
     \ Remove X bit positions from the mask.
     and                             \ dif-msk
+;
+
+\ Return the number of bits different two regions are.
+: region-distance ( reg1 reg0 -- u )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-region
+
+    region-diff-mask        \ msk
+    value-num-bits          \ nb
 ;
 
 \ Return the state far from a given state, within a region.

@@ -135,3 +135,9 @@
 : !nor ( u1 u2 -- u3 )
     or !not
 ;
+
+\ Return the bitwise "NXOR" of two unsigned numbers.
+\ while remaining within the bounds of allowable bits.
+: !nxor ( u1 u2 -- u3 )
+    xor !not
+;

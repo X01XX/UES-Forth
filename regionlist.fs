@@ -1,12 +1,18 @@
 \ Functions for region lists.
 
-\ Deallocate a region list.
-: region-list-deallocate ( list0 -- )
-    [ ' region-deallocate ] literal over list-apply \ Deallocate region instances in the list.
-    list-deallocate                                 \ Deallocate list and links.
-;
+\ Deallocate a region list.                                                                                                             
+: region-list-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    2 < if
+        \ Deallocate region instances in the list.
+        [ ' region-deallocate ] literal over        \ lst0 xt lst0
+        list-apply                                  \ lst0
+    then
 
-\ ' region-list-deallocate to region-list-deallocate-xt
+    \ Deallocate the list.
+    list-deallocate                                 \
+;
 
 \ Return the intersection of two region lists.
 : region-list-set-intersection ( list1 list0 -- list-result )
@@ -407,6 +413,15 @@
     [ ' region-superset-of ] literal -rot list-member
 ;
 
+\ Return true if a region-list contains a intersection of a region.
+: region-list-any-intersection-of ( reg1 list0 -- flag )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-region
+
+    [ ' region-intersects ] literal -rot list-member
+;
+
 \ Return a list of regions that use a given state.
 : region-list-uses-state ( sta1 reg-lst0 -- list )
     \ Check args.
@@ -646,4 +661,229 @@
     repeat
 
     drop                                \ ret-lst
+;
+
+\ Copy a region-list, removing subsets.
+: region-list-copy-nosubs ( lst0 - lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-new swap               \ ret lst0
+    list-get-links              \ ret link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret link regx
+        #2 pick                 \ ret link regx ret
+        region-list-push-nosubs \ ret link flag
+        drop
+
+        link-get-next           \ ret link
+    repeat
+;
+
+\ Append nos region-list to the tos region-list.
+: region-list-append ( lst1 lst0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    swap                    \ lst0 lst1
+    list-get-links          \ lst0 link
+    begin
+        ?dup
+    while
+        dup link-get-data   \ lst0 link nedx
+        #2 pick             \ lst0 link nedx lst0
+        region-list-push      \ lst0 link
+
+        link-get-next
+    repeat
+                        \ lst0
+    drop
+;
+
+\ Return a list of unique regions, that is non-intersections.
+\ An odd thing, the unique regions can have intersections with each other.
+\ Like X1X1 & 0X0X = 0101, unique parts of X1X1 = 11X1, X111, unique parts of 0X0X = 0X00, 000X.
+: region-list-unique-parts  ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    dup list-get-length                         \ lst0 len
+    #2 < if
+        region-list-copy                        \ lst0'
+        exit
+    then
+
+    \ Insure-no-duplicates.
+    region-list-copy-nosubs                     \ lst0'
+    \ cr ." no dups: " dup .region-list cr
+
+    \ Set up for loop 1.
+    list-new swap                               \ ret lst0'
+    dup list-get-links                          \ ret lst0' link-b (base link)
+    dup                                         \ ret lst0' link-b link-l1 (loop 1 link) 
+    \ Check each region.
+    begin
+        ?dup
+    while
+        \ Set up for loop 2, skip if link addresses are equal.
+        dup link-get-data                       \ ret lst0' link-b link-l1 reg1
+        list-new tuck region-list-push          \ ret lst0' link-b link-l1 reg-lst
+
+        #2 pick                                 \ ret lst0' link-b link-l1 reg-lst link-l2
+        begin
+            ?dup
+        while
+            \ Skip if link-l1 and link-l2 addresses are equal.
+            #2 pick over <>                     \ ret lst0' link-b link-l1 reg-lst link-l2
+            if
+                \ Check if subtraction is needed.
+
+                dup link-get-data               \ ret lst0' link-b link-l1 reg-lst link-l2 reg2
+                #2 pick                         \ ret lst0' link-b link-l1 reg-lst link-l2 reg2 reg-lst
+                
+                \ cr ." compare " dup .region-list space ." to " over .region
+                region-list-any-intersection-of \ ret lst0' link-b link-l1 reg-lst link-l2 flag
+                \ space ." any int: " dup .bool cr
+                if
+                    \ Do subtraction.
+                    dup link-get-data           \ ret lst0' link-b link-l1 reg-lst link-l2 reg2
+                    #2 pick                     \ ret lst0' link-b link-l1 reg-lst link-l2 reg2 reg-lst
+                    region-list-subtract-region \ ret lst0' link-b link-l1 reg-lst link-l2 reg-lst'
+
+                    \ Replace old region-list
+                    rot                         \ ret lst0' link-b link-l1 link-l2 reg-lst' reg-lst
+                    region-list-deallocate      \ ret lst0' link-b link-l1 link-l2 reg-lst'
+                    swap                        \ ret lst0' link-b link-l1 reg-lst' link-l2
+                then
+            then
+            link-get-next                       \ ret lst0' link-b link-l1 reg-lst link-l2-next
+        repeat
+                                                \ ret lst0' link-b link-l1 reg-lst
+        \ cr ." unique parts: " dup .region-list cr
+        \ Add to return list.
+        dup                                     \ ret lst0' link-b link-l1 reg-lst reg-lst
+        #5 pick                                 \ ret lst0' link-b link-l1 reg-lst reg-lst ret
+        region-list-append                      \ ret lst0' link-b link-l1 reg-lst
+
+        \ Clean up for loop 2
+        region-list-deallocate                  \ ret lst0' link-b link-l1
+        
+        link-get-next                           \ ret lst0' link-b link-l1-next
+    repeat
+                                                \ ret lst0' link-b
+    drop                                        \ ret lst0'
+    region-list-deallocate                      \ ret
+;
+
+: region-list-intersection-fragments ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Insure-no-duplicates.
+    list-new swap                       \ ret lst0'
+    region-list-copy-nosubs             \ ret lst0'
+    \ cr ." no dups: " dup .region-list cr
+
+    begin
+        dup list-is-empty 0=
+    while
+        \ Get unique parts.
+        dup region-list-unique-parts    \ ret lst0' lst2
+        \ cr ." unique parts: " dup .region-list cr
+
+        \ Add to results.
+        dup                             \ ret lst0' lst2 lst2
+        #3 pick                         \ ret lst0' lst2 lst2 ret
+        region-list-append              \ ret lst0' lst2
+
+        \ Get whats left.
+        swap 2dup                       \ ret lst2 lst0' lst2 lst0'
+        region-list-subtract            \ ret lst2 lst0' lst3
+        \ cr ." left: " dup .region-list cr
+
+        swap region-list-deallocate     \ ret lst2 lst3
+        swap region-list-deallocate     \ ret lst3
+    repeat
+
+    region-list-deallocate              \ ret
+;
+
+\ Return the complement of a region-list.
+: region-list-complement ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Init region-list with region of all X.
+    0 0 !not region-new     \ lst0 regx
+    list-new tuck           \ lst0 lst regx lst
+    region-list-push        \ lst0 lst
+
+    \ Subtract the given list.
+    tuck                    \ lst lst0 lst
+    region-list-subtract    \ lst lst2
+
+    \ Clean up.
+    swap                    \ lst2 lst
+    region-list-deallocate  \ lst2
+;
+
+\ Return a region-list, normalized.
+\ That is, combine adjacent regions.
+: region-list-normalize ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Normalize, by double complement.
+    region-list-complement          \ lst
+    dup                             \ lst lst
+    region-list-complement          \ lst lst'
+
+    \ Clean up.
+    swap region-list-deallocate     \ lst'
+;
+
+\ Return a copy of a region-list, except for a given region ia a given index.
+: region-list-copy-except ( reg2 inx1 lst0 -- lst )
+    \ Check args.
+    assert-tos-is-list
+    over 0 < abort" index out of range"
+    over over list-get-length < is-false abort" index out of range"
+    assert-3os-is-region
+
+    \ Init return list.
+    list-new swap                   \ reg2 inx1 ret-lst lst0
+
+    \ Init index counter
+    0 swap                          \ reg2 inx1 ret-lst ctr lst0
+
+    \ Prep for loop.
+    list-get-links                  \ reg2 inx1 ret-lst ctr link
+
+    begin
+        ?dup
+    while
+        over                        \ reg2 inx1 ret-lst ctr link ctr
+        #4 pick                     \ reg2 inx1 ret-lst ctr link ctr inx1
+        = if                        \ reg2 inx1 ret-lst ctr link
+            #4 pick                 \ reg2 inx1 ret-lst ctr link reg2
+            #3 pick                 \ reg2 inx1 ret-lst ctr link reg2 ret-lst
+            region-list-push-end    \ reg2 inx1 lst-ret ctr link
+        else                        \ reg2 inx1 ret-lst ctr link
+            dup link-get-data       \ reg2 inx1 ret-lst ctr link region
+            #3 pick                 \ reg2 inx1 ret-lst ctr link region ret-lst
+            region-list-push-end    \ reg2 inx1 ret-lst ctr link
+        then
+
+        \ Inc counter.
+        swap 1+ swap
+
+        link-get-next               \ reg2 inx1 ret-lst ctr link
+    repeat
+                                    \ reg2 inx1 ret-lst ctr
+    drop                            \ reg2 inx1 ret-lst
+    nip nip                         \ ret-lst
 ;

@@ -6,7 +6,7 @@
 \ c-addr c-cnt c-addr c-cnt c-addr c-cnt 3 or ...
 \
 \ The stack will have the token info top-down as in the string left-to-right.
-: parse-user-input ( c-start c-cnt -- [c-addr c-cnt ] token-cnt )
+: parse-string ( c-start c-cnt -- [c-addr c-cnt ] token-cnt )
     \ Check for null input.
     dup 0= if           \ c-start 0
         nip
@@ -33,6 +33,7 @@
 
         \ Check for a separator.
         bl =                        \ c-start fl t-cnt c-end flag
+        
         if
             \ Check length GT zero.
             dup i -                 \ c-start fl t-cnt c-end s-len
@@ -777,6 +778,6 @@
         pad dup rot accept      \ pad-addr pad-addr n
                                 \ pad-addr c-cnt
         cr
-        parse-user-input         \ [ c-addr c-cnt ]* token-cnt
-        eval-user-input          \ [ c-addr c-cnt ]* token-cnt
+        parse-string            \ [ c-addr c-cnt ]* token-cnt
+        eval-user-input         \ [ c-addr c-cnt ]* token-cnt
 ;

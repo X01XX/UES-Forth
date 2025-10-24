@@ -1,8 +1,8 @@
-: input-test-parse-user-input
+: input-test-parse-string
     depth 0<> abort" Test 0 stack not empty"
 
     \ Straight-forward test.
-    s" ab cde fghi" parse-user-input
+    s" ab cde fghi" parse-string
     #3 <>
     abort" Three tokens not found"
 
@@ -13,7 +13,7 @@
     depth 0<> abort" Test 1 stack not empty"
 
     \ Double up separators, and at start and end.
-    s"  ab cde  fghi " parse-user-input
+    s"  ab cde  fghi " parse-string
     #3 <>
     abort" Three tokens not found"
 
@@ -24,26 +24,26 @@
     depth 0<> abort" Test 2 stack not empty"
     
     \ Try no string.
-    s" " parse-user-input
+    s" " parse-string
     0 <>
     abort" No tokens not found"
 
     depth 0<> abort" Test 3 stack not empty"
     
     \ Try only one separator.
-    s"  " parse-user-input
+    s"  " parse-string
     0 <>
     abort" No tokens not found"
 
     depth 0<> abort" Test 4 stack not empty"
     
     \ Try only two separators.
-    s"   " parse-user-input
+    s"   " parse-string
     0 <>
     abort" No tokens not found"
 
     depth 0<> abort" Test 5 stack not empty"
 
-    cr ." input-test-parse-user-input: Ok" cr
+    cr ." input-test-parse-string: Ok" cr
 ;
 

@@ -1,8 +1,17 @@
-\ Implement functions for a list of groups.
+\ Functions for group lists.
 
-: group-list-deallocate ( domlst0 -- )
-    [ ' group-deallocate ] literal over list-apply      \ Deallocate group instances in the list.
-    list-deallocate                                     \ Deallocate list and links.
+\ Deallocate a group list.
+: group-list-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    2 < if
+        \ Deallocate group instances in the list.
+        [ ' group-deallocate ] literal over         \ lst0 xt lst0
+        list-apply                                  \ lst0
+    then
+
+    \ Deallocate the list.
+    list-deallocate                                 \
 ;
 
 \ Find a group in a list, by state, if any.
