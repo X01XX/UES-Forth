@@ -118,7 +118,7 @@
 
     \ Check list length.
     dup list-get-length 4 <> abort" list length is not 4?"
-    [ ' .region-list-corr ] literal over list-apply
+    \ [ ' .region-list-corr ] literal over list-apply
 
     \ Check results 1.
     s" (xxxx XX0XX)" region-list-corr-from-string-a \ rlc rlc-lst rlc-t

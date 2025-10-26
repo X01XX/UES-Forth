@@ -444,9 +444,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
 \ Return the maximum region for the domains' number of bits.
 \ Caller to deallocate the region.
-: domain-get-max-region ( dom -- reg )
+: domain-get-max-region ( dom0 -- regx )
+    \ Check-arg.
+    assert-tos-is-domain
+
     domain-get-all-bits-mask    \ msk
-    0 region-new                \ reg
+    0 region-new                \ regx
 ;
 
 ' domain-get-max-region to domain-get-max-region-xt
@@ -1027,11 +1030,4 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     session-set-current-domain-xt execute
 ;
 
-: domain-get-max-region ( dom0 -- regx )
-    \ Check-arg.
-    assert-tos-is-domain
-
-    domain-get-all-bits-mask    \ msk
-    0 region-new                \ regx
-;
 

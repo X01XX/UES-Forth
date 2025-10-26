@@ -49,7 +49,7 @@
     s" (XXX1 xx0xx)" region-list-corr-from-string-a \ rlc rlc-lst rlc-t
     [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-t xt
     over #3 pick list-member                        \ rlc rlc-lst rlc-t bool
-    is-false abort" region-list-corr not found in rlc-list?"
+    is-false abort" region-list-corr (XXX1 xx0xx) not found in rlc-list?"
     region-list-deallocate                          \ rlc rlc-lst
 
                                 \ rlc rlc-lst
@@ -85,7 +85,7 @@
     s" (XXX1 xx0xx)" region-list-corr-from-string-a \ rlc rlc-lst rlc-t
     [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-t xt
     over #3 pick list-member                        \ rlc rlc-lst rlc-t bool
-    is-false abort" region-list-corr not found in rlc-list?"
+    is-false abort" region-list-corr (XXX1 xx0xx) not found in rlc-list?"
     region-list-deallocate                          \ rlc rlc-lst
 
     \ Check results 2.
@@ -93,7 +93,7 @@
     [ ' region-list-corr-eq ] literal               \ rlc-lst rlc xt
     swap                                            \ rlc-lst xt rlc
     #2 pick list-member                             \ rlc-lst bool
-    is-false abort" region-list-corr not found in rlc-list?"
+    is-false abort" region-list-corr (xx1x XX0XX) not found in rlc-list?"
 
                                                     \ rlc-lst
     rlc-list-deallocate                             \
@@ -131,8 +131,7 @@
     s" (000X 000XX)" region-list-corr-from-string-a \ rlc-lst rlc-lst' rlc-t
     [ ' region-list-corr-eq ] literal               \ rlc-lst rlc-lst' rlc-t xt
     over #3 pick list-member                        \ rlc-lst rlc-lst' rlc-t bool
-    is-false abort" region-list-corr not found in rlc-list?"
-
+    is-false abort" region-list-corr (000X 000XX) not found in rlc-list?"
     region-list-deallocate                          \ rlc-lst rlc-lst'
 
     \ Clean up.
@@ -143,11 +142,236 @@
     cr ." rlc-list-test-copy-nosubs - Ok" cr
 ;
 
-: rlc-tests
+: rlc-list-test-subtract-rlc
+    \ Run against an intersecting rlc, in an rlc-list.
+
+    \ Init rlc to subtract.
+    s" (000X 001XX)" region-list-corr-from-string-a \ rlc
+
+    \ Init rlc-list to subtract from.
+    list-new                                        \ rlc rlc-lst
+
+    \ Add intersecting rlc.
+    s" (X001 00X0X)" region-list-corr-from-string-a \ rlc rlc-lst rlcx
+    over rlc-list-push                              \ rlc rlc-lst
+
+    \ Do subtraction.
+    2dup rlc-list-subtract-rlc                      \ rlc rlc-lst rlc-left
+
+    \ Check result.
+    \ dup .rlc-list
+    dup list-get-length 2 <> abort" List length not 2?"
+
+    \ Check result 1.
+    s" (1001 00x0x)" region-list-corr-from-string-a \ rlc rlc-lst rlc-left rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-left rlc-t xt
+    over #3 pick list-member                        \ rlc rlc-lst rlc-left rlc-t bool
+    is-false abort" region-list-corr (1001 00x0x) not found in rlc-list?"
+    region-list-deallocate                          \ rlc rlc-lst rlc-left
+
+    \ Check result 2.
+    s" (x001 0000X)" region-list-corr-from-string-a \ rlc rlc-lst rlc-left rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-left rlc-t xt
+    over #3 pick list-member                        \ rlc rlc-lst rlc-left rlc-t bool
+    is-false abort" region-list-corr (x001 0000X) not found in rlc-list?"
+    region-list-deallocate                          \ rlc rlc-lst rlc-left
+
+    \ Clean up.
+    rlc-list-deallocate         \ rlc rlc-lst
+    rlc-list-deallocate         \ rlc
+    region-list-deallocate      \
+
+
+    \ Run against a non-intersection rlc, in an rlc-list.
+
+    \ Init rlc to subtract.
+    s" (000X 001XX)" region-list-corr-from-string-a \ rlc
+
+    \ Init rlc-list to subtract from.
+    list-new                                        \ rlc rlc-lst
+
+    \ Add non-intersecting rlc.
+    s" (X011 00X0X)" region-list-corr-from-string-a \ rlc rlc-lst rlcx
+    over rlc-list-push                              \ rlc rlc-lst
+
+    \ Do subtraction.
+    2dup rlc-list-subtract-rlc   \ rlc rlc-lst rlc-left
+
+    \ Check result.
+    \ dup .rlc-list
+    dup list-get-length 1 <> abort" List length not 1?"
+
+    \ Check result 1.
+    s" (X011 00X0X)" region-list-corr-from-string-a \ rlc rlc-lst rlc-left rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-left rlc-t xt
+    over #3 pick list-member                        \ rlc rlc-lst rlc-left rlc-t bool
+    is-false abort" region-list-corr (X011 00X0X) not found in rlc-list?"
+    region-list-deallocate                          \ rlc rlc-lst rlc-left
+
+    \ Clean up.
+    rlc-list-deallocate         \ rlc rlc-lst
+    rlc-list-deallocate         \ rlc
+    region-list-deallocate      \
+
+    \ Run against a subset rlc, in an rlc-list.
+
+    \ Init rlc to subtract.
+    s" (000X 001XX)" region-list-corr-from-string-a \ rlc
+
+    \ Init rlc-list to subtract from.
+    list-new                                        \ rlc rlc-lst
+
+    \ Add a subset rlc
+    s" (0000 0010X)" region-list-corr-from-string-a \ rlc rlc-lst rlcx
+    over rlc-list-push                              \ rlc rlc-lst
+
+    \ Do subtraction.
+    2dup rlc-list-subtract-rlc   \ rlc rlc-lst rlc-left
+
+    \ Check result.
+    \ dup .rlc-list
+    dup list-get-length 0<> abort" List length not 0?"
+
+    \ Clean up.
+    rlc-list-deallocate         \ rlc rlc-lst
+    rlc-list-deallocate         \ rlc
+    region-list-deallocate      \
+
+    \ Run against a all three options.
+
+    \ Init rlc to subtract.
+    s" (000X 001XX)" region-list-corr-from-string-a \ rlc
+
+    \ Init rlc-list to subtract from.
+    list-new                                        \ rlc rlc-lst
+
+    \ Add intersecting rlc.
+    s" (X001 00X0X)" region-list-corr-from-string-a \ rlc rlc-lst rlcx
+    over rlc-list-push
+
+    \ Add a subset rlc.
+    s" (0000 0010X)" region-list-corr-from-string-a \ rlc rlc-lst rlcx
+    over rlc-list-push                              \ rlc rlc-lst
+
+    \ Add non-intersecting rlc.
+    s" (X011 00X0X)" region-list-corr-from-string-a \ rlc rlc-lst rlcx
+    over rlc-list-push                              \ rlc rlc-lst
+    cr dup .rlc-list space ." - " over .region-list-corr
+
+    \ Do subtraction.
+    2dup rlc-list-subtract-rlc   \ rlc rlc-lst rlc-left
+    space ." = " dup .rlc-list cr
+
+    \ Check result.
+    \ dup .rlc-list
+    dup list-get-length #3 <> abort" List length not 0?"
+
+    \ Check result 1.
+    s" (1001 00x0x)" region-list-corr-from-string-a \ rlc rlc-lst rlc-left rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-left rlc-t xt
+    over #3 pick list-member                        \ rlc rlc-lst rlc-left rlc-t bool
+    is-false abort" region-list-corr (1001 00x0x) not found in rlc-list?"
+    region-list-deallocate                          \ rlc rlc-lst rlc-left
+
+    \ Check result 2.
+    s" (x001 0000X)" region-list-corr-from-string-a \ rlc rlc-lst rlc-left rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-left rlc-t xt
+    over #3 pick list-member                        \ rlc rlc-lst rlc-left rlc-t bool
+    is-false abort" region-list-corr (x000 0000X) not found in rlc-list?"
+    region-list-deallocate                          \ rlc rlc-lst rlc-left
+
+    \ Check result 3.
+    s" (x011 00x0x)" region-list-corr-from-string-a \ rlc rlc-lst rlc-left rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc rlc-lst rlc-left rlc-t xt
+    over #3 pick list-member                        \ rlc rlc-lst rlc-left rlc-t bool
+    is-false abort" region-list-corr (x011 00x0x) not found in rlc-list?"
+    region-list-deallocate                          \ rlc rlc-lst rlc-left
+
+    \ Clean up.
+    rlc-list-deallocate         \ rlc rlc-lst
+    rlc-list-deallocate         \ rlc
+    region-list-deallocate      \
+
+    cr ." rlc-list-test-subtract-rlc - Ok" cr
+;
+
+: rlc-list-test-complement
+    \ Init rlc-list.
+    list-new                                        \ rlc-lst
+
+    \ Add rlc 1.
+    s" (X10X X1X0X)" region-list-corr-from-string-a \ rlc-lst rlcx
+    over rlc-list-push                              \ rlc-lst
+
+    \ Add rlc 2.
+    s" (X11X X1X1X)" region-list-corr-from-string-a \ rlc-lst rlcx
+    over rlc-list-push                              \ rlc-lst
+
+    \ Get complement.
+    dup rlc-list-complement                         \ rlc-lst rlc-lst'
+
+    \ Check results.
+    \ cr ." comp1: " dup .rlc-list cr
+    dup list-get-length 4 <> abort" comp1 len not 4?"
+
+    dup rlc-list-complement                         \ rlc-lst rlc-lst' rlc-lst''
+    \ cr ." comp2: " dup .rlc-list cr
+    dup list-get-length 2 <> abort" comp1 len not 2?"
+
+    #2 pick                                         \ rlc-lst rlc-lst' rlc-lst'' rlc-lst
+    over                                            \ rlc-lst rlc-lst' rlc-lst'' rlc-lst rlc-lst''
+    rlc-list-eq                                     \ rlc-lst rlc-lst' rlc-lst'' bool
+    is-false abort" Initial and result rlc-lists not equal?"
+
+    \ Clean up.
+    rlc-list-deallocate         \ rlc-lst rlc-lst'
+    rlc-list-deallocate         \ rlc-lst
+    rlc-list-deallocate         \
+    
+    cr ." rlc-list-test-complement - Ok" cr
+;
+
+: rlc-list-test-normalize
+    \ Init rlc-list.
+    list-new                                        \ rlc-lst
+
+    \ Add rlc 1.
+    s" (X10X X1X0X)" region-list-corr-from-string-a \ rlc-lst rlcx
+    over rlc-list-push                              \ rlc-lst
+
+    \ Add rlc 2.
+    s" (X11X X1X0X)" region-list-corr-from-string-a \ rlc-lst rlcx
+    over rlc-list-push                              \ rlc-lst
+
+    \ Normalize
+    dup rlc-list-normalize                         \ rlc-lst rlc-lst'
+
+    \ Check results.
+    \ cr ." norm: " dup .rlc-list cr
+    dup list-get-length 1 <> abort" normalized len not 1?"
+
+    \ Check result 1.
+    s" (X1XX X1X0X)" region-list-corr-from-string-a \ rlc-lst rlc-lst' rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc-lst rlc-lst' rlc-t xt
+    over #3 pick list-member                        \ rlc-lst rlc-lst' rlc-t bool
+    is-false abort" region-list-corr (X1XX X1X0X) not found in rlc-lst' ?"
+    region-list-deallocate                          \ rlc-lst rlc-lst'
+
+    \ Clean up.
+    rlc-list-deallocate         \ rlc-lst
+    rlc-list-deallocate         \
+    
+    cr ." rlc-list-test-normalize - Ok" cr
+;
+
+: rlc-list-tests
     rlc-list-test-any-superset
     rlc-list-test-remove-subsets
     rlc-list-test-push-nosubs
     rlc-list-test-copy-nosubs
+    rlc-list-test-subtract-rlc
+    rlc-list-test-complement
+    rlc-list-test-normalize
 
-    cr ." rlc tests - Ok" cr
+    cr ." rlc-list tests - Ok" cr
 ;

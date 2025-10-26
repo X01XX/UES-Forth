@@ -59,21 +59,28 @@
 
 \ ' region-list-push to region-list-push-xt
 
-\ Push a region to a region-list, unless it is already in the lists.
-: region-list-push-nodups ( reg1 list0 -- )
+\ Push a region into a list, if there are no duplicates in the list.
+\ Return true if the region is added to the list.
+: region-list-push-nodups ( reg1 list0 -- flag )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-region
 
-    2dup
-    [ ' region-eq ] literal -rot
-    list-member
+    \ Return if any region in the list is a duplicate of reg1.
+    2dup                                    \ reg1 list0 reg1 list0
+    [ ' region-eq ] literal                 \ reg1 list0 reg1 list0 xt
+    -rot                                    \ reg1 list0 xt reg1 list0
+    list-member                             \ reg1 list0 flag
     if
         2drop
-    else
-        over struct-inc-use-count
-        list-push
+        false
+        exit
     then
+                                            \ reg1 list0
+
+    \ reg1 list0
+    region-list-push
+    true
 ;
 
 \ Push a region to the end of a region-list.
@@ -337,16 +344,19 @@
     nip                         \ lst2
 ;
 
-\ Return a nomalized list.
-\ That is with maximum unions and overlaps.
+\ Return a region-list, normalized.
+\ That is, combine adjacent regions.
 : region-list-normalize ( lst0 -- lst )
     \ Check arg.
     assert-tos-is-list
 
-    region-list-complement      \ lst1
-    dup region-list-complement  \ lst1 lst2
-    swap                        \ lst2 lst1
-    region-list-deallocate      \ lst2
+    \ Normalize, by double complement.
+    region-list-complement          \ lst
+    dup                             \ lst lst
+    region-list-complement          \ lst lst'
+
+    \ Clean up.
+    swap region-list-deallocate     \ lst'
 ;
 
 \ Return a list of region intersections with a region-list, no subsets.
@@ -683,6 +693,26 @@
     repeat
 ;
 
+\ Copy a region-list, removing duplicates.
+: region-list-copy-nodups ( lst0 - lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-new swap               \ ret lst0
+    list-get-links              \ ret link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret link regx
+        #2 pick                 \ ret link regx ret
+        region-list-push-nodups \ ret link flag
+        drop
+
+        link-get-next           \ ret link
+    repeat
+;
+
 \ Append nos region-list to the tos region-list.
 : region-list-append ( lst1 lst0 -- )
     \ Check args.
@@ -779,71 +809,88 @@
     region-list-deallocate                      \ ret
 ;
 
-: region-list-intersection-fragments ( lst0 -- lst )
+\ Return a list of region-pair intersectinons.
+\ Subsets more than Ok, needed.
+: region-list-intersections ( reg-lst0 -- reg-lst)
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Init return list.
+    list-new swap                       \ ret-lst reg-lst0
+    list-get-links                      \ ret-lst link0
+
+    \ For each region.
+    begin
+        ?dup
+    while
+        dup link-get-next               \ ret-lst link0 link+
+
+        \ For each following region.
+        begin
+            ?dup
+        while
+            over link-get-data          \ ret-lst link0 link+ reg0
+            over link-get-data          \ ret-lst link0 link+ reg0 reg+
+            region-intersection         \ ret-lst link0 link+, reg-int t | f
+            if                          \ ret-lst link0 link+ reg-int
+                dup                     \ ret-lst link0 link+ reg-int reg-int
+                #4 pick                 \ ret-lst link0 link+ reg-int reg-int ret-lst
+                region-list-push-nodups \ ret-lst link0 link+ reg-int bool
+                if
+                    drop                \ ret-lst link0 link+
+                else
+                    region-deallocate   \ ret-lst link0 link+
+                then
+            then
+
+            link-get-next               \ ret-lst link0 link+
+        repeat
+
+        link-get-next                   \ ret-lst link0
+    repeat
+                                        \ ret-lst
+;
+
+\ Return fragments of a given region-list.
+\ The fragments will account for all parts of the given region-list.
+\ All fragments will be within all regions of the given region-list that they intersect.
+: region-list-intersection-fragments ( lst0 -- frag-lst )
     \ Check arg.
     assert-tos-is-list
 
     \ Insure-no-duplicates.
-    list-new swap                       \ ret lst0'
-    region-list-copy-nosubs             \ ret lst0'
+    list-new swap                       \ ret-lst lst0'
+    region-list-copy-nodups             \ ret-lst lst0'
     \ cr ." no dups: " dup .region-list cr
 
     begin
         dup list-is-empty 0=
     while
-        \ Get unique parts.
-        dup region-list-unique-parts    \ ret lst0' lst2
-        \ cr ." unique parts: " dup .region-list cr
+        dup                                 \ ret-lst lst0' lst0'
 
-        \ Add to results.
-        dup                             \ ret lst0' lst2 lst2
-        #3 pick                         \ ret lst0' lst2 lst2 ret
-        region-list-append              \ ret lst0' lst2
+        \ Get intersections.
+        region-list-intersections           \ ret-lst lst0' int-lst
 
-        \ Get whats left.
-        swap 2dup                       \ ret lst2 lst0' lst2 lst0'
-        region-list-subtract            \ ret lst2 lst0' lst3
-        \ cr ." left: " dup .region-list cr
+        \ Get whats left over.
+        2dup swap                           \ ret-lst lst0' int-lst int-lst lst0'
+        region-list-subtract                \ ret-lst lst0' int-lst left-over-lst
+        \ cr ." list: " #2 pick .region-list
+        \ space ." - " over .region-list
+        \ space ." = " dup .region-list
+        \ cr
 
-        swap region-list-deallocate     \ ret lst2 lst3
-        swap region-list-deallocate     \ ret lst3
+        \ Add left over to result list.
+        dup                                 \ ret-lst lst0' int-lst left-over-lst left-over-lst 
+        #4 pick                             \ ret-lst lst0' int-lst left-over-lst left-over-lst ret-lst
+        region-list-append                  \ ret-lst lst0' int-lst left-over-lst
+
+        \ Clean up.
+        region-list-deallocate              \ ret-lst lst0' int-lst
+        swap                                \ ret-lst int-lst lst0'
+        region-list-deallocate              \ ret-lst int-lst
     repeat
-
-    region-list-deallocate              \ ret
-;
-
-\ Return the complement of a region-list.
-: region-list-complement ( lst0 -- lst )
-    \ Check arg.
-    assert-tos-is-list
-
-    \ Init region-list with region of all X.
-    0 0 !not region-new     \ lst0 regx
-    list-new tuck           \ lst0 lst regx lst
-    region-list-push        \ lst0 lst
-
-    \ Subtract the given list.
-    tuck                    \ lst lst0 lst
-    region-list-subtract    \ lst lst2
-
-    \ Clean up.
-    swap                    \ lst2 lst
-    region-list-deallocate  \ lst2
-;
-
-\ Return a region-list, normalized.
-\ That is, combine adjacent regions.
-: region-list-normalize ( lst0 -- lst )
-    \ Check arg.
-    assert-tos-is-list
-
-    \ Normalize, by double complement.
-    region-list-complement          \ lst
-    dup                             \ lst lst
-    region-list-complement          \ lst lst'
-
-    \ Clean up.
-    swap region-list-deallocate     \ lst'
+                                            \ ret-lst lst (empty)
+    list-deallocate                         \ ret-lst
 ;
 
 \ Return a copy of a region-list, except for a given region ia a given index.

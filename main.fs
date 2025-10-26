@@ -339,7 +339,7 @@ cr ." main.fs"
     region-list-corr-tests
     depth 0<> abort" Session tests stack not empty"
 
-    rlc-tests
+    rlc-list-tests
     depth 0<> abort" Session tests stack not empty"
     
     test-end

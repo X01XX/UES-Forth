@@ -106,7 +106,6 @@
 ;
 
 \ Return an rcl-list with no duplicates or subsets.
-\ Return true if the push succeeds.
 : rlc-list-copy-nosubs ( list0 -- rcl-list )
     \ Check arg.
     assert-tos-is-list
@@ -126,4 +125,204 @@
         link-get-next           \ ret-lst link
     repeat
                                 \ ret-lst
+;
+
+\ Return true if a rlclist contains at least one rlc
+\ that intersects with a given rlc. 
+: rlc-list-any-intersection-rlc ( rlc1 rlc-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    list-get-links                  \ rlc1 link0
+    begin
+        ?dup
+    while
+        over                        \ rlc1 link0 rlc1
+        over link-get-data          \ rlc1 link0 rlc1 rlc0
+        region-list-corr-intersects \ rlc1 link0 bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                    \ rlc1
+    drop                            \
+    false
+;
+
+: rlc-list-subtract-rlc ( rlc1 rlc-lst0 -- rlc-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    \ cr ." subtract " over .region-list-corr space ." from " dup .rlc-list
+    \ Init return list.
+    list-new -rot                           \ ret-lst rlc1 rlc-lst0
+
+    \ Get first rlc-lst0 link.
+    list-get-links                          \ ret-lst rlc1 link0
+
+    \ For each rlc in rlc-lst0 ...
+    begin
+        ?dup
+    while
+        \ Check if rlc1 is a superset of rlc0.
+        dup link-get-data                       \ ret-lst rlc1 link0 rlc0
+        #2 pick                                 \ ret-lst rlc1 link0 rlc0 rlc1
+        region-list-corr-superset               \ ret-lst rlc1 link0 bool
+        if
+            \ Don't add rlc0 to return list.
+        else
+            \ Check if rlc1 intersects rlc0.
+            dup link-get-data                   \ ret-lst rlc1 link0 rlc0
+            #2 pick                             \ ret-lst rlc1 link0 rlc0 rlc1
+            region-list-corr-intersects         \ ret-lst rlc1 link0 bool
+            if
+                \ Subtract rlc1 from rlc0.
+                over                            \ ret-lst rlc1 link0 rlc1
+                over link-get-data              \ ret-lst rlc1 link0 rlc1 rlc0
+                region-list-corr-subtract       \ ret-lst rlc1 link0, left-lst t | f 
+                if
+                    \ Add whats left to the return list.
+                    dup                         \ ret-lst rlc1 link0 left-lst left-lst
+                    list-get-links              \ ret-lst rlc1 link0 left-lst left-link
+                    begin
+                        ?dup
+                    while
+                        dup link-get-data       \ ret-lst rlc1 link0 left-lst left-link left-rlc
+                        #5 pick                 \ ret-lst rlc1 link0 left-lst left-link left-rlc ret-lst
+                        rlc-list-push-nosubs    \ ret-lst rlc1 link0 left-lst left-link bool
+                        drop
+                        \ cr ." at 1 " .s cr
+                        link-get-next           \ ret-lst rlc1 link0 left-lst left-link
+                    repeat
+                                                \ ret-lst rlc1 link0 left-lst
+                    rlc-list-deallocate         \ ret-lst rlc1 link0
+                then
+            else
+                \ Add rlc0 to return list.
+                dup link-get-data               \ ret-lst rlc1 link0 rlc0
+                #3 pick                         \ ret-lst rlc1 link0 rlc0 ret-lst
+                rlc-list-push-nosubs            \ ret-lst rlc1 link0 bool
+                drop
+            then
+        then
+       \  cr ." at 2 " .s cr
+        link-get-next
+    repeat
+                            \ ret-lst rlc1
+    drop                    \ ret-lst
+    \ space ." giving " dup .rlc-list cr
+;
+
+\ Return TOS rlc-lst minus NOS rcl-lst.
+: rlc-list-subtract ( rlc-lst1 rlc-lst0 -- rlc-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    \ Prep for loop.
+    rlc-list-copy-nosubs        \ rlc-lst1 rlc-lst0'
+    swap                        \ rlc-lst0' rlc-lst1
+    list-get-links              \ rlc-lst0' link1
+
+    \ Subtract each rlc in rlc-lst1 from rlc-lst0'.
+    begin
+        ?dup
+    while
+        \ Prep for process.
+        swap                    \ link1 rlc-lst0'
+
+        \ Subtract an rlc.
+        over link-get-data      \ link1 rlc-lst0' rlc1
+        over                    \ link1 rlc-lst0' rlc1 rlc-lst0'
+        rlc-list-subtract-rlc   \ link1 rlc-lst0' rlc-lst0''
+
+        \ Clean up previous rlc-lst0
+        swap                    \ link1 rlc-lst0'' rlc-lst0'
+        rlc-list-deallocate     \ link1 rlc-lst0''
+
+        \ Prep for next cycle.
+        swap                    \ rcl-lst0'' link1
+
+        link-get-next
+    repeat
+                            \ rcl-lst0'
+;
+
+\ Return the comlement of a rlc.
+: rlc-list-complement ( rlc-lst0 -- rlc-lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Max list of maximum regions.
+    list-new                        \ rlc-lst0 max-rlc-lst
+    region-list-corr-max-regions    \ rlc-lst0 max-rlc-lst rlc-max
+    over                            \ rlc-lst0 max-rlc-lst rlc-max max-rlc-lst
+    rlc-list-push                   \ rlc-lst0 max-rlc-lst
+
+    \ Save max rlc
+    tuck                            \ max-rlc-lst rlc-lst0 max-rlc-lst
+
+    \ Subtract rlc from max regions.
+    rlc-list-subtract               \ max-rlc-lst ret-rlc-lst
+
+    \ Clean up.
+    swap rlc-list-deallocate        \ ret-rlc-lst
+;
+
+\ Return true if two rlc-lists are equal.
+: rlc-list-eq ( rlc-lst1 rlc-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    \ Check length first.
+    over list-get-length                    \ rlc-lst1 rlc-lst0 len1
+    over list-get-length                    \ rlc-lst1 rlc-lst0 len1 len0
+    <> if
+        2drop
+        false
+        exit
+    then
+
+    \ Check each rlc.
+    list-get-links                          \ rlc-lst1 link0
+
+    begin
+        ?dup
+    while
+        [ ' region-list-corr-eq ] literal   \ rlc-lst1 link0 xt
+        over link-get-data                  \ rlc-lst1 link0 xt rlc0
+        #3 pick                             \ rlc-lst1 link0 xt rlc0 rlc-lst1
+        list-member                         \ rlc-lst1 link0 bool
+        is-false if
+            2drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ rlc-lst1
+    drop                        \
+    true
+;
+
+\ Return a normalized rlc-list.
+: rlc-list-normalize ( rcl-lst0 -- rcl-lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    rlc-list-complement     \ rcl-lst0'
+    dup                     \ rcl-lst0' rcl-lst0'
+    rlc-list-complement     \ rcl-lst0' rcl-lst0''
+
+    \ Clean up.
+    swap                    \ rcl-lst0'' rcl-lst0'
+    rlc-list-deallocate     \ rcl-lst0''
 ;
