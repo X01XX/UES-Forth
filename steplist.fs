@@ -4,7 +4,7 @@
 : step-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
-    2 < if
+    #2 < if
         \ Deallocate step instances in the list.
         [ ' step-deallocate ] literal over          \ lst0 xt lst0
         list-apply                                  \ lst0
@@ -14,8 +14,6 @@
     list-deallocate                                 \
 ;
 
-' step-list-deallocate to step-list-deallocate-xt
-
 \ Print a step-list
 : .step-list ( list0 -- )
     \ Check args.
@@ -23,8 +21,6 @@
 
     [ ' .step ] literal swap .list
 ;
-
-' .step-list to .step-list-xt
 
 \ Push a step to the end of a step-list.
 : step-list-push-end ( stp1 list0 -- )
@@ -69,8 +65,6 @@
                         \ lst0
     drop
 ;
-
-' step-list-append to step-list-append-xt
 
 : step-list-remove-item ( inx1 lst0 -- stpx true | false )
     \ Check arg.

@@ -171,8 +171,6 @@ need-action  cell+ constant need-target     \ A state.
     tuck _need-set-type             \ ned
 ;
 
-' need-new to need-new-xt
-
 \ Print a need.
 : .need ( ned0 -- )
     \ Check arg.

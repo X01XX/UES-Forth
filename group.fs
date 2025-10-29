@@ -444,7 +444,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
             0                               \ ret-lst smpl1 grp0 | smpl1 0
             #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
             rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
-            step-new-by-rule-f-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-f              \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 nip nip                     \ ret-lst stpx
                 over                        \ ret-lst stpx ret-lst
@@ -460,7 +460,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
             over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
             dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
             swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-            step-new-by-rule-f-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-f              \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
                 execute                     \ ret-lst smpl1 grp0 |
@@ -470,7 +470,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
                 over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
                 dup rulestore-get-rule-0        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-0
                 swap rulestore-get-rule-1       \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1
-                step-new-by-rule-f-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
+                step-new-by-rule-f              \ ret-lst smpl1 grp0 | stpx t | f
                 if                              \ ret-lst smpl1 grp0 | stpx
                     #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
                     execute                     \ ret-lst smpl1 grp0 |
@@ -510,7 +510,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
             0                               \ ret-lst smpl1 grp0 | smpl1 0
             #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
             rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
-            step-new-by-rule-b-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-b              \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 nip nip                     \ ret-lst stpx
                 over                        \ ret-lst stpx ret-lst
@@ -526,7 +526,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
             over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
             dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
             swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-            step-new-by-rule-b-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
+            step-new-by-rule-b              \ ret-lst smpl1 grp0 | stpx t | f
             if                              \ ret-lst smpl1 grp0 | stpx
                 #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
                 execute                     \ ret-lst smpl1 grp0 |
@@ -540,7 +540,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
                 #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 rul-1 grp-ruls
                 rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
                 swap                            \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1
-                step-new-by-rule-b-xt execute   \ ret-lst smpl1 grp0 | stpx t | f
+                step-new-by-rule-b              \ ret-lst smpl1 grp0 | stpx t | f
                 if                              \ ret-lst smpl1 grp0 | stpx
                     #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx ret-lst xt
                     execute                     \ ret-lst smpl1 grp0 |
@@ -731,7 +731,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     assert-nos-is-changes
 
     dup group-get-pn            \ cngs1 grp0 pn
-    3 = if
+    #3 = if
         2drop
         false
         exit

@@ -46,8 +46,6 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     abort" TOS is not an allocated step"
 ;
 
-' assert-tos-is-step to assert-tos-is-step-xt
-
 \ Check NOS for step, unconventional, leaves stack unchanged. 
 : assert-nos-is-step ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-step 0=
@@ -80,8 +78,6 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     @                   \ Fetch the field.
 ;
 
-' step-get-sample to step-get-sample-xt
-
 \ Set the sample of a step instance, use only in this file.
 : _step-set-sample ( smpl addr -- )
     step-sample +       \ Add offset.
@@ -102,8 +98,6 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     step-alt-sample +   \ Add offset.
     !                   \ Set field.
 ;
-
-' step-set-alt-sample to step-set-alt-sample-xt
 
 \ Return step result state.
 : step-get-result ( stp0 -- sta )
@@ -159,10 +153,10 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 \            i.e. Can be used anytime in the path. 
 : step-new    ( alt-smpl2 smpl1 act0 -- step )
     \ Check args.
-    assert-tos-is-action
+    assert-tos-is-action-xt execute
     assert-nos-is-sample
 
-    dup action-get-inst-id          \ as2 s1 act0 act-id
+    dup action-get-inst-id-xt execute   \ as2 s1 act0 act-id
     0<> if
         \ If action not zero, a change must happen.
         over sample-get-states =    \ as2 s1 act0 flag
@@ -251,8 +245,6 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     then
 ;
 
-' .step to .step-xt
-
 : step-deallocate ( stp0 -- )
     \ Check arg.
     assert-tos-is-step
@@ -338,8 +330,6 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     true                            \ stpx true
 ;
 
-' step-new-by-rule-f to step-new-by-rule-f-xt
-
 \ Return a backward-chaining step, given a rule, alternate-rule (may be zero), and sample.
 : step-new-by-rule-b ( smpl3 alt-rul2 rul1 -- stp true | false )
     \ Check args.
@@ -385,5 +375,3 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
     nip nip nip                     \ stpx
     true                            \ stpx true
 ;
-
-' step-new-by-rule-b to step-new-by-rule-b-xt

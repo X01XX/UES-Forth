@@ -283,10 +283,10 @@
             1 of
                 dup #2 xor
             endof
-            2 of
+            #2 of
                 dup #4 xor
             endof
-            4 of
+            #4 of
                 dup 1 xor
             endof
         endcase

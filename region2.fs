@@ -8,7 +8,7 @@
     2dup region-intersects 0=       \ reg1 reg0 flag
     if
         list-new tuck               \ reg1 list reg0 list
-        region-list-push            \ reg1 list
+        region-list-push-xt execute \ reg1 list
         nip                         \ list
         exit
     then
@@ -37,7 +37,8 @@
         isolate-a-bit               \ reg1 reg0 list | x1mask' one-bit
         #3 pick                     \ reg1 reg0 list | x1mask' one-bit reg0
         region-x-to-0               \ reg1 reg0 list | x1mask' reg0'
-        #2 pick region-list-push    \ reg1 reg0 list | x1mask'
+        #2 pick region-list-push-xt
+        execute                     \ reg1 reg0 list | x1mask'
     repeat
     drop                            \ reg1 reg0 list
 
@@ -52,14 +53,13 @@
         isolate-a-bit               \ reg1 reg0 list | x0mask' one-bit
         #3 pick                     \ reg1 reg0 list | x0mask' one-bit reg0
         region-x-to-1               \ reg1 reg0 list | x0mask' reg0'
-        #2 pick region-list-push    \ reg1 reg0 list | x0mask'
+        #2 pick region-list-push-xt
+        execute                     \ reg1 reg0 list | x0mask'
     repeat
     drop                            \ reg1 reg0 list
 
     nip nip                         \ list
 ;
-
-' region-subtract to region-subtract-xt
 
 \ Return a region-list from a TOS region minus the NOS state.
 : region-subtract-state ( sta1 reg0 -- region-list )
@@ -70,9 +70,10 @@
     \ Check if any subtraction is needed.
     2dup region-superset-of-state 0=    \ sta1 reg0 flag
     if
-        list-new tuck              \ sta1 list reg0 list
-        region-list-push           \ sta1 list
-        nip                        \ list
+        list-new tuck               \ sta1 list reg0 list
+        region-list-push-xt
+        execute                     \ sta1 list
+        nip                         \ list
         exit
     then
 
@@ -102,7 +103,8 @@
         #3 pick                     \ sta1 reg0 list | x1mask' one-bit reg0
         region-x-to-0               \ sta1 reg0 list | x1mask' reg0'
         #2 pick                     \ sta1 reg0 list | x1mask' reg0 list
-        region-list-push            \ sta1 reg0 list | x1mask'
+        region-list-push-xt
+        execute                     \ sta1 reg0 list | x1mask'
     repeat
     drop                            \ sta1 reg0 list
 
@@ -117,11 +119,11 @@
         isolate-a-bit               \ sta1 reg0 list | x0mask' one-bit
         #3 pick                     \ sta1 reg0 list | x0mask' one-bit reg0
         region-x-to-1               \ sta1 reg0 list | x0mask' reg0'
-        #2 pick region-list-push    \ sta1 reg0 list | x0mask'
+        #2 pick region-list-push-xt
+        execute                     \ sta1 reg0 list | x0mask'
     repeat
     drop                            \ sta1 reg0 list
 
     nip nip                         \ list
 ;
 
-\ ' region-subtract-state to region-subtract-state-xt

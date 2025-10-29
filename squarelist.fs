@@ -4,7 +4,7 @@
 : square-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
-    2 < if
+    #2 < if
         \ Deallocate square instances in the list.
         [ ' square-deallocate ] literal over        \ lst0 xt lst0
         list-apply                                  \ lst0

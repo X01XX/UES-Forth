@@ -1,13 +1,14 @@
 \ Implement a Session struct and functions.                                                                                             
 
 #31319 constant session-id
-    #4 constant session-struct-number-cells
+    #5 constant session-struct-number-cells
 
 \ Struct fields
 0 constant session-header    \ 16-bits [0] struct id [1] use count
-session-header              cell+ constant session-domains              \ A domain-list
-session-domains             cell+ constant session-current-domain       \ A domain, or zero before first domain is added.
-session-current-domain      cell+ constant session-needs                \ A need-list.
+session-header              cell+ constant session-domains-disp         \ A domain-list
+session-domains-disp        cell+ constant session-current-domain-disp  \ A domain, or zero before first domain is added.
+session-current-domain-disp cell+ constant session-needs-disp           \ A need-list.
+session-needs-disp          cell+ constant session-rlcrate-list-disp    \ Base region-list-corr + rate, list.
 
 0 value session-addr \ Storage for session address.
 
@@ -30,8 +31,8 @@ session-current-domain      cell+ constant session-needs                \ A need
     \ Check arg.
     assert-tos-is-session
 
-    session-domains +   \ Add offset.
-    @                   \ Fetch the field.
+    session-domains-disp +  \ Add offset.
+    @                       \ Fetch the field.
 ;
 
 \ Set the domain-list for an session instance.
@@ -40,8 +41,8 @@ session-current-domain      cell+ constant session-needs                \ A need
     assert-tos-is-session
     assert-nos-is-list
 
-    session-domains +   \ Add offset.
-    !                   \ Set the field.
+    session-domains-disp +  \ Add offset.
+    !                       \ Set the field.
 ;
 
 \ Return the current domain from an session instance.
@@ -49,11 +50,9 @@ session-current-domain      cell+ constant session-needs                \ A need
     \ Check arg.
     assert-tos-is-session
 
-    session-current-domain +    \ Add offset.
-    @                           \ Fetch the field.
+    session-current-domain-disp +   \ Add offset.
+    @                               \ Fetch the field.
 ;
-
-' session-get-current-domain to session-get-current-domain-xt
 
 \ Set the current domain for an session instance.
 : session-set-current-domain ( dom ses0 -- )
@@ -63,8 +62,8 @@ session-current-domain      cell+ constant session-needs                \ A need
         assert-nos-is-domain
     then
 
-    session-current-domain +    \ Add offset.
-    !                           \ Set the field.
+    session-current-domain-disp +   \ Add offset.
+    !                               \ Set the field.
 ;
 
 ' session-set-current-domain to session-set-current-domain-xt
@@ -74,7 +73,7 @@ session-current-domain      cell+ constant session-needs                \ A need
     \ Check arg.
     assert-tos-is-session
 
-    session-needs +             \ Add offset.
+    session-needs-disp +        \ Add offset.
     @                           \ Fetch the field.
 ;
 
@@ -87,12 +86,12 @@ session-current-domain      cell+ constant session-needs                \ A need
         over struct-inc-use-count
     then
 
-    session-needs +             \ Add offset.
+    session-needs-disp +        \ Add offset.
     !                           \ Set the field.
 ;
 
 \ Update the session needs, deallocating the previous list, if any.
-: _session-update-needs  ( ned-lst sess0 -- )
+: _session-update-needs  ( ned-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
@@ -106,6 +105,28 @@ session-current-domain      cell+ constant session-needs                \ A need
     else
         need-list-deallocate
     then
+;
+
+\ Return the session need-list
+: session-get-rlcrate-list ( sess0 -- rlcrt-lst )
+    \ Check arg.
+    assert-tos-is-session
+
+    session-rlcrate-list-disp + \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the need-list for an session instance.
+: _session-set-rlcrate-list ( rlcrt-lst1 ses0 -- )
+    \ Check args.
+    assert-tos-is-session
+    over 0<> if
+        assert-nos-is-list
+        over struct-inc-use-count
+    then
+
+    session-rlcrate-list-disp + \ Add offset.
+    !                           \ Set the field.
 ;
 
 \ End accessors.
@@ -133,8 +154,11 @@ session-current-domain      cell+ constant session-needs                \ A need
     \ Zero-out current domain.
     0 over session-set-current-domain
 
-    \ Init need-list
+    \ Init need-list.
     list-new over _session-set-needs    \ ses
+
+    \ Init rlcrate-list.
+    list-new over _session-set-rlcrate-list  \ sess
 ;
 
 \ Print a session.
@@ -164,10 +188,12 @@ session-current-domain      cell+ constant session-needs                \ A need
         link-get-next               \ sess0 link
     repeat
 
+    cr ." rlcrates: "
+    dup session-get-rlcrate-list    \ sess0 lst
+    .rlcrate-list
+    cr
     drop
 ;
-
-' .session to .session-xt
 
 \ Deallocate a session.
 : session-deallocate ( ses0 -- )
@@ -176,8 +202,8 @@ session-current-domain      cell+ constant session-needs                \ A need
 
     \ Clear fields.
     dup session-get-domains domain-list-deallocate
-    dup session-get-needs
-    ?dup if need-list-deallocate then
+    dup session-get-needs need-list-deallocate
+    dup session-get-rlcrate-list rlcrate-list-deallocate
 
     \ Deallocate instance.
     0 over struct-set-id
@@ -419,12 +445,104 @@ session-current-domain      cell+ constant session-needs                \ A need
     true
 ;
 
+: session-add-rlcrate ( rlcrt1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-rlcrate
+
+    session-get-rlcrate-list        \ rlcrt1 rlcrt-lst
+    rlcrate-list-push               \
+;
+
+: session-process-rlcrates ( sess0 -- )
+    \ Check arg.
+    assert-tos-is-session
+
+    cr ." session-process-rlcrates" cr
+
+    dup session-get-rlcrate-list                \ sess0 rlcrt-lst
+
+    cr ." rlcrates:  " dup .rlcrate-list cr
+    
+    rlcrate-list-to-rlc-list                    \ sess0 rlc-lst
+    dup                                         \ sess0 rlc-lst rlc-lst
+    rlc-list-intersection-fragments             \ sess0 rlc-lst rlc-lst2
+    cr ." fragments: " dup .rlc-list cr
+    swap rlc-list-deallocate                    \ sess0 rlc-lst2
+
+    \ Check fragments, and find values.
+    over session-get-rlcrate-list               \ sess0 rlc-lst2 rlcrt-lst
+    swap                                        \ sess0 rlcrt-lst rlc-lst2
+    \ dup                                         \ sess0 rlcrt-lst rlc-lst2 rcl-lst2
+
+    \ For each fragment.
+    0 0 rate-new                                \ sess0 rlcrt-lst rlc-lst2 rate-agg - init aggregate rate.
+    over list-get-links                         \ sess0 rlcrt-lst rlc-lst2 rate-agg link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx
+
+        \ For each rlcrate item
+        #4 pick list-get-links                  \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2
+        begin
+            ?dup
+        while
+            over                                    \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcrtx
+            over link-get-data                      \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcrtx rlcratey
+            rlcrate-get-rlc                         \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcrtx rlcrty
+            2dup                                    \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcrtx rlcrty rlcrtx rlcrty
+            region-list-corr-intersects             \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcrtx rlcrty bool
+            if
+                2dup region-list-corr-superset      \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcrtx rlcrty bool
+                if
+                                                    \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcrtx rlcrty
+                    cr .region-list-corr space ." superset of " .region-list-corr
+                    dup link-get-data               \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rlcratey
+                    rlcrate-get-rate                \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rate
+                    space dup ." rate: " .rate      \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rate
+                    #4 pick                         \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2 rate rate-agg
+                    rate-add                        \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2
+                    cr
+                else
+                    cr .region-list-corr space ." not superset of " .region-list-corr space ." ?" cr
+                    abort
+                then
+                                                \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2
+            else
+                2drop                           \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2
+            then
+
+            link-get-next                       \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx link2
+        repeat
+                                                \ sess0 rlcrt-lst rlc-lst2 rate-agg link | rlcrtx
+        drop                                    \ sess0 rlcrt-lst rlc-lst2 rate-agg link
+
+        \ Process aggregate rate.
+        swap                                    \ sess0 rlcrt-lst rlc-lst2 link rate-agg
+        cr 34 spaces ." agg rate: " dup .rate cr
+        rate-deallocate
+        0 0 rate-new                            \ sess0 rlcrt-lst rlc-lst2 link rate-agg
+        swap                                    \ sess0 rlcrt-lst rlc-lst2 rate-agg link
+
+        link-get-next                           \ sess0 rlcrt-lst rlc-lst2 rate-agg link
+    repeat
+                                                \ sess0 rlcrt-lst rlc-lst2 rate-agg
+    \ Clean up.
+    rate-deallocate                             \ sess0 rlcrt-lst rlc-lst2
+    rlc-list-deallocate                         \ sess0 rlcrt-lst
+    2drop                                       \
+;
+
 \ Return the number of domains.
 : session-get-number-domains ( -- u )
     current-session
     session-get-domains
     list-get-length
 ;
+
+' session-get-number-domains to session-get-number-domains-xt
 
 : set-domain ( u1 )
     current-session             \ u1 sess
@@ -434,9 +552,10 @@ session-current-domain      cell+ constant session-needs                \ A need
     session-set-current-domain
 ;
 
-: session-get-domain-links ( -- link )
-    current-session
-    session-get-domains
-    list-get-links
+\ Return the session domain list.
+: session-get-domain-list ( -- link )
+    current-session     \ sess
+    session-get-domains \ dom-lst
 ;
 
+' session-get-domain-list to session-get-domain-list-xt

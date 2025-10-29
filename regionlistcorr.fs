@@ -3,18 +3,19 @@
     \ Check arg.
     assert-tos-is-list
     dup list-get-length
-    session-get-number-domains
+    session-get-number-domains-xt execute
     <> abort" Lists have different length?"
 
-    list-get-links              \ link0
-    session-get-domain-links    \ link0 d-link
+    list-get-links                                      \ link0
+    session-get-domain-list-xt execute list-get-links   \ link0 d-link
     ." ("
     begin
         ?dup
     while
         \ Set current domain.
         dup link-get-data           \ link0 d-link domx
-        domain-set-current          \ link0 d-link
+        domain-set-current-xt
+        execute                     \ link0 d-link
 
         over link-get-data          \ link0 d-link reg0
         .region                     \ link0 d-link
@@ -38,13 +39,14 @@
     assert-nos-is-list
     over list-get-length
     over list-get-length
-    session-get-number-domains
+    session-get-number-domains-xt execute
     3<> abort" Lists have different length?"
 
     \ Init links for loop.
-    swap list-get-links             \ lst0 link1
-    swap list-get-links             \ link1 link0
-    session-get-domain-links        \ link1 link0 d-link
+    swap list-get-links                     \ lst0 link1
+    swap list-get-links                     \ link1 link0
+    session-get-domain-list-xt execute
+    list-get-links                          \ link1 link0 d-link
 
     begin
         ?dup
@@ -53,7 +55,8 @@
 
         \ Set current domain.
         dup link-get-data           \ link1 link0 d-link domx
-        domain-set-current          \ link1 link0 d-link
+        domain-set-current-xt
+        execute                     \ link1 link0 d-link
 
         \ Compare regions.
         #2 pick link-get-data       \ link1 link0 d-link reg2
@@ -91,13 +94,14 @@
     assert-nos-is-list
     over list-get-length
     over list-get-length
-    session-get-number-domains
+    session-get-number-domains-xt execute
     3<> abort" Lists have different length?"
 
     \ Init links for loop.
-    swap list-get-links             \ lst0 link1
-    swap list-get-links             \ link1 link0
-    session-get-domain-links        \ link1 link0 d-link
+    swap list-get-links                     \ lst0 link1
+    swap list-get-links                     \ link1 link0
+    session-get-domain-list-xt execute
+    list-get-links                          \ link1 link0 d-link
 
     begin
         ?dup
@@ -106,7 +110,8 @@
 
         \ Set current domain.
         dup link-get-data           \ link1 link0 d-link domx
-        domain-set-current          \ link1 link0 d-link
+        domain-set-current-xt
+        execute                     \ link1 link0 d-link
 
         \ Check regions
         #2 pick link-get-data       \ link1 link0 d-link reg1
@@ -136,7 +141,7 @@
     assert-nos-is-list
     over list-get-length
     over list-get-length
-    session-get-number-domains
+    session-get-number-domains-xt execute
     3<> abort" Lists have different length?"
 
     \ Check for a superset subtrahend.
@@ -160,9 +165,10 @@
     0 >r                            \ lst0 ret-lst lst1 lst0, r: \ ctr
 
     \ Init links for loop.
-    swap list-get-links             \ lst0 ret-lst lst0 link1
-    swap list-get-links             \ lst0 ret-lst link1 link0
-    session-get-domain-links        \ lst0 ret-lst link1 link0 d-link
+    swap list-get-links                     \ lst0 ret-lst lst0 link1
+    swap list-get-links                     \ lst0 ret-lst link1 link0
+    session-get-domain-list-xt execute
+    list-get-links                          \ lst0 ret-lst link1 link0 d-link
 
     begin
         ?dup
@@ -171,7 +177,8 @@
 
         \ Set current domain.
         dup link-get-data           \ lst0 ret-lst link1 link0 d-link domx
-        domain-set-current          \ lst0 ret-lst link1 link0 d-link
+        domain-set-current-xt
+        execute                     \ lst0 ret-lst link1 link0 d-link
 
         \ Subtract two regions.
         #2 pick link-get-data       \ lst0 ret-lst link1 link0 d-link reg1
@@ -236,7 +243,7 @@
     parse-string                \ addr0 cnt0 cnt2
 
     \ Check number tokens.
-    session-get-number-domains  \ addr0 cnt0 cnt2 domain-count
+    session-get-number-domains-xt execute   \ addr0 cnt0 cnt2 domain-count
     <> if                       \ addr0 cnt0
         0 do
             2drop
@@ -246,15 +253,17 @@
     then
 
     \ Process each region, skip invalid regions.
-                                    \ addr0 cnt0
-    list-new                        \ addr0 cnt0 ret-lst
-    session-get-domain-links        \ addr0 cnt0 ret-lst d-link
+                                            \ addr0 cnt0
+    list-new                                \ addr0 cnt0 ret-lst
+    session-get-domain-list-xt execute
+    list-get-links                          \ addr0 cnt0 ret-lst d-link
     begin
         ?dup
     while
         \ Set current domain.
         dup link-get-data           \ addr0 cnt0 ret-lst d-link domx
-        domain-set-current          \ addr0 cnt0 ret-lst d-link
+        domain-set-current-xt
+        execute                     \ addr0 cnt0 ret-lst d-link
 
         \ Get one region.
         2swap                       \ ret-lst d-link addr0 cnt0
@@ -269,7 +278,7 @@
 
     \ Check results.                \ ret-lst
     dup list-get-length             \ ret-lst len
-    session-get-number-domains      \ ret-lst len dnum
+    session-get-number-domains-xt execute   \ ret-lst len dnum
     <> if
         region-list-deallocate
         false
@@ -292,7 +301,7 @@
     assert-nos-is-list
     over list-get-length
     over list-get-length
-    session-get-number-domains
+    session-get-number-domains-xt execute
     3<> abort" Lists have different length?"
 
     swap list-get-links     \ lst0 link1
@@ -321,20 +330,23 @@
 \ Return a list of maximum sized regions.
 : region-list-corr-max-regions ( -- lst )
     \ Init return list.
-    list-new                    \ ret-lst
+    list-new                                \ ret-lst
     \ Prep for loop.
-    session-get-domain-links    \ ret-lst d-link
+    session-get-domain-list-xt execute
+    list-get-links                          \ ret-lst d-link
 
     begin
         ?dup
     while
         \ Set current domain.
         dup link-get-data           \ lst0 ret-lst link1 link0 d-link domx
-        domain-set-current          \ lst0 ret-lst link1 link0 d-link
+        domain-set-current-xt
+        execute                     \ lst0 ret-lst link1 link0 d-link
 
         \ Add next region.
         dup link-get-data       \ ret-lst d-lisk domx
-        domain-get-max-region   \ ret-lst d-lisk regx
+        domain-get-max-region-xt
+        execute                 \ ret-lst d-lisk regx
         #2 pick                 \ ret-lst d-lisk regx ret-lst
         region-list-push-end    \ ret-lst d-lisk
 
@@ -364,7 +376,7 @@
     assert-nos-is-list
     over list-get-length
     over list-get-length
-    session-get-number-domains
+    session-get-number-domains-xt execute
     3<> abort" Lists have different length?"
 
     \ Init counter.
@@ -400,9 +412,62 @@
     assert-nos-is-list
     over list-get-length
     over list-get-length
-    session-get-number-domains
+    session-get-number-domains-xt execute
     3<> abort" Lists have different length?"
 
     region-list-corr-distance   \ nb
     1 =
+;
+
+: region-list-corr-intersection ( lst1 lst0 -- rlc t | f )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+    over list-get-length
+    over list-get-length
+    session-get-number-domains-xt execute
+    3<> abort" Lists have different length?"
+
+    \ Init return list.
+    list-new -rot                   \ ret-lst lst1 lst0
+
+    \ Init links for loop.
+    swap list-get-links                     \ ret-lst  lst0 link1
+    swap list-get-links                     \ ret-lst  link1 link0
+    session-get-domain-list-xt execute
+    list-get-links                          \ ret-lst  link1 link0 d-link
+
+    begin
+        ?dup
+    while
+                                    \ ret-lst  link1 link0 d-link
+
+        \ Set current domain.
+        dup link-get-data           \ ret-lst  link1 link0 d-link domx
+        domain-set-current-xt
+        execute                     \ ret-lst  link1 link0 d-link
+
+        \ Check regions
+        #2 pick link-get-data       \ ret-lst  link1 link0 d-link reg1
+        #2 pick link-get-data       \ ret-lst  link1 link0 d-link reg1 reg0
+        region-intersection         \ ret-lst  link1 link0 d-link, reg-int t | f
+        if                          \ ret-lst  link1 link0 d-link reg-int
+            #4 pick                 \ ret-lst  link1 link0 d-link reg-int ret-lst
+            region-list-push-end    \ ret-lst  link1 link0 d-link
+        else
+            3drop                   \ ret-lst
+            region-list-deallocate  \
+            false                   \ bool
+            exit
+        then
+
+        \ Prep for next cycle.
+                                    \ ret-lst link1 link0 d-link
+        rot link-get-next           \ ret-lst  link0 d-link link1
+        rot link-get-next           \ ret-lst  d-link link1 link0
+        rot link-get-next           \ ret-lst  link1 link0 d-link
+    repeat
+                                    \ ret-lst link1 link0
+    2drop                           \ ret-lst
+    true
 ;

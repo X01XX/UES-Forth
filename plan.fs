@@ -43,23 +43,17 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     abort" TOS is not an allocated plan"
 ;
 
-' assert-tos-is-plan to assert-tos-is-plan-xt
-
 \ Check NOS for plan, unconventional, leaves stack unchanged. 
 : assert-nos-is-plan ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-plan 0=
     abort" NOS is not an allocated plan"
 ;
 
-' assert-nos-is-plan to assert-nos-is-plan-xt
-
 \ Check 3OS for plan, unconventional, leaves stack unchanged. 
 : assert-3os-is-plan ( pln2 arg1 arg0 -- arg1 arg0 )
     #2 pick is-allocated-plan 0=
     abort" 3OS is not an allocated plan"
 ;
-
-' assert-3os-is-plan to assert-3os-is-plan-xt
 
 \ Start accessors.
 
@@ -98,7 +92,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 \ Return a new, empty, plan, given a domain.
 : plan-new    ( dom0 -- plan )
     \ Check args.
-    assert-tos-is-domain
+    assert-tos-is-domain-xt execute
 
    \ Allocate space.
     plan-mma mma-allocate           \  d0 addr
@@ -120,18 +114,14 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     over _plan-set-step-list        \ addr
 ;
 
-' plan-new to plan-new-xt
-
 : .plan ( stp0 -- )
     \ Check arg.
     assert-tos-is-plan
 
-    dup plan-get-domain domain-get-inst-id
+    dup plan-get-domain domain-get-inst-id-xt execute
     ." Dom: " dec. space
     plan-get-step-list .step-list
 ;
-
-' .plan to .plan-xt
 
 : plan-deallocate ( pln0 -- )
     \ Check arg.
@@ -149,8 +139,6 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
         struct-dec-use-count
     then
 ;
-
-' plan-deallocate to plan-deallocate-xt
 
 \ Return the result state of a non-empty plan.
 : plan-get-result-state ( pln - sta )
@@ -236,8 +224,6 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     2drop
 ;
 
-' plan-push-end to plan-push-end-xt
-
 \ Return the initial state of a non-empty plan.
 : plan-get-initial-state ( pln - sta )
     \ Check arg.
@@ -283,8 +269,6 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     2drop
 ;
 
-' plan-push to plan-push-xt
-
 \ Run a plan.  Return true if it works.
 : plan-run ( pln0 -- flag )
     cr ." plan-run" cr
@@ -295,9 +279,11 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     dup plan-get-domain             \ pln0 dom
     dup                             \ pln0 dom dom
     current-session                 \ pln0 dom dom sess
-    session-set-current-domain      \ pln0 dom
+    session-set-current-domain-xt
+    execute                         \ pln0 dom
 
-    dup domain-get-current-state    \ pln0 dom cur-sta
+    dup domain-get-current-state-xt
+    execute                         \ pln0 dom cur-sta
     #2 pick plan-get-initial-state  \ pln0 dom cur-sta pln-sta
     <> abort" Plan initial state does not match the domain current state"
 
@@ -311,7 +297,8 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
         dup link-get-data           \ pln0 dom link step
         dup step-get-action         \ pln0 dom link step actx
         #3 pick                     \ pln0 dom link step actx dom
-        domain-get-sample           \ pln0 dom link step d-smpl
+        domain-get-sample-xt
+        execute                     \ pln0 dom link step d-smpl
 
         \ Check if action sample is as expected.
         over step-get-sample        \ pln0 dom link step d-smpl s-smpl
@@ -351,5 +338,3 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     repeat
     drop
 ;
-
-' plan-append to plan-append-xt

@@ -46,6 +46,8 @@ action-groups               cell+ constant action-function              \ An xt 
     abort" TOS is not an allocated action"
 ;
 
+' assert-tos-is-action to assert-tos-is-action-xt
+
 \ Check NOS for action, unconventional, leaves stack unchanged. 
 : assert-nos-is-action ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-action 0=
@@ -1430,8 +1432,8 @@ action-groups               cell+ constant action-function              \ An xt 
                 group-calc-forward-steps        \ ret-lst smpl1 link grp-stp-lst
                 dup                             \ ret-lst smpl1 link grp-stp-lst grp-stp-lst
                 #4 pick                         \ ret-lst smpl1 link grp-stp-lst grp-stp-lst ret-lst
-                step-list-append-xt execute     \ ret-lst smpl1 link grp-stp-lst
-                step-list-deallocate-xt execute \ ret-lst smpl1 link
+                step-list-append                \ ret-lst smpl1 link grp-stp-lst
+                step-list-deallocate            \ ret-lst smpl1 link
             else
                 \ Sample initial state is not in the group r-region.
                 2drop                   \ ret-lst smpl1 link
@@ -1445,7 +1447,7 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
                                     \ ret-lst smpl1
     drop                            \ ret-lst
-    \ cr ." action-get-forward-steps: " dup .step-list-xt execute cr
+    \ cr ." action-get-forward-steps: " dup .step-list cr
 ;
 
 \ Return a list of possible forward-chaining steps, given a sample.
@@ -1474,14 +1476,14 @@ action-groups               cell+ constant action-function              \ An xt 
         group-calc-backward-steps           \ ret smpl1 link stp-lst
         dup                                 \ ret smpl1 link stp-lst stp-lst
         #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
-        step-list-append-xt execute         \ ret smpl1 link stp-lst
-        step-list-deallocate-xt execute     \ ret smpl1 link
+        step-list-append                    \ ret smpl1 link stp-lst
+        step-list-deallocate                \ ret smpl1 link
 
         link-get-next               \ ret smpl1 link
     repeat
                                     \ ret smpl1
     drop                            \ ret
-    \ cr ." action-get-backward-steps: " dup .step-list-xt execute cr
+    \ cr ." action-get-backward-steps: " dup .step-list cr
 ;
 
 \ Return steps that allow sample changes to be made, forward-chaining.
@@ -1513,8 +1515,8 @@ action-groups               cell+ constant action-function              \ An xt 
             group-get-steps-by-changes-f        \ smpl1 cngs ret | link stp-lst
             dup                                 \ smpl1 cngs ret | link stp-lst stp-lst
             #3 pick                             \ smpl1 cngs ret | link stp-lst stp-lst ret
-            step-list-append-xt execute         \ smpl1 cngs ret | link stp-lst
-            step-list-deallocate-xt execute     \ smpl1 cngs ret | link
+            step-list-append                    \ smpl1 cngs ret | link stp-lst
+            step-list-deallocate                \ smpl1 cngs ret | link
         then
 
         link-get-next               \ smpl1 cngs ret link
@@ -1522,7 +1524,7 @@ action-groups               cell+ constant action-function              \ An xt 
                                     \ smpl1 cngs ret
     swap changes-deallocate         \ smpl1 ret
     nip                             \ ret
-    \ cr ." action-get-steps-by-changes-f: " dup .step-list-xt execute cr
+    \ cr ." action-get-steps-by-changes-f: " dup .step-list cr
 ;
 
 \ Return steps that allow sample changes to be made, forward-chaining.
@@ -1548,13 +1550,13 @@ action-groups               cell+ constant action-function              \ An xt 
         group-get-steps-by-changes-b        \ ret smpl1 link stp-lst
         dup                                 \ ret smpl1 link stp-lst stp-lst
         #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
-        step-list-append-xt execute         \ ret smpl1 link stp-lst
-        step-list-deallocate-xt execute     \ ret smpl1 link
+        step-list-append                    \ ret smpl1 link stp-lst
+        step-list-deallocate                \ ret smpl1 link
 
         link-get-next               \ ret smpl1 link
     repeat
                                     \ ret smpl1
     drop                            \ ret
-    \ cr ." action-get-steps-by-changes-f: " dup .step-list-xt execute cr
+    \ cr ." action-get-steps-by-changes-f: " dup .step-list cr
 ;
 

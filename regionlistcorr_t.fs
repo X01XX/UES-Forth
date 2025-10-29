@@ -91,7 +91,7 @@
         region-list-deallocate                          \ rlc1 rlc2 rlc-lst
 
         \ Clean up list-of-lists.
-        rlc-list-deallocate-xt execute                   \ rlc1 rlc2
+        rlc-list-deallocate                             \ rlc1 rlc2
     else
         cr ." Subtract failed?"
         abort
@@ -149,7 +149,7 @@
     region-list-deallocate                          \ rlc rlc-lst
 
     \ Clean up list-of-lists.
-    rlc-list-deallocate-xt execute                  \ rlc
+    rlc-list-deallocate                             \ rlc
 
     region-list-deallocate                          \
 

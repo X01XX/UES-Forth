@@ -2,6 +2,34 @@
 \ A parking spot for the start of a list of links, or no links, that is, an empty list.
 \ This struct wholly manages the link struct.
 
+\ Comparing any two items in a list is easier than in a higher-level language!
+\                                       \ list
+\    list-get-links                     \ link
+\
+\   \ For each item.
+\   begin
+\       ?dup
+\   while
+\        \ Get link to following items.
+\        \ Having direct access to the list links makes this logic effortless,
+\        \ compared to using indices at a higher level.
+\        dup link-get-next               \ link link+
+\
+\        \ For each following item.
+\        begin
+\           ?dup
+\       while
+\           over link-get-data          \ link link+ dat0
+\           over link-get-data          \ link link+ dat0 dat+
+\           .
+\           \ do comparison.
+\           .
+\           link-get-next               \ link link+
+\       repeat
+\
+\       link-get-next                   \ link
+\   repeat
+
 #17971 constant list-id
     #2 constant list-struct-number-cells
 
@@ -105,7 +133,7 @@ list-header cell+ constant list-links
 \ Return an new list struct instance address.
 : list-new ( -- addr )
     \ Allocate space.
-    list-mma mma-allocate       \ src0 list-addr
+    list-mma mma-allocate       \ list-addr
 
     \ Init fields.
     list-id over struct-set-id  \ list-addr

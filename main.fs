@@ -10,14 +10,14 @@
 \ No digit appears consecutively.   (avoids 11)
 \
 \ Struct ids in use.
-\ link   list   region Rule   RuleStore square
+\ Link   List   Region Rule   RuleStore Square
 \ 17137, 17971, 19317, 23131, 23173,    23197
 \
 \ Sample Action Session Domain Need   Changes
 \ 23719, 29717, 31319,  31379, 19717, 31973
 \
-\ Step   Plan   Step2  Plan   Group
-\ 37171, 37379, 41719, 41737, 43717
+\ Step   Plan   Group  Rate   RlcRate
+\ 37171, 37379, 43717, 41719, 41737
 \
 \ Struct ids not yet used:
 \ 47137, 47317, 53171,
@@ -47,8 +47,10 @@ include value.fs
 include bool.fs
 
 include region.fs
-include regionlist.fs
 include region2.fs
+
+include regionlist.fs
+
 include state.fs
 
 include changes.fs
@@ -64,31 +66,34 @@ include square.fs
 include valuelist.fs
 include squarelist.fs
 
-include group.fs
-include grouplist.fs
-
 include need.fs
 include needlist.fs
+
+include step.fs
+include steplist.fs
+
+include regionlistcorr.fs
+include rlclist.fs
+include rate.fs
+include rlcrate.fs
+include rlcratelist.fs
+
+include plan.fs
+include planlist.fs
+
+include group.fs
+include grouplist.fs
 
 include action.fs
 include actionlist.fs
 include actionxts.fs
 
-include step.fs
-include steplist.fs
-
 include domain.fs
 include domainlist.fs
 
 include session.fs
-include plan.fs
-include planlist.fs
-include input.fs
 
-include regionlistcorr.fs
-include regionlistcorr_t.fs
-include rlclist.fs
-include rlclist_t.fs
+include input.fs
 
 cs
 
@@ -106,6 +111,8 @@ cs
     cr #4 spaces ." Need mma:         " need-mma .mma-usage
     cr #4 spaces ." Step mma:         " step-mma .mma-usage
     cr #4 spaces ." Plan mma:         " plan-mma .mma-usage
+    cr #4 spaces ." Rate mma:         " rate-mma .mma-usage
+    cr #4 spaces ." RlcRate mma:      " rlcrate-mma .mma-usage
     cr #4 spaces ." Action mma:       " action-mma .mma-usage
     cr #4 spaces ." Domain mma:       " domain-mma .mma-usage
     cr #4 spaces ." dstack: " .s
@@ -128,6 +135,8 @@ cs
     assert-plan-mma-none-in-use
     assert-action-mma-none-in-use
     assert-changes-mma-none-in-use
+    assert-rate-mma-none-in-use
+    assert-rlcrate-mma-none-in-use
 
     depth 0<> 
     if  
@@ -144,6 +153,9 @@ include action_t.fs
 include rulestore_t.fs
 include state_t.fs
 include input_t.fs
+include regionlistcorr_t.fs
+include rlclist_t.fs
+
 
 cr ." main.fs"
 
@@ -162,6 +174,9 @@ cr ." main.fs"
 #150 plan-mma-init
  #50 action-mma-init
  #25 domain-mma-init
+#100 rate-mma-init
+#100 rlcrate-mma-init
+cr
 
 \ Free heap memory before exiting.
 : free-heap ( -- )
@@ -180,6 +195,8 @@ cr ." main.fs"
     plan-mma mma-free
     action-mma mma-free
     domain-mma mma-free
+    rate-mma mma-free
+    rlcrate-mma mma-free
 ;
 
 : init-main ( -- )
@@ -236,7 +253,23 @@ cr ." main.fs"
     over domain-add-action                      \ sess dom1
 
     \ Add last domain
-    swap session-add-domain                     \ sess dom1
+    over session-add-domain                     \ sess dom1
+
+    s" (X1X1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    -1 2 rate-new                               \ sess rlc rt
+    rlcrate-new                                 \ sess rlc-rt
+    \ cr ." rlcrate: " dup .rlcrate cr
+    over session-add-rlcrate                    \ sess
+
+    s" (1XX1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    -2 0 rate-new                               \ sess
+    rlcrate-new                                 \ sess rlc-rt
+    \ cr ." rlcrate: " dup .rlcrate cr
+    over session-add-rlcrate                    \ sess
+
+    dup session-process-rlcrates                \ sess
+
+    drop                                        \
 ;
 
 0 value step-num
@@ -246,7 +279,8 @@ cr ." main.fs"
     true
     begin
     while
-        \ Inc step num
+        \ Inc step num.
+
         step-num 1+ to step-num
         
         \ Print header.

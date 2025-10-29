@@ -4,7 +4,7 @@
 : rlc-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
-    2 < if
+    #2 < if
         \ Deallocate rlc instances in the list.
         [ ' region-list-deallocate ] literal over           \ lst0 xt lst0
         list-apply                                  \ lst0
@@ -13,8 +13,6 @@
     \ Deallocate the list.
     list-deallocate                                 \
 ;
-
-' rlc-list-deallocate to rlc-list-deallocate-xt
 
 : .rlc-list ( rlc-lst -- )
     s" (" type
@@ -105,8 +103,8 @@
     true
 ;
 
-\ Return an rcl-list with no duplicates or subsets.
-: rlc-list-copy-nosubs ( list0 -- rcl-list )
+\ Return an rlc-list with no duplicates or subsets.
+: rlc-list-copy-nosubs ( list0 -- rlc-list )
     \ Check arg.
     assert-tos-is-list
 
@@ -219,7 +217,7 @@
     \ space ." giving " dup .rlc-list cr
 ;
 
-\ Return TOS rlc-lst minus NOS rcl-lst.
+\ Return TOS rlc-lst minus NOS rlc-lst.
 : rlc-list-subtract ( rlc-lst1 rlc-lst0 -- rlc-lst )
     \ Check args.
     assert-tos-is-list
@@ -247,11 +245,11 @@
         rlc-list-deallocate     \ link1 rlc-lst0''
 
         \ Prep for next cycle.
-        swap                    \ rcl-lst0'' link1
+        swap                    \ rlc-lst0'' link1
 
         link-get-next
     repeat
-                            \ rcl-lst0'
+                            \ rlc-lst0'
 ;
 
 \ Return the comlement of a rlc.
@@ -314,15 +312,189 @@
 ;
 
 \ Return a normalized rlc-list.
-: rlc-list-normalize ( rcl-lst0 -- rcl-lst )
+: rlc-list-normalize ( rlc-lst0 -- rlc-lst )
     \ Check arg.
     assert-tos-is-list
 
-    rlc-list-complement     \ rcl-lst0'
-    dup                     \ rcl-lst0' rcl-lst0'
-    rlc-list-complement     \ rcl-lst0' rcl-lst0''
+    rlc-list-complement     \ rlc-lst0'
+    dup                     \ rlc-lst0' rlc-lst0'
+    rlc-list-complement     \ rlc-lst0' rlc-lst0''
 
     \ Clean up.
-    swap                    \ rcl-lst0'' rcl-lst0'
-    rlc-list-deallocate     \ rcl-lst0''
+    swap                    \ rlc-lst0'' rlc-lst0'
+    rlc-list-deallocate     \ rlc-lst0''
+;
+
+\ Push a rlc into a rlc-list, if there are no duplicates in the list.
+\ Return true if the rlc is added to the list.
+: rlc-list-push-nodups ( rlc1 rlc-lst0 -- flag )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    \ Return if any rlc in the list is a duplicate of rlc1.
+    2dup                                    \ rlc1 rlc-lst0 rlc1 rlc-lst0
+    [ ' region-list-corr-eq ] literal       \ rlc1 rlc-lst0 rlc1 rlc-lst0 xt
+    -rot                                    \ rlc1 rlc-lst0 xt rlc1 rlc-lst0
+    list-member                             \ rlc1 rlc-lst0 flag
+    if
+        2drop
+        false
+        exit
+    then
+                                            \ rlc1 rlc-lst0
+
+    \ rlc1 list0
+    rlc-list-push
+    true
+;
+
+\ Return a copy of an rlc-list, with duplicates removed.
+: rlc-list-copy-nodups ( rlc-lst -- rlc-lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-new swap               \ ret lst0
+    list-get-links              \ ret link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret link regx
+        #2 pick                 \ ret link regx ret
+        rlc-list-push-nodups    \ ret link flag
+        drop
+
+        link-get-next           \ ret link
+    repeat
+;
+
+\ Return all two-rlc intersections from an rlc-list.
+\ Duplicates will be suppresed, but propr subsets are Ok. 
+: rlc-list-intersections ( rlc-lst -- rlc-lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Init return list.
+    list-new swap                           \ ret-lst reg-lst0
+    list-get-links                          \ ret-lst link0
+
+    \ For each region.
+    begin
+        ?dup
+    while
+        \ Get link to following regions.
+        \ Having direct access to the list links makes this logic effortless,
+        \ compared to using indices at a higher level.
+        dup link-get-next                   \ ret-lst link0 link+
+
+        \ For each following region.
+        begin
+            ?dup
+        while
+            over link-get-data              \ ret-lst link0 link+ rlc0
+            over link-get-data              \ ret-lst link0 link+ rlc0 rlc+
+            region-list-corr-intersection   \ ret-lst link0 link+, rlc-int t | f
+            if                              \ ret-lst link0 link+ rlc-int
+                dup                         \ ret-lst link0 link+ rlc-int rlc-int
+                #4 pick                     \ ret-lst link0 link+ rlc-int rlc-int ret-lst
+                rlc-list-push-nodups        \ ret-lst link0 link+ rlc-int bool
+                if
+                    drop                    \ ret-lst link0 link+
+                else
+                    region-deallocate       \ ret-lst link0 link+
+                then
+            then
+
+            link-get-next                   \ ret-lst link0 link+
+        repeat
+
+        link-get-next                       \ ret-lst link0
+    repeat
+                                            \ ret-lst
+;
+
+\ Append NOS rlc-lst to TOS-rlc-list.
+: rlc-list-append ( rlc-lst1 rlc-lst0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    swap                    \ rlc-lst0 rlc-lst1
+    list-get-links          \ rlc-lst0 link
+    begin
+        ?dup
+    while
+        dup link-get-data   \ rlc-lst0 link rlcx
+        #2 pick             \ rlc-lst0 link rlcx rlc-lst0
+        rlc-list-push       \ rlc-lst0 link
+
+        link-get-next       \ rlc-lst0 link
+    repeat
+                            \ rlc-lst0
+    drop
+;
+
+\ Append NOS rlc-lst to TOS-rlc-list, no duplicates.
+: rlc-list-append-nodups ( rlc-lst1 rlc-lst0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    swap                        \ rlc-lst0 rlc-lst1
+    list-get-links              \ rlc-lst0 link
+    begin
+        ?dup
+    while
+        dup link-get-data       \ rlc-lst0 link rlcx
+        #2 pick                 \ rlc-lst0 link rlcx rlc-lst0
+        rlc-list-push-nodups    \ rlc-lst0 link flag
+        drop                    \ rlc-lst0 link
+
+        link-get-next           \ rlc-lst0 link
+    repeat
+                                \ rlc-lst0
+    drop
+;
+
+\ Return fragments of a given rlc-list.
+\ The fragments will account for all parts of the given rlc-list.
+\ All fragments will be within all regions of the given rlc-list that they intersect.
+\ Intermediate regions may be proper subsets, but duplicates will be avoided.
+: rlc-list-intersection-fragments ( lst0 -- frag-lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Insure-no-duplicates.
+    list-new swap                           \ ret-lst lst0
+    rlc-list-copy-nodups                    \ ret-lst lst0'
+
+    begin
+        dup list-is-empty 0=
+    while
+        dup                                 \ ret-lst lst0' lst0'
+
+        \ Get intersections.
+        rlc-list-intersections              \ ret-lst lst0' int-lst
+
+        \ Get whats left over.
+        2dup swap                           \ ret-lst lst0' int-lst int-lst lst0'
+        rlc-list-subtract                   \ ret-lst lst0' int-lst left-over-lst
+        \ cr ." list: " #2 pick .rlc-list
+        \ space ." - " over .rlc-list
+        \ space ." = " dup .rlc-list
+        \ cr
+
+        \ Add left over to result list.
+        dup                                 \ ret-lst lst0' int-lst left-over-lst left-over-lst 
+        #4 pick                             \ ret-lst lst0' int-lst left-over-lst left-over-lst ret-lst
+        rlc-list-append-nodups              \ ret-lst lst0' int-lst left-over-lst
+
+        \ Clean up, intersections become the next cycle lst0'.
+        rlc-list-deallocate                 \ ret-lst lst0' int-lst
+        swap                                \ ret-lst int-lst lst0'
+        rlc-list-deallocate                 \ ret-lst int-lst
+    repeat
+                                            \ ret-lst lst (empty)
+    list-deallocate                         \ ret-lst
 ;

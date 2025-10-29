@@ -103,7 +103,7 @@
 
 : rlc-list-test-copy-nosubs
     \ Init rcl list.
-    cr ." at 1 " .s cr
+    \ cr ." at 1 " .s cr
     list-new                                        \ rcl-lst
 
     \ Add first rlc.
@@ -117,11 +117,11 @@
     \ Add first duplicate rlc.
     s" (000X 000XX)" region-list-corr-from-string-a \ rlc-lst rclx
     over rlc-list-push                              \ rlc-lst
-    cr ." before: " dup .rlc-list
+    \ cr ." before: " dup .rlc-list
 
     dup                                             \ rlc-lst rlc-lst
     rlc-list-copy-nosubs                            \ rlc-lst rlc-lst'
-    cr ." after:  " dup .rlc-list
+    \ cr ." after:  " dup .rlc-list
 
     \ Check result length.
     dup list-get-length                             \ rlc rlc-lst len
@@ -360,8 +360,42 @@
     \ Clean up.
     rlc-list-deallocate         \ rlc-lst
     rlc-list-deallocate         \
-    
+
     cr ." rlc-list-test-normalize - Ok" cr
+;
+
+: rlc-list-test-intersection-fragments
+\ Init rlc-list.
+    list-new                                        \ rlc-lst
+
+    \ Add rlc 1.
+    s" (X1X1 XX1X1)" region-list-corr-from-string-a \ rlc-lst rlcx
+    over rlc-list-push                              \ rlc-lst
+
+    \ Add rlc 2.
+    s" (1XX1 X1X1X)" region-list-corr-from-string-a \ rlc-lst rlcx
+    over rlc-list-push                              \ rlc-lst
+
+    \ Normalize
+    dup rlc-list-intersection-fragments             \ rlc-lst rlc-lst'
+
+    \ Check results.
+    \ cr ." results: " dup .rlc-list cr
+
+    dup list-get-length 7 <> abort" result len not 7?"
+
+    \ Check result intersection.
+    s" (11X1 X1111)" region-list-corr-from-string-a \ rlc-lst rlc-lst' rlc-t
+    [ ' region-list-corr-eq ] literal               \ rlc-lst rlc-lst' rlc-t xt
+    over #3 pick list-member                        \ rlc-lst rlc-lst' rlc-t bool
+    is-false abort" region-list-corr (11X1 X1111) not found in rlc-lst' ?"
+    region-list-deallocate                          \ rlc-lst rlc-lst'
+
+    \ Clean up.
+    rlc-list-deallocate         \ rlc-lst
+    rlc-list-deallocate         \
+
+    cr ." rlc-list-test-intersection-fragments - Ok" cr
 ;
 
 : rlc-list-tests
@@ -372,6 +406,7 @@
     rlc-list-test-subtract-rlc
     rlc-list-test-complement
     rlc-list-test-normalize
+    rlc-list-test-intersection-fragments
 
     cr ." rlc-list tests - Ok" cr
 ;

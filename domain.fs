@@ -160,8 +160,6 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     domain-current-action +
     @
 ;
-
-' domain-get-current-action to domain-get-current-action-xt
  
 \ Set the current action of a domain instance.
 : domain-set-current-action ( act1 dom0 -- )
@@ -311,6 +309,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     dup .sample cr
     nip nip
 ;
+
+' domain-get-sample to domain-get-sample-xt
 
 \ Return true if a domain id matches a number.
 : domain-id-eq ( id1 sqr0 -- flag )
@@ -525,7 +525,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Copy sample for later deallocation in loop.
     swap sample-copy swap           \ smpl2 dom0
     \ Init return plan.
-    dup plan-new-xt execute         \ smpl2 dom0 pln
+    dup plan-new                    \ smpl2 dom0 pln
     -rot                            \ pln smpl2 dom0
 
     begin
@@ -534,7 +534,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         0= if
             drop
             sample-deallocate
-            plan-deallocate-xt execute
+            plan-deallocate
             false
             exit
          then
@@ -549,8 +549,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             swap sample-deallocate  \ pln stpx
             \ Add step to plan.
             over                    \ pln stpx pln
-            plan-push-end-xt        \ pln stpx pln xt
-            execute                 \ pln
+            plan-push-end           \ pln
             \ Return.
             true
             exit
@@ -559,7 +558,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         \ Add step to plan.         \ pln smpl2 dom0 | stpx
         dup                         \ pln smpl2 dom0 | stpx stpx
         #4 pick                     \ pln smpl2 dom0 | stpx stpx pln
-        plan-push-end-xt execute    \ pln smpl2 dom0 | stpx
+        plan-push-end               \ pln smpl2 dom0 | stpx
         \ Create new sample.
         step-get-result             \ pln smpl2 dom0 | stp-r
         #2 pick sample-get-result   \ pln smpl2 dom0 | stp-r smpl-r
@@ -596,8 +595,6 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Return.
     false
 ;
-
-' domain-get-plan-f to domain-get-plan-f-xt
 
 : domain-get-step-b ( smpl1 dom0 -- step true | false )
     \ Check args.
@@ -665,7 +662,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Copy sample for later deallocation in loop.
     swap sample-copy swap           \ smpl2 dom0
     \ Init return plan.
-    dup plan-new-xt execute         \ smpl2 dom0 pln
+    dup plan-new                    \ smpl2 dom0 pln
     -rot                            \ pln smpl2 dom0
 
     begin
@@ -674,7 +671,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         0= if
             drop
             sample-deallocate
-            plan-deallocate-xt execute
+            plan-deallocate
             false
             exit
          then
@@ -689,8 +686,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             swap sample-deallocate  \ pln stpx
             \ Add step to plan.
             over                    \ pln stpx pln
-            plan-push-xt            \ pln stpx pln xt
-            execute                 \ pln
+            plan-push               \ pln
+
             \ Return.
             true
             exit
@@ -699,7 +696,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         \ Add step to plan.         \ pln smpl2 dom0 | stpx
         dup                         \ pln smpl2 dom0 | stpx stpx
         #4 pick                     \ pln smpl2 dom0 | stpx stpx pln
-        plan-push-xt execute        \ pln smpl2 dom0 | stpx
+        plan-push                   \ pln smpl2 dom0 | stpx
 
         \ Create new sample.
         step-get-initial            \ pln smpl2 dom0 | stp-r
@@ -737,8 +734,6 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     false
 ;
 
-' domain-get-plan-b to domain-get-plan-b-xt
-
 \ Try forward and backward chaining to make a plan
 \ for going from the initial state of a sample to the result state.
 : domain-get-plan2-fb ( smpl1 dom0 -- plan true | false )
@@ -752,14 +747,14 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         2dup domain-get-plan-f      \ smpl1 dom0 | p t | f
         if
             nip nip
-            cr ." plan found (fc) " dup .plan-xt execute cr
+            cr ." plan found (fc) " dup .plan cr
             true
             exit
         then
         \ Try backward-chaining.
         domain-get-plan-b      \ p t | f
         if
-            cr ." plan found (bc*) " dup .plan-xt execute cr
+            cr ." plan found (bc*) " dup .plan cr
             true
             exit
         then
@@ -768,14 +763,14 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         2dup domain-get-plan-b      \ smpl1 dom0 | p t | f
         if
             nip nip
-            cr ." plan found (bc) " dup .plan-xt execute cr
+            cr ." plan found (bc) " dup .plan cr
             true
             exit
         then
         \ Try forward-chaining.
         domain-get-plan-f      \ p t | f
         if
-            cr ." plan found (fc*) " dup .plan-xt execute cr
+            cr ." plan found (fc*) " dup .plan cr
             true
             exit
         then
@@ -914,14 +909,14 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                 \ Add step to plan1.
                 #3 pick                     \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2 stpx
                 #2 pick                     \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2 stpx plan1
-                plan-push-end-xt execute    \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
+                plan-push-end               \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
 
                 \ Add plan2
                 2dup swap                   \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2 plan2 plan1
-                plan-append-xt execute      \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
+                plan-append                 \ smpl1 dom0 | asym-lst stpx smpl2 plan1 plan2
 
-                plan-deallocate-xt execute  \ smpl1 dom0 | asym-lst stpx smpl2 plan1
-                cr ." plan found (afc): " dup .plan-xt execute cr
+                plan-deallocate             \ smpl1 dom0 | asym-lst stpx smpl2 plan1
+                cr ." plan found (afc): " dup .plan cr
                 nip nip                     \ smpl1 dom0 | asym-lst plan1
                 swap step-list-deallocate   \ smpl1 dom0 plan1
                 nip nip                     \ plan1
@@ -929,7 +924,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                 exit
             else                            \ smpl1 dom0 | asym-lst stpx smpl2 plan1 smpl4
                 sample-deallocate           \ smpl1 dom0 | asym-lst stpx smpl2 plan1
-                plan-deallocate-xt execute  \ smpl1 dom0 | asym-lst stpx smpl2
+                plan-deallocate             \ smpl1 dom0 | asym-lst stpx smpl2
                 2drop                       \ smpl1 dom0 | asym-lst
                 step-list-deallocate        \ smpl1 dom0
                 2drop
@@ -1030,4 +1025,5 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     session-set-current-domain-xt execute
 ;
 
+' domain-set-current to domain-set-current-xt
 

@@ -15,17 +15,15 @@
     abort
 ;
 
-' xtabort value session-get-current-domain-xt
-
 ' xtabort value session-set-current-domain-xt
 
-' xtabort value .session-xt
+' xtabort value session-get-number-domains-xt
 
+' xtabort value session-get-domain-list-xt
 
 
 ' xtabort value cur-domain-xt
 
-' xtabort value domain-get-current-action-xt
 
 ' xtabort value domain-get-all-bits-mask-xt
 
@@ -35,7 +33,12 @@
 
 ' xtabort value domain-get-max-region-xt
 
+' xtabort value domain-set-current-xt
+
 ' xtabort value domain-get-current-state-xt
+
+' xtabort value domain-get-sample-xt
+
 
 ' xtabort value assert-tos-is-domain-xt
 
@@ -44,69 +47,28 @@
 ' xtabort value domain-get-num-bits-xt
 
 
-' xtabort value domain-get-plan-f-xt
-
-' xtabort value domain-get-plan-b-xt
-
-
-
 ' xtabort value cur-action-xt
 
 ' xtabort value action-get-inst-id-xt
+
+' xtabort value assert-tos-is-action-xt
 
 ' xtabort value assert-nos-is-action-xt
 
 ' xtabort value action-make-need-xt
 
 
-' xtabort value region-subtract-xt
-
-
 ' xtabort value memory-use-xt
-
-' xtabort value step-list-append-xt
-
-' xtabort value step-list-deallocate-xt
 
 ' xtabort value step-list-push-xt
 
 ' xtabort value step-new-xt
 
-' xtabort value .step-list-xt
-
-' xtabort value step-get-sample-xt
-
-' xtabort value step-set-alt-sample-xt
-
-' xtabort value .step-xt
-
 ' xtabort value step-set-forward-xt
 
-' xtabort value step-new-by-rule-f-xt
-
-' xtabort value step-new-by-rule-b-xt
-
-' xtabort value assert-tos-is-step-xt
+' xtabort value region-list-push-xt
 
 
-' xtabort value plan-new-xt
+' xtabort value .rlcrate-xt
 
-' xtabort value plan-push-end-xt
 
-' xtabort value plan-deallocate-xt
-
-' xtabort value plan-push-xt
-
-' xtabort value .plan-xt
-
-' xtabort value plan-append-xt
-
-' xtabort value assert-tos-is-plan-xt
-
-' xtabort value assert-nos-is-plan-xt
-
-' xtabort value assert-3os-is-plan-xt
-
-' xtabort value need-new-xt
-
-' xtabort value rlc-list-deallocate-xt
