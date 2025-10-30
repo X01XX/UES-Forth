@@ -327,46 +327,19 @@
     true
 ;
 
-\ Return a list of maximum sized regions.
-: region-list-corr-max-regions ( -- lst )
-    \ Init return list.
-    list-new                                \ ret-lst
-    \ Prep for loop.
-    session-get-domain-list-xt execute
-    list-get-links                          \ ret-lst d-link
-
-    begin
-        ?dup
-    while
-        \ Set current domain.
-        dup link-get-data           \ lst0 ret-lst link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ lst0 ret-lst link1 link0 d-link
-
-        \ Add next region.
-        dup link-get-data       \ ret-lst d-lisk domx
-        domain-get-max-region-xt
-        execute                 \ ret-lst d-lisk regx
-        #2 pick                 \ ret-lst d-lisk regx ret-lst
-        region-list-push-end    \ ret-lst d-lisk
-
-        link-get-next           \ ret-lst d-link
-    repeat
-                                \ ret-lst
-;
-
 \ Return the complement of a region-list-corr, a list of region-list-corr.
 : region-list-corr-complement ( lst0 -- lst )
     \ Check arg.
     assert-tos-is-list
 
-    region-list-corr-max-regions    \ lst0 lst-max
-    tuck                            \ lst-max lst0 lst-max
-    region-list-corr-subtract       \ lst-max, lst t | f
+    current-session                     \ lst0 sess
+    session-max-regions-xt execute      \ lst0 lst-max
+    tuck                                \ lst-max lst0 lst-max
+    region-list-corr-subtract           \ lst-max, lst t | f
     is-false abort" subtract failed?"
 
-    swap                            \ lst lst-max
-    region-list-deallocate          \ lst
+    swap                                \ lst lst-max
+    region-list-deallocate              \ lst
 ;
 
 \ Return the numbr of bits different between two region-list-corr.

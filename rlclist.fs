@@ -222,6 +222,7 @@
     \ Check args.
     assert-tos-is-list
     assert-nos-is-list
+    \ cr ." rlc-list " dup .rlc-list space ." - " over .rlc-list
 
     \ Prep for loop.
     rlc-list-copy-nosubs        \ rlc-lst1 rlc-lst0'
@@ -250,6 +251,7 @@
         link-get-next
     repeat
                             \ rlc-lst0'
+    \ space ." = " dup .rlc-list
 ;
 
 \ Return the comlement of a rlc.
@@ -258,19 +260,20 @@
     assert-tos-is-list
 
     \ Max list of maximum regions.
-    list-new                        \ rlc-lst0 max-rlc-lst
-    region-list-corr-max-regions    \ rlc-lst0 max-rlc-lst rlc-max
-    over                            \ rlc-lst0 max-rlc-lst rlc-max max-rlc-lst
-    rlc-list-push                   \ rlc-lst0 max-rlc-lst
+    list-new                            \ rlc-lst0 max-rlc-lst
+    current-session                     \ rlc-lst0 max-rlc-lst sess
+    session-max-regions-xt execute      \ rlc-lst0 max-rlc-lst rlc-max
+    over                                \ rlc-lst0 max-rlc-lst rlc-max max-rlc-lst
+    rlc-list-push                       \ rlc-lst0 max-rlc-lst
 
     \ Save max rlc
-    tuck                            \ max-rlc-lst rlc-lst0 max-rlc-lst
+    tuck                                \ max-rlc-lst rlc-lst0 max-rlc-lst
 
     \ Subtract rlc from max regions.
-    rlc-list-subtract               \ max-rlc-lst ret-rlc-lst
+    rlc-list-subtract                   \ max-rlc-lst ret-rlc-lst
 
     \ Clean up.
-    swap rlc-list-deallocate        \ ret-rlc-lst
+    swap rlc-list-deallocate            \ ret-rlc-lst
 ;
 
 \ Return true if two rlc-lists are equal.

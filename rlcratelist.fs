@@ -79,3 +79,35 @@
     repeat
                             \ ret-lst
 ;
+
+: rlcrate-list-match-rate-negative-rlcs ( n lst0 -- rlc-lst )
+    \ Check args.
+    assert-tos-is-list
+
+    \ Init return list.
+    list-new -rot               \ ret-lst n lst0
+
+    \ Prep for loop.
+    list-get-links              \ ret-lst n link
+
+    begin
+        ?dup
+    while
+        \ Compare rlcrate negative value with passed value.
+        dup link-get-data       \ ret-lst n link rlcrtx
+        rlcrate-get-rate        \ ret-lst n link rate
+        rate-get-negative       \ ret-lst n link n2
+        #2 pick                 \ ret-lst n link n2 n
+        =                       \ ret-lst n link bool
+        if
+            dup link-get-data   \ ret-lst n link rlcrtx
+            rlcrate-get-rlc     \ ret-lst n link rlc
+            #3 pick             \ ret-lst n link rlc ret-lst
+            rlc-list-push       \ ret-lst n link
+        then
+
+        link-get-next
+    repeat
+                            \ ret-lst n
+    drop                    \ ret-lst
+;
