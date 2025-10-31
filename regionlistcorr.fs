@@ -237,10 +237,8 @@
     true
 ;
 
-\ Return a region-list-corr from a string.
-: region-list-corr-from-string ( addr n -- rlcorr t | f )
-    \ Get tokens.
-    parse-string                \ addr0 cnt0 cnt2
+\ Return a region-list-corr from a parsed string.
+: region-list-corr-from-parsed-string ( addr n -- rlcorr t | f )
 
     \ Check number tokens.
     session-get-number-domains-xt execute   \ addr0 cnt0 cnt2 domain-count
@@ -286,6 +284,14 @@
     then
                                     \ ret-lst
     true
+;
+
+\ Return a region-list-corr from a string.
+: region-list-corr-from-string ( addr n -- rlcorr t | f )
+    \ Get tokens.
+    parse-string                \ addr0 cnt0 cnt2
+
+    region-list-corr-from-parsed-string
 ;
 
 \ Return a region-list-corr from a string, or abort.

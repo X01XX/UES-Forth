@@ -79,7 +79,7 @@
 
     \ Check results.
     dup list-get-length                             \ rlc rlc-lst len
-    2 <> abort" Result length not 2?"
+    #2 <> abort" Result length not 2?"
 
     \ Check results 1.
     s" (XXX1 xx0xx)" region-list-corr-from-string-a \ rlc rlc-lst rlc-t
@@ -160,7 +160,7 @@
 
     \ Check result.
     \ dup .rlc-list
-    dup list-get-length 2 <> abort" List length not 2?"
+    dup list-get-length #2 <> abort" List length not 2?"
 
     \ Check result 1.
     s" (1001 00x0x)" region-list-corr-from-string-a \ rlc rlc-lst rlc-left rlc-t
@@ -312,11 +312,11 @@
 
     \ Check results.
     \ cr ." comp1: " dup .rlc-list cr
-    dup list-get-length 4 <> abort" comp1 len not 4?"
+    dup list-get-length #4 <> abort" comp1 len not 4?"
 
     dup rlc-list-complement                         \ rlc-lst rlc-lst' rlc-lst''
     \ cr ." comp2: " dup .rlc-list cr
-    dup list-get-length 2 <> abort" comp1 len not 2?"
+    dup list-get-length #2 <> abort" comp1 len not 2?"
 
     #2 pick                                         \ rlc-lst rlc-lst' rlc-lst'' rlc-lst
     over                                            \ rlc-lst rlc-lst' rlc-lst'' rlc-lst rlc-lst''
@@ -382,7 +382,7 @@
     \ Check results.
     \ cr ." results: " dup .rlc-list cr
 
-    dup list-get-length 7 <> abort" result len not 7?"
+    dup list-get-length #7 <> abort" result len not 7?"
 
     \ Check result intersection.
     s" (11X1 X1111)" region-list-corr-from-string-a \ rlc-lst rlc-lst' rlc-t

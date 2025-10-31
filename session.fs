@@ -279,7 +279,7 @@ session-rlcrate-le0-rates-disp  cell+ constant session-rlclist-by-rate-disp     
     .rlcrate-list
     cr
 
-    cr ." rlclist by fragment rlc rate: "
+    cr ." rlclists, excluding lower value rlcrates: "
     dup session-get-rlclist-by-rate     \ sess0 rcllist-lst
     list-get-links                      \ sess0 rcllist-link 
     over session-get-rlcrate-le0-rates  \ sess0 rcllist-link rates-le0
@@ -287,7 +287,7 @@ session-rlcrate-le0-rates-disp  cell+ constant session-rlclist-by-rate-disp     
     begin
         ?dup
     while
-        cr dup link-get-data   ."    rate: " .
+        cr dup link-get-data   ."    rate: " #3 dec.r
         over link-get-data space ." rlclist: " .rlc-list
 
         swap link-get-next
@@ -324,7 +324,7 @@ session-rlcrate-le0-rates-disp  cell+ constant session-rlclist-by-rate-disp     
         list-deallocate
     then
 
-    \ Deallocate instance.
+    \ Deallocate session instance.
     0 over struct-set-id
     free
     abort" session free failed"
@@ -748,17 +748,17 @@ session-rlcrate-le0-rates-disp  cell+ constant session-rlclist-by-rate-disp     
     \ The lowest negative will have a Freedom of Movement (FOM) of the maximum regions.
     \ That is, move anywhere in the FOM and not encounter a higher negative rlcrate.
     \
-    \ The second lowest negative will have an FOM of max regions - lowest negative FOM.
+    \ The second lowest negative rate will have an FOM of max regions - lowest negative rlcrates.
     \
-    \ The third lowest negative will have an FOM of max regions - lowest negative FOM - second-lowest FOM.
+    \ The third lowest negative rate will have an FOM of max regions - lowest negative rlcrates - second-lowest negative rlcrates.
     \
-    \ The zero rate FOM will be the maximum regions - all negative FOMs.
+    \ The zero rate FOM will be the maximum regions - all negative rlcrates.
     \
-    \ Given a starting state and a goal state:
+    \ Given a starting rlc and a goal rlc:
     \
-    \    Start in an FOM that is equal to the highest negative FOM the start and/or goal states are in.
+    \    Start in the highest negative FOM that the start and goal states are in.
     \    If a plan can work within that FOM, use it.
-    \    Otherwise try the next less restrictive FOM, encountering a higher negative rate rcl.
+    \    Otherwise try the next least restrictive FOM, possibly encountering higher negative rlcrates.
     \
     dup [ ' > ] literal swap list-sort
 

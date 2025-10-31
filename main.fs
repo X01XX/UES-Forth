@@ -256,13 +256,13 @@ cr
     over session-add-domain                     \ sess dom1
 
     s" (X1X1 01X1X)" region-list-corr-from-string-a \ sess rlc
-    -1 2 rate-new                               \ sess rlc rt
+    -1 #2 rate-new                              \ sess rlc rt
     rlcrate-new                                 \ sess rlc-rt
     \ cr ." rlcrate: " dup .rlcrate cr
     over session-add-rlcrate                    \ sess
 
     s" (1XX1 01X1X)" region-list-corr-from-string-a \ sess rlc
-    -2 0 rate-new                               \ sess
+    #-2 0 rate-new                               \ sess
     rlcrate-new                                 \ sess rlc-rt
     \ cr ." rlcrate: " dup .rlcrate cr
     over session-add-rlcrate                    \ sess

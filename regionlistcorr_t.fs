@@ -59,7 +59,7 @@
 
     if                                  \ rlc1 rlc2 rlc-lst
         \ Check list length.
-        dup list-get-length 4 <> abort" list length is not 4?"
+        dup list-get-length #4 <> abort" list length is not 4?"
         [ ' .region-list-corr ] literal over list-apply
 
         \ Check results 1.
@@ -117,7 +117,7 @@
     [ ' .region-list-corr ] literal over list-apply cr
 
     \ Check list length.
-    dup list-get-length 4 <> abort" list length is not 4?"
+    dup list-get-length #4 <> abort" list length is not 4?"
     \ [ ' .region-list-corr ] literal over list-apply
 
     \ Check results 1.

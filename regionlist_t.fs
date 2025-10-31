@@ -388,7 +388,7 @@
     \ cr ." rslt: " dup .region-list cr
 
     \ Check results.
-    dup list-get-length 2 <>                \ lst1 lst2 flag
+    dup list-get-length #2 <>               \ lst1 lst2 flag
     abort" result length not 2?"
 
     \ Check member.
@@ -432,7 +432,7 @@
     region-list-copy-except                 \ lst1 lst2
 
     \ Check results.
-    dup list-get-length 3 <> abort" Result not length 3?"
+    dup list-get-length #3 <> abort" Result not length 3?"
 
     0 over list-get-item                    \ lst1 lst2 item0
     s" 00X1" region-from-string-a           \ lst1 lst2 item0 regx
@@ -446,7 +446,7 @@
     swap region-deallocate                  \ lst1 lst2 flag
     is-false abort" first region not X111?" \ lst1 lst2
 
-    2 over list-get-item                    \ lst1 lst2 item0
+    #2 over list-get-item                   \ lst1 lst2 item0
     s" X100" region-from-string-a           \ lst1 lst2 item0 regx
     tuck region-eq                          \ lst1 slt2 regx flag
     swap region-deallocate                  \ lst1 lst2 flag
