@@ -68,7 +68,7 @@ sample-initial-disp cell+ constant sample-result-disp
 
 \ Start accessors.
 
-\ Return the first field from a sample instance.
+\ Return the initial field from a sample instance.
 : sample-get-initial ( addr -- u)
     \ Check arg.
     assert-tos-is-sample
@@ -77,33 +77,32 @@ sample-initial-disp cell+ constant sample-result-disp
     @                       \ Fetch the field.
 ;
  
-\ Return the second field from a sample instance.
+\ Return the result field from a sample instance.
 : sample-get-result ( addr -- u)
     \ Check arg.
     assert-tos-is-sample
 
-    \ Get second state.
     sample-result-disp +    \ Add offset.
     @                       \ Fetch the field.
 ;
-\ Set the first field from a sample instance, use only in this file.
+\ Set the initial field from a sample instance, use only in this file.
 : _sample-set-initial ( u1 addr -- )
     \ Check args.
     assert-tos-is-sample
     assert-nos-is-value
 
     sample-initial-disp +   \ Add offset.
-    !                       \ Set first field.
+    !                       \ Set initial field.
 ;
  
-\ Set the second field from a sample instance, use only in this file.
+\ Set the result field from a sample instance, use only in this file.
 : _sample-set-result ( u1 addr -- )
     \ Check args.
     assert-tos-is-sample
     assert-nos-is-value
 
     sample-result-disp +    \ Add offset.
-    !                       \ Set second field.
+    !                       \ Set result field.
 ;
 
 : sample-get-states ( smpl -- u-r u-i )
@@ -132,12 +131,9 @@ sample-initial-disp cell+ constant sample-result-disp
     \ Store id.
     sample-id over              \ u1 u2 addr id addr
     struct-set-id               \ u1 u2 addr
-    
-    \ Init use count.
-    0 over struct-set-use-count
 
     \ Store states
-    tuck _sample-set-initial   \ r1  addr
+    tuck _sample-set-initial   \ u1  addr
     tuck _sample-set-result    \ addr
 ;
 

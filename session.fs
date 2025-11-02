@@ -387,33 +387,41 @@ session-rlcrate-le0-rates-disp  cell+ constant session-rlclist-by-rate-disp     
     then
 ;
 
+\ Return a list of states, onu for eack domain, in domain list order.
+: session-get-current-states ( sess0 -- sta-lst )
+    \ Check args.
+    assert-tos-is-session
+
+    list-new                        \ sess0 sat-lst
+    over session-get-domains        \ sess0 sta-lst dom-lst
+
+    list-get-links                   \ sess0 sta-lst link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \  sess0 sta-lst link domx
+
+        dup #4 pick session-set-current-domain
+        
+        domain-get-current-state    \ sess0 sta-lst link stax
+        #2 pick                     \ sess0 sta-lst link stax sta-lst
+        list-push-end               \ sess0 sta-lst link
+
+        link-get-next               \ sess0 sta-lst link
+    repeat
+                                    \ sess0 sta-lst
+    nip
+;
+
 \ Print a list of current states.
 : .session-current-states ( sess0 -- )
     \ Check args.
     assert-tos-is-session
 
-    dup session-get-domains             \ sess0 dom-lst
-
-    list-get-links                      \ sess0 link
-    ." ("
-    begin
-        ?dup
-    while
-        dup link-get-data           \  sess0 link domx
-
-        dup #3 pick session-set-current-domain
-        
-        domain-get-current-state    \ sess0 link stax
-        .value
-
-        link-get-next               \ sess0 link
-        dup if
-            space
-        then
-    repeat
-    ." )"
-                                    \ sess0
-    drop
+    session-get-current-states      \ sta-lst
+    dup .state-list-corr            \ sta-lst
+    list-deallocate
 ;
 
 \ Print a list of reachable regions.

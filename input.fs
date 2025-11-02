@@ -53,6 +53,28 @@
     then
 ;
 
+: do-to-command ( rlc0 -- )
+    current-session session-get-current-states   \ rlc0 sta-corr
+
+    \ Check if the current states are already at the goal.
+    2dup swap                                   \ rlc0 sta-corr sta-corr rlc0
+    region-list-corr-superset-states            \ rlc0 sta-corr bool
+    if
+        cr ." The current states are already at goal." cr
+        list-deallocate
+        drop
+        exit
+    then
+                                                \ rlc0 sta-corr
+    2dup swap region-list-corr-translate-states \ rlc0 sta-lst sta-lst2
+                                                \ rlc0 sta-corr sta-lst2
+    swap samplecorr-new                         \ rlc0 smplcor
+    cr ." Desired sample corr: " dup .samplecorr cr
+    samplecorr-deallocate
+
+    drop
+;
+
 \ Zero-token logic, get/show/act-on needs.
 : do-zero-token-command ( -- true )
     current-session             \ sess
@@ -491,6 +513,26 @@
         exit
     then
 
+    \ Change current rlc to another.
+    2dup s" to" str=
+    if
+        \ Drop command string.
+        2drop                                       \ c-addr c-cnt c-addr c-cnt
+
+        \ Get goal rlc.
+        2                                           \ add new length, 2.
+        region-list-corr-from-parsed-string         \ rlc t | f
+
+        if
+            dup do-to-command
+            region-list-deallocate
+        else
+            cr ." to command: Did not understand the given rlc string" cr
+        then
+        true
+        exit
+    then
+    
     cr ." Three-token command not recognized" cr
     \ Clear tokens.
     2drop
@@ -676,6 +718,7 @@
         cr ." psd <domain ID> <action ID> - Print Square Detail, for a given domain/action."
         cr ." scs <domain id> <action id> - Sample the Current State of a domain, with an action."
         cr ." sas <domain id> <action id> <state> - Sample an Arbitrary State. Change domain current state, then sample with an action."
+        cr ." to - Change all domain states, like: to (0X00 000X1)"
         cr ." mu - Display Memory Use."
         cr
         cr ." <state> will usually be like: %0101, leading zeros can be ommitted."

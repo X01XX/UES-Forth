@@ -8,8 +8,10 @@
 square-header   cell+ constant square-state
 square-state    cell+ constant square-rules     \ A Rulestore.
 square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, starting here.
-                                                \ The result count, mod 4, will be the next element to use
-                                                \ for a new result.
+                                                \ The result count, mod 4, will be the next element index to use
+                                                \ to store a new result.
+                                                \ The square is initialized with one result, so the result count will never be 0.
+                                                \ The most recent result index will be (result count - 1) mod 4.
 
 0 value square-mma \ Storage for square mma instance.
 

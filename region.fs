@@ -630,7 +630,10 @@ region-state-0-disp cell+ constant region-state-1-disp
     assert-tos-is-region
     assert-nos-is-value
     2dup region-superset-of-state
-    abort" No need to translate?"
+    if
+        drop
+        exit
+    then
 
     dup region-get-state-0      \ sta1 reg0 rsta0
     #2 pick xor                 \ sta1 reg0 diff

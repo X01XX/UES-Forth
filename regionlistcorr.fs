@@ -83,6 +83,56 @@
     \ space ." bool: " dup .bool cr
 ;
 
+\ Return true if TOS is a superset of its corresponding region in NOS.
+: region-list-corr-superset-states ( lst1 lst0 -- bool )
+    \ cr ." region-list-corr-superset: " dup .region-list-corr space ." sup " over .region-list-corr
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+    over list-get-length
+    over list-get-length
+    session-get-number-domains-xt execute
+    3<> abort" Lists have different length?"
+
+    \ Init links for loop.
+    swap list-get-links                     \ lst0 link1
+    swap list-get-links                     \ link1 link0
+    session-get-domain-list-xt execute
+    list-get-links                          \ link1 link0 d-link
+
+    begin
+        ?dup
+    while
+                                    \ link1 link0 d-link
+
+        \ Set current domain.
+        dup link-get-data           \ link1 link0 d-link domx
+        domain-set-current-xt
+        execute                     \ link1 link0 d-link
+
+        \ Compare regions.
+        #2 pick link-get-data       \ link1 link0 d-link sta2
+        #2 pick link-get-data       \ link1 link0 d-link sta2 reg1
+        region-superset-of-state    \ link1 link0 d-link bool
+        if
+        else
+            \ Non-superset found.
+            3drop
+            false
+            exit
+        then
+
+        \ Prep for next cycle.
+                                    \ link1 link0 d-link
+        rot link-get-next           \ link0 d-link link1
+        rot link-get-next           \ d-link link1 link0
+        rot link-get-next           \ link1 link0 d-link
+    repeat
+                                    \ link1 link0
+    2drop                           \
+    true                           \ bool
+;
+
 \ Return true if TOS is a subset of its corresponding region in NOS.
 : region-list-corr-subset ( lst1 lst0 -- bool )
     swap region-list-corr-superset
@@ -449,4 +499,52 @@
                                     \ ret-lst link1 link0
     2drop                           \ ret-lst
     true
+;
+
+: region-list-corr-translate-states ( sta-lst1 lst0 -- slc )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+    over list-get-length
+    over list-get-length
+    session-get-number-domains-xt execute
+    3<> abort" Lists have different length?"
+
+    \ Init return list.
+    list-new -rot                   \ ret-lst sta-lst1 reg-lst1
+
+    \ Init links for loop.
+    swap list-get-links             \ ret-lst  reg-lst1 link1
+    swap list-get-links             \ ret-lst  link1 link0
+    session-get-domain-list-xt
+    execute                         \ ret-lst  link1 link0 dom-lst
+    list-get-links                  \ ret-lst  link1 link0 d-link
+
+    begin
+        ?dup
+    while
+                                    \ ret-lst  link1 link0 d-link
+
+        \ Set current domain.
+        dup link-get-data           \ ret-lst  link1 link0 d-link domx
+        domain-set-current-xt
+        execute                     \ ret-lst  link1 link0 d-link
+
+        \ Check state/region
+        #2 pick link-get-data       \ ret-lst  link1 link0 d-link sta1
+        #2 pick link-get-data       \ ret-lst  link1 link0 d-link sta1 reg0
+
+        region-translate-state      \ ret-lst  link1 link0 d-link sta0
+
+        #4 pick                     \ ret-lst  link1 link0 d-link sta0 ret-lst
+        list-push-end               \ ret-lst  link1 link0 d-link
+
+        \ Prep for next cycle.
+                                    \ ret-lst link1 link0 d-link
+        link-get-next rot           \ ret-lst  link0 d-link+ link1
+        link-get-next rot           \ ret-lst  d-link+ link1+ link0
+        link-get-next rot           \ ret-lst  link1+ link0+ d-link+
+    repeat
+                                    \ ret-lst link1 link0
+    2drop                           \ ret-lst
 ;
