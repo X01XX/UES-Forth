@@ -855,3 +855,36 @@ session-rlcrate-le0-rates-disp  cell+ constant session-rlclist-by-rate-disp     
 ;
 
 ' session-get-domain-list to session-get-domain-list-xt
+
+\ Return the rate and rlc list for a path to satisyf a desired samplecorr.
+: session-rlc-rate-for-samplecorr ( smplcr1 sess0 -- rlc rate )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-samplecorr
+
+    dup session-get-rlcrate-le0-rates       \ smplcr1 sess0 rt-lst
+    list-get-links                          \ smplcr1 sess0 rt-lnk
+    swap session-get-rlclist-by-rate        \ smplcr1 rt-lnk rlc-lst
+    list-get-links                          \ smplcr1 rt-lnk rlc-lnk
+
+    begin
+        ?dup
+    while
+        #2 pick                             \ smplcr1 rt-lnk rlc-lnk smplcr1
+        over link-get-data                  \ smplcr1 rt-lnk rlc-lnk smplcr1 rlc-lstx
+        rlc-list-any-superset-samplecorr    \ smplcr1 rt-lnk rlc-lnk bool
+        if
+            link-get-data                   \ smplcr1 rt-lnk rlcx
+            swap link-get-data              \ smplcr1 rlcx rate
+            rot drop                        \ rlcx rate
+            exit
+        then
+        
+        link-get-next swap
+        link-get-next swap
+    repeat
+
+    cr ." session-rlc-rate-for-samplecorr: drop-through?" cr
+    2drop
+    0 list-new
+;

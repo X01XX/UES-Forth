@@ -70,6 +70,13 @@
                                                 \ rlc0 sta-corr sta-lst2
     swap samplecorr-new                         \ rlc0 smplcor
     cr ." Desired sample corr: " dup .samplecorr cr
+
+
+    dup                                         \ rlc0 smplcor smplcor
+    current-session                             \ rlc0 smplcor smplcor sess
+    session-rlc-rate-for-samplecorr             \ rlc0 smplcor rlc rate
+    cr ." rate: " .  space ." rlc: " .rlc-list cr
+
     samplecorr-deallocate
 
     drop

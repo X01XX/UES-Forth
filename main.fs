@@ -73,13 +73,13 @@ include needlist.fs
 include step.fs
 include steplist.fs
 
+include samplecorr.fs
+
 include regionlistcorr.fs
 include rlclist.fs
 include rate.fs
 include rlcrate.fs
 include rlcratelist.fs
-
-include samplecorr.fs
 
 include plan.fs
 include planlist.fs

@@ -501,3 +501,51 @@
                                             \ ret-lst lst (empty)
     list-deallocate                         \ ret-lst
 ;
+
+: rlc-list-any-superset-states ( slc1 rlc0 -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    list-get-links                          \ slc1 link
+    begin
+        ?dup
+    while
+        over                                \ slc1 link slc1
+        over link-get-data                  \ slc1 link slc1 rlcx
+        region-list-corr-superset-states    \ slc1 link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                            \ slc1
+    drop                                    \
+    false                                   \ bool
+;
+
+\ Return true if a rlclist has at least one superset of the initial and result
+\ states of a samplecorr.
+: rlc-list-any-superset-samplecorr ( smpc1 rlcl0 -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-samplecorr
+
+    \ Check for superest of samplecorr initial states.
+    over samplecorr-get-initial         \ smpc1 rlcl0 smpc1-i
+    over                                \ smpc1 rlcl0 smpc1-i rlcl0
+    rlc-list-any-superset-states        \ smpc1 rlcl0 bool
+    is-false if
+        2drop
+        false
+        exit
+    then
+
+    \ Check for superest of samplecorr result states.
+    swap samplecorr-get-result      \ rlcl0 smpc1-r
+    swap                            \ smpc1-r rlgl0
+    rlc-list-any-superset-states    \ bool
+;
