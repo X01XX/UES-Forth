@@ -1,0 +1,16 @@
+\ Implement a step struct and functions.
+\
+\ A step may be added to a step list in a plan.
+
+#37171 constant step-id                                                                                  
+    #6 constant step-struct-number-cells
+
+\ Struct fields.
+0 constant step-header                                              \ id (16) use count (16) intersects from/to bool (8)
+step-header                 cell+ constant step-action-disp         \ An action instance addr.
+step-action-disp            cell+ constant step-rule-disp           \ A rule instance addr.
+\ Store frequently used calculated fields, to decrease cycles and memory allocation/deallocation.
+step-rule-disp              cell+ constant step-initial-region-disp \ A region instance addr.
+step-initial-region-disp    cell+ constant step-result-region-disp  \ A region instance addr.
+step-result-region-disp     cell+ constant step-changes-disp        \ A changes instance addr.
+
