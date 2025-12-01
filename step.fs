@@ -220,6 +220,8 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     space ." ]"
 ;
 
+' .step to .step-xt
+
 \ Deallocate a step instance.
 : step-deallocate ( stp0 -- )
     \ Check arg.

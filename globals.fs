@@ -1,4 +1,5 @@
 
--1 value current-session        \ Storage for session address.
-
+: current-session
+    session-stack-tos-xt execute
+;
 

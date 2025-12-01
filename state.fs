@@ -6,7 +6,7 @@
     cur-domain-xt execute               \ u0 dom
     domain-get-all-bits-mask-xt execute \ u0 all-bits
     0 region-new                        \ u0 reg-max
-    dup struct-inc-use-count
+    \ dup struct-inc-use-count
     tuck                                \ reg-max u0 reg-max
     region-subtract-state               \ reg-max list
     swap region-deallocate              \ list

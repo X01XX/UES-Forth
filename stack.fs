@@ -145,6 +145,24 @@
     @                   \ n
 ;
 
+\ Return the item on top of the stack.
+: stack-tos ( stack-addr -- )
+    dup             \ stack-addr stack-addr
+    stack-empty?    \ stack-addr flag
+
+    if
+        cr
+        ." stack-tos stack is empty"
+        #-24 throw
+    then                \ stack-addr
+
+    dup                 \ stack-addr stack-addr
+    stack-get-num-on-stack  \ stack-addr num-on-stack
+
+    cells +             \ stack-cell[last]
+    @                   \ n
+;
+
 \ .stack-stats. Run like: "<stack-name> .stack-stats"
 : .stack-stats ( stack-addr -- )
     ." <"

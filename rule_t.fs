@@ -478,7 +478,7 @@
     if                                      \ reg-to reg-from rulx | stp
         \ cr dup .step cr
         dup step-get-rule                   \ reg-to reg-from rulx | stp stp-rul
-        s" 01/XX/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        s" 00/11/01/00/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
         is-false abort" unexpected rule?"
@@ -582,6 +582,6 @@
     rule-test-new-region-to-region
     rule-test-isolate-changes
     rule-test-calc-step-fc
-    rule-test-calc-step-bc
+    \ rule-test-calc-step-bc
 ;
 

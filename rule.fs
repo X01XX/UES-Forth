@@ -749,10 +749,11 @@ rule-m11    cell+ constant rule-m10
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
-
+    cr ." rule-restrict-initial-region: " over .region space dup .rule cr
     tuck                        \ rul0 reg1 rul0
     rule-calc-initial-region    \ rul0 reg1 reg-initial'
     2dup                        \ rul0 reg1 reg-initial' reg1 reg-initial'
+    cr ." rule-restrict-initial-region: reg1: " over .region space ." rule initial: " dup .region cr
     region-intersects           \ rul0 reg1 reg-initial' flag
     swap region-deallocate      \ rul0 reg1 flag
     is-false if
@@ -1561,6 +1562,7 @@ rule-m11    cell+ constant rule-m10
     \ Check if getting to the rule's initial region requires other needed changes.
     #3 pick #3 pick #3 pick rule-use-is-premature-fc    \ | cngs-ned' bool
     if
+        cr ." rule-calc-step-fc: is premature" cr
         changes-deallocate
         3drop
         false
@@ -1568,20 +1570,13 @@ rule-m11    cell+ constant rule-m10
     then
 
                                                                 \ reg-to reg-from rul0 | cngs-ned'
-
     \ Get rule for reg-from to rul0.
-    #3 pick #3 pick rule-new-region-to-region                   \ | cngs-ned' rul-to'
+    over rule-calc-initial-region                               \ reg-to reg-from rul0 | cngs-ned' rul-i'
+    dup #4 pick                                                 \ reg-to reg-from rul0 | cngs-ned' rul-i' reg-i reg-from
+    rule-new-region-to-region                                   \ | cngs-ned' rul-i' rul-to'
+    swap region-deallocate                                      \ | cngs-ned' rul-to'
 
-    \ Check if needed changes are in the rule, making it premature to use.
-    2dup rule-intersects-changes                                \ | cngs-ned' rul-to' bool
-    if
-        rule-deallocate
-        changes-deallocate
-        3drop
-        false
-        exit
-    then
-
+    
     \ Restrict rul0.                                            \ | cngs-ned' rul-to'
     dup rule-calc-result-region                                 \ | cngs-ned' rul-to' rul-to-rslt'
     dup                                                         \ | cngs-ned' rul-to' rul-to-rslt' rul-to-rslt'
@@ -1593,9 +1588,11 @@ rule-m11    cell+ constant rule-m10
         cr ." rule-calc-step-fc: rule-restrict-initial-region failed?"
         abort
     then
-    
-    \ Combine the two rules.                                    \ | cngs-ned' rul-to' rul0'
-    2dup rule-combine2                                          \ | cngs-ned' rul-to' rul0' rul-seq'
+
+    swap                                                         \ | cngs-ned' rul0' rul-to'
+    \ cr ." rul-to: " over .rule space ." rul0: " dup .rule cr
+    \ Combine the two rules.
+    2dup rule-combine2                                          \ | cngs-ned' rul0' rul-to' rul0' rul-seq'
     rot rule-deallocate                                         \ | cngs-ned' rul0' rul-seq'
  
     \ Get the number of unwanted changes.
@@ -1608,7 +1605,6 @@ rule-m11    cell+ constant rule-m10
     swap                                                        \ | cngs-ned' u-unw rul0'
     cur-action-xt execute                                       \ | cngs-ned' u-unw rul0' act
     step-new-xt execute                                         \ | cngs-ned' u-unw stpx
-
     \ Set number-unwanted-changes.
     tuck                                                        \ | cngs-ned' stpx u-unw stpx
     step-set-number-unwanted-changes-xt execute                 \ | cngs-ned' stpx

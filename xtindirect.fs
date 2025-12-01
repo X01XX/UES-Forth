@@ -23,6 +23,8 @@
 
 ' xtabort value session-max-regions-xt
 
+' xtabort value session-stack-tos-xt
+
 
 ' xtabort value cur-domain-xt
 
@@ -71,6 +73,8 @@
 ' xtabort value step-set-forward-xt
 
 ' xtabort value step-set-number-unwanted-changes-xt
+
+' xtabort value .step-xt
 
 ' xtabort value region-list-push-xt
 

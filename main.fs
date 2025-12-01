@@ -124,6 +124,7 @@ cs
     cr #4 spaces ." RlcRate mma:      " rlcrate-mma .mma-usage
     cr #4 spaces ." Action mma:       " action-mma .mma-usage
     cr #4 spaces ." Domain mma:       " domain-mma .mma-usage
+    cr #4 spaces ." Session mma:      " session-mma .mma-usage
     cr #4 spaces ." dstack: " .s
 ;
 
@@ -187,6 +188,7 @@ cr ." main.fs"
  #25 domain-mma-init
 #100 rate-mma-init
 #100 rlcrate-mma-init
+#005 session-mma-init
 cr
 
 \ Free heap memory before exiting.
@@ -209,13 +211,13 @@ cr
     domain-mma mma-free
     rate-mma mma-free
     rlcrate-mma mma-free
+    session-mma mma-free
 ;
 
 : init-main ( -- )
     \ Set up session.
-    session-new                                 \ sess
-    dup struct-inc-use-count                    \ sess  (limited usefulness, so far, but follow convention)
-    dup to current-session                      \ sess
+    current-session-new                         \ session instance added to session stack.
+    current-session                             \ sess
 
     \ Add domain 0
     #4 domain-new                                \ sess dom
@@ -316,7 +318,7 @@ cr
     \ Clean up
     memory-use
     cr cr ." Deallocating ..." cr
-    current-session session-deallocate
+    current-session-deallocate
     memory-use
     test-none-in-use
 ;
@@ -329,9 +331,7 @@ cr
 : test-init
 
     \ Set up session.
-    session-new                         \ sess
-    dup struct-inc-use-count            \ sess (limited usefulness, so far, but follow convention)
-    to current-session                  \
+    current-session-new                 \ Session instance added to session stack.
 
     \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
     #4 domain-new                       \ dom
@@ -342,6 +342,8 @@ cr
     current-session                     \ dom sess
     session-add-domain                  \ dom
 
+    current-session session-process-rlcrates
+
     \ Set current domain to the first.
     \ Most tests assume a 4-bit domain.
     0 set-domain
@@ -350,10 +352,14 @@ cr
 : test-end
     memory-use
     cr cr ." Deallocating ..." cr
-    current-session session-deallocate
+    current-session-deallocate
 
     memory-use
-    test-none-in-use
+    session-stack
+    stack-empty?
+    if
+        test-none-in-use
+    then
 ;
 
 : all-tests

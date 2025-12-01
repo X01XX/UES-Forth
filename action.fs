@@ -275,35 +275,35 @@ action-groups               cell+ constant action-function              \ An xt 
 
     \ Get old regions that are deleted.
     2dup                                \ act0 old-ls new-ls old-ls new-ls
-    region-list-set-difference          \ act0 old-ls new-ls old-gone
+    region-list-set-difference          \ act0 old-ls new-ls old-gone'
     cr ." Old LS regions deleted: " dup .region-list cr
 
     \ Scan deleted regions.
-    dup list-get-links                   \ act0 old-ls new-ls old-gone link
+    dup list-get-links                   \ act0 old-ls new-ls old-gone' link
     begin
         ?dup
     while
-        dup link-get-data               \ act0 old-ls new-ls old-gone link region
+        dup link-get-data               \ act0 old-ls new-ls old-gone' link region
 
         \ If group exists, delete it.
-        #5 pick                         \ act0 old-ls new-ls old-gone link region act0
-        _action-delete-group-if-exists  \ act0 old-ls new-ls old-gone link flag
+        #5 pick                         \ act0 old-ls new-ls old-gone' link region act0
+        _action-delete-group-if-exists  \ act0 old-ls new-ls old-gone' link flag
         if
             cr #4 spaces dup link-get-data .region
             space ." deleted group"
         then
 
-        link-get-next                   \ act0 old-ls new-ls old-gone link
+        link-get-next                   \ act0 old-ls new-ls old-gone' link
     repeat
     cr
-                                        \ act0 old-ls new-ls old-gone
+                                        \ act0 old-ls new-ls old-gone'
     region-list-deallocate              \ act0 old-ls new-ls
 
     \ Get new regions.
     dup                                 \ act0 old-ls new-ls new-ls
     #2 pick                             \ act0 old-ls new-ls new-ls old-os
 
-    region-list-set-difference          \ act0 old-ls new-ls new-added
+    region-list-set-difference          \ act0 old-ls new-ls new-added'
     cr ." New LS regions added: " dup .region-list cr
     region-list-deallocate              \ act0 old-ls new-ls 
 
@@ -804,11 +804,15 @@ action-groups               cell+ constant action-function              \ An xt 
             #3 pick square-get-state        \ sqr1 act0 | reg-in-lst link sta1
             over link-get-data              \ sqr1 act0 | reg-in-lst link sta1 regx
             region-get-state-0              \ sqr1 act0 | reg-in-lst link sta1 s0
-            region-new                      \ sqr1 act0 | reg-in-lst link reg-new
-            #3 pick                         \ sqr1 act0 | reg-in-lst link reg-new act0
-            action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new ip-lst
-            region-list-push-nosups         \ sqr1 act0 | reg-in-lst link flag
-            drop                            \ sqr1 act0 | reg-in-lst link
+            region-new dup                  \ sqr1 act0 | reg-in-lst link reg-new reg-new
+            #4 pick                         \ sqr1 act0 | reg-in-lst link reg-new reg-new act0
+            action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new reg-new ip-lst
+            region-list-push-nosups         \ sqr1 act0 | reg-in-lst link reg-new flag
+            if
+                drop
+            else
+                region-deallocate
+            then
         else
             cr ." sqrs NOT incompat 0" cr
         then
@@ -827,11 +831,15 @@ action-groups               cell+ constant action-function              \ An xt 
             #3 pick square-get-state        \ sqr1 act0 | reg-in-lst link sta1
             over link-get-data              \ sqr1 act0 | reg-in-lst link sta1 regx
             region-get-state-1              \ sqr1 act0 | reg-in-lst link sta1 s1
-            region-new                      \ sqr1 act0 | reg-in-lst link reg-new
-            #3 pick                         \ sqr1 act0 | reg-in-lst link reg-new act0
-            action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new ip-lst
-            region-list-push-nosups         \ sqr1 act0 | reg-in-lst link flag
-            drop                            \ sqr1 act0 | reg-in-lst link
+            region-new dup                  \ sqr1 act0 | reg-in-lst link reg-new reg-new
+            #4 pick                         \ sqr1 act0 | reg-in-lst link reg-new reg-new act0
+            action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new reg-new ip-lst
+            region-list-push-nosups         \ sqr1 act0 | reg-in-lst link reg-new flag
+            if
+                drop
+            else
+                region-deallocate
+            then
         else
             cr ." sqrs NOT incompat 1" cr
         then

@@ -1,7 +1,7 @@
 \ Implement a Session struct and functions.                                                                                             
 
 #31319 constant session-id
-   #10 constant session-struct-number-cells
+    #9 constant session-struct-number-cells
 
 \ Struct fields
 0 constant session-header       \ 16-bits [0] struct id [1] use count
@@ -18,7 +18,22 @@ session-rlcrate-le0-rates-disp  cell+ constant session-rlclist-by-rate-disp     
 session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp           \ List of rule-list-corr, representing an rlc translating to a smaller, imbedded, intersection
                                                                                     \ with another rlc.
 
-0 value session-addr \ Storage for session address.
+0 value session-mma     \ Storage for session mma instance.
+
+0 value session-stack   \ Stack for controlled access to session instances,
+                        \ primarily for testing purposes.
+
+\ Init session mma, return the addr of allocated memory.
+: session-mma-init ( num-items -- ) \ sets region-mma.
+    dup 1 < 
+    abort" session-mma-init: Invalid number of items."
+
+    cr ." Initializing Session store."
+    session-struct-number-cells over mma-new to session-mma
+
+    \ Create stack for session instances.
+    stack-new to session-stack
+;
 
 \ Check instance type.
 : is-allocated-session ( addr -- flag )
@@ -225,18 +240,21 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     then
 
     session-rules-by-rate-disp +    \ Add offset.
-    !                               \ Set the field.
+    !                               \ Set the fiel105612940047944d.
 ;
 
 \ End accessors.
 
+: session-stack-tos ( -- sess )
+    session-stack stack-tos
+;
+' session-stack-tos to session-stack-tos-xt
+
 \ Create an session, given an instance ID.
-: session-new ( -- addr)
+: current-session-new ( -- ) \ new session pushed onto session stack.
     
     \ Allocate space.
-    \ session-mma mma-allocate        \ses
-    session-struct-number-cells cells allocate
-    abort" Session allocation failed"
+    session-mma mma-allocate        \ ses
 
     \ Store id.
     session-id over                 \ ses id ses
@@ -270,6 +288,8 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 
     \ Init list of rule-list-corrs, by rate.
     list-new over _session-set-rules-by-rate
+
+    session-stack stack-push
 ;
 
 \ Print a session.
@@ -330,10 +350,9 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     drop                                \
 ;
 
-\ Deallocate a session.
-: session-deallocate ( ses0 -- )
-    \ Check arg.
-    assert-tos-is-session
+\ Deallocate the session.
+: current-session-deallocate ( -- )
+    session-stack stack-tos         \ sess
 
     \ Clear fields.
     dup session-get-domains domain-list-deallocate
@@ -360,10 +379,8 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     [ ' rule-list-deallocate ] literal swap list-apply
     list-deallocate
 
-    \ Deallocate session instance.
-    0 over struct-set-id
-    free
-    abort" session free failed"
+    session-stack stack-pop drop
+    session-mma mma-deallocate
 ;
 
 : session-add-domain ( dom1 sess0 -- )

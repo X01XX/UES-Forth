@@ -2,7 +2,7 @@
 
 \ Test adding samples and changing the logical structure, incompatible pairs.
 : action-test-add-sample
-    cr ." depth s1: " depth . cr
+    \ cr ." depth s1: " depth . cr
     #4                              \ 4
     [ ' act-0-get-sample ] literal  \ 4 xt
     action-new                      \ act
@@ -87,11 +87,10 @@
 
     sample-deallocate
     action-deallocate
-    cr ." depth 1: " depth . cr
+    \ cr ." depth 1: " depth . cr
 
     cr ." action-test-add-sample - Ok"
 ;
-
 
 : action-tests
     action-test-add-sample
