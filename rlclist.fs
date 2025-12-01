@@ -15,6 +15,9 @@
 ;
 
 : .rlc-list ( rlc-lst -- )
+    \ Check arg.
+    assert-tos-is-list
+
     s" (" type
     [ ' .region-list-corr ] literal swap    \ xt rlc-list
     list-apply                              \
@@ -195,7 +198,6 @@
                         #5 pick                 \ ret-lst rlc1 link0 left-lst left-link left-rlc ret-lst
                         rlc-list-push-nosubs    \ ret-lst rlc1 link0 left-lst left-link bool
                         drop
-                        \ cr ." at 1 " .s cr
                         link-get-next           \ ret-lst rlc1 link0 left-lst left-link
                     repeat
                                                 \ ret-lst rlc1 link0 left-lst
@@ -209,7 +211,7 @@
                 drop
             then
         then
-       \  cr ." at 2 " .s cr
+
         link-get-next
     repeat
                             \ ret-lst rlc1
@@ -502,6 +504,7 @@
     list-deallocate                         \ ret-lst
 ;
 
+\ Return true if any rlc, in an rlc list, is a superset of a given state-list-corr.
 : rlc-list-any-superset-states ( slc1 rlc0 -- bool )
     \ Check args.
     assert-tos-is-list
@@ -548,4 +551,129 @@
     swap samplecorr-get-result      \ rlcl0 smpc1-r
     swap                            \ smpc1-r rlgl0
     rlc-list-any-superset-states    \ bool
+;
+
+\ Return true if an rlc, in a rlc list, is a superset of both states in a samplecorr.
+: rlc-list-one-superset-samplecorr ( smplc1 rlc0 -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-samplecorr
+
+    list-get-links                              \ smplc1 link
+    begin
+        ?dup
+    while
+        over samplecorr-get-initial             \ smplc1 link smpl-i
+        over link-get-data                      \ smplc1 link smpl-i rlcx
+        region-list-corr-superset-states        \ smplc1 link bool
+        if                                      \ smplc1 link
+            over samplecorr-get-result          \ smplc1 link smpl-r
+            over link-get-data                  \ smplc1 link smpl-r rlcx
+            region-list-corr-superset-states    \ smplc1 link bool
+            if                                  \ smplc1 link
+                2drop                           \
+                true                            \ bool
+                exit
+            then
+        then
+
+        link-get-next
+    repeat
+                                                \ smplc1
+    drop                                        \
+    false                                       \ bool
+;
+
+\ Return a list of rlcs superset of a state-list-corr.
+: rlc-list-superset-states-rlc-list ( slc1 rlc0 -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    \ Init return list.
+    list-new -rot                           \ ret-lst slc1 rlc0
+
+    list-get-links                          \ ret-lst slc1 link
+    begin
+        ?dup
+    while
+        over                                \ ret-lst slc1 link slc1
+        over link-get-data                  \ ret-lst slc1 link slc1 rlcx
+        region-list-corr-superset-states    \ ret-lst slc1 link bool
+        if                                  \ ret-lst slc1 link
+            dup link-get-data               \ ret-lst slc1 link rlcx
+            #3 pick                         \ ret-lst slc1 link rlcx ret-lst
+            rlc-list-push                   \ ret-lst slc1 link
+        then
+
+        link-get-next
+    repeat
+                                            \ ret-lst slc1
+    drop                                    \ ret-lst
+;
+
+\ Return the least different value to two given rlcs, not counting equal rlcs.
+: rlc-list-least-difference ( rlc2 rlc1 rlc-lst0 -- u )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+    assert-3os-is-list
+
+    \ Init return count.
+    #2 pick #2 pick             \ rlc2 rlc1 rlc-lst0 rlc2 rlc1
+    region-list-corr-distance   \ rlc2 rlc1 rlc-lst0 u
+    dup 0= abort" two rcls intersect?"
+    cr ." rlc1 " #2 pick .region-list-corr
+    space ." and " #3 pick .region-list-corr
+    space ." is " dup . cr
+    
+    swap                        \ rlc2 rlc1 dist rlc-lst0
+
+    \ Prep for loop.
+    list-get-links              \ rlc2 rlc1 dist link
+
+    begin
+        2dup
+    while
+        \ Check rlcx ne rlc1.
+        dup link-get-data       \ rlc2 rlc1 dist link rlcx
+        #3 pick                 \ rlc2 rlc1 dist link rlcx rlc1
+        <> if
+            \ Check rlcx ne rlc2
+            dup link-get-data       \ rlc2 rlc1 dist link rlcx
+            #4 pick                 \ rlc2 rlc1 dist link rlcx rlc2
+            <> if
+                \ Calc distance to rlc2.
+                dup link-get-data           \ rlc2 rlc1 dist link rlcx
+                #4 pick                     \ rlc2 rlc1 dist link rlcx rlc2
+                region-list-corr-distance   \ rlc2 rlc1 dist link dist2
+                
+                \ Calc distance to rlc1.
+                over link-get-data          \ rlc2 rlc1 dist link dist2 rlcx
+                cr ." for " dup .region-list-corr
+                #4 pick                     \ rlc2 rlc1 dist link dist2 rlcx rlc1
+                region-list-corr-distance   \ rlc2 rlc1 dist link dist2 dist1
+
+                \ Add distance 1 and 2.
+                +                           \ rlc2 rlc1 dist link dist12
+
+                \ Compare with current least dist.
+                dup                         \ rlc2 rlc1 dist link dist12 dist12
+                #3 pick                     \ rlc2 rlc1 dist link dist12 dist12 dist
+                space ." compare cur dist " dup . space ." with new " over . cr
+                <                           \ rlc2 rlc1 dist link dist12 bool
+                if                          \ rlc2 rlc1 dist link dist12
+                    \ Update current least distance.
+                    rot drop                \ rlc2 rlc1 link dist12
+                    swap                    \ rlc2 rlc1 dist12 link
+                else
+                    drop                    \ rlc2 rlc1 dist link
+                then
+            then
+        then
+
+        link-get-next
+    repeat
+                                \ rlc2 rlc1 dist
+    nip nip                     \ dist
 ;

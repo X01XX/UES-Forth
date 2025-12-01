@@ -47,19 +47,19 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 
 \ Check TOS for group, unconventional, leaves stack unchanged. 
 : assert-tos-is-group ( arg0 -- arg0 )
-    dup is-allocated-group 0=
-    if  
-        cr ." TOS is not an allocated group"
-        abort
+    dup is-allocated-group
+    is-false if  
+        s" TOS is not an allocated group"
+       .abort-xt execute
     then
 ;
 
 \ Check NOS for group, unconventional, leaves stack unchanged. 
 : assert-nos-is-group ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-group 0=
-    if  
-        cr ." NOS is not an allocated group"
-        abort
+    over is-allocated-group
+    is-false if
+        s" NOS is not an allocated group"
+       .abort-xt execute
     then
 ;
 
@@ -424,186 +424,47 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     rulestore-calc-changes  \ changes
 ;
 
-\ Return a list of possible forward-chaining steps, given a sample.
+\ Return a list of possible forward-chaining steps, given a from-region (tos) and a to-region (nos).
 \ Return 0, 1 or 2 forward steps.
-: group-calc-forward-steps ( smpl1 grp0 -- stp-lst )
+: group-calc-steps-fc ( reg-to reg-from grp0 -- stp-lst )
     \ Check args.
     assert-tos-is-group
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
+    #2 pick #2 pick                             \ | reg-to reg-from
+    2dup region-superset-of                     \ | reg-to reg-from bool
+    abort" group-calc-steps-fc: region subset?" \ | reg-to reg-from
+    swap region-superset-of                     \ | bool
+    abort" group-calc-steps-fc: region subset?" \ |
     \ cr ." group-calc-forward-steps:" cr
 
-    \ Init return list.
-    list-new -rot           \ ret-lst smpl1 grp0
-
-    dup group-get-pn        \ ret-lst smpl1 grp0 pn
-    case
-                            \ ret-lst smpl1 grp0 |
-        1 of
-                                            \ ret-lst smpl1 grp0 |
-            over                            \ ret-lst smpl1 grp0 | smpl1
-            0                               \ ret-lst smpl1 grp0 | smpl1 0
-            #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
-            rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
-            step-new-by-rule-f              \ ret-lst smpl1 grp0 | stpx t | f
-            if                              \ ret-lst smpl1 grp0 | stpx
-                nip nip                     \ ret-lst stpx
-                over                        \ ret-lst stpx ret-lst
-                step-list-push-xt execute   \ ret-lst
-            else                            \ ret-lst smpl1 grp0
-                2drop                       \ ret-lst
-            then
-        endof
-        #2 of
-            \ Check rule-0.
-                                            \ ret-lst smpl1 grp0 |
-            over                            \ ret-lst smpl1 grp0 | smpl1
-            over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
-            dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
-            swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-            step-new-by-rule-f              \ ret-lst smpl1 grp0 | stpx t | f
-            if                              \ ret-lst smpl1 grp0 | stpx
-                #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
-                execute                     \ ret-lst smpl1 grp0 |
-
-                \ Check rule-1. If rule-0 initial region is a superset of smpl1 initial state, so is the rule-1 initial region.
-                over                            \ ret-lst smpl1 grp0 | smpl1
-                over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
-                dup rulestore-get-rule-0        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-0
-                swap rulestore-get-rule-1       \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1
-                step-new-by-rule-f              \ ret-lst smpl1 grp0 | stpx t | f
-                if                              \ ret-lst smpl1 grp0 | stpx
-                    #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
-                    execute                     \ ret-lst smpl1 grp0 |
-                then
-                2drop
-            else
-                2drop
-            then
-        endof
-        #3 of
-            2drop
-        endof
-        cr ." Invalid pn value" cr
-        abort
-    endcase
+    group-get-rules         \ reg-to reg-from rul-str
+    rulestore-calc-steps-fc \ stp-lst
 ;
 
-\ Return 0, 1 or 2, backward steps.
-: group-calc-backward-steps ( smpl1 grp0 -- stp-lst )
+\ Return a list of possible backward-chaining steps, given a from-region (tos) and a to-region (nos).
+\ Return 0, 1 or 2 forward steps.
+: group-calc-steps-bc ( reg-to reg-from grp0 -- stp-lst )
     \ Check args.
     assert-tos-is-group
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-tos-is-region
+    \ cr ." group-calc-forward-steps:" cr
 
-    \ cr ." group-calc-backward-steps: " dup .group space over .sample cr
-
-    \ Init return list.
-    list-new -rot                           \ ret-lst smpl1 grp0
-
-    \ Get group pn.
-    dup group-get-pn                        \ ret-lst smpl1 grp0 pn
-
-    \ Process group by pn value.
-    case
-        1 of
-                                            \ ret-lst smpl1 grp0 |
-            over                            \ ret-lst smpl1 grp0 | smpl1
-            0                               \ ret-lst smpl1 grp0 | smpl1 0
-            #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 0 grp-ruls
-            rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 0 rul-0
-            step-new-by-rule-b              \ ret-lst smpl1 grp0 | stpx t | f
-            if                              \ ret-lst smpl1 grp0 | stpx
-                nip nip                     \ ret-lst stpx
-                over                        \ ret-lst stpx ret-lst
-                step-list-push-xt execute   \ ret-lst
-            else                            \ ret-lst smpl1 grp0
-                2drop                       \ ret-lst
-            then
-        endof
-        #2 of
-            \ Check rule-0. Rule-0 result region may be a superset of the smpl1 result state, while the rule-1 result region is not.
-                                            \ ret-lst smpl1 grp0 |
-            over                            \ ret-lst smpl1 grp0 | smpl1
-            over group-get-rules            \ ret-lst smpl1 grp0 | smpl1 grp-ruls
-            dup rulestore-get-rule-1        \ ret-lst smpl1 grp0 | smpl1 grp-ruls rul-1
-            swap rulestore-get-rule-0       \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-            step-new-by-rule-b              \ ret-lst smpl1 grp0 | stpx t | f
-            if                              \ ret-lst smpl1 grp0 | stpx
-                #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx xt
-                execute                     \ ret-lst smpl1 grp0 |
-            then
-
-            \ Check rule 1.  Rule-1 result region may be a superset of the smpl1 result state, while the rule-0 result region is not.
-            dup  group-get-rules                \ ret-lst smpl1 grp0 | grp-ruls
-            rulestore-get-rule-1                \ ret-lst smpl1 grp0 | rul-1
-            ?dup if
-                #2 pick swap                    \ ret-lst smpl1 grp0 | smpl1 rul-1
-                #2 pick group-get-rules         \ ret-lst smpl1 grp0 | smpl1 rul-1 grp-ruls
-                rulestore-get-rule-0            \ ret-lst smpl1 grp0 | smpl1 rul-1 rul-0
-                swap                            \ ret-lst smpl1 grp0 | smpl1 rul-0 rul-1
-                step-new-by-rule-b              \ ret-lst smpl1 grp0 | stpx t | f
-                if                              \ ret-lst smpl1 grp0 | stpx
-                    #3 pick step-list-push-xt   \ ret-lst smpl1 grp0 | stpx ret-lst xt
-                    execute                     \ ret-lst smpl1 grp0 |
-                then
-                2drop
-            else
-                2drop                           \ ret-lst
-            then
-        endof
-        #3 of
-            2drop
-        endof
-    endcase
-    \ cr   ." -> " dup .step-list-xt execute cr
+    group-get-rules         \ reg-to reg-from rul-str
+    rulestore-calc-steps-bc \ stp-lst
 ;
 
-\ Return steps by changes, forward-chaining.
-: group-get-steps-by-changes-f ( smpl1 grp0 -- stp-lst )
+\ Return a list of steps having needed changes, given a from-region (tos) and a to-region (nos).
+: group-calc-steps ( reg-to reg-from grp0 -- stp-lst )
     \ Check args.
     assert-tos-is-group
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-tos-is-region
+    \ cr ." group-calc-forward-steps:" cr
 
-    \ cr ." group-get-steps-by-changes-f: " dup .group space over .sample cr
-
-    \ Get group pn.
-    dup group-get-pn                        \ smpl1 grp0 pn
-
-    \ Handle unpredictable group.
-    #3 = if
-        2drop
-        list-new
-        exit
-    then
-
-    group-get-rules                         \ smpl ruls
-    rulestore-get-steps-by-changes-f        \ stp-lst
-
-    \ cr   ." -> " dup .step-list-xt execute cr
-;
-
-\ Return steps by changes, backward-chaining.
-: group-get-steps-by-changes-b ( smpl1 grp0 -- stp-lst )
-    \ Check args.
-    assert-tos-is-group
-    assert-nos-is-sample
-
-    \ cr ." group-get-steps-by-changes-b: " dup .group space over .sample cr
-
-    \ Get group pn.
-    dup group-get-pn                        \ smpl1 grp0 pn
-
-    \ Handle unpredictable group.
-    #3 = if
-        2drop
-        list-new
-        exit
-    then
-
-    group-get-rules                         \ smpl ruls
-    rulestore-get-steps-by-changes-b        \ stp-lst
-    \ cr ." at 4 " .s cr
-
-    \ cr   ." -> " dup .step-list-xt execute cr
+    group-get-rules         \ reg-to reg-from rul-str
+    rulestore-calc-steps    \ stp-lst
 ;
 
 \ Return a fill need, if any.
@@ -707,7 +568,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
                 cur-action-xt execute   \ | 5 s-sta actx
                 action-make-need-xt     \ | 5 s-sta actx xt
                 execute                 \ | nedx
-                nip nip nip             \ nedx
+                2nip nip                \ nedx
                 true
                 exit
             else                        \ grp0 g-r-reg link sqrx
@@ -738,5 +599,5 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     then
 
     group-get-rules             \ cngs1 rul-str
-    rulestore-has-any-change    \ flag
+    rulestore-makes-change      \ flag
 ;

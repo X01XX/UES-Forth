@@ -79,62 +79,6 @@
     then
 ;
 
-\ Return steps that intersect (one, or two, equal states) a given sample.
-: step-list-step-intersections ( smpl1 stp-lst0 -- stp-lst )
-    \ Check args.
-    assert-tos-is-list
-    assert-nos-is-sample
-
-    \ Prep for loop.
-    list-new -rot               \ ret smpl1 lst0
-    list-get-links              \ ret smpl1 link
-
-    begin
-        ?dup
-    while
-        over                    \ ret smpl1 link smpl1 
-        over link-get-data      \ ret smpl1 link smpl1 step
-        step-intersects-sample  \ ret smpl1 link flag
-        if
-            dup link-get-data   \ ret smpl1 link step
-            #3 pick             \ ret smpl1 link step ret
-            step-list-push      \ ret smpl1 link
-        then
-
-        link-get-next
-    repeat
-                                \ ret smpl1
-    drop                        \ ret
-;
-
-\ Return steps that do not intersect (one, or two, equal states) a given sample.
-: step-list-step-non-intersections ( smpl1 stp-lst0 -- stp-lst )
-    \ Check args.
-    assert-tos-is-list
-    assert-nos-is-sample
-
-    \ Prep for loop.
-    list-new -rot               \ ret smpl1 lst0
-    list-get-links              \ ret smpl1 link
-
-    begin
-        ?dup
-    while
-        over                    \ ret smpl1 link smpl1 
-        over link-get-data      \ ret smpl1 link smpl1 step
-        step-intersects-sample  \ ret smpl1 link flag
-        0= if
-            dup link-get-data   \ ret smpl1 link step
-            #3 pick             \ ret smpl1 link step ret
-            step-list-push      \ ret smpl1 link
-        then
-
-        link-get-next
-    repeat
-                                \ ret smpl1
-    drop                        \ ret
-;
-
 \ Return a list of steps that have a sample with the desired changes.
 : step-list-intersects-changes ( cngs1 stp-lst0 -- stp-lst )
     \ Check args.
@@ -162,29 +106,68 @@
     drop                        \ ret
 ;
 
-\
-: step-list-any-match-sample ( smpl1 lst0 -- flag )
-    \ Check args.
+\ Return a reversed step list.
+: step-list-reverse ( stp-lst0 -- stp-lst )
+    \ Check arg.
     assert-tos-is-list
-    assert-nos-is-sample
 
-    list-get-links          \ smpl1 link
+    \ Init return list.
+    list-new swap       \ lst stp-lst0
+
+    \ Prep for loop.
+    list-get-links       \ lst link
+
     begin
         ?dup
     while
-        2dup link-get-data  \ smpl1 link smpl1 stpx
-        step-get-sample     \ smpl1 link smpl1 stp-smpl
-        sample-intersects   \ smpl1 link flag
-        if
-            2drop
-            true
-            exit
+        dup link-get-data   \ lst link stpx
+        #2 pick             \ lst link stpx lst
+        step-list-push
+
+        link-get-next
+    repeat
+;
+
+: step-list-match-number-unwanted-changes ( u-unw1 stp-lst0 -- stp-lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Init return list.
+    list-new swap       \ u-unw1 ret-lst stp-lst0
+
+    \ Prep for loop.
+    list-get-links       \ u-unw1 ret-lst link
+
+    begin
+        ?dup
+    while
+        dup link-get-data   \ u-unw1 ret-lst link stpx
+        dup                 \ u-unw1 ret-lst link stpx stpx
+        step-get-number-unwanted-changes    \ u-unw1 ret-lst link stpx stp-unw
+        #4 pick             \ u-unw1 ret-lst link stpx u-unw1 u-unw1
+        =                   \ u-unw1 ret-lst link stpx bool
+        if                  \ u-unw1 ret-lst link stpx
+            #2 pick         \ u-unw1 ret-lst link stpx ret-lst
+            step-list-push  \ u-unw1 ret-lst link
+        else                \ u-unw1 ret-lst link stpx
+            drop            \ u-unw1 ret-lst link
         then
 
         link-get-next
     repeat
 
-    drop
-    false
+    \ Clean up, return.     \ u-unw1 ret-lst
+    nip                     \ ret-lst
+;
+
+\ Pop the first step from a step-list.
+: step-list-pop ( stp-lst0 -- stp t | f )
+    list-pop        \ stp t | f
+    if
+        dup struct-dec-use-count
+        true
+    else
+        false
+    then
 ;
 

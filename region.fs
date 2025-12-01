@@ -47,20 +47,29 @@ region-state-0-disp cell+ constant region-state-1-disp
 
 \ Check TOS for region, unconventional, leaves stack unchanged. 
 : assert-tos-is-region ( arg0 -- arg0 )
-    dup is-allocated-region 0=
-    abort" TOS is not an allocated region"
+    dup is-allocated-region
+    is-false if
+        s" TOS is not an allocated region"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for region, unconventional, leaves stack unchanged. 
 : assert-nos-is-region ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-region 0=
-    abort" NOS is not an allocated region"
+    over is-allocated-region
+    is-false if
+        s" NOS is not an allocated region"
+        .abort-xt execute
+    then
 ;
 
 \ Check 3OS for region, unconventional, leaves stack unchanged. 
 : assert-3os-is-region ( arg2 arg1 arg0 -- arg1 arg0 )
-    #2 pick is-allocated-region 0=
-    abort" NOS is not an allocated region"
+    #2 pick is-allocated-region
+    is-false if
+        s" 3OS is not an allocated region"
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.
@@ -439,17 +448,27 @@ region-state-0-disp cell+ constant region-state-1-disp
     then
 ;
 
-\ Return true if a TOS region is a superset of the NOS region.
-: region-superset-of ( reg1 reg0 -- flag )
+\ Return true if regions are not equal.
+: region-neq ( reg1 rge0 -- bool )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
 
-    2dup region-intersects          \ reg1 reg0 flag
+    region-eq
+    is-false
+;
+
+\ Return true if a TOS region is a superset of the NOS region.
+: region-superset-of ( reg1 reg-sup -- flag )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-region
+
+    2dup region-intersects          \ reg1 reg-sup flag
     if
         \ Regions intersect.
         over region-intersection    \ reg1 reg-int flag
-        0= abort" region-superset-of: reg0 and reg1 should intersect"
+        0= abort" region-superset-of: reg-sup and reg1 should intersect"
                                     \ reg1 reg-int
         tuck region-eq              \ reg-int flag
         swap region-deallocate      \ flag
@@ -461,18 +480,18 @@ region-state-0-disp cell+ constant region-state-1-disp
 ;
 
 \ Return true if a TOS region is a subset of the NOS region.
-: region-subset-of ( reg1 reg0 -- flag )
+: region-subset-of ( reg1 reg-sub -- flag )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
 
-    2dup region-intersects          \ reg1 reg0 flag
+    2dup region-intersects          \ reg1 reg-sub flag
     if
         \ Regions intersect.
-        tuck                        \ reg0 reg1 reg0
-        region-intersection         \ reg0 reg-int flag
-        0= abort" region-subset-of: reg0 and reg1 should intersect"
-                                    \ reg0 reg-int
+        tuck                        \ reg-sub reg1 reg-sub
+        region-intersection         \ reg-sub reg-int flag
+        0= abort" region-subset-of: reg-sub and reg1 should intersect"
+                                    \ reg-sub reg-int
         tuck region-eq              \ reg-int flag
         swap region-deallocate      \ flag
     else
@@ -685,7 +704,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     xor                 \ sta-far
 ;
 
-\ Return true if a regions' two states are adjacent.
+\ Return true if a region's two states are adjacent.
 : region-states-adjacent ( reg0 -- flag )
     \ Check arg.
     assert-tos-is-region
@@ -697,3 +716,11 @@ region-state-0-disp cell+ constant region-state-1-disp
     value-1-bit-set         \ flag
 ;
 
+: region-copy ( reg0 - reg )
+    \ Check arg.
+    assert-tos-is-region
+
+    dup region-get-state-1      \ reg0 s-1
+    swap region-get-state-0     \ s-r s-0
+    region-new
+;

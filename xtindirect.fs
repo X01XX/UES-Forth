@@ -41,6 +41,8 @@
 
 ' xtabort value domain-get-sample-xt
 
+' xtabort value domain-get-plan-fc-xt
+
 
 ' xtabort value assert-tos-is-domain-xt
 
@@ -68,9 +70,15 @@
 
 ' xtabort value step-set-forward-xt
 
+' xtabort value step-set-number-unwanted-changes-xt
+
 ' xtabort value region-list-push-xt
 
 
 ' xtabort value .rlcrate-xt
+
+' xtabort value .abort-xt
+
+' xtabort value .stack-structs-xt
 
 

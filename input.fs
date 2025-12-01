@@ -28,28 +28,39 @@
         #2 pick need-get-target         \ ned act dom t-sta
         over domain-get-current-state   \ ned act dom t-sta c-state
         sample-new                      \ ned act dom smpl
-        2dup swap                       \ ned act dom smpl smpl dom
-        domain-get-plan                 \ ned act dom smpl, plan true | false
+        \ Create from/to regions.
+        dup sample-get-result           \ ned act dom smpl rslt
+        dup region-new                  \ ned act dom smpl reg-to
+        over sample-get-initial         \ ned act dom smpl reg-to initial
+        dup region-new                  \ ned act dom smpl reg-to reg-from
+        2dup                            \ ned act dom smpl reg-to reg-from reg-to reg-from
+        #5 pick                         \ ned act dom smpl reg-to reg-from reg-to reg-from dom
+
+        domain-get-plan                 \ ned act dom smpl reg-to reg-from, plan true | false
         if
+            swap region-deallocate
+            swap region-deallocate      \ ned act dom smpl plan
             dup plan-run                \ ned act dom smpl plan flag
             if
-                cr ." plan succeeded" cr
+                cr ." plan succeeded " cr
                                         \ ned act dom smpl plan
                 #3 pick                 \ ned act dom smpl plan act
                 #3 pick                 \ ned act dom smpl plan act dom
                 domain-get-sample       \ ned act dom smpl plan smpl
                 sample-deallocate       \ ned act dom smpl plan
-            else
-                cr ." plan failed" cr
+            else                        \ ned act dom smpl plan
+                cr ." plan failed " cr
             then
                                         \ ned act dom smpl plan
             plan-deallocate
         else
+            region-deallocate
+            region-deallocate           \ ned act dom smpl
             cr ." No plan found" cr
         then
                                         \ ned act dom smpl
         sample-deallocate               \ ned act dom
-        2drop drop
+        3drop
     then
 ;
 
@@ -74,10 +85,47 @@
 
     dup                                         \ rlc0 smplcor smplcor
     current-session                             \ rlc0 smplcor smplcor sess
-    session-rlc-rate-for-samplecorr             \ rlc0 smplcor rlc rate
-    cr ." rate: " .  space ." rlc: " .rlc-list cr
+    session-rlc-rate-for-samplecorr             \ rlc0 smplcor rlc-lst rate
+    cr ." rate: " .  space dup ." rlc: " .rlc-list
+                                                \ rlc0 smplcor rlc-lst
+    2dup                                        \ rlc0 smplcor rlc-lst smplcor rlc-lst
+    rlc-list-one-superset-samplecorr            \ rlc0 smplcor rlc-lst bool
+    space
+    if                                          \ rlc0 smplcor rlc-lst
+        \ In one rlc, TODO: do direct f/b chaining.
+        ." rlc supersets: "
 
-    samplecorr-deallocate
+        over samplecorr-get-initial             \ rlc0 smplcor rlc-lst smplcor-i
+        over                                    \ rlc0 smplcor rlc-lst smplcor-i rlc-lst
+        rlc-list-superset-states-rlc-list       \ rlc0 smplcor rlc-lst rlc-lst2
+        space
+        dup .rlc-list
+        rlc-list-deallocate                     \ rlc0 smplcor rlc-lst
+        drop                                    \ rlc0 smplcor
+    else                                        \ rlc0 smplcor rlc-lst
+        \ Not in one rlc. TODO: find least different rlc between.
+        ." not in one rlc" cr
+
+        over samplecorr-get-initial             \ rlc0 smplcor rlc-lst smplcor-i
+        space ." supersets: " dup .state-list-corr
+        over                                    \ rlc0 smplcor rlc-lst smplcor-i rlc-lst
+        rlc-list-superset-states-rlc-list       \ rlc0 smplcor rlc-lst rlc-lst2
+        space
+        ." are " dup .rlc-list
+        rlc-list-deallocate                     \ rlc0 smplcor rlc-lst
+        cr
+        over samplecorr-get-result              \ rlc0 smplcor rlc-lst smplcor-i
+        space ." supersets of: " dup .state-list-corr
+        over                                    \ rlc0 smplcor rlc-lst smplcor-i rlc-lst
+        rlc-list-superset-states-rlc-list       \ rlc0 smplcor rlc-lst rlc-lst2
+        space
+        ." are " dup .rlc-list
+        rlc-list-deallocate                     \ rlc0 smplcor rlc-lst
+        cr
+        drop                                    \ rlc0 smplcor
+    then
+    cr
+    samplecorr-deallocate                       \ rlc0
 
     drop
 ;

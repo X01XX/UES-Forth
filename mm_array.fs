@@ -222,13 +222,13 @@ include stack.fs
     0<> if ." mma-array free failed" then   
 ;
 
-\ Return the number af array items in use.
-\ Run like: <struct name>-mma mma-in-use
+\ Return the number of struct instances in use.
 : mma-in-use ( mma-addr -- u )
-    _mma-get-stack           \ stack-addr
-    dup stack-get-capacity   \ stack-addr capacity
-    swap stack-get-num-on-stack  \ capacity free
-    -
+    _mma-get-stack          \ stk
+    dup stack-get-capacity  \ stk cap
+    swap                    \ cap stack-addr
+    stack-get-num-on-stack  \ cap num-on
+    -                       \ in-use
 ;
 
 \ Print one-line of  
@@ -247,6 +247,10 @@ include stack.fs
     over _mma-get-min-free  \ mma-addr stack-addr | min-free
     #5 dec.r                \ mma-addr stack-addr |
     #2 spaces
+
+    over _mma-get-min-free 100 *
+    over stack-get-capacity /
+    #3 dec.r ." %" #2 spaces
 
     ." In use: "
     dup                     \ mma-addr stack-addr | stack-addr

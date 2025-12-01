@@ -68,20 +68,32 @@ list-header cell+ constant list-links
 
 \ Check TOS for list, unconventional, leaves stack unchanged. 
 : assert-tos-is-list ( lst0 -- lst0 )
-    dup is-allocated-list 0=
-    abort" TOS is not an allocated list."
+    dup is-allocated-list
+    if
+    else
+        s" TOS is not an allocated list."
+       .abort-xt execute
+    then
 ;
 
 \ Check NOS for list, unconventional, leaves stack unchanged. 
 : assert-nos-is-list ( lst1 arg0 -- lst1 arg0 )
-    over is-allocated-list 0=
-    abort" NOS is not an allocated list."
+    over is-allocated-list
+    if
+    else
+        s" NOS is not an allocated list."
+       .abort-xt execute
+    then
 ;
 
 \ Check 3OS for list, unconventional, leaves stack unchanged. 
 : assert-3os-is-list ( lst2 arg1 arg0 -- lst2 arg1 arg0 )
-    #2 pick is-allocated-list 0=
-    abort" 3OS is not an allocated list."
+    #2 pick is-allocated-list
+    if
+    else
+        s" 3OS is not an allocated list."
+       .abort-xt execute
+    then
 ;
 
 \ Start accessors.
@@ -140,7 +152,6 @@ list-header cell+ constant list-links
     0 over _list-set-length     \ list-addr
     0 over _list-set-links      \ list-addr
     0 over struct-set-use-count \ list-addr
-    \ cr ." list-new: " dup . cr
 ;
 
 \ Return true if a list is empty.
@@ -154,9 +165,9 @@ list-header cell+ constant list-links
 
 \ Add data to the end of a list.
 \ If data is a struct, having a use count, caller to inc use count.
-\ e.g.
-\ alist of link-data = number.
-\ #5 swap list-push-end
+\
+\ e.g. TOS is a list of numbers.
+\ #5 over list-push-end
 : list-push-end ( data list-addr -- )
     \ Check arg.
     assert-tos-is-list
@@ -186,14 +197,13 @@ list-header cell+ constant list-links
     then
 ;
 
-\ Add an address to the beginning of a list
-\ If data is a struct, having a use count, caller to inc use count.
+\ Add an number/address to the begining of a list
 \
 \ If list data are struct instances, the caller should inc the instance use count befere pushing,
-\ using: dup struct-inc-use-count
-\ e.g.
-\ alist of link-data = number.
-\ #5 swap list-push
+\ e.g. dup struct-inc-use-count
+\
+\ e.g. TOS is a list of numbers.
+\ #5 over list-push
 : list-push ( data list-addr -- )
     \ Check arg.
     assert-tos-is-list
@@ -216,7 +226,10 @@ list-header cell+ constant list-links
     _list-set-links
 ;
 
-\ Print a list.
+\ Print a list, with no knowledge of what the link-data points to.
+\
+\ e.g. TOS is a list of anything.
+\ dup .list-raw
 : .list-raw ( addr -- )
     \ Check arg.
     assert-tos-is-list
@@ -238,9 +251,9 @@ list-header cell+ constant list-links
 
 \ Print a list, given an xt to print the data.
 \ xt signature is ( link-data -- )
-\ e.g.
-\ alist of link-data = number.
-\ [ ' . ] literal swap .list
+\
+\ e.g. TOS is a list of numbers.
+\ [ ' . ] literal over .list
 : .list ( xt addr -- )
     \ Check arg.
     assert-tos-is-list
@@ -275,9 +288,9 @@ list-header cell+ constant list-links
 
 \ Return true if a list contains an item, based on a given test execution token.
 \ xt signature is ( item link-data -- flag ) or ( filler link-data -- flag )
-\ e.g.
-\ alist of link-data = number.
-\ [ ' = ] literal swap #5 swap list-member
+\
+\ e.g. TOS is a list of numbers.
+\ [ ' = ] literal over #5 swap list-member
 : list-member ( xt item list -- flag )
     \ Check arg.
     assert-tos-is-list
@@ -307,9 +320,9 @@ list-header cell+ constant list-links
 
 \ Return the first data cell of a link, based on a given test execution token and test item.
 \ xt signature is ( item link-data -- flag ) or ( filler link-data -- flag )
-\ e.g.
-\ alist of link-data = number.
-\ [ ' = ] literal swap #5 swap list-find
+\
+\ e.g. TOS is a list of numbers.
+\ [ ' = ] literal over #5 swap list-find
 : list-find ( xt item list -- cell true | false )
     \ Check arg.
     assert-tos-is-list
@@ -348,9 +361,9 @@ list-header cell+ constant list-links
 
 \ Return a list containing items that match a given test execution token and test item.
 \ xt signature is ( item link-data -- flag ) or ( filler link-data -- flag )
-\ e.g.
-\ alist of link-data = number.
-\ [ ' < ] literal swap #5 swap list-find-all
+\
+\ e.g. TOS is a list of numbers.
+\ [ ' < ] literal over #5 swap list-find-all
 : list-find-all ( xt item list -- list )
     \ Check arg.
     assert-tos-is-list
@@ -392,8 +405,10 @@ list-header cell+ constant list-links
 ;
 
 \ Pop an item from the beginning of a list.
-\ If list data are struct instances, the caller should dec the instance use count of the result,
-\ using: if dup struct-dec-use-count then
+\ If list data are struct instances, the caller should dec the instance use count of the result.
+\
+\ e.g. TOS is a list of structs.
+\ dup list-pop if dup struct-dec-use-count then
 : list-pop ( lst0 -- data true | false )
     \ Check arg.
     assert-tos-is-list
@@ -432,9 +447,8 @@ list-header cell+ constant list-links
 \
 \ I like this one. Standard tradecraft, as L. Ron Hubbard once wrote.
 \
-\ e.g.
-\ alist of link-data = number.
-\ [ ' = ] literal swap #5 swap list-remove
+\ e.g. TOS is a list of numbers.
+\ [ ' = ] literal over #5 swap list-remove
 : list-remove ( xt item list -- data true | false )
     \ Check arg.
     assert-tos-is-list
@@ -509,12 +523,12 @@ list-header cell+ constant list-links
 ;
 
 \ Remove an item based on index.
-\ e.g.
-\ alist of link-data = anything.
-\ #2 swap list-remove-item
 \
-\ If list data are struct instances, the caller should dec the instance use count of the result,
-\ using: if dup struct-dec-use-count then
+\ e.g. TOS is a list of at least 3 of anything.
+\ #2 over list-remove-item
+\
+\ If list data are struct instances, the caller should dec the instance use count of the result.
+\ e.g. if dup struct-dec-use-count then
 : list-remove-item ( u1 lst0 -- data true | false )
     \ Check args.
     assert-tos-is-list
@@ -550,8 +564,10 @@ list-header cell+ constant list-links
 ;
 
 \ Pop the last item in a list.
-\ If list data are struct instances, the caller should dec the instance use count of the result,
-\ using: if dup struct-dec-use-count then
+\ If list data are struct instances, the caller should dec the instance use count of the result.
+\
+\ e.g. TOS is a non-empty list.
+\ dup list-pop-end if dup struct-dec-use-count then
 : list-pop-end ( lst0 -- data true | false )
     \ Check arg.
     assert-tos-is-list
@@ -563,7 +579,7 @@ list-header cell+ constant list-links
     swap list-remove-item
 ;
 
-\ Deallocate a list that has a use count of 1.
+\ Deallocate a list that has a use count of 1 or 0.
 : _list-deallocate-uc-1 ( list-addr -- )
     \ Check arg.
     assert-tos-is-list
@@ -587,11 +603,13 @@ list-header cell+ constant list-links
 ;
 
 \ Deallocate a list.
-\ If the link data is struct instance addresses, the caller may need to deallocated them first.
+\ If the link data is struct instance addresses, the caller may need to deallocate them first.
 \
 \ If the list is a list of structs using use count, dec the use count of the structs, or not, before
 \ calling this.
-\ e.g.: dup struct-get-use-count #2 < if [ ' <struct-name>-deallocate ] literal over list-apply then
+\
+\ e.g. TOS is a list.
+\ dup struct-get-use-count #2 < if [ ' <struct-name>-deallocate ] literal over list-apply then
 : list-deallocate ( list-addr -- )
     \ Check arg.
     assert-tos-is-list
@@ -614,7 +632,9 @@ list-header cell+ constant list-links
 \ xt signature is ( link-data link-data -- flag )
 \
 \ If list data are struct instances, the caller should inc the instance use count of the result,
-\ using: [ ' struct-inc-use-count ] literal over list-apply.
+\
+\ e.g. TOS is a list result of list-difference.
+\ [ ' struct-inc-use-count ] literal over list-apply
 : list-difference ( xt list1 list0 -- list )
     \ Check arg.
     assert-tos-is-list
@@ -650,8 +670,10 @@ list-header cell+ constant list-links
 \ Provide an xt for determining data equality.
 \ xt signature is ( link-data link-data -- flag )
 \
-\ If list data are struct instances, the caller should inc the instance use count of the result,
-\ using: [ ' struct-inc-use-count ] literal over list-apply.
+\ If list data are struct instances, the caller should inc the instance use count of the result.
+\
+\ e.g. TOS is a list.
+\ [ ' struct-inc-use-count ] literal over list-apply
 : list-union ( xt list1 list0 -- list )
     \ Check args.
     assert-tos-is-list
@@ -725,8 +747,10 @@ list-header cell+ constant list-links
 \ Return the intersection of two lists.
 \ xt signature is ( link-data link-data -- flag )
 \
-\ If list data are struct instances, the caller should inc the instance use count of the result,
-\ using: [ ' struct-inc-use-count ] literal over list-apply.
+\ If list data are struct instances, the caller should inc the instance use count of the result.
+\
+\ e.g. TOS is a list result of list-intersection.
+\ [ ' struct-inc-use-count ] literal over list-apply
 : list-intersection ( xt list1 list0 -- list2 )
     \ Check args.
     assert-tos-is-list
@@ -769,6 +793,7 @@ list-header cell+ constant list-links
 ;
 
 \ Return a data item, based on an index into a list.
+\ The index must be valid.
 : list-get-item ( u list -- data )
     \ Check args.
     assert-tos-is-list
@@ -800,9 +825,10 @@ list-header cell+ constant list-links
 
 \ Sort a list, given an xt that returns true if two successive items
 \ should be swapped.
-\ e.g.
-\ alist of link-data = number.
-\ [ ' < ] literal over list-sort
+\
+\ e.g. TOS is a-list, with link-data = number.
+\ [ ' < ] literal over list-sort    \ Descending result.
+\ [ ' > ] literal over list-sort    \ Ascending result.
 : list-sort ( xt list -- )
     \ Check args.
     assert-tos-is-list

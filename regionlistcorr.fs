@@ -1,3 +1,5 @@
+\ Functions for region list corresponding (to domains) lists. 
+
 \ Print a region-list corresponding to the session domain list.
 : .region-list-corr ( reg-lst0 )
     \ Check arg.

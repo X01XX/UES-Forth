@@ -38,14 +38,20 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 
 \ Check TOS for rulestore, unconventional, leaves stack unchanged. 
 : assert-tos-is-rulestore ( arg0 -- arg0 )
-    dup is-allocated-rulestore 0=
-    abort" TOS is not an allocated rulestore."
+    dup is-allocated-rulestore
+    is-false if
+        s" TOS is not an allocated rulestore."
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for rulestore, unconventional, leaves stack unchanged. 
 : assert-nos-is-rulestore ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-rulestore 0=
-    abort" NOS is not an allocated rulestore."
+    over is-allocated-rulestore
+    is-false if
+        s" NOS is not an allocated rulestore."
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.
@@ -67,15 +73,6 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Get second rule.
     rulestore-rule-1 +  \ Add offset.
     @                   \ Fetch the field.
-;
-
-\ Get both rules.
-: rulestore-get-rules ( rulstr -- rul1 rul0 )
-    \ Check arg
-    assert-tos-is-rulestore
-
-    dup rulestore-get-rule-1    \ rulstr rul1
-    swap rulestore-get-rule-0   \ rul1 rul0
 ;
  
 \ Set the first field of a rulestore, use only in this file.
@@ -519,144 +516,143 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
                                 \ cngs
 ;
 
-\ Given a rulestore and a desired sample, return a list
-\ of steps that may help, in forward-chaining.
-\ The steps' samples' states may not match any state in the desired sample.
-\ So one option would be to make a plan from the given sample's initial state
-\ to the steps' initial state.
-: rulestore-get-steps-by-changes-f ( smpl1 ruls0 -- stp-lst )
+\ Given a rulestore' a from region (tos) and a goal region (nos), return a list
+\ of steps that may help make the needed changes.
+: rulestore-calc-steps ( reg-to reg-from ruls0 -- stp-lst )
     \ Check args.
     assert-tos-is-rulestore
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
 
     \ Init return list.
-    list-new                                \ smpl1 ruls0 stp-lst |
+    list-new                                \ reg-to reg-from ruls0 stp-lst
+    swap                                    \ reg-to reg-from stp-lst ruls0
+    2swap                                   \ stp-lst ruls0 reg-to reg-from
 
     \ Process rule 0.
-    #2 pick                                 \ | smpl1
-    #2 pick rulestore-get-rule-0            \ | smpl1 rul0
-    rule-get-sample-by-changes-f            \ | r0-smpl t | f
-    if                                      \ | r0-smpl
-        \ Check for alternate rule.
-        #2 pick rulestore-get-rule-1        \ | r0-smpl rul1
-        ?dup
-
-        if                                  \ | r0-smpl rul1
-            over sample-get-initial         \ | r0-smpl rul1 r0-smpl-i (r0-smpl-i may be different from smpl1-i)
-            swap                            \ | r0-smpl r0-smpl-i rul1
-            rule-apply-to-state-f           \ | r0-smpl, r1-smpl t | f
-            0= abort" apply failed?"
-            swap                            \ | r1-smpl r0-smpl
-        else                                \ | r0-smpl
-            0 swap                          \ | 0 r0-smpl
+    #2 pick                                 \ stp-lst ruls0 reg-to reg-from ruls0
+    rulestore-get-rule-0                    \ stp-lst ruls0 reg-to reg-from rul0
+    ?dup if
+        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to
+        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to reg-from
+        rot                                 \ stp-lst ruls0 reg-to reg-from reg-to reg-from rul0
+        rule-calc-step                      \ stp-lst ruls0 reg-to reg-from, stp t | f
+        if                                  \ stp-lst ruls0 reg-to reg-from stp
+            #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
+            step-list-push-xt execute       \ stp-lst ruls0 reg-to reg-from
         then
-
-        \ Make step.
-        cur-action-xt execute               \ | r1-smpl r0-smpl actx
-        step-new-xt execute                 \ | stpx
-        over                                \ | stpx stp-lst
-        step-list-push-xt execute           \ |
+    else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
+        3drop                               \ stp-lst
+        exit
     then
-                                            \ smpl1 ruls0 stp-lst |
-
+                                            \ stp-lst ruls0 reg-to reg-from
     \ Process rule 1.
-    over rulestore-get-rule-1               \ | rul1
-    ?dup
-    if
-        #3 pick swap                        \ | smpl1 rul1
-        rule-get-sample-by-changes-f        \ | r1-smpl t | f
-        if                                  \ | r1-smpl
-            #2 pick rulestore-get-rule-0    \ | r1-smpl rul0
-            over sample-get-initial         \ | r1-smpl rul0 r1-smpl-i (r1-smpl-i may be different from smpl1-i)
-            swap                            \ | r1-smpl r1-smpl-i rul0
-            rule-apply-to-state-f           \ | r1-smpl, r0-smpl t | f
-            0= abort" apply failed?"
-            swap                            \ | r0-smpl r1-smpl
-
-            \ Make step.
-            cur-action-xt execute           \ | r0-smpl r1-smpl actx
-            step-new-xt execute             \ | stpx
-            over                            \ | stpx ret-lst
-            step-list-push-xt execute       \ |
+    rot                                     \ stp-lst reg-to reg-from ruls0
+    rulestore-get-rule-1                    \ stp-lst reg-to reg-from rul1
+    ?dup if
+        rule-calc-step                      \ stp-lst, stp t | f
+        if                                  \ stp-lst stp
+            over                            \ stp-lst stpx stp-lst
+            step-list-push-xt execute       \ stp-lst
         then
+    else
+        2drop                               \ stp-lst
     then
-                                        \ smpl1 ruls0 stp-lst |
-    nip nip                             \ stp-lst
 ;
 
-\ Given a rulestore and a desired sample, return a list
-\ of steps that may help, in backward-chaining.
-\ The steps' samples' states may not match any state in the desired sample.
-\ So one option would be to make a plan from the given sample's result state
-\ to the steps' result state.
-: rulestore-get-steps-by-changes-b ( smpl1 ruls0 -- stp-lst )
+\ Given a rulestore, a from region (tos), and a goal region (nos), return a list
+\ of steps that may help make the needed changes, for forward chaining.
+\ These steps' initial-region may intersect reg-from, or be reachable from reg-from without making a needed change.
+: rulestore-calc-steps-fc ( reg-to reg-from ruls0 -- stp-lst )
     \ Check args.
     assert-tos-is-rulestore
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
+    #2 pick #2 pick                                 \ | reg-to reg-from
+    2dup region-superset-of                         \ | reg-to reg-from bool
+    abort" rulestore-calc-steps-fc: region subset?" \ | reg-to reg-from
+    swap region-superset-of                         \ | bool
+    abort" rulestore-calc-steps-fc: region subset?" \ |
 
     \ Init return list.
-    list-new                            \ smpl1 ruls0 stp-lst |
+    list-new                                \ reg-to reg-from ruls0 stp-lst
+    swap                                    \ reg-to reg-from stp-lst ruls0
+    2swap                                   \ stp-lst ruls0 reg-to reg-from
 
     \ Process rule 0.
-    #2 pick                             \ | smpl1
-    #2 pick                             \ | smpl1 ruls0
-    rulestore-get-rule-0                \ | smpl1 rul0
-    rule-get-sample-by-changes-b        \ | r0-smpl t | f
-    if
-        \ Check alternate path.
-        #2 pick rulestore-get-rule-1    \ | r0-smpl rul1
-        ?dup
-        if                              \ | r0-smpl rul1
-                                        \ The second rule may have a greatly different result compared to the first rule
-                                        \ but they have the same initial region, so use rul0-smpl-i forward on rule1.
-
-            over sample-get-initial     \ | r0-smpl rul1 r0-smpl-i
-            swap                        \ | r0-smpl r0-smpl-i rul1
-            rule-apply-to-state-f       \ | r0-smpl, r1-smpl-i t | f
-            0= abort" Apply failed?"
-            swap                        \ | r1-smpl r0-smpl
-        else
-            0 swap                      \ | 0 r0-smpl
+    #2 pick                                 \ stp-lst ruls0 reg-to reg-from ruls0
+    rulestore-get-rule-0                    \ stp-lst ruls0 reg-to reg-from rul0
+    ?dup if
+        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to
+        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to reg-from
+        rot                                 \ stp-lst ruls0 reg-to reg-from reg-to reg-from rul0
+        rule-calc-step-fc                   \ stp-lst ruls0 reg-to reg-from, stp t | f
+        if                                  \ stp-lst ruls0 reg-to reg-from stp
+            #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
+            step-list-push-xt execute       \ stp-lst ruls0 reg-to reg-from
         then
-
-        \ Make rule.
-        cur-action-xt execute           \ | 0/rul1-smpl rul0-smpl actx
-        step-new-xt execute             \ | stpx
-        false over                      \ | stpx f stpx
-        step-set-forward-xt execute     \ | stpx
-        over                            \ | stpx stp-lst
-        step-list-push-xt execute       \ |
+    else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
+        3drop                               \ stp-lst
+        exit
     then
-                                        \ smpl1 ruls0 stp-lst |
-
+                                            \ stp-lst ruls0 reg-to reg-from
     \ Process rule 1.
-    over rulestore-get-rule-1           \ | rul1
-    ?dup
-    if
-        #3 pick swap                    \ | smpl1 rul1
-
-        rule-get-sample-by-changes-b    \ | rul1-smpl t | f
-        if                              \ | rul1-smpl
-                                        \ The first rule may have a greatly different result compared to the second rule
-                                        \ but they have the same initial region, so use rul1-smpl-i forward on rule0.
-
-            dup sample-get-initial      \ | rul1-smpl rul1-smpl-i
-            #3 pick                     \ | rul1-smpl rul1-smpl-i ruls0
-            rulestore-get-rule-0        \ | rul1-smpl rul1-smpl-i rul0
-            rule-apply-to-state-f       \ | rul1-smpl, rul0-smpl t | f
-            0= abort" Apply failed?"
-            \ Make step.
-            swap                        \ | rul0-smpl rul1-smpl
-            cur-action-xt execute       \ | rul0-smpl rul1-smpl actx
-            swap step-new-xt execute    \ | stpx
-            false over                  \ | stpx f stpx
-            step-set-forward-xt execute \ | stpx
-            #3 pick                     \ | stpx stp-lst
-            step-list-push-xt execute   \ |
+    rot                                     \ stp-lst reg-to reg-from ruls0
+    rulestore-get-rule-1                    \ stp-lst reg-to reg-from rul1
+    ?dup if
+        rule-calc-step-fc                   \ stp-lst, stp t | f
+        if                                  \ stp-lst stp
+            over                            \ stp-lst stpx stp-lst
+            step-list-push-xt execute       \ stp-lst
         then
+    else
+        2drop                               \ stp-lst
     then
-                                        \ smpl1 ruls0 stp-lst |
-    nip nip                             \ stp-lst
+;
+
+\ Given a rulestore, a from region (tos), and a goal region (nos), return a list
+\ of steps that may help make the needed changes, for backward chaining.
+\ These steps' result-region may intersect reg-to, or be reachable from reg-to without making a needed change.
+: rulestore-calc-steps-bc ( reg-to reg-from ruls0 -- stp-lst )
+    \ Check args.
+    assert-tos-is-rulestore
+    assert-nos-is-region
+    assert-3os-is-region
+
+    \ Init return list.
+    list-new                                \ reg-to reg-from ruls0 stp-lst
+    swap                                    \ reg-to reg-from stp-lst ruls0
+    2swap                                   \ stp-lst ruls0 reg-to reg-from
+
+    \ Process rule 0.
+    #2 pick                                 \ stp-lst ruls0 reg-to reg-from ruls0
+    rulestore-get-rule-0                    \ stp-lst ruls0 reg-to reg-from rul0
+    ?dup if
+        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to
+        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to reg-from
+        rot                                 \ stp-lst ruls0 reg-to reg-from reg-to reg-from rul0
+        rule-calc-step-bc                   \ stp-lst ruls0 reg-to reg-from, stp t | f
+        if                                  \ stp-lst ruls0 reg-to reg-from stp
+            #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
+            step-list-push-xt execute       \ stp-lst ruls0 reg-to reg-from
+        then
+    else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
+        3drop                               \ stp-lst
+        exit
+    then
+                                            \ stp-lst ruls0 reg-to reg-from
+    \ Process rule 1.
+    rot                                     \ stp-lst reg-to reg-from ruls0
+    rulestore-get-rule-1                    \ stp-lst reg-to reg-from rul1
+    ?dup if
+        rule-calc-step-bc                   \ stp-lst, stp t | f
+        if                                  \ stp-lst stp
+            over                            \ stp-lst stpx stp-lst
+            step-list-push-xt execute       \ stp-lst
+        then
+    else
+        2drop                               \ stp-lst
+    then
 ;
 
 \ Return a pn value, based on the number of rules stored in a rulestore.
@@ -680,7 +676,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
 ;
 
 \ Return true if rulestore has at least one needed change.
-: rulestore-has-any-change ( cngs1 rul-str0 -- flag )
+: rulestore-makes-change ( cngs1 rul-str0 -- flag )
     \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-changes
@@ -688,7 +684,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Check rule 0.
     2dup                        \ cngs1 rul-str0 cngs1 rul-str0
     rulestore-get-rule-0        \ cngs1 rul-str0 cngs1 rul-0
-    rule-has-any-change         \ cngs1 rul-str0 flag
+    rule-makes-change           \ cngs1 rul-str0 flag
     if
         2drop                   \
         true                    \ true
@@ -698,7 +694,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Check rule 1.             \ cngs1 rul-str0
     rulestore-get-rule-1        \ cngs1 rul-1
     ?dup if
-        rule-has-any-change     \ flag
+        rule-makes-change       \ flag
     else
         drop                    \
         false                   \ false

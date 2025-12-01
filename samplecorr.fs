@@ -1,4 +1,4 @@
-\ Struct and functions for a desired sample of sate-list-corr to state-list-corr.
+\ Struct and functions for a desired sample of state-list-corr to state-list-corr.
 
 #47317 constant samplecorr-id
     #3 constant samplecorr-struct-number-cells
@@ -39,20 +39,29 @@ samplecorr-initial-disp cell+ constant samplecorr-result-disp
 
 \ Check TOS for samplecorr, unconventional, leaves stack unchanged. 
 : assert-tos-is-samplecorr ( smpl0 -- smpl0 )
-    dup is-allocated-samplecorr 0=
-    abort" TOS is not an allocated samplecorr"
+    dup is-allocated-samplecorr
+    is-false if
+        s" TOS is not an allocated samplecorr"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for samplecorr, unconventional, leaves stack unchanged. 
 : assert-nos-is-samplecorr ( smpl1 arg0 -- smpl1 arg0 )
-    over is-allocated-samplecorr 0=
-    abort" NOS is not an allocated samplecorr"
+    over is-allocated-samplecorr
+    is-false if
+        s" NOS is not an allocated samplecorr"
+        .abort-xt execute
+    then
 ;
 
 \ Check 3OS for samplecorr, unconventional, leaves stack unchanged. 
 : assert-3os-is-samplecorr ( smpl2 arg1 arg0 -- smpl2 arg1 arg0 )
-    #2 pick is-allocated-samplecorr 0=
-    abort" 3OS is not an allocated samplecorr"
+    #2 pick is-allocated-samplecorr
+    is-false if
+        s" 3OS is not an allocated samplecorr"
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.

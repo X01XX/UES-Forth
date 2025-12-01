@@ -5,7 +5,10 @@
     dup is-false
     over -1 =
     or
-    is-false abort" TOS is not bool"
+    is-false if
+        s" TOS is not bool"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for bool, unconventional, leaves stack unchanged. 
@@ -13,8 +16,10 @@
     over dup is-false
     swap -1 =
     or
-    0=
-    abort" NOS is not bool"
+    is-false if
+        s" NOS is not bool"
+        .abort-xt execute
+    then
 ;
 
 \ Check 3OS for bool, unconventional, leaves stack unchanged. 
@@ -22,8 +27,10 @@
     #2 pick dup is-false
     swap -1 =
     or
-    0=
-    abort" 3OS is not bool"
+    is-false if
+        s" 3OS is not bool"
+        .abort-xt execute
+    then
 ;
 
 : .bool ( b -- )

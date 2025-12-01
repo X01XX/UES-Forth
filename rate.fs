@@ -39,20 +39,29 @@
 
 \ Check TOS for rate, unconventional, leaves stack unchanged. 
 : assert-tos-is-rate ( arg0 -- arg0 )
-    dup is-allocated-rate 0=
-    abort" TOS is not an allocated rate"
+    dup is-allocated-rate
+    is-false if
+        s" TOS is not an allocated rate"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for rate, unconventional, leaves stack unchanged. 
 : assert-nos-is-rate ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-rate 0=
-    abort" NOS is not an allocated rate"
+    over is-allocated-rate
+    is-false if
+        s" NOS is not an allocated rate"
+        .abort-xt execute
+    then
 ;
 
 \ Check 3OS for rate, unconventional, leaves stack unchanged. 
 : assert-3os-is-rate ( arg2 arg1 arg0 -- arg1 arg0 )
-    #2 pick is-allocated-rate 0=
-    abort" NOS is not an allocated rate"
+    #2 pick is-allocated-rate
+    is-false if
+        s" NOS is not an allocated rate"
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.

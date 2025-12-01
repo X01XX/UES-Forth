@@ -44,18 +44,6 @@
     then
 ;
 
-\ Count the number of bits set to one.
-: num-one-bits ( n -- u )
-    0 swap             \ Init counter, put below working number.
-    begin
-        dup
-    while 
-        swap 1 + swap   \ Increment counter.
-        dup 1 - and     \ Remove one bit set to one.
-    repeat
-    drop                \ Drop working cell, leaving result.
-;
-
 \ Isolate LSB from a non-zero number.
 \ Return changed number and a single-bit number.
 : isolate-a-bit ( u1 -- u2 u3 )
@@ -289,7 +277,9 @@
 ;
 
 \ The reverse of 2rot.
-: -2rot 2rot 2rot ;
+: -2rot ( -- )
+    2rot 2rot
+;
 
 \ Return a terrible random number, from 0 to a given limit - 1.
 \ Used to exercise different sections of code, purity of randomness is not important. 
@@ -409,3 +399,5 @@
     \ Clear stack
     nip nip                         \ t-cnt
 ;
+
+: 3dup #2 pick #2 pick #2 pick ;

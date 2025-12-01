@@ -44,26 +44,29 @@ sample-initial-disp cell+ constant sample-result-disp
 
 \ Check TOS for sample, unconventional, leaves stack unchanged. 
 : assert-tos-is-sample ( smpl0 -- smpl0 )
-    dup is-allocated-sample 0=
-    abort" TOS is not an allocated sample"
+    dup is-allocated-sample
+    is-false if
+        s" TOS is not an allocated sample"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for sample, unconventional, leaves stack unchanged. 
 : assert-nos-is-sample ( smpl1 arg0 -- smpl1 arg0 )
-    over is-allocated-sample 0=
-    abort" NOS is not an allocated sample"
+    over is-allocated-sample
+    is-false if
+        s" NOS is not an allocated sample"
+        .abort-xt execute
+    then
 ;
 
 \ Check 3OS for sample, unconventional, leaves stack unchanged. 
 : assert-3os-is-sample ( smpl2 arg1 arg0 -- smpl2 arg1 arg0 )
-    #2 pick is-allocated-sample 0=
-    abort" 3OS is not an allocated sample"
-;
-
-\ Check 4OS for sample, unconventional, leaves stack unchanged. 
-: assert-4os-is-sample ( smpl3 arg2 arg1 arg0 -- smpl3 arg2 arg1 arg0 )
-    #3 pick is-allocated-sample 0=
-    abort" 4OS is not an allocated sample"
+    #2 pick is-allocated-sample
+    is-false if
+        s" 3OS is not an allocated sample"
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.
@@ -231,7 +234,7 @@ sample-initial-disp cell+ constant sample-result-disp
     =
 ;
 
-\ Return true if a samples' changes intersect a given changes instance.
+\ Return true if a sample's changes intersect a given changes instance.
 : sample-intersects-changes ( cngs1 smpl0 -- flag )
     \ Check args.
     assert-tos-is-sample

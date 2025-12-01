@@ -20,9 +20,8 @@
 \ 37171, 37379, 43717, 41719, 41737,    47317
 \
 \ Struct ids not yet used:
-\ 53171,
-\ 53173, 53197, 53717, 53719, 53731,
-\ 59797, 61379, 61717, 61979.
+\ 53171, 53173, 53197, 53717, 53719,
+\ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
 cr ." Starting vocabulary UES," cr
@@ -33,7 +32,9 @@ UES definitions
 
 decimal
 
-\ Foundational.
+include xtindirect.fs
+include bool.fs
+
 include tools.fs
 include mm_array.fs     \ includes stack.fs
 include link.fs
@@ -41,10 +42,8 @@ include list.fs
 
 \ Application.
 include globals.fs
-include xtindirect.fs
 
 include value.fs
-include bool.fs
 
 include region.fs
 include region2.fs
@@ -62,6 +61,9 @@ include sample.fs
 
 include rule.fs
 include rulestore.fs
+include rulelist.fs
+include rulelistcorr.fs
+
 include square.fs
 
 include valuelist.fs
@@ -83,6 +85,7 @@ include rlcratelist.fs
 
 include plan.fs
 include planlist.fs
+include plan_t.fs
 
 include group.fs
 include grouplist.fs
@@ -97,6 +100,8 @@ include domainlist.fs
 include session.fs
 
 include input.fs
+
+include stackprint.fs
 
 cs
 
@@ -168,12 +173,12 @@ cr ." main.fs"
 #2000 link-mma-init
 #202 list-mma-init
 #403 region-mma-init
-#304 rule-mma-init
-#305 rulestore-mma-init
-#206 square-mma-init
+#404 rule-mma-init
+#405 rulestore-mma-init
+#306 square-mma-init
 #250 sample-mma-init
 #100 samplecorr-mma-init
- #50 changes-mma-init
+#150 changes-mma-init
 #100 group-mma-init
 #200 need-mma-init
 #150 step-mma-init

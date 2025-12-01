@@ -20,19 +20,28 @@
 \ Check TOS for value, unconventional, leaves stack unchanged. 
 : assert-tos-is-value ( u -- u )
     dup is-not-value
-    abort" TOS is not a valid value."
+    if
+        s" TOS is not a valid value."
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for value, unconventional, leaves stack unchanged. 
 : assert-nos-is-value ( u ?? -- u ??)
     over is-not-value
-    abort" NOS is not a valid value."
+    if
+        s" NOS is not a valid value."
+        .abort-xt execute
+    then
 ;
 
 \ Check 3OS for value, unconventional, leaves stack unchanged. 
 : assert-3OS-is-value ( u ?? ?? -- u ?? ??)
     #2 pick is-not-value
-    abort" 3OS is not a valid value."
+    if
+        s" 3OS is not a valid value."
+        .abort-xt execute
+    then
 ;
 
 \ Print a value.

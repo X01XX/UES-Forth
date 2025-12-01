@@ -44,23 +44,30 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
 \ Check TOS for square, unconventional, leaves stack unchanged. 
 : assert-tos-is-square ( arg0 -- arg0 )
-    dup is-allocated-square 0=
-    abort" TOS is not an allocated square"
+    dup is-allocated-square
+    is-false if
+        s" TOS is not an allocated square"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for square, unconventional, leaves stack unchanged. 
 : assert-nos-is-square ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-square 0=
-    abort" NOS is not an allocated square"
+    over is-allocated-square
+    is-false if
+        s" NOS is not an allocated square"
+        .abort-xt execute
+    then
 ;
 
 \ Check nos is a valid pn value.
 : assert-nos-is-pn ( pn1 arg0 -- )
-    over 1 <
-    abort" nos is not a valid pn value"
-
-    over #3 >
-    abort" nos is nat a valid pn value"
+    over dup 1 < swap
+    #3 > or
+    if
+        s" nos is not a valid pn value"
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.

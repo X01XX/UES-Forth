@@ -39,20 +39,38 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Check TOS for plan, unconventional, leaves stack unchanged. 
 : assert-tos-is-plan ( arg0 -- arg0 )
-    dup is-allocated-plan 0=
-    abort" TOS is not an allocated plan"
+    dup is-allocated-plan
+    is-false if
+        s" TOS is not an allocated plan"
+       .abort-xt execute
+    then
 ;
 
 \ Check NOS for plan, unconventional, leaves stack unchanged. 
 : assert-nos-is-plan ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-plan 0=
-    abort" NOS is not an allocated plan"
+    over is-allocated-plan
+    is-false if
+        s" NOS is not an allocated plan"
+       .abort-xt execute
+    then
 ;
 
 \ Check 3OS for plan, unconventional, leaves stack unchanged. 
 : assert-3os-is-plan ( pln2 arg1 arg0 -- arg1 arg0 )
-    #2 pick is-allocated-plan 0=
-    abort" 3OS is not an allocated plan"
+    #2 pick is-allocated-plan
+    is-false if
+        s" 3OS is not an allocated plan"
+       .abort-xt execute
+    then
+;
+
+\ Check 4OS for plan, unconventional, leaves stack unchanged. 
+: assert-4os-is-plan ( pln3 arg2 arg1 arg0 -- arg1 arg0 )
+    #3 pick is-allocated-plan
+    is-false if
+        s" 4OS is not an allocated plan"
+       .abort-xt execute
+    then
 ;
 
 \ Start accessors.
@@ -140,15 +158,15 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     then
 ;
 
-\ Return the result state of a non-empty plan.
-: plan-get-result-state ( pln - sta )
+\ Return the result region of a non-empty plan.
+: plan-get-result-region ( pln - reg )
     \ Check arg.
     assert-tos-is-plan
 
     \ Check for empty list.
     plan-get-step-list      \ stp-lst
     dup list-is-empty
-    abort" Empty step-list in plan?"
+    abort" plan-get-result-region: Empty plan?"
 
     \ Scan the steps.
     list-get-links          \ link
@@ -160,26 +178,32 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
         dup 0=
         if
             drop
-            step-get-result
+            step-get-result-region
             exit
         then
         nip                 \ link
     again
 ;
 
-\ Check plan for any result equal to a given result.
-: plan-contains-result ( sta1 pln0 -- flag )
-    dup plan-get-step-list          \ sta1 pln0 stp-lst
-    list-get-links                  \ sta1 pln0 link
+\ Check plan for any initial region intersecting a step's result region.
+: plan-check-step-result ( stp1 pln0 -- flag )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-step
+
+    swap step-get-result-region
+    swap                            \ reg-r pln0
+
+    dup plan-get-step-list          \ reg-r pln0 stp-lst
+    list-get-links                  \ reg-r pln0 link
     begin
         ?dup
     while
         \ Get step
-        dup link-get-data           \ sta1 pln0 link step
-        step-get-sample             \ sta1 pln0 link smpl
-        sample-get-result           \ sta1 pln0 link s-r
-        #3 pick                     \ sta1 pln0 link s-r sta1
-        =                           \ sta1 pln0 link flag
+        dup link-get-data           \ reg-r pln0 link step
+        step-get-initial-region     \ reg-r pln0 link s-r
+        #3 pick                     \ reg-r pln0 link s-r reg-r
+        region-intersects           \ reg-r pln0 link flag
         if
             3drop
             true
@@ -188,23 +212,53 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
         link-get-next
     repeat
-                                    \ sta1 pln0
+                                    \ reg-r pln0
     2drop
     false
 ;
 
-\ Push a step to the end of a plan.
-: plan-push-end ( stp1 pln0 -- )
+\ Check plan for any result region intersecting a step's initial region.
+: plan-check-step-initial ( stp1 pln0 -- flag )
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-step
 
-    over step-get-sample            \ stp1 pln0 smpl
-    sample-get-result               \ stp1 pln0 s-r
-    over                            \ stp1 pln0 s-r pln0
-    plan-contains-result            \ stp1 pln0 flag
+    swap step-get-initial-region
+    swap                            \ reg-i pln0
+    
+    dup plan-get-step-list          \ reg-i pln0 stp-lst
+    list-get-links                  \ reg-i pln0 link
+    begin
+        ?dup
+    while
+        \ Get step
+        dup link-get-data           \ reg-i pln0 link step
+        step-get-result-region      \ reg-i pln0 link s-r
+        #3 pick                     \ reg-i pln0 link s-r reg-i
+        region-intersects           \ reg-i pln0 link flag
+        if
+            3drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                    \ reg-i pln0
+    2drop
+    false
+;
+
+\ Push a step to the end of a plan, forward chaining.
+: plan-push-end ( stp1 pln0 -- )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-step
+    \ cr ." plan-push-end: " dup .plan space over .step cr
+
+    2dup plan-check-step-result     \ stp1 pln0 flag
     if
-        cr ." plan: " .plan space ." contains result of step: " .step cr
+        cr ." plan: " .plan space ." contains result region intersection of step: " .step cr
         abort
     then
 
@@ -214,42 +268,41 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     \ Check step linkage.
     dup list-is-empty               \ stp1 pln0 | stp1 stp-lst flag
     0= if                           \ stp1 pln0 | stp1 stp-lst
-        over step-get-initial       \ stp1 pln0 | stp1 stp-lst stp-i
+        over                        \ stp1 pln0 | stp1 stp-lst stp1
+        step-get-initial-region     \ stp1 pln0 | stp1 stp-lst stp-i
         #3 pick                     \ stp1 pln0 | stp1 stp-lst stp-i pln
-        plan-get-result-state       \ stp1 pln0 | stp1 stp-lst stp-i pln-r
-        <> abort" steps do not link"
+        plan-get-result-region      \ stp1 pln0 | stp1 stp-lst stp-i pln-r
+        region-neq abort" steps do not link directly, use plan-link"
     then
 
     step-list-push-end              \ stp1 pln0
     2drop
 ;
 
-\ Return the initial state of a non-empty plan.
-: plan-get-initial-state ( pln - sta )
+\ Return the initial region of a non-empty plan.
+: plan-get-initial-region ( pln - reg )
     \ Check arg.
     assert-tos-is-plan
 
     plan-get-step-list      \ stp-lst
     dup list-is-empty
-    abort" Empty step-list in plan?"
+    abort" plan-get-initial-region: Empty plan?"
+
     list-get-links          \ link
     link-get-data           \ step
-    step-get-initial        \ sta
+    step-get-initial-region \ reg
 ;
 
-\ Push a step to the beginning of a plan.
+\ Push a step to the beginning of a plan, backward chaining.
 : plan-push ( stp1 pln0 -- )
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-step
     \ cr ." plan-push: " over .step space dup .plan cr
 
-    over step-get-sample            \ stp1 pln0 smpl
-    sample-get-result               \ stp1 pln0 s-r
-    over                            \ stp1 pln0 s-r pln0
-    plan-contains-result            \ stp1 pln0 flag
+    2dup plan-check-step-initial    \ stp1 pln0 flag
     if
-        cr ." plan: " .plan space ." contains result of step: " .step cr
+        cr ." plan: " .plan space ." contains initial region intersection of step: " .step cr
         abort
     then
 
@@ -259,10 +312,11 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     \ Check step linkage.
     dup list-is-empty               \ stp1 pln0 | stp1 stp-lst flag
     0= if                           \ stp1 pln0 | stp1 stp-lst
-        over step-get-result        \ stp1 pln0 | stp1 stp-lst stp-i
+        over                        \ stp1 pln0 | stp1 stp-lst stp1
+        step-get-result-region      \ stp1 pln0 | stp1 stp-lst stp-i
         #3 pick                     \ stp1 pln0 | stp1 stp-lst stp-i pln
-        plan-get-initial-state      \ stp1 pln0 | stp1 stp-lst stp-i pln-r
-        <> abort" steps do not link"
+        plan-get-initial-region     \ stp1 pln0 | stp1 stp-lst stp-i pln-r
+        region-eq is-false abort" steps do not link directly, maybe use plan-link?"
     then
 
     step-list-push                  \ stp1 pln0
@@ -271,7 +325,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Run a plan.  Return true if it works.
 : plan-run ( pln0 -- flag )
-    cr ." plan-run" cr
+ cr ." plan-run: " dup .plan
     \ Check arg.
     assert-tos-is-plan
 
@@ -284,8 +338,9 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
     dup domain-get-current-state-xt
     execute                         \ pln0 dom cur-sta
-    #2 pick plan-get-initial-state  \ pln0 dom cur-sta pln-sta
-    <> abort" Plan initial state does not match the domain current state"
+
+    #2 pick plan-get-initial-region \ pln0 dom cur-sta pln-reg
+    region-superset-of-state is-false abort" Plan initial region does not match the domain current state"
 
                                     \ pln0 dom
     over plan-get-step-list         \ pln0 dom stp-lst
@@ -301,8 +356,11 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
         execute                     \ pln0 dom link step d-smpl
 
         \ Check if action sample is as expected.
-        over step-get-sample        \ pln0 dom link step d-smpl s-smpl
-        over sample-eq              \ pln0 dom link step d-smpl flag
+        dup                         \ pln0 dom link step d-smpl d-smpl
+        sample-get-result           \ pln0 dom link step d-smpl d-r
+        #2 pick                     \ pln0 dom link step d-smpl d-r step
+        step-get-result-region      \ pln0 dom link step d-smpl d-r s-r
+        region-superset-of-state    \ pln0 dom link step d-smpl bool
         swap sample-deallocate      \ pln0 dom link step flag
         0= if
             2drop 2drop false exit
@@ -338,3 +396,298 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     repeat
     drop
 ;
+
+\ Return a plan after restricting its initial region.
+: plan-restrict-initial-region ( reg1 pln0 -- pln t | f )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-region
+
+    2dup plan-get-initial-region    \ reg1 pln0 reg1 pln-i-reg
+    region-intersects               \ reg1 pln0 bool
+    is-false abort" plan initial region does not intersect?"
+
+    \ Init return plan.
+    dup plan-get-domain             \ reg1 pln0 dom-id
+    plan-new -rot                   \ pln reg1 pln0
+
+    \ Prep for loop.
+    plan-get-step-list              \ pln reg1 list
+    list-get-links                  \ pln reg1 link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ pln reg1 link stpx
+        #2 pick                         \ pln reg1 link stpx reg1
+        over step-get-initial-region    \ pln reg1 link stpx reg1 stp-i-reg
+        2dup region-intersects          \ pln reg1 link stpx reg1 stp-i-reg bool
+        is-false if
+            3drop 2drop                 \ pln
+            plan-deallocate
+            false
+            exit
+        then
+
+                                            \ pln reg1 link stpx reg1 stp-i-reg
+        region-subset-of                    \ pln reg1 link stpx bool ( includes region-eq )
+        is-false if                         \ pln reg1 link stpx
+            \ Restrict step initial region.
+            #2 pick                         \ pln reg1 link stpx reg1
+            swap                            \ pln reg1 link reg1 stpx
+            step-restrict-initial-region    \ pln reg1 link stpx'
+        then
+        
+        \ Set new reg1.
+        rot drop                    \ pln link stpx
+        dup step-get-result-region  \ pln link stpx s-rslt
+        -rot                        \ pln reg1-new link stpx
+
+        \ Add step to plan.
+        #3 pick                 \ pln reg1 link stpx pln
+        plan-push-end           \ pln reg1 link
+
+        link-get-next
+    repeat
+                                \ pln reg1
+    drop
+    true
+;
+
+\ Return a plan after restricting its result region.
+: plan-restrict-result-region ( reg1 pln0 -- pln t | f )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-region
+
+    2dup plan-get-result-region     \ reg1 pln0 reg1 pln-r-reg
+    region-intersects               \ reg1 pln0 bool
+    is-false abort" plan result region does not intersect?"
+
+    \ Init return plan.
+    dup plan-get-domain             \ reg1 pln0 dom-id
+    plan-new -rot                   \ pln reg1 pln0
+
+    \ Prep for loop.
+
+    \ Get step list from plan, reverse list, save ref for later deallocation.
+    plan-get-step-list              \ pln reg1 stp-list
+    step-list-reverse               \ pln reg1 stp-list'
+    -rot                            \ stp-lst' pln reg1
+    #2 pick                         \ stp-lst' pln reg1 stp-list'
+    
+    list-get-links                  \ stp-lst' pln reg1 link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ stp-lst' pln reg1 link stpx
+        #2 pick                         \ stp-lst' pln reg1 link stpx reg1
+        over step-get-result-region     \ stp-lst' pln reg1 link stpx reg1 stp-r-reg
+        2dup region-intersects          \ stp-lst' pln reg1 link stpx reg1 stp-r-reg bool
+        is-false if
+            3drop 2drop                 \ stp-lst' pln
+            plan-deallocate
+            step-list-deallocate
+            false
+            exit
+        then
+
+                                            \ stp-lst' pln reg1 link stpx reg1 stp-r-reg
+        region-subset-of                    \ stp-lst' pln reg1 link stpx bool ( includes region-eq )
+        is-false if                         \ stp-lst' pln reg1 link stpx
+            \ Restrict step result region.
+            #2 pick                         \ stp-lst' pln reg1 link stpx reg1
+            swap                            \ stp-lst' pln reg1 link reg1 stpx
+            step-restrict-result-region     \ stp-lst' pln reg1 link stpx'
+        then
+        
+        \ Set new reg1.             \ stp-lst' pln reg1 link stpx
+        rot drop                    \ stp-lst' pln link stpx'
+        dup step-get-initial-region \ stp-lst' pln link stpx' s-rslt
+        -rot                        \ stp-lst' pln reg1-new link stpx
+
+        \ Add step to plan.
+        #3 pick                 \ stp-lst' pln reg1 link stpx pln
+        plan-push               \ stp-lst' pln reg1 link
+
+        link-get-next
+    repeat
+                                \ stp-lst' pln reg1
+    drop                        \ stp-lst' pln
+    swap step-list-deallocate   \ pln
+    true
+;
+
+\ Link two plans, where tos plan result intersects nos plan initial.
+: plan-link ( pln-to pln-from -- pln t | f )
+\ Check args.
+    assert-tos-is-plan
+    assert-nos-is-plan
+    \ cr ." plan-link start: from " dup .plan space ." to " over .plan cr
+
+    \ Check intersection.
+    over plan-get-initial-region
+    over plan-get-result-region
+
+    region-intersection                 \ pln-to pln-from, reg-int' t | f
+    if
+        \ Adjust each plan to be compatible with the other.
+        tuck                            \ pln-to reg-int' pln-from reg-int'
+        swap                            \ pln-to reg-int' reg-int' pln-from
+        plan-restrict-result-region     \ pln-to reg-int', pln-from' t | f
+        is-false if
+            cr ." restrict result region failed" cr
+            region-deallocate
+            drop
+            false
+            exit
+        then
+    else
+        over plan-get-initial-region    
+        over plan-get-result-region
+        cr ." plan-link: no intersection, plan from result-region " .region space ." to plan-to initial region " .region cr
+        2drop
+        false
+        exit
+    then
+                                    \ pln-to reg-int' pln-from'
+    -rot                            \ pln-from' pln-to reg-int'
+    tuck                            \ pln-from' reg-int' pln-to reg-int'
+    swap                            \ pln-from' reg-int' reg-int' pln-to'
+    plan-restrict-initial-region    \ pln-from' reg-int', pln-to' t | f
+    is-false if
+        region-deallocate
+        plan-deallocate
+        false
+        exit
+    then
+                                    \ pln-from' reg-int' pln-to'
+    swap region-deallocate          \ pln-from' pln-to'
+
+    \ Build return plan.
+    tuck                            \ pln-to' pln-from' pln-to'
+    plan-get-step-list              \ pln-to' pln-from' stp-lst
+    list-get-links                  \ pln-to' pln-from' link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ pln-to' pln-from' link stpx
+        #2 pick                     \ pln-to' pln-from' link stpx pln-from'
+        plan-push-end               \ pln-to' pln-from' link
+
+        link-get-next               \ pln-to' pln-from' link
+    repeat
+                                    \ pln-to' pln-from'
+    swap plan-deallocate            \ pln-from'
+    true
+    \ cr ." plan link end: " .s cr
+;
+
+: plan-get-length ( pln0 -- u )
+    \ Check args.
+    assert-tos-is-plan
+
+    plan-get-step-list
+    list-get-length
+;
+
+\ Pop the first step from a plan.
+: plan-pop ( pln0 -- stp t | f )
+    \ Check arg.
+    assert-tos-is-plan
+
+    plan-get-step-list  \ stp-lst
+    step-list-pop       \ stp t | f
+;
+
+\ Add a step to the end of a plan, returning a new plan.
+: plan-link-step-to-result-region ( stp-to pln-from -- pln t | f )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-step
+    \ cr ." plan-link-step-to-result-region start: from " dup .plan space ." to " over .step cr
+
+    \ Check step for plan.
+    2dup plan-check-step-result     \ stp-to pln-from bool
+    if
+        2drop
+        false
+        exit
+    then
+
+    \ Make plan from step.
+    swap                        \ pln-from stp-to
+    over plan-get-domain        \ pln-from stp-to dom
+    plan-new                    \ pln-from stp-to pln-to
+    tuck plan-push              \ pln-from pln-to
+
+    \ Link plans.
+    swap                        \ pln-to pln-from
+    2dup plan-link              \ pln-to pln-from, pln-rslt t | f
+
+    \ Check result.
+    if                          \ pln-to pln-from pln-rslt
+        nip                     \ pln-to pln-rslt
+        swap                    \ pln-rslt pln-to
+        dup plan-pop if drop then   \ Protect step from deallocation.
+        plan-deallocate         \ pln-rslt
+        true
+    else                        \ pln-to pln-from
+        drop                    \ pln-to
+        dup plan-pop if drop then   \ Protect step from deallocation.
+        plan-deallocate         \
+        false
+    then
+;
+
+\ Add a step to the beginning of a plan, returning a new plan.
+: plan-link-step-to-initial-region ( stp-from pln-to -- pln t | f )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-step
+    \ cr ." plan-link-step-to-initial-region: start: " .s cr
+
+    \ Check step for plan.
+    2dup plan-check-step-initial    \ stp-from pln-to bool
+    if
+        2drop
+        false
+        exit
+    then
+
+    \ Make plan from step.
+    over                        \ stp-from pln-to stp-from
+    dup struct-inc-use-count    \ stp-from pln-from stp-from ( gaurd against later plan-deallocate )
+    step-copy                   \ stp-from pln-to stp-from' ( avoid use count problems when the pln-from is deallocated )
+    over plan-get-domain        \ stp-from pln-to stp-from' dom
+    plan-new                    \ stp-from pln-to stp pln-from
+    tuck plan-push              \ stp-from pln-to pln-from
+
+    \ Link plans.
+    2dup plan-link              \ stp-from pln-to pln-from, pln-rslt t | f
+    if                          \ stp-from pln-to pln-from pln-rslt
+        swap                    \ stp-from pln-to pln-rslt pln-from
+        dup plan-pop if drop then   \ Protect step from deallocation.
+        plan-deallocate    \ stp-from pln-to pln-rslt
+        nip                     \ stp-from pln-rslt
+        true
+    else                        \ stp-from pln-to pln-from
+        dup plan-pop if drop then   \ Protect step from deallocation.
+        plan-deallocate         \ stp-from pln-to
+        drop
+        false
+    then
+    \ cr ." plan-link-step-to-initial-region: end: " .s cr
+;
+
+\ Return true if a plan is empty.
+: plan-is-empty ( pln -- bool )
+    \ Check args.
+    assert-tos-is-plan
+
+    plan-get-step-list
+    list-is-empty
+;
+

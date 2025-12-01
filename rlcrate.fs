@@ -41,20 +41,29 @@ rlcrate-rate-disp   cell+ constant rlcrate-rlc-disp
 
 \ Check TOS for rlcrate, unconventional, leaves stack unchanged. 
 : assert-tos-is-rlcrate ( arg0 -- arg0 )
-    dup is-allocated-rlcrate 0=
-    abort" TOS is not an allocated rlcrate"
+    dup is-allocated-rlcrate
+    is-false if
+        s" TOS is not an allocated rlcrate"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for rlcrate, unconventional, leaves stack unchanged. 
 : assert-nos-is-rlcrate ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-rlcrate 0=
-    abort" NOS is not an allocated rlcrate"
+    over is-allocated-rlcrate
+    is-false if
+        s" NOS is not an allocated rlcrate"
+        .abort-xt execute
+    then
 ;
 
 \ Check 3OS for rlcrate, unconventional, leaves stack unchanged. 
 : assert-3os-is-rlcrate ( arg2 arg1 arg0 -- arg1 arg0 )
-    #2 pick is-allocated-rlcrate 0=
-    abort" NOS is not an allocated rlcrate"
+    #2 pick is-allocated-rlcrate
+    is-false if
+        s" NOS is not an allocated rlcrate"
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.

@@ -1,15 +1,18 @@
 \ Implement a step struct and functions.
+\
+\ A step may be added to a step list in a plan.
 
 #37171 constant step-id                                                                                  
-    #4 constant step-struct-number-cells
+    #6 constant step-struct-number-cells
 
 \ Struct fields.
-0 constant step-header                          \ id (16) use count (16) forward flag (8)
-step-header   cell+ constant step-action        \ An action addr.
-step-action   cell+ constant step-sample        \ A expected, or desired, sample.
-step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a diversion, not an error, for a pn-2 action.
-                                                \ If this is no change, resampling is all that would be needed.
-                                                \ May be zero, for a pn-1 action.
+0 constant step-header                                              \ id (16) use count (16) number unwanted changes (8)
+step-header                 cell+ constant step-action-disp         \ An action instance addr.
+step-action-disp            cell+ constant step-rule-disp           \ A rule instance addr.
+\ Store frequently used calculated fields, to decrease cycles and memory allocation/deallocation.
+step-rule-disp              cell+ constant step-initial-region-disp \ A region instance addr.
+step-initial-region-disp    cell+ constant step-result-region-disp  \ A region instance addr.
+step-result-region-disp     cell+ constant step-changes-disp        \ A changes instance addr.
 
 0 value step-mma \ Storage for step mma instance.
 
@@ -42,336 +45,329 @@ step-sample   cell+ constant step-alt-sample    \ A possible alternate sample, a
 
 \ Check TOS for step, unconventional, leaves stack unchanged. 
 : assert-tos-is-step ( arg0 -- arg0 )
-    dup is-allocated-step 0=
-    abort" TOS is not an allocated step"
+    dup is-allocated-step
+    is-false if
+        s" TOS is not an allocated step"
+        .abort-xt execute
+    then
 ;
 
 \ Check NOS for step, unconventional, leaves stack unchanged. 
 : assert-nos-is-step ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-step 0=
-    abort" NOS is not an allocated step"
+    over is-allocated-step
+    is-false if
+        s" NOS is not an allocated step"
+        .abort-xt execute
+    then
 ;
 
 \ Start accessors.
 
 \ Return the step action. 
-: step-get-action ( addr -- act )
+: step-get-action ( stp0 -- act )
     \ Check arg.
     assert-tos-is-step
 
-    step-action +       \ Add offset.
+    step-action-disp +  \ Add offset.
     @                   \ Fetch the field.
 ;
  
 \ Set the action of a step instance, use only in this file.
-: _step-set-action ( u1 addr -- )
-    step-action +       \ Add offset.
+: _step-set-action ( u1 stp0 -- )
+    step-action-disp +  \ Add offset.
     !                   \ Set field.
 ;
 
-\ Return the step sample. 
-: step-get-sample ( addr -- smpl )
+\ Return the step rule. 
+: step-get-rule ( stp0 -- rul )
     \ Check arg.
     assert-tos-is-step
 
-    step-sample +       \ Add offset.
+    step-rule-disp +    \ Add offset.
     @                   \ Fetch the field.
 ;
 
-\ Set the sample of a step instance, use only in this file.
-: _step-set-sample ( smpl addr -- )
-    step-sample +       \ Add offset.
+\ Set the rule of a step instance, use only in this file.
+: _step-set-rule ( rul1 stp0 -- )
+    step-rule-disp +    \ Add offset.
     !                   \ Set field.
 ;
 
-\ Return the step alt-sample. 
-: step-get-alt-sample ( addr -- smpl )
+\ Return the step initial-region. 
+: step-get-initial-region ( stp0 -- reg )
     \ Check arg.
     assert-tos-is-step
 
-    step-alt-sample +   \ Add offset.
+    step-initial-region-disp +  \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the initial-region of a step instance, use only in this file.
+: _step-set-initial-region ( reg1 stp0 -- )
+    step-initial-region-disp +      \ Add offset.
+    !                               \ Set field.
+;
+
+\ Return the step rule. 
+: step-get-result-region ( stp0 -- reg )
+    \ Check arg.
+    assert-tos-is-step
+
+    step-result-region-disp +   \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the result-region of a step instance, use only in this file.
+: _step-set-result-region ( reg1 stp0 -- )
+    step-result-region-disp +   \ Add offset.
+    !                           \ Set field.
+;
+
+\ Return the step changes. 
+: step-get-changes ( stp0 -- cngs )
+    \ Check arg.
+    assert-tos-is-step
+
+    step-changes-disp + \ Add offset.
     @                   \ Fetch the field.
 ;
- 
-\ Set the alt-sample of a step instance, use only in this file.
-: step-set-alt-sample ( smpl addr -- )
-    step-alt-sample +   \ Add offset.
+
+\ Set the changes of a step instance, use only in this file.
+: _step-set-changes ( cngs1 stp0 -- )
+    step-changes-disp + \ Add offset.
     !                   \ Set field.
 ;
 
-\ Return step result state.
-: step-get-result ( stp0 -- sta )
+\ Return step number-unwanted-changes.
+: step-get-number-unwanted-changes ( stp0 -- u )
     \ Check arg.
     assert-tos-is-step
 
-    step-get-sample
-    sample-get-result
-;
-
-\ Return step initial state.
-: step-get-initial ( stp0 -- sta )
-    \ Check arg.
-    assert-tos-is-step
-
-    step-get-sample
-    sample-get-initial
-;
-
-\ Return forward-flag from an step instance.
-: step-get-forward ( act0 -- bool)
-    \ Check arg.
-    assert-tos-is-step
-
-    \ Get forward flag.
     4c@
-    0<>     \ Turn 255 into -1
 ;
 
-
-\ Set the forward flag of an step instance, use only in this file.
-: step-set-forward ( b1 act0 -- )
+\ Set step number-unwanted-changes.
+: step-set-number-unwanted-changes ( u stp0 -- )
     \ Check args.
     assert-tos-is-step
-    assert-nos-is-bool
 
-    \ Set forward flag, to 0 or 255.
     4c!
 ;
 
-' step-set-forward to step-set-forward-xt
+' step-set-number-unwanted-changes to step-set-number-unwanted-changes-xt
 
 \ End accessors.
 
-\ Return a new step, given:
-\    Action.
-\    Sample.
-\    Alt-sample (may be zero).
-\    Order-matters flag.
-\        if false
-\            Forward-chaining:  Rule initial region is a superset of the glidepath.
-\            Backward-chaining: Rule result region is a superset of the glidepath.
-\            i.e. Can be used anytime in the path. 
-: step-new    ( alt-smpl2 smpl1 act0 -- step )
+\ Return a new step, given a rule and an action.
+: step-new    ( rul1 act0 -- step )
     \ Check args.
     assert-tos-is-action-xt execute
-    assert-nos-is-sample
-
-    dup action-get-inst-id-xt execute   \ as2 s1 act0 act-id
-    0<> if
-        \ If action not zero, a change must happen.
-        over sample-get-states =    \ as2 s1 act0 flag
-        abort" Sample makes no change?"
-    then
+    assert-nos-is-rule
 
    \ Allocate space.
-    step-mma mma-allocate           \ as2 s1 a0 addr
+    step-mma mma-allocate           \ rul1 a0 stpx
 
     \ Store id.
-    step-id over                    \ as2 s1 a0 addr id addr
-    struct-set-id                   \ as2 s1 a0 addr
-        
+    step-id over                    \ rul1 a0 stpx id stpx
+    struct-set-id                   \ rul1 a0 stpx
+
     \ Init use count.
-    0 over struct-set-use-count     \ as2 s1 a0 addr
+    0 over struct-set-use-count     \ rul1 a0 stpx
 
     \ Set action.
-    tuck                            \ as2 s1 addr a0 addr
-    _step-set-action                \ as2 s1 addr
+    tuck                            \ rul1 stpx a0 stpx
+    _step-set-action                \ rul1 stpx
 
-    \ Set sample.
-    tuck                            \ as2 addr s1 addr
+    \ Set initial-region.
+    over rule-calc-initial-region   \ rul1 stpx reg
+    1 over struct-set-use-count
+    over _step-set-initial-region   \ rul1 stpx
+
+    \ Set result-region.
+    over rule-calc-result-region   \ rul1 stpx reg
+    1 over struct-set-use-count
+    over _step-set-result-region   \ rul1 stpx
+
+    \ Set changes.
+    over rule-get-changes           \ rul1 stpx cngs
+    1 over struct-set-use-count
+    over _step-set-changes          \ rul1 stpx
+
+    \ Set rule.
+    tuck                            \ stpx rul1 stpx
     over struct-inc-use-count
-    _step-set-sample                \ as2 addr
+    _step-set-rule                  \ stpx
 
-    \ Check alt-sample.
-    over
-    ?dup
-    if
-      assert-tos-is-sample
-      struct-inc-use-count
-    then
-
-    \ Set alt-sample
-    tuck                            \ addr as2 addr
-    step-set-alt-sample             \ addr
-
-    \ Default to step forward.
-    true over step-set-forward        \ addr
+    \ Init number-unwanted-changes.
+    0 over                              \ stpx int stpx
+    step-set-number-unwanted-changes    \ stpx
 ;
 
 ' step-new to step-new-xt
-
-\ Print a sample for a step.
-: .step-sample ( smpl1 stp0 -- )
-    \ Check args.
-    assert-tos-is-step
-    assert-nos-is-sample
-
-    dup step-get-action                     \ smpl1 stp0 actx
-    action-get-inst-id-xt execute           \ smpl1 stp0 act-id
-    swap step-get-forward                   \ smpl1 act-id flag
-    if                                      \ smpl1 act-id
-        over sample-get-initial             \ smpl1 act-id s-i
-        .value                              \ smpl1 act-id
-        ." -"
-        0 <# #S 0 #> type drop              \ smpl1
-        ." ->"
-        sample-get-result .value            \
-    else
-                                            \ smpl1 act-id
-        over sample-get-initial             \ smpl1 act-id s-i
-        .value                              \ smpl1 act-id
-        ." <-"
-        0 <# #S 0 #> type drop              \ smpl1
-        ." -"
-        sample-get-result .value            \
-    then
-;
 
 : .step ( stp0 -- )
     \ Check arg.
     assert-tos-is-step
 
-    dup step-get-sample     \ stp0 smpl
-    over                    \ stp0 smpl stp0
-    .step-sample            \ stp0
+    dup step-get-action                     \ stp0 actx
+    action-get-inst-id-xt execute           \ stp0 act-id
+    ." [ " dec.
 
-    dup step-get-alt-sample     \ stp0 smpl-alt
-    ?dup
-    if
-        swap                    \ smps-alt stp0
-        space ." Alt: " .step-sample
-    else
-        drop
-    then
+    dup step-get-rule       \ stp0 rul
+    .rule                   \ stp0
+
+    space step-get-number-unwanted-changes dec.
+    space ." ]"
 ;
 
+\ Deallocate a step instance.
 : step-deallocate ( stp0 -- )
     \ Check arg.
     assert-tos-is-step
-    \ cr dup ." dealloc step: " .step cr
 
     dup struct-get-use-count      \ stp0 count
 
     #2 <
     if
+        \ Deallocate imbedded structs.
+        dup step-get-rule
+        rule-deallocate
+
+        dup step-get-initial-region
+        region-deallocate
+
+        dup step-get-result-region
+        region-deallocate
+
+        dup step-get-changes
+        changes-deallocate
+
         \ Deallocate instance.
-        dup step-get-sample
-        sample-deallocate
-        dup step-get-alt-sample
-        ?dup if
-            sample-deallocate
-        then
         step-mma mma-deallocate
     else
         struct-dec-use-count
     then
 ;
 
-\ Return true if a steps' sample has a state that is in a given sample.
-: step-intersects-sample ( smpl1 stp0 -- flag )
-    \ Check args.
-    assert-tos-is-step
-    assert-nos-is-sample
-
-    step-get-sample     \ smpl1 stp-smpl
-    sample-intersects   \ flag
-;
-
-\ Return true if a steps' sample changes intersects a given changes.
+\ Return true if a step's changes intersects a given changes.
 : step-intersects-changes ( cngs1 stp0 -- flag )
     \ Check args.
     assert-tos-is-step
     assert-nos-is-changes
 
-    step-get-sample             \ cngs1 stp-smpl
-    sample-calc-changes         \ cngs1 stp-cngs
-    tuck                        \ stp-cngs csgs1 stp-cngs
-    changes-intersect           \ stp-cngs flag
-    swap changes-deallocate     \ flag
+    step-get-changes            \ cngs1 s-cngs
+    changes-intersect           \ flag
 ;
 
-\ Return a forward-chaining step, given a rule, alternate-rule (may be zero) and sample.
-: step-new-by-rule-f ( smpl3 alt-rul2 rul1 -- stp true | false )
+\ Return a step with a rule initial-region restricted by a given region.
+: step-restrict-initial-region ( reg1 stp0 -- stp )
     \ Check args.
-    assert-tos-is-rule
-    over if
-        assert-nos-is-rule
-    then
-    assert-3os-is-sample
+    assert-tos-is-step
+    assert-nos-is-region
 
-    \ Get rule forward sample.
-    #2 pick over                    \ smpl3 alt-rul2 rul1 | smpl3 rul1
-    rule-calc-forward-sample        \ smpl3 alt-rul2 rul1 | rul1-smpl t | f
-    0= if                           \ smpl3 alt-rul2 rul1
-        3drop
-        false                       \ false
+    over                            \ reg1 stp0 reg1
+    over step-get-initial-region    \ reg1 stp0 reg1 s-reg
+    region-intersects               \ reg1 stp0 bool
+    is-false abort" no intersection wint step initial-region?"
+
+    \ Copy action, from step.
+    dup step-get-action -rot        \ act reg1 stp0
+
+    \ Calc new rule.
+    step-get-rule                   \ act reg1 rul
+    rule-restrict-initial-region    \ act, rul' t | f
+    is-false abort" rule-restrict-initial-region failed?"
+
+    \ Make new step.
+    swap                        \ rul' act
+    step-new                    \ stp
+;
+
+\ Return a step with a rule result-region restricted by a given region.
+: step-restrict-result-region ( reg1 stp0 -- stp )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-region
+    \ cr ." step " dup .step space ." restrict result to: " over .region
+
+    over                            \ reg1 stp0 reg1
+    over step-get-result-region     \ reg1 stp0 reg1 s-reg
+    region-intersects               \ reg1 stp0 bool
+    is-false abort" no intersection wint step result-region?"
+
+   \ Copy action, from step.
+    dup step-get-action -rot        \ act reg1 stp0
+
+    \ Calc new rule.
+    step-get-rule                   \ act reg1 rul
+    rule-restrict-result-region     \ act, rul' t | f
+    is-false abort" rule-restrict-result-region failed?"
+
+    \ Make new step.
+    swap                        \ rul' act
+    step-new                    \ stp
+;
+
+\ Return a result from applying a step rule to a state, going forward.
+: step-apply-to-state-f ( sta1 stp0 -- sta )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-value
+
+    step-get-rule           \ sta1 rul
+    rule-apply-to-state-f   \ sta
+;
+
+\ Return true if two steps can be linked stp1 result region to stp0 initial region.
+: step-can-be-linked ( stp1 stp0 -- bool )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-step
+
+    swap step-get-result-region     \ stp0 reg1
+    swap step-get-initial-region    \ reg1 reg0
+    region-intersects               \ bool
+;
+
+\ Return true if a step links two regions.
+: step-links-two-regions ( reg-to reg-from stp0 -- bool )
+    \ Check args.
+    assert-tos-is-step
+    assert-nos-is-region
+    assert-3os-is-region
+
+                                    \ reg-to reg-from stp0
+    step-get-rule                   \ reg-to reg-from s-rul
+    rule-restrict-initial-region    \ reg-to, s-rul' t | f
+    is-false if
+        drop
+        false
         exit
     then
 
-    \ Get alt-rule forward sample, if any.
-                                    \ smpl3 alt-rul2 rul1 | rul1-smpl
-    #2 pick                         \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
-    dup 0<>
-    if                              \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
-        \ Calc alternate sample, not bounded by smpl3.
-        over sample-get-initial     \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2 smpl-i
-        swap                        \ smpl3 alt-rul2 rul1 | rul1-smpl smpl-i alt-rul2
-        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 | rul1-smpl, alt-rul2-smpl t | f
-        0= if                       
-            ." Alt sample failed?" abort
-        then
-    \ else                          \ smpl3 alt-rul2 rul1 | rul1-smpl 0
-    then                            \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2-smpl
-
-    swap                            \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl
-    cur-action-xt execute           \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl act0
-    step-new-xt execute             \ smpl3 alt-rul2 rul1 | stpx
-    nip nip nip                     \ stpx
-    true                            \ stpx true
+                                    \ reg-to s-rul'
+    tuck                            \ s-rul' reg-to s-rul'
+    rule-restrict-result-region     \ s-rul', s-rul'' t | f
+    if
+        rule-deallocate
+        rule-deallocate
+        true
+    else
+        rule-deallocate
+        false
+    then
 ;
 
-\ Return a backward-chaining step, given a rule, alternate-rule (may be zero), and sample.
-: step-new-by-rule-b ( smpl3 alt-rul2 rul1 -- stp true | false )
-    \ Check args.
-    assert-tos-is-rule
-    over if
-        assert-nos-is-rule
-    then
-    assert-3os-is-sample
+\ Return a copy of a step.
+: step-copy ( stp0 -- stp )
+    \ Check arg.
+    assert-tos-is-step
 
-    \ Get rule forward sample.
-    #2 pick over                    \ smpl3 alt-rul2 rul1 | smpl3 rul1
-    rule-calc-backward-sample       \ smpl3 alt-rul2 rul1 | rul1-smpl t | f
-    0= if                           \ smpl3 alt-rul2 rul1
-        3drop
-        false                       \ false
-        exit
-    then
-
-    \ Check sample is NE smpl3 result state, and between, inclusive the two sample states.
-    
-    
-                                    \ smpl3 alt-rul2 rul1 | rul1-smpl
-    \ Get alt-rule forward sample, if any.
-                                    \ smpl3 alt-rul2 rul1 | rul1-smpl
-    #2 pick                         \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
-    dup 0<>
-    if                              \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2
-        \ Calc alternate sample, not bounded by smpl3.
-        over sample-get-initial     \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2 smpl-i
-        swap                        \ smpl3 alt-rul2 rul1 | rul1-smpl smpl-i alt-rul2
-        rule-apply-to-state-f       \ smpl3 alt-rul2 rul1 | rul1-smpl, alt-rul2-smpl t | f
-        0= if                       
-            ." Alt sample failed?" abort
-        then
-    \ else                          \ smpl3 alt-rul2 rul1 | rul1-smpl 0
-    then                            \ smpl3 alt-rul2 rul1 | rul1-smpl alt-rul2-smpl
-
-    swap                            \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl
-    cur-action-xt execute           \ smpl3 alt-rul2 rul1 | alt-rul2-smpl rul1-smpl act0
-    step-new-xt execute             \ smpl3 alt-rul2 rul1 | stpx
-    false over                      \ smpl3 alt-rul2 rul1 | stpx f stpx
-    step-set-forward-xt execute     \ smpl3 alt-rul2 rul1 | stpx
-    nip nip nip                     \ stpx
-    true                            \ stpx true
+    dup step-get-rule                   \ stp0 rul
+    over step-get-action                \ stp0 rul act
+    step-new                            \ stp0 stp
+    swap                                \ stp stp0
+    step-get-number-unwanted-changes    \ stp u-unw
+    over                                \ stp u-unw stp
+    step-set-number-unwanted-changes    \ stp
 ;

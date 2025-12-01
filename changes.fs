@@ -52,14 +52,20 @@ changes-m01-disp    cell+ constant changes-m10-disp
 
 \ Check TOS for changes, unconventional, leaves stack unchanged. 
 : assert-tos-is-changes ( cngs0 -- )
-    dup is-allocated-changes 0=
-    abort" TOS is not an allocated changes."
+    dup is-allocated-changes
+    is-false if
+        s" TOS is not an allocated changes."
+       .abort-xt execute
+    then
 ;
 
 \ Check NOS for changes, unconventional, leaves stack unchanged. 
 : assert-nos-is-changes ( rul1 ??? -- )
-    over is-allocated-changes 0=
-    abort" NOS is not an allocated changes."
+    over is-allocated-changes
+    is-false if
+        s" NOS is not an allocated changes."
+       .abort-xt execute
+    then
 ;
 
 \ Start accessors.
@@ -190,25 +196,44 @@ changes-m01-disp    cell+ constant changes-m10-disp
     swap changes-get-m01
 ;
 
-\ Return changes needed so that a from-region will intersect a to-region.
-: changes-new-from-regions ( reg-to reg-from -- cngs )
+: change-masks-region-to-region ( reg-to reg-from -- m10 m01 )
+    \ Check arg.
+    assert-tos-is-region
+    assert-nos-is-region
+
+    \ Get reg-from masks.
+    dup region-x-mask -rot      \ fx reg-to reg-from
+    dup region-0-mask -rot      \ fx f0 reg-to reg-from
+    region-1-mask swap          \ fx f0 f1 reg-to
+    
+    \ Get reg-to masks.
+    dup region-0-mask swap      \ fx f0 f1 t0 reg-to
+    region-1-mask               \ fx f0 f1 t0 t1
+
+    \ Calc changes m10.
+    #4 pick #2 pick and         \ fx f0 f1 t0 t1 | mx0
+    #3 pick #3 pick and         \ fx f0 f1 t0 t1 | mx0 m10
+    or                          \ fx f0 f1 t0 t1 | c10
+
+    \ Calc changes m01.
+    #5 pick #2 pick and         \ fx f0 f1 t0 t1 | c10 mx1
+    #5 pick #3 pick and         \ fx f0 f1 t0 t1 | c10 mx1 m01
+    or                          \ fx f0 f1 t0 t1 | c10 c01
+
+    \ Clean up.
+    >r >r                       \ fx f0 f1 t0 t1
+    2drop 2drop drop            \
+    r> r>                       \ c10 c01
+;
+
+\ Return changes needed to translate a region (tos) to intersect with another (nos).
+: changes-new-region-to-region ( reg-to reg-from -- cngs )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
 
-    over region-edge-mask
-    over region-edge-mask
-    and                         \ to frm egd-msk
-    -rot                        \ edg-msk to from
-    region-get-state-0  swap    \ edg-msk fs0 to
-    region-get-state-0          \ edg-msk fs0 ts0
-    2dup invert                 \ edg-msk fs0 ts0 fs0 ~ts0
-    and                         \ edg-msk fs0 ts0 m10 
-    #3 pick and                 \ edg-msk fs0 ts0 m10'
-    -rot                        \ edg-msk m10' fs0 ts0
-    swap invert and             \ edg-msk m10' m01
-    rot and                     \ m10' m01'
-    changes-new                 \ cngs
+    change-masks-region-to-region           \ m10 m01
+    changes-new                             \ cngs
 ;
 
 \ Return true if two changes intersect, in at least one bit.
@@ -231,3 +256,79 @@ changes-m01-disp    cell+ constant changes-m10-disp
     0<>
 ;
 
+\ Return true if the m01 and m10 masks have a one in the same position.
+: changes-duplex ( cngs0 -- bool )
+    \ Check arg.
+    assert-tos-is-changes
+
+    dup changes-get-m01     \ cngs0 m01
+    swap                    \ m01 cngs0
+    changes-get-m10         \ m01 m10
+    and                     \ msk
+    0<>                     \ bool
+;
+
+\ Return the intersection of two changes.
+: changes-intersection ( cngs1 cngs0 -- cngs )
+    \ Check args.
+    assert-tos-is-changes
+    assert-nos-is-changes
+
+    \ Intersect m01.
+    over changes-get-m01        \ cngs1 cngs0 1m01
+    over changes-get-m01        \ cngs1 cngs0 1m01 0m01
+    and                         \ cngs1 cngs0 m01
+
+    \ Intersect m10.
+    #2 pick changes-get-m10     \ cngs1 cngs0 m01 1m10
+    #2 pick changes-get-m10     \ cngs1 cngs0 m01 1m10 0m10
+    and                         \ cngs1 cngs0 m01 m10
+
+    \ Build result changes.
+    _changes-allocate           \ cngs1 cngs0 m01 m10 r-cngs
+    tuck _changes-set-m10       \ cngs1 cngs0 m01 r-cngs
+    tuck _changes-set-m01       \ cngs1 cngs0 r-cngs
+
+    \ Clean up.
+    nip nip
+;
+
+\ Return true if changes are all zero.
+: changes-null ( cngs0 -- bool )
+    \ Check arg.
+    assert-tos-is-changes
+
+    dup changes-get-m01     \ cngs0 m01
+    0<> if
+        drop
+        false
+        exit
+    then
+
+    changes-get-m10         \ m10
+    0=
+;
+
+\ Return the inversion of a given changes instance.
+: changes-invert ( cngs0 -- cngs )
+    \ Check arg.
+    assert-tos-is-changes
+
+    dup changes-get-m10 !not    \ cngs0 m10'
+    
+    swap changes-get-m01 !not   \ m10' m01'
+
+    changes-new                 \ cngs
+;
+
+
+
+: changes-number-changes ( cngs0 -- u )
+    \ Check arg.
+    assert-tos-is-changes
+
+    dup changes-get-m10 value-num-bits  \ cngs0 u10
+    swap                                \ u10 cngs0
+    changes-get-m01 value-num-bits      \ u10 u01
+    +
+;

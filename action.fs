@@ -42,24 +42,33 @@ action-groups               cell+ constant action-function              \ An xt 
 
 \ Check TOS for action, unconventional, leaves stack unchanged. 
 : assert-tos-is-action ( arg0 -- arg0 )
-    dup is-allocated-action 0=
-    abort" TOS is not an allocated action"
+    dup is-allocated-action
+    is-false if
+        s" TOS is not an allocated action"
+       .abort-xt execute
+    then
 ;
 
 ' assert-tos-is-action to assert-tos-is-action-xt
 
 \ Check NOS for action, unconventional, leaves stack unchanged. 
 : assert-nos-is-action ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-action 0=
-    abort" NOS is not an allocated action"
+    over is-allocated-action
+    is-false if
+        s" NOS is not an allocated action"
+       .abort-xt execute
+    then
 ;
 
 ' assert-nos-is-action to assert-nos-is-action-xt
 
 \ Check 3OS for action, unconventional, leaves stack unchanged. 
 : assert-3os-is-action ( arg2 arg1 arg0 -- arg2 arg1 arg0 )
-    #2 pick is-allocated-action 0=
-    abort" 3OS is not an allocated action"
+    #2 pick is-allocated-action
+    is-false if
+        s" 3OS is not an allocated action"
+       .abort-xt execute
+    then
 ;
 
 \ Start accessors.
@@ -1021,43 +1030,6 @@ action-groups               cell+ constant action-function              \ An xt 
     swap action-state-confirmed \ flag
 ;
 
-\ Return the square-compare value of the two states in a region, with different states.
-: action-region-states-compare ( reg1 act0 -- flag )
-     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-
-    swap region-get-states          \ act0 s1 s0
-    2dup = abort" region states are equal?"
-    
-    \ Get first state square.
-    #2 pick                         \ act0 s1 s0 act0
-    action-find-square              \ act0 s1, sqr0 t | f
-    if                              \ act0 s1 sqr0
-        \ sqr0 found.
-        swap                        \ act0 sqr0 s1
-        rot                         \ sqr0 s1 act0
-        action-find-square          \ sqr0, sqr1 t | f
-        if                          \ sqr0 sqr1
-            \ sqr1 found
-            square-compare          \ char
-            exit
-        else                        \ sqr0
-            \ sqr1 not found
-            drop
-            [char] M
-            exit
-        then
-    else                            \ act0 s1
-        \ sqr0 not found.
-        2drop
-        [char] M
-        exit
-    then
-     
-;
-
-
 \ Return true if two actions are equal.
 : action-eq ( act1 act0 -- flag )
      \ Check args.
@@ -1399,164 +1371,148 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
 ;
 
-\ Return a list of possible forward-chaining steps, given a sample.
-\ Only steps with result states between the the sample initial state, exclusive,
-\ and the sample result state, inclusive, will be returned.
-\ See child function rule-calc-forward-sample.
-: action-get-forward-steps ( smpl1 act0 -- stp-lst )
+\ Return a list of possible forward-chaining steps, given to/from regions.
+\ Steps may, or may not, intersect the to/from regions.
+\ If they do not intersect, there are no restrictions.
+: action-calc-steps ( reg2 reg1 act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
 
     \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
-    \ space ." action-get-forward-steps: " over .sample
+    \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
 
-    list-new -rot                   \ ret-lst smpl1 act0
-    action-get-groups               \ ret-lst smpl1 grp-lst
-    list-get-links                  \ ret-lst smpl1 link
+    \ Init return list.
+    list-new swap                       \ reg2 reg1 ret-lst act0
+    2swap                               \ ret-lst act0 reg2 reg1
+    rot                                 \ ret-lst reg2 reg1 act0
+
+    action-get-groups                   \ ret-lst reg2 reg1 grp-lst
+    list-get-links                      \ ret-lst reg2 reg1 link
     begin
         ?dup
     while
-        over                        \ ret-lst smpl1 link smpl1
-        over link-get-data          \ ret-lst smpl1 link smpl1 grpx
+        dup link-get-data               \ ret-lst reg2 reg1 link grpx
 
         \ Check if group might apply.
-        dup group-get-pn            \ ret-lst smpl1 link smpl1 grpx pn
-        #3 <                        \ ret-lst smpl1 link smpl1 grpx flag
-        if
-            over sample-get-initial     \ ret-lst smpl1 link smpl1 grpx stax
-            over group-get-r-region     \ ret-lst smpl1 link smpl1 grpx stax regx
-            region-superset-of-state    \ ret-lst smpl1 link smpl1 grpx flag
-            if
-                group-calc-forward-steps        \ ret-lst smpl1 link grp-stp-lst
-                dup                             \ ret-lst smpl1 link grp-stp-lst grp-stp-lst
-                #4 pick                         \ ret-lst smpl1 link grp-stp-lst grp-stp-lst ret-lst
-                step-list-append                \ ret-lst smpl1 link grp-stp-lst
-                step-list-deallocate            \ ret-lst smpl1 link
-            else
-                \ Sample initial state is not in the group r-region.
-                2drop                   \ ret-lst smpl1 link
+        group-get-pn                    \ ret-lst reg2 reg1 link pn
+        #3 <                            \ ret-lst reg2 reg1 link flag
+        if                              \ ret-lst reg2 reg1 link
+            #2 pick #2 pick #2 pick     \ ret-lst reg2 reg1 link reg2 reg1 link
+            over link-get-data          \ ret-lst reg2 reg1 link reg2 reg1 grpx
+            group-calc-steps            \ ret-lst reg2 reg1 link stp-lst
+            dup list-is-empty           \ ret-lst reg2 reg1 link stp-lst bool
+            is-false if                 \ ret-lst reg2 reg1 link stp-lst
+                dup                     \ ret-lst reg2 reg1 link stp-lst stp-lst
+                #5 pick                 \ ret-lst reg2 reg1 link stp-lst stp-lst ret-lst
+                step-list-append        \ ret-lst reg2 reg1 link stp-lst
             then
-        else
-            \ pn = 3/U
-            2drop
+            step-list-deallocate        \ ret-lst reg2 reg1 link
         then
 
-        link-get-next               \ ret-lst smpl1 link
+        link-get-next                   \ ret-lst reg2 reg1 link
     repeat
-                                    \ ret-lst smpl1
-    drop                            \ ret-lst
-    \ cr ." action-get-forward-steps: " dup .step-list cr
+                                        \ ret-lst reg2 reg1
+    2drop                               \ ret-lst
 ;
 
 \ Return a list of possible forward-chaining steps, given a sample.
-\ Only steps with initial state between the the sample result state, exclusive,
-\ and the sample initial state, inclusive, will be returned.
-\ See child function rule-calc-backward-sample.
-: action-get-backward-steps ( smpl1 act0 -- stp-lst )
+\ Steps may, or may not, intersect the from region.
+\ If they do not intersect reg-from, going reg-from to the step initial-region cannot require a needed change.
+: action-calc-steps-fc ( reg2 reg1 act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
+    #2 pick #2 pick                                 \ | reg-to reg-from
+    2dup region-superset-of                         \ | reg-to reg-from bool
+    abort" action-calc-steps-fc: region subset?"    \ | reg-to reg-from
+    swap region-superset-of                         \ | bool
+    abort" action-calc-steps-fc: region subset?"    \ |
 
     \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
-    \ space ." action-get-backward-steps: " over .sample
+    \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
 
-    list-new -rot                   \ ret smpl1 act0
-    action-get-groups               \ ret smpl1 grp-lst
-    list-get-links                  \ ret smpl1 link
+    \ Init return list.
+    list-new swap                       \ reg2 reg1 ret-lst act0
+    2swap                               \ ret-lst act0 reg2 reg1
+    rot                                 \ ret-lst reg2 reg1 act0
+
+    action-get-groups                   \ ret-lst reg2 reg1 grp-lst
+    list-get-links                      \ ret-lst reg2 reg1 link
     begin
         ?dup
     while
-        over                        \ ret smpl1 link smpl1
-        over link-get-data          \ ret smpl1 link smpl1 grpx
+        dup link-get-data               \ ret-lst reg2 reg1 link grpx
 
-        \ Get backward steps, step-list returned may be empty.
-        group-calc-backward-steps           \ ret smpl1 link stp-lst
-        dup                                 \ ret smpl1 link stp-lst stp-lst
-        #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
-        step-list-append                    \ ret smpl1 link stp-lst
-        step-list-deallocate                \ ret smpl1 link
-
-        link-get-next               \ ret smpl1 link
-    repeat
-                                    \ ret smpl1
-    drop                            \ ret
-    \ cr ." action-get-backward-steps: " dup .step-list cr
-;
-
-\ Return steps that allow sample changes to be made, forward-chaining.
-: action-get-steps-by-changes-f ( smpl1 act0 -- stp-lst )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-sample
-
-    \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
-    \ space ." Act: " dup action-get-inst-id .
-    \ cr space ." action-get-steps-by-changes-f: " over .sample
-
-    over sample-calc-changes            \ smpl1 act0 cngs
-    list-new                            \ smpl1 act0 cngs ret
-    rot action-get-groups               \ smpl1 cngs ret | grp-lst
-    list-get-links                      \ smpl1 cngs ret | link
-    begin
-        ?dup
-    while
-        #2 pick                     \ smpl1 cngs ret | link cngs
-        over link-get-data          \ smpl1 cngs ret | link cngs grpx
-        group-has-any-change        \ smpl1 cngs ret | link flag
-        if
-            \ Group has wanted changes.
-            #3 pick                 \ smpl1 cngs ret | link smpl1
-            over link-get-data      \ smpl1 cngs ret | link smpl1 grpx
-                
-            \ Get steps, step-list returned may be empty.
-            group-get-steps-by-changes-f        \ smpl1 cngs ret | link stp-lst
-            dup                                 \ smpl1 cngs ret | link stp-lst stp-lst
-            #3 pick                             \ smpl1 cngs ret | link stp-lst stp-lst ret
-            step-list-append                    \ smpl1 cngs ret | link stp-lst
-            step-list-deallocate                \ smpl1 cngs ret | link
+        \ Check if group might apply.
+        group-get-pn                    \ ret-lst reg2 reg1 link pn
+        #3 <                            \ ret-lst reg2 reg1 link flag
+        if                              \ ret-lst reg2 reg1 link
+            #2 pick #2 pick #2 pick     \ ret-lst reg2 reg1 link reg2 reg1 link
+            link-get-data               \ ret-lst reg2 reg1 link reg2 reg1 grpx
+            group-calc-steps-fc         \ ret-lst reg2 reg1 link stp-lst
+            dup list-is-empty           \ ret-lst reg2 reg1 link stp-lst bool
+            is-false if                 \ ret-lst reg2 reg1 link stp-lst
+                dup                     \ ret-lst reg2 reg1 link stp-lst stp-lst
+                #5 pick                 \ ret-lst reg2 reg1 link stp-lst stp-lst ret-lst
+                step-list-append        \ ret-lst reg2 reg1 link stp-lst
+            then
+            step-list-deallocate        \ ret-lst reg2 reg1 link
         then
 
-        link-get-next               \ smpl1 cngs ret link
+        link-get-next                   \ ret-lst reg2 reg1 link
     repeat
-                                    \ smpl1 cngs ret
-    swap changes-deallocate         \ smpl1 ret
-    nip                             \ ret
-    \ cr ." action-get-steps-by-changes-f: " dup .step-list cr
+                                        \ ret-lst reg2 reg1
+    2drop                               \ ret-lst
 ;
 
-\ Return steps that allow sample changes to be made, forward-chaining.
-: action-get-steps-by-changes-b ( smpl1 act0 -- stp-lst )
+\ Return a list of possible backward-chaining steps, given a sample.
+\ Steps may, or may not, intersect region reg-to.
+\ If they do not intersect reg-to, going from the step initial-region to reg-to cannot require a needed change.
+: action-calc-steps-bc ( reg2 reg1 act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
 
     \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
-    \ cr space ." action-get-steps-by-changes-f: " over .sample
+    \ space ." action-calc-steps-bc: " #2 pick .region space over .region cr
 
-    list-new -rot                   \ ret smpl1 act0
-    action-get-groups               \ ret smpl1 grp-lst
-    list-get-links                  \ ret smpl1 link
+    \ Init return list.
+    list-new swap                   \ reg2 reg1 ret-lst act0
+    2swap                           \ ret-lst act0 reg2 reg1
+    rot                             \ ret-lst reg2 reg1 act0
+
+    action-get-groups               \ ret reg2 reg1 grp-lst
+    list-get-links                  \ ret reg2 reg1 link
     begin
         ?dup
     while
-        over                        \ ret smpl1 link smpl1
-        over link-get-data          \ ret smpl1 link smpl1 grpx
+        #2 pick #2 pick #2 pick     \ ret reg2 reg1 link reg2 reg1 link
+        link-get-data               \ ret reg2 reg1 link reg2 reg1 grpx
 
-        \ Get steps, step-list returned may be empty.
-        group-get-steps-by-changes-b        \ ret smpl1 link stp-lst
-        dup                                 \ ret smpl1 link stp-lst stp-lst
-        #4 pick                             \ ret smpl1 link stp-lst stp-lst ret
-        step-list-append                    \ ret smpl1 link stp-lst
-        step-list-deallocate                \ ret smpl1 link
+        \ Check if group might apply.
+        group-get-pn                \ ret-lst reg2 reg1 link pn
+        #3 <                        \ ret-lst reg2 reg1 link flag
+        if                          \ ret-lst reg2 reg1 link
+            \ Get backward steps, step-list returned may be empty.
+            group-calc-steps-bc     \ ret-lst reg2 reg1 link stp-lst
+            dup list-is-empty       \ ret-lst reg2 reg1 link stp-lst bool
+            is-false if
+                dup                 \ ret-lst reg2 reg1 link stp-lst stp-lst
+                #5 pick             \ ret-lst reg2 reg1 link stp-lst stp-lst ret-lst
+                step-list-append    \ ret-lst reg2 reg1 link stp-lst
+            then
+            step-list-deallocate    \ ret-lst reg2 reg1 link
+        then
 
-        link-get-next               \ ret smpl1 link
+        link-get-next               \ ret-lst reg2 reg1 link
     repeat
-                                    \ ret smpl1
-    drop                            \ ret
-    \ cr ." action-get-steps-by-changes-f: " dup .step-list cr
+                                    \ ret-lst reg2 reg1
+    2drop                           \ ret-lst
 ;
-

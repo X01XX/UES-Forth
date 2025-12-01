@@ -40,32 +40,53 @@ need-action  cell+ constant need-target     \ A state.
 
 \ Check TOS for need, unconventional, leaves stack unchanged. 
 : assert-tos-is-need ( arg0 -- arg0 )
-    dup is-allocated-need 0=
-    abort" TOS is not an allocated need"
+    dup is-allocated-need
+    is-false if
+        s" TOS is not an allocated need"
+       .abort-xt execute
+    then
 ;
 
 \ Check NOS for need, unconventional, leaves stack unchanged. 
 : assert-nos-is-need ( arg1 arg0 -- arg1 arg0 )
-    over is-allocated-need 0=
-    abort" NOS is not an allocated need"
+    over is-allocated-need
+    is-false if
+        s" NOS is not an allocated need"
+       .abort-xt execute
+    then
 ;
 
 \ Check tos for valid need number.
 : assert-tos-is-need-number ( u0 )
-    dup 1 < abort" Invalid need number?"
-    dup #5 > abort" Invalid need number?"
+    dup 1 < over #5 > or
+    if
+        s" tos invalid need number?"
+       .abort-xt execute
+    then
 ;
 
 \ Check nos for valid need number.
 : assert-nos-is-need-number ( u1 arg0 )
-    over 1 < abort" Invalid need number?"
-    over #5 > abort" Invalid need number?"
+    over dup                     \ u1 arg0 u1 u1
+    1 < swap                     \ u1 arg0 b1 u1
+    5 >                          \ u1 arg0 b1 b2
+    or
+    if
+        s" nos invalid need number?"
+       .abort-xt execute
+    then
 ;
 
 \ Check 3os for valid need number.
 : assert-3os-is-need-number ( u2 arg1 arg0 )
-    #2 pick 1 < abort" Invalid need number?"
-    #2 pick #5 > abort" Invalid need number?"
+    #2 pick dup                  \ u2 arg1 arg0 u2 u2
+    1 < swap                     \ u2 arg1 arg0 b1 u2
+    5 >                          \ u2 arg1 arg0 b1 b2
+    or
+   if
+        s" 3os invalid need number?"
+       .abort-xt execute
+    then
 ;
 
 \ Start accessors.

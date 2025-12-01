@@ -37,8 +37,11 @@ link-next   cell+ constant link-data
 
 \ Check TOS for link, unconventional, leaves stack unchanged. 
 : assert-tos-is-link ( arg0 -- arg0 )
-    dup is-allocated-link 0=
-    abort" TOS is not an allocated link."
+    dup is-allocated-link
+    0= if
+        s" TOS is not an allocated link."
+       .abort-xt execute
+    then
 ;
 
 \ Start accessors.
