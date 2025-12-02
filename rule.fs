@@ -749,11 +749,11 @@ rule-m11    cell+ constant rule-m10
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
-    cr ." rule-restrict-initial-region: " over .region space dup .rule cr
+    \ cr ." rule-restrict-initial-region: " over .region space dup .rule cr
     tuck                        \ rul0 reg1 rul0
     rule-calc-initial-region    \ rul0 reg1 reg-initial'
     2dup                        \ rul0 reg1 reg-initial' reg1 reg-initial'
-    cr ." rule-restrict-initial-region: reg1: " over .region space ." rule initial: " dup .region cr
+    \ cr ." rule-restrict-initial-region: reg1: " over .region space ." rule initial: " dup .region cr
     region-intersects           \ rul0 reg1 reg-initial' flag
     swap region-deallocate      \ rul0 reg1 flag
     is-false if
@@ -1562,7 +1562,7 @@ rule-m11    cell+ constant rule-m10
     \ Check if getting to the rule's initial region requires other needed changes.
     #3 pick #3 pick #3 pick rule-use-is-premature-fc    \ | cngs-ned' bool
     if
-        cr ." rule-calc-step-fc: is premature" cr
+        \ cr ." rule-calc-step-fc: is premature" cr
         changes-deallocate
         3drop
         false

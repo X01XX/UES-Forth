@@ -574,6 +574,7 @@
 ;
 
 : rule-tests
+    0 set-domain
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
     rule-test-apply-to-state-f

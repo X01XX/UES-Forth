@@ -460,6 +460,7 @@
 ;
 
 : region-list-tests
+    0 set-domain
     region-list-test-region-intersections-n
     region-list-test-subtract-n
     region-list-test-states

@@ -79,6 +79,7 @@
 ;
 
 : region-tests
+    0 set-domain
     region-test-region-subtract
     region-test-states-in
 ;

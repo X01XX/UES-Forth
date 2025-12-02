@@ -93,5 +93,6 @@
 ;
 
 : action-tests
+    0 set-domain
     action-test-add-sample
 ;

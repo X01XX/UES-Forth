@@ -1,6 +1,4 @@
 : input-test-parse-string
-    depth 0<> abort" Test 0 stack not empty"
-
     \ Straight-forward test.
     s" ab cde fghi" parse-string
     #3 <>
@@ -42,8 +40,10 @@
     0 <>
     abort" No tokens not found"
 
-    depth 0<> abort" Test 5 stack not empty"
-
     cr ." input-test-parse-string: Ok" cr
 ;
 
+: input-tests
+    0 set-domain
+    input-test-parse-string
+;

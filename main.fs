@@ -166,7 +166,7 @@ include state_t.fs
 include input_t.fs
 include regionlistcorr_t.fs
 include rlclist_t.fs
-
+include session_t.fs
 
 cr ." main.fs"
 
@@ -369,30 +369,41 @@ cr
 
     square-tests
     depth 0<> abort" Square stack tests not empty"
+
     square-list-tests
     depth 0<> abort" Square-list tests stack not empty"
+
     region-tests
     depth 0<> abort" Region tests stack not empty"
+
     region-list-tests
     depth 0<> abort" Region-list tests stack not empty"
+
     rule-tests
     depth 0<> abort" Rule tests stack not empty"
+
     action-tests
     depth 0<> abort" Action tests stack not empty"
+
     rulestore-tests
     depth 0<> abort" Rulestore tests stack not empty"
+
     state-tests
     depth 0<> abort" State tests stack not empty"
-    input-test-parse-string
+
+    input-tests
     depth 0<> abort" Input tests stack not empty"
 
     \ Tests that assume a 4-bit domain-0 and a 5-bit domain-1 should be last,
     \ as they may change the current domain.
     region-list-corr-tests
-    depth 0<> abort" Session tests stack not empty"
+    depth 0<> abort" region-list-corr tests stack not empty"
 
     rlc-list-tests
+    depth 0<> abort" rlc-list tests stack not empty"
+
+    session-tests
     depth 0<> abort" Session tests stack not empty"
-    
+
     test-end
 ;

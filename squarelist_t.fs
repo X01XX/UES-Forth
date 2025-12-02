@@ -64,6 +64,7 @@
 ;
 
 : square-list-tests
+    0 set-domain
     square-list-test-in-region
     square-list-test-states-in-region
 ;

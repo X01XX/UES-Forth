@@ -516,7 +516,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
                                 \ cngs
 ;
 
-\ Given a rulestore' a from region (tos) and a goal region (nos), return a list
+\ Given a rulestore, a from region (tos) and a goal region (nos), return a list
 \ of steps that may help make the needed changes.
 : rulestore-calc-steps ( reg-to reg-from ruls0 -- stp-lst )
     \ Check args.

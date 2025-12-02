@@ -98,5 +98,6 @@
 ;
 
 : rulestore-tests
+    0 set-domain
     rulestore-test-union
 ;

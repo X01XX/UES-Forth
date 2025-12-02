@@ -17,5 +17,6 @@
 ;
 
 : state-tests
+    0 set-domain
     state-test-not-a-or-not-b
 ;

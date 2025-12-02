@@ -397,6 +397,7 @@
 ;
 
 : square-tests
+    0 set-domain
     square-test-add-result
     square-test-compare
 ;
