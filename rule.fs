@@ -1528,27 +1528,29 @@ rule-m11    cell+ constant rule-m10
     then
 
                                                 \ reg-to reg-from rul0 | cngs-ned'
+    \ Get number unwanted changes
+    dup                                         \ reg-to reg-from rul0 | cngs-ned' cngs-ned'
+    #2 pick                                     \ reg-to reg-from rul0 | cngs-ned' cngs-ned' rul0
+    rule-number-unwanted-changes                \ | cngs-ned' u-unw
+    swap                                        \ | u-unw cngs-ned'
 
     \ Check if reg-from intersects rule initial-region..
     
-    #2 pick #2 pick                             \ | cngs-ned' reg-from rul0
-    rule-restrict-initial-region                \ | cngs-ned', rul0' t | f
-    if                                          \ | cngs-ned' rul0'
-        \ Get number unwanted changes
-        2dup rule-number-unwanted-changes       \ | cngs-ned' rul0' u-unw
-        -rot                                    \ | u-unw cngs-ned' rul0'
-        swap changes-deallocate                 \ | u-unw rul0'
-
+    #3 pick #3 pick                             \ | u-unw cngs-ned' reg-from rul0
+    rule-restrict-initial-region                \ | u-unw cngs-ned', rul0' t | f
+    if                                          \ | u-unw cngs-ned' rul0'
         \ Make step.
-        cur-action-xt execute                   \ | u-unw rul0' act
-        step-new-xt execute                     \ | u-unw stpx
+        cur-action-xt execute                   \ | u-unw cngs-ned' rul0' act
+        step-new-xt execute                     \ | u-unw cngs-ned' stpx
 
         \ Set number unwanted changes.
-        tuck                                    \ | stpx u-unw stpx
-        step-set-number-unwanted-changes-xt     \ | stpx u-unw stpx xt
-        execute                                 \ | stpx
+        #2 pick over                            \ | u-unw cngs-ned' stpx u-unw stpx
+        step-set-number-unwanted-changes-xt     \ | u-unw cngs-ned' stpx u-unw stpx xt
+        execute                                 \ | u-unw cngs-ned' stpx
 
-        \ Clean up.                             \ reg-to reg-from rul0 | stpx
+        \ Clean up.                             \ | u-unw cngs-ned' stpx
+        swap changes-deallocate                 \ | u-unw stpx
+        nip                                     \ | stpx
         2nip nip                                \ stpx
 
         \ Return
@@ -1557,61 +1559,42 @@ rule-m11    cell+ constant rule-m10
     then
 
     \ Rule reg-from does not intersect rule initial-region.
-                                                \ | reg-to reg-from rul0 | cngs-ned'
+                                                \ reg-to reg-from rul0 | u-unw cngs-ned'
+    dup                                         \ | u-unw cngs-ned' cngs-ned'
+    #3 pick                                     \ | u-unw cngs-ned' cngs-ned' rul0
+    rule-isolate-changes                        \ | u-unw cngs-ned' rul0'
 
-    \ Check if getting to the rule's initial region requires other needed changes.
-    #3 pick #3 pick #3 pick rule-use-is-premature-fc    \ | cngs-ned' bool
-    if
-        \ cr ." rule-calc-step-fc: is premature" cr
-        changes-deallocate
-        3drop
-        false
-        exit
-    then
+    \ Add to unwanted changes, reg-from to rule initial region.
+                                                \ reg-to reg-from rul0 | u-unw cngs-ned' rul0'
 
-                                                                \ reg-to reg-from rul0 | cngs-ned'
-    \ Get rule for reg-from to rul0.
-    over rule-calc-initial-region                               \ reg-to reg-from rul0 | cngs-ned' rul-i'
-    dup #4 pick                                                 \ reg-to reg-from rul0 | cngs-ned' rul-i' reg-i reg-from
-    rule-new-region-to-region                                   \ | cngs-ned' rul-i' rul-to'
-    swap region-deallocate                                      \ | cngs-ned' rul-to'
+    #4 pick                                     \ u-unw cngs-ned' rul0' reg-from
+    over rule-calc-initial-region               \ u-unw cngs-ned' rul0' reg-from rul0-reg'
+    tuck                                        \ u-unw cngs-ned' rul0' rul0-reg' reg-from rul0-reg'
+    changes-new-region-to-region                \ u-unw cngs-ned' rul0' rul0-reg' cngs-to-rul'
+    swap region-deallocate                      \ u-unw cngs-ned' rul0' cngs-to-rul'
 
-    
-    \ Restrict rul0.                                            \ | cngs-ned' rul-to'
-    dup rule-calc-result-region                                 \ | cngs-ned' rul-to' rul-to-rslt'
-    dup                                                         \ | cngs-ned' rul-to' rul-to-rslt' rul-to-rslt'
-    #4 pick                                                     \ | cngs-ned' rul-to' rul-to-rslt' rul-to-rslt' rul0
-    rule-restrict-initial-region                                \ | cngs-ned' rul-to' rul-to-rslt', rul0' t | f
-    if                                                          \ | cngs-ned' rul-to' rul-to-rslt' rul0'
-        swap region-deallocate                                  \ | cngs-ned' rul-to' rul0'
-    else
-        cr ." rule-calc-step-fc: rule-restrict-initial-region failed?"
-        abort
-    then
-
-    swap                                                         \ | cngs-ned' rul0' rul-to'
-    \ cr ." rul-to: " over .rule space ." rul0: " dup .rule cr
-    \ Combine the two rules.
-    2dup rule-combine2                                          \ | cngs-ned' rul0' rul-to' rul0' rul-seq'
-    rot rule-deallocate                                         \ | cngs-ned' rul0' rul-seq'
- 
-    \ Get the number of unwanted changes.
-    #2 pick                                                     \ | cngs-ned' rul0' rul-seq' cngs-ned'
-    over                                                        \ | cngs-ned' rul0' rul-seq' cngs-ned' rul-seq
-    rule-number-unwanted-changes                                \ | cngs-ned' rul0' rul-seq' u-unw
-    swap rule-deallocate                                        \ | cngs-ned' rul0' u-unw
+    #2 pick changes-invert                      \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned''
+    2dup changes-intersection                   \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned'' cngs-int'
+    dup changes-number-changes                  \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned'' cngs-int' u-unw2
+    swap changes-deallocate                     \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned'' u-unw2
+    swap changes-deallocate                     \ u-unw cngs-ned' rul0' cng-to-rul' u-unw2
+    swap changes-deallocate                     \ u-unw cngs-ned' rul0' u-unw2
+    swap                                        \ u-unw cngs-ned' u-unw2 rul0'
 
     \ Make step.
-    swap                                                        \ | cngs-ned' u-unw rul0'
-    cur-action-xt execute                                       \ | cngs-ned' u-unw rul0' act
-    step-new-xt execute                                         \ | cngs-ned' u-unw stpx
-    \ Set number-unwanted-changes.
-    tuck                                                        \ | cngs-ned' stpx u-unw stpx
-    step-set-number-unwanted-changes-xt execute                 \ | cngs-ned' stpx
+    cur-action-xt execute                       \ | u-unw cngs-ned' u-unw2 rul0' act
+    step-new-xt execute                         \ | u-unw cngs-ned' u-unw2 stp
+
+    \ Update unwanted number of changes.
+    rot changes-deallocate                      \ | u-unw u-unw2 stp
+    -rot                                        \ | stp u-unw u-unw2
+    +                                           \ | stp u-unw3
+    over                                        \ | stp u-unw3 stp
+    step-set-number-unwanted-changes-xt         \ | stp u-unw3 stp xt
+    execute                                     \ | stp
 
     \ Clean up.
-    swap changes-deallocate                                     \ | stp
-    2nip nip                                                    \ stp
+    2nip nip                                     \ stp
 
     \ Return
     true

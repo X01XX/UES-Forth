@@ -194,26 +194,26 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     swap step-get-result-region
     swap                            \ reg-r pln0
 
-    dup plan-get-step-list          \ reg-r pln0 stp-lst
-    list-get-links                  \ reg-r pln0 link
+    plan-get-step-list              \ reg-r stp-lst
+    list-get-links                  \ reg-r link
     begin
         ?dup
     while
         \ Get step
-        dup link-get-data           \ reg-r pln0 link step
-        step-get-initial-region     \ reg-r pln0 link s-r
-        #3 pick                     \ reg-r pln0 link s-r reg-r
-        region-intersects           \ reg-r pln0 link flag
+        dup link-get-data           \ reg-r link step
+        step-get-initial-region     \ reg-r link s-r
+        #2 pick                     \ reg-r link s-r reg-r
+        region-intersects           \ reg-r link flag
         if
-            3drop
+            2drop
             true
             exit
         then
 
         link-get-next
     repeat
-                                    \ reg-r pln0
-    2drop
+                                    \ reg-r
+    drop
     false
 ;
 
@@ -225,27 +225,27 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
     swap step-get-initial-region
     swap                            \ reg-i pln0
-    
-    dup plan-get-step-list          \ reg-i pln0 stp-lst
-    list-get-links                  \ reg-i pln0 link
+
+    plan-get-step-list              \ reg-i stp-lst
+    list-get-links                  \ reg-i link
     begin
         ?dup
     while
         \ Get step
-        dup link-get-data           \ reg-i pln0 link step
-        step-get-result-region      \ reg-i pln0 link s-r
-        #3 pick                     \ reg-i pln0 link s-r reg-i
-        region-intersects           \ reg-i pln0 link flag
+        dup link-get-data           \ reg-i link step
+        step-get-result-region      \ reg-i link s-r
+        #2 pick                     \ reg-i link s-r reg-i
+        region-intersects           \ reg-i link flag
         if
-            3drop
+            2drop
             true
             exit
         then
 
         link-get-next
     repeat
-                                    \ reg-i pln0
-    2drop
+                                    \ reg-i
+    drop
     false
 ;
 

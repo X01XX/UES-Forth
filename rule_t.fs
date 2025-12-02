@@ -456,7 +456,7 @@
         s" 01/11/00/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
-        is-false abort" unexpected rule?"
+        is-false abort" rule-test-calc-step-fc 1: unexpected rule?"
 
         rule-deallocate
         step-deallocate
@@ -464,7 +464,7 @@
         region-deallocate
         region-deallocate
     else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-fc failed?"
+        cr ." rule-test-calc-step-fc 1: rule-calc-step-fc failed?"
         abort
     then
 
@@ -476,12 +476,11 @@
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
-        \ cr dup .step cr
         dup step-get-rule                   \ reg-to reg-from rulx | stp stp-rul
-        s" 00/11/01/00/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        s" 01/XX/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
-        is-false abort" unexpected rule?"
+        is-false abort" rule-test-calc-step-fc 2: unexpected rule?"
 
         rule-deallocate
         step-deallocate
@@ -489,21 +488,9 @@
         region-deallocate
         region-deallocate
     else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-fc failed?"
+        cr ." rule-calc-step-fc 2: failed?"
         abort
     then
-
-    \ Test 3, reg-from does not intersect the rule initial-region,
-    \ the rule initial region is not reachable without using another needed change.
-    %1101 %1101 region-new                  \ reg-to
-    %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/XX/00/11/" rule-from-string       \ reg-to reg-from rulx
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
-    abort" step returned?" 
-    rule-deallocate
-    region-deallocate
-    region-deallocate
 
     cr ." rule-test-calc-step-fc - Ok" cr
 ;

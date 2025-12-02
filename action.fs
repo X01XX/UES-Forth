@@ -1476,6 +1476,7 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
                                         \ ret-lst reg2 reg1
     2drop                               \ ret-lst
+    \ cr ." returning steps: " dup .step-list cr
 ;
 
 \ Return a list of possible backward-chaining steps, given a sample.
