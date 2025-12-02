@@ -410,7 +410,7 @@
         then
 
         \ Get state.
-        snumber?                                    \ dom, sta t | f
+        snumber?                                    \ dom, to-sta t | f
         if
             dup is-not-value
             if
@@ -419,9 +419,9 @@
                 true
                 exit
             else
-                swap                                \ sta dom
-                dup domain-get-current-state        \ sta dom cur-sta
-                rot swap                            \ dom sta cur-sta
+                swap                                \ to-sta dom
+                dup domain-get-current-state        \ to-sta dom cur-sta
+                rot swap                            \ dom to-sta cur-sta
                 2dup =
                 if                                  \ dom sta cur-sta
                     cr ." Already at that state."
@@ -431,11 +431,16 @@
                 then
 
                 \ Do domain-get-plan
-                sample-new                          \ dom smpl
-                tuck swap                           \ smpl smpl dom
-                domain-get-plan                     \ smpl, plan t | f
-                if                                  \ smpl plan
-                    swap sample-deallocate          \ plan
+                dup region-new swap                 \ dom cur-reg to-sta
+                dup region-new swap                 \ dom to-reg cur-reg
+                
+                rot                                 \ to-reg cur-reg dom
+                #2 pick swap                        \ to-reg cur-reg to-reg dom
+                #2 pick swap                        \ to-reg cur-reg to-reg cur-reg dom
+                domain-get-plan                     \ to-reg cur-reg, plan t | f
+                if                                  \ to-reg cur-reg plan
+                    swap region-deallocate          \ to-reg plan
+                    swap region-deallocate          \ plan
                     dup                             \ plan plan
                     plan-run                        \ plan flag
                     swap plan-deallocate            \ flag
@@ -444,8 +449,9 @@
                     else
                         cr ." Plan failed" cr
                     then
-                else                                \ smpl
-                    sample-deallocate               \
+                else                                \ to-reg cur-reg
+                    region-deallocate               \ to-reg
+                    region-deallocate               \
                     cr ." No plan found" cr
                 then
 
@@ -773,7 +779,7 @@
         cr ." psd <domain ID> <action ID> - Print Square Detail, for a given domain/action."
         cr ." scs <domain id> <action id> - Sample the Current State of a domain, with an action."
         cr ." sas <domain id> <action id> <state> - Sample an Arbitrary State. Change domain current state, then sample with an action."
-        cr ." to - Change all domain states, like: to (0X00 000X1)"
+\        cr ." to - Change all domain states, like: to (0X00 000X1)"
         cr ." mu - Display Memory Use."
         cr
         cr ." <state> will usually be like: %0101, leading zeros can be ommitted."
