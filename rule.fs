@@ -1498,6 +1498,7 @@ rule-m11    cell+ constant rule-m10
 \ If the rule initial-region intersects reg-from, or
 \ going from reg-from to the rule initial-region does not contain a needed change, a step will be returned.
 : rule-calc-step-fc ( reg-to reg-from rul0 -- step t | f )
+    \ cr ." rule-calc-step-fc: from: " over .region space ." to: " #2 pick .region space ." rule: " dup .rule cr
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -1567,11 +1568,32 @@ rule-m11    cell+ constant rule-m10
     \ Add to unwanted changes, reg-from to rule initial region.
                                                 \ reg-to reg-from rul0 | u-unw cngs-ned' rul0'
 
-    #4 pick                                     \ u-unw cngs-ned' rul0' reg-from
-    over rule-calc-initial-region               \ u-unw cngs-ned' rul0' reg-from rul0-reg'
-    tuck                                        \ u-unw cngs-ned' rul0' rul0-reg' reg-from rul0-reg'
-    changes-new-region-to-region                \ u-unw cngs-ned' rul0' rul0-reg' cngs-to-rul'
-    swap region-deallocate                      \ u-unw cngs-ned' rul0' cngs-to-rul'
+    #4 pick                                     \ | u-unw cngs-ned' rul0' reg-from
+    over rule-calc-initial-region               \ | u-unw cngs-ned' rul0' reg-from rul0-reg'
+    tuck                                        \ | u-unw cngs-ned' rul0' rul0-reg' reg-from rul0-reg'
+    swap                                        \ | u-unw cngs-ned' rul0' rul0-reg' rul0-reg' reg-from
+    changes-new-region-to-region                \ | u-unw cngs-ned' rul0' rul0-reg' cngs-to-rul'
+    swap region-deallocate                      \ | u-unw cngs-ned' rul0' cngs-to-rul'
+
+    \ cr ." reg-from to rule changes: " dup .changes cr
+    \ cr ." needed changes:           " #2 pick .changes cr
+
+    \ Check for premature changes required.
+    dup                                         \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-to-rul'
+    #3 pick                                     \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-to-rul' cngs-ned'
+    changes-intersection                        \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-int'
+    dup changes-null                            \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-int' bool
+    swap changes-deallocate                     \ | u-unw cngs-ned' rul0' cngs-to-rul' bool
+    if
+    else
+        changes-deallocate
+        rule-deallocate
+        changes-deallocate
+        drop
+        3drop
+        false
+        exit
+    then
 
     #2 pick changes-invert                      \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned''
     2dup changes-intersection                   \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned'' cngs-int'
@@ -1592,6 +1614,7 @@ rule-m11    cell+ constant rule-m10
     over                                        \ | stp u-unw3 stp
     step-set-number-unwanted-changes-xt         \ | stp u-unw3 stp xt
     execute                                     \ | stp
+    \ cr ." indirect step: " dup .step-xt execute cr
 
     \ Clean up.
     2nip nip                                     \ stp

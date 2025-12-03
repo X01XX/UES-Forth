@@ -272,17 +272,23 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     region-intersects               \ reg1 stp0 bool
     is-false abort" no intersection wint step initial-region?"
 
+    \ Copy number unwanted changes.
+    dup step-get-number-unwanted-changes -rot    \ u-unw reg1 stp0
+
     \ Copy action, from step.
-    dup step-get-action -rot        \ act reg1 stp0
+    dup step-get-action -rot        \ u-unw act reg1 stp0
 
     \ Calc new rule.
-    step-get-rule                   \ act reg1 rul
-    rule-restrict-initial-region    \ act, rul' t | f
+    step-get-rule                   \ u-unw act reg1 rul
+    rule-restrict-initial-region    \ u-unw act, rul' t | f
     is-false abort" rule-restrict-initial-region failed?"
 
     \ Make new step.
-    swap                        \ rul' act
-    step-new                    \ stp
+    swap                        \ u-unw rul' act
+    step-new                    \ u-unw stp
+
+    \ Set number unwanted changes.
+    tuck step-set-number-unwanted-changes   \ stp
 ;
 
 \ Return a step with a rule result-region restricted by a given region.
@@ -297,17 +303,23 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     region-intersects               \ reg1 stp0 bool
     is-false abort" no intersection wint step result-region?"
 
-   \ Copy action, from step.
-    dup step-get-action -rot        \ act reg1 stp0
+    \ Copy number unwanted changes.
+    dup step-get-number-unwanted-changes -rot    \ u-unw reg1 stp0
+
+    \ Copy action, from step.
+    dup step-get-action -rot        \ u-unw act reg1 stp0
 
     \ Calc new rule.
-    step-get-rule                   \ act reg1 rul
-    rule-restrict-result-region     \ act, rul' t | f
+    step-get-rule                   \ u-unw act reg1 rul
+    rule-restrict-result-region     \ u-unw act, rul' t | f
     is-false abort" rule-restrict-result-region failed?"
 
     \ Make new step.
-    swap                        \ rul' act
-    step-new                    \ stp
+    swap                        \ u-unw rul' act
+    step-new                    \ u-unw stp
+
+    \ Set number unwanted changes.
+    tuck step-set-number-unwanted-changes   \ stp
 ;
 
 \ Return a result from applying a step rule to a state, going forward.
