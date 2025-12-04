@@ -724,3 +724,33 @@ region-state-0-disp cell+ constant region-state-1-disp
     swap region-get-state-0     \ s-r s-0
     region-new
 ;
+
+\ Translate a region to another, with fewest changes.
+\ From:  0 0 0 | 1 1 1 | X X X
+\ To:    0 1 X | 0 1 X | 0 1 X
+\ =:     0 1 0 | 0 1 1 | 0 1 X
+: region-translate-to-region ( reg-to reg-from -- reg )
+    \ cr ." region-translate-to-region: from: " dup .region space ." to: " over .region cr
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-region
+
+    \ Change selected reg-from X positions to zero.
+    over region-x-mask      \ reg-to reg-from tx 
+    over region-0-mask      \ reg-to reg-from tx f0
+    and                     \ reg-to reg-from 0x
+
+    #2 pick                 \ reg-to reg-from 0x reg-to
+    region-x-to-0           \ reg-to reg-from reg-to'
+
+    \ Change selected reg-from' X positions to one.
+    #2 pick region-x-mask   \ reg-to reg-from reg-to' tx 
+    #2 pick region-1-mask   \ reg-to reg-from reg-to' tx f1
+    and                     \ reg-to reg-from reg-to' 1x
+
+    over region-x-to-1      \ reg-to reg-from reg-to' reg-to''
+
+    \ Clean up, return.
+    swap region-deallocate  \ reg-to reg-from reg-to''
+    nip nip                 \ reg-to''
+;

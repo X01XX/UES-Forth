@@ -196,6 +196,9 @@ changes-m01-disp    cell+ constant changes-m10-disp
     swap changes-get-m01
 ;
 
+\ Return the changes needed to translate a region (TOS) to another (NOS).
+\ 0->1 = X->1 union 0->1.
+\ 1->0 = X->0 union 1->0.
 : change-masks-region-to-region ( reg-to reg-from -- m10 m01 )
     \ Check arg.
     assert-tos-is-region

@@ -477,7 +477,8 @@
     rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
         dup step-get-rule                   \ reg-to reg-from rulx | stp stp-rul
-        s" 01/XX/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        s" 01/11/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        \ cr ." expt: " dup .rule space ." found: " over .rule cr
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
         is-false abort" rule-test-calc-step-fc 2: unexpected rule?"

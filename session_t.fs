@@ -1,5 +1,6 @@
 
 \ Test using a non-intersecting step, the first, to find a plan, using forward-chaining.
+\ Implementing the example in the sections of theory.html named "Choosing the next rule" and "A reason to not choose a rule".
 : session-test-fc
     current-session-new
 

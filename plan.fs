@@ -521,7 +521,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Link two plans, where tos plan result intersects nos plan initial.
 : plan-link ( pln-to pln-from -- pln t | f )
-\ Check args.
+    \ Check args.
     assert-tos-is-plan
     assert-nos-is-plan
     \ cr ." plan-link start: from " dup .plan space ." to " over .plan cr
@@ -684,10 +684,9 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Return true if a plan is empty.
 : plan-is-empty ( pln -- bool )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-plan
 
     plan-get-step-list
     list-is-empty
 ;
-

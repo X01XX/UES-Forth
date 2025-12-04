@@ -22,6 +22,22 @@ Changed rule union logic for two-result states.
 First try union by change mask ( 0->1 + 1->0 ) only, possibly creating X->X and X->x bit positions.
 Next try union by change-mask and same-result, possibly creating X->1 and X->0 bit positions.
 
+The huge emphasis on small functions in Forth is a little too much, in my opinion.
+
+Stack contents can be recorded, "managed", in comments, line-by-line.
+
+Start struct functions with a struct name, and make the TOS an instance of the struct, except for <struct name>-new.
+ 
+A function with "get" in its name returns the address of a struct field, and does not need to be
+stored, or deallocated.
+
+A function with "calc" or "new" in its name, returning a struct, that should eventually be stored or deallocated.
+
+Intermediate struct instances can be noted in the comments with a "'", like rule1',
+to help remember to store or deallocate.
+
 I once was testing a problem, and I had a very clear perception of state samples going from two (in-order) results,
-then to unpredictable, then back to two. In the end, I decided it was unpredictable.
+then to unpredictable, then back to two. In the end, I decided it was unpredictable. So I have
+an imperative to support two-result states, even though I find them aggravating to work.
+I suppose you could have n-result states, but I don't want to think about it.
 

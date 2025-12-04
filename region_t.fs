@@ -78,9 +78,38 @@
     cr ." region-test-states-in - Ok" cr
 ;
 
+: region-test-translate-to-region
+    %0101 %0101 region-new          \ reg-from'           0101
+    %1001 %1001 region-new          \ reg-from' reg-to'   1001
+    swap                            \ reg-to' reg-from'
+    2dup region-translate-to-region \ reg-to' reg-from' reg-rslt'
+    \ cr ." from " over .region
+    \ cr ." to   " #2 pick .region
+    \ cr ." =    " dup .region cr
+    #2 pick over region-eq is-false abort" region-test-translate-to-region: 1: region unexpected"
+    region-deallocate
+    region-deallocate
+    region-deallocate
+
+    %0101 %0101 region-new          \ reg-from' 0101
+    %0000 %1111 region-new          \ reg-to'   1001
+    swap                            \ reg-to' reg-from'
+    2dup region-translate-to-region \ reg-to' reg-from' reg-rslt'
+    \ cr ." from " over .region
+    \ cr ." to   " #2 pick .region
+    \ cr ." =    " dup .region cr
+    2dup region-eq is-false abort" region-test-translate-to-region: 2: region unexpected"
+    region-deallocate
+    region-deallocate
+    region-deallocate
+    
+    cr ." region-test-translate-to-region - Ok" cr
+;
+
 : region-tests
     0 set-domain
     region-test-region-subtract
     region-test-states-in
+    region-test-translate-to-region
 ;
 
