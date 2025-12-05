@@ -1,5 +1,5 @@
 
-\ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs tools.fs,
+\ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs tools.fs stackprint.fs,
 \ contact the Wisconsin Alumni Research Foundation (WARF).
 
 \ Struct IDs.
