@@ -511,6 +511,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     if
         step-list-deallocate
         false
+        \ cr ." domain-calc-step-fc: returning: false"
         exit
     then
 
@@ -560,6 +561,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     \ Clean up.                     \ stp-lst2 stpx
     swap step-list-deallocate       \ stpx
+    \ cr ." domain-calc-step-fc: returning: " dup .step cr
 
     \ Return.
     true
@@ -588,14 +590,13 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     swap                            \ depth reg-to dom0 | pln reg-from
 
     begin
-        \ cr ." Top of loop: from: " dup .region space ." to " #3 pick .region cr
         #3 pick                     \ depth reg-to dom0 | pln reg-from | reg-to
-        \ cr ." domain-get-plan2-fc: top of loop: reg-from: " over .region space ." to: " dup .region cr
         over                        \ depth reg-to dom0 | pln reg-from | reg-to reg-from
         #4 pick                     \ depth reg-to dom0 | pln reg-from | reg-to reg-from dom0
         domain-calc-step-fc         \ depth reg-to dom0 | pln reg-from | stpx true | false
 
         is-false if                 \ depth reg-to dom0 | pln reg-from |
+            \ cr ." returning from domain-get-plan-fc 1: f depth: " #4 pick . cr
             \ No step found, done.
             drop
             plan-deallocate
@@ -609,6 +610,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         #3 pick                                 \ depth reg-to dom0 | pln reg-from | stpx stpx pln
         plan-check-step-result                  \ depth reg-to dom0 | pln reg-from | stpx bool
         if
+            \ cr ." returning from domain-get-plan-fc 2: f depth: " #5 pick . cr
             step-deallocate
             drop
             plan-deallocate
@@ -646,6 +648,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                     nip                         \ depth reg-to dom0 | pln'
                     dup plan-get-result-region  \ depth reg-to dom0 | pln' reg-from |
                 else                            \ depth reg-to dom0 | pln reg-from | stpx pln
+                    \ cr ." returning from domain-get-plan-fc 3: f depth: " #6 pick . cr
                     \ plan link failed, done.
                     drop                        \ depth reg-to dom0 | pln reg-from | stpx
                     step-deallocate
@@ -665,8 +668,10 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             over step-get-initial-region        \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i
             #3 pick                             \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i reg-from
             #6 pick                             \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i reg-from dom
+            \ cr ." calling domain-get-plan-fc depth " #3 pick . cr
             domain-get-plan-fc-xt execute       \ depth reg-to dom0 | pln reg-from | stpx | pln2 t | f
             if                                  \ depth reg-to dom0 | pln reg-from | stpx | pln2
+                \ cr ." returned from domain-get-plan-fc: t " dup .plan space ." depth: " #6 pick . space ." continuing" cr
                 swap step-deallocate            \ depth reg-to dom0 | pln reg-from | pln2
                 #2 pick                         \ depth reg-to dom0 | pln reg-from | pln2 pln
                 dup plan-is-empty               \ depth reg-to dom0 | pln reg-from | pln2 pln bool
@@ -687,6 +692,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                         nip                         \ depth reg-to dom0 | pln3
                         dup plan-get-result-region  \ depth reg-to dom0 | pln3 reg-from
                     else                            \ depth reg-to dom0 | pln reg-from | pln2 pln
+                        \ cr ." returning from domain-get-plan-fc 4: f depth: " #6 pick . cr
                         drop
                         plan-deallocate
                         drop
@@ -697,6 +703,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                     then
                 then
             else                                \ depth reg-to dom0 | pln reg-from | stpx
+                \ cr ." returning from domain-get-plan-fc 5: f depth: " #5 pick . cr
                 step-deallocate
                 drop
                 plan-deallocate
@@ -708,15 +715,18 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Check if the plan result, the current reg-from, is a subset of the goal region.
                                             \ depth reg-to dom0 | pln' reg-from |
+        \ cr ." Checking end of plan: " over .plan space ." cur reg-from: " dup .region space ." reg-to: " #3 pick .region space ." depth: " #4 pick . cr
+        
         #3 pick                             \ depth reg-to dom0 | pln' reg-from | reg-to
         over                                \ depth reg-to dom0 | pln' reg-from | reg-to reg-from
         swap                                \ depth reg-to dom0 | pln' reg-from | reg-from reg-to
+        \ cr ." reg-from: " over .region space ." reg-to: " dup .region cr
         region-superset-of                  \ depth reg-to dom0 | pln' reg-from | bool
         if
             \ Plan finished.
             drop                            \ depth reg-to dom0 | pln'
+            \ cr ." returning from domain-get-plan-fc 6: t " dup .plan space ." depth: " #3 pick . cr
             2nip nip                        \ pln
-            \ cr ." returning plan: " dup .plan cr
             true
             exit
         then

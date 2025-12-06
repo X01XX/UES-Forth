@@ -1419,7 +1419,7 @@ rule-m11    cell+ constant rule-m10
 
 \ Combine tos rule to nos rule.
 \ The tos rule result region has to intersect the nos initial rule.
-: rule-combine2 ( rul1 rul0 -- rul )
+: rule-combine2 ( rul1-to rul0-from -- rul )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -1528,29 +1528,29 @@ rule-m11    cell+ constant rule-m10
     then
 
                                                 \ reg-to reg-from rul0 | cngs-ned'
-    \ Get number unwanted changes
-    dup                                         \ reg-to reg-from rul0 | cngs-ned' cngs-ned'
-    #2 pick                                     \ reg-to reg-from rul0 | cngs-ned' cngs-ned' rul0
-    rule-number-unwanted-changes                \ | cngs-ned' u-unw
-    swap                                        \ | u-unw cngs-ned'
 
     \ Check if reg-from intersects rule initial-region.
     
-    #3 pick #3 pick                             \ | u-unw cngs-ned' reg-from rul0
-    rule-restrict-initial-region                \ | u-unw cngs-ned', rul0' t | f
-    if                                          \ | u-unw cngs-ned' rul0'
+    #2 pick #2 pick                             \ | cngs-ned' reg-from rul0
+    rule-restrict-initial-region                \ | cngs-ned', rul0' t | f
+    if                                          \ | cngs-ned' rul0'
+
+        \ Get number unwanted changes.
+        2dup                                    \ | cngs-ned' rul0' cngs-ned' rul0'
+        rule-number-unwanted-changes            \ | cngs-ned' rul0' u-unw
+        -rot                                    \ | u-unw cngs-ned' rul0'
+
         \ Make step.
         cur-action-xt execute                   \ | u-unw cngs-ned' rul0' act
         step-new-xt execute                     \ | u-unw cngs-ned' stpx
+        swap changes-deallocate                 \ | u-unw stpx
 
         \ Set number unwanted changes.
-        #2 pick over                            \ | u-unw cngs-ned' stpx u-unw stpx
-        step-set-number-unwanted-changes-xt     \ | u-unw cngs-ned' stpx u-unw stpx xt
-        execute                                 \ | u-unw cngs-ned' stpx
+        tuck                                    \ | stpx u-unw stpx
+        step-set-number-unwanted-changes-xt     \ | stpx u-unw stpx xt
+        execute                                 \ | stpx
 
-        \ Clean up.                             \ | u-unw cngs-ned' stpx
-        swap changes-deallocate                 \ | u-unw stpx
-        nip                                     \ | stpx
+        \ Clean up.                             \ | stpx
         2nip nip                                \ stpx
 
         \ Return
@@ -1559,7 +1559,26 @@ rule-m11    cell+ constant rule-m10
     then
 
     \ reg-from does not intersect rule initial-region.
-                                                \ reg-to reg-from rul0 | u-unw cngs-ned'
+                                                \ reg-to reg-from rul0 | cngs-ned'
+
+    \ Check if rule use is premature.
+    #3 pick #3 pick #3 pick                     \ reg-to reg-from rul0 | cngs-ned' reg-to reg-from rul0
+    rule-use-is-premature-fc                    \ reg-to reg-from rul0 | cngs-ned' bool
+    if
+        changes-deallocate
+        3drop
+        false
+        exit
+    then
+
+                                                \ reg-to reg-from rul0 | cngs-ned'
+
+    \ Calc rule from reg-from to rul0.
+    #2 pick #2 pick                             \ reg-to reg-from rul0 | cngs-ned' reg-from rul0
+    rule-calc-initial-region                    \ reg-to reg-from rul0 | cngs-ned' reg-from rul-i'
+    tuck swap                                   \ reg-to reg-from rul0 | cngs-ned' rul-i' rul-i' reg-from
+    rule-new-region-to-region                   \ reg-to reg-from rul0 | cngs-ned' rul-i' rul1'
+    swap region-deallocate                      \ reg-to reg-from rul0 | cngs-ned' rul1'
 
     \ Restrict rule to likely limits based on reg-from.
     \ 1 X->1 = 1->1
@@ -1570,66 +1589,31 @@ rule-m11    cell+ constant rule-m10
     \ 0 X->X = 0->0
     \ 1 X->x = 1->0
     \ 0 X->x = 0->1
-    2over                                       \ reg-to reg-from rul0 | u-unw cngs-ned' reg-from rul0
-    rule-calc-initial-region                    \ reg-to reg-from rul0 | u-unw cngs-ned' reg-from rul-i'
-    tuck swap                                   \ reg-to reg-from rul0 | u-unw cngs-ned' rul-i' rul-i' reg-from
-    region-translate-to-region                  \ reg-to reg-from rul0 | u-unw cngs-ned' rul-i' reg-from'
-    swap region-deallocate                      \ reg-to reg-from rul0 | u-unw cngs-ned' reg-from'
-    dup                                         \ reg-to reg-from rul0 | u-unw cngs-ned' reg-from' reg-from'
-    #4 pick                                     \ reg-to reg-from rul0 | u-unw cngs-ned' reg-from' reg-from' rul0
-    rule-restrict-initial-region                \ reg-to reg-from rul0 | u-unw cngs-ned' reg-from', rul0' t | f
+    dup rule-calc-result-region                 \ reg-to reg-from rul0 | cngs-ned' rul1' rul1-r'
+    dup                                         \ reg-to reg-from rul0 | cngs-ned' rul1' rul1-r' rul1-r'
+    #4 pick                                     \ reg-to reg-from rul0 | cngs-ned' rul1' rul1-r' rul1-r' rul0
+    rule-restrict-initial-region                \ reg-to reg-from rul0 | cngs-ned' rul1' rul1-r', rul0' t | f
     is-false abort" rule-calc-step-fc: rule-restrict-initial-region failed?"
-    swap region-deallocate                      \ reg-to reg-from rul0 | u-unw cngs-ned' rul0'
 
-    \ Get changes from reg-from to rule-inital-region.
-                                                \ reg-to reg-from rul0 | u-unw cngs-ned' rul0'
+    swap region-deallocate                      \ reg-to reg-from rul0 | cngs-ned' rul1' rul0'
 
-    #4 pick                                     \ | u-unw cngs-ned' rul0' reg-from
-    over rule-calc-initial-region               \ | u-unw cngs-ned' rul0' reg-from rul0-reg'
-    tuck                                        \ | u-unw cngs-ned' rul0' rul0-reg' reg-from rul0-reg'
-    swap                                        \ | u-unw cngs-ned' rul0' rul0-reg' rul0-reg' reg-from
-    changes-new-region-to-region                \ | u-unw cngs-ned' rul0' rul0-reg' cngs-to-rul'
-    swap region-deallocate                      \ | u-unw cngs-ned' rul0' cngs-to-rul'
-
-    \ cr ." reg-from to rule changes: " dup .changes cr
-    \ cr ." needed changes:           " #2 pick .changes cr
-
-    \ Check if premature changes are required.
-    dup                                         \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-to-rul'
-    #3 pick                                     \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-to-rul' cngs-ned'
-    changes-intersection                        \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-int'
-    dup changes-null                            \ | u-unw cngs-ned' rul0' cngs-to-rul' cngs-int' bool
-    swap changes-deallocate                     \ | u-unw cngs-ned' rul0' cngs-to-rul' bool
-    if
-    else
-        changes-deallocate
-        rule-deallocate
-        changes-deallocate
-        drop
-        3drop
-        false
-        exit
-    then
-
-    \ Add to unwanted changes, reg-from to rule initial region.
-    #2 pick changes-invert                      \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned''
-    2dup changes-intersection                   \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned'' cngs-int'
-    dup changes-number-changes                  \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned'' cngs-int' u-unw2
-    swap changes-deallocate                     \ u-unw cngs-ned' rul0' cng-to-rul' cngs-ned'' u-unw2
-    swap changes-deallocate                     \ u-unw cngs-ned' rul0' cng-to-rul' u-unw2
-    swap changes-deallocate                     \ u-unw cngs-ned' rul0' u-unw2
-    swap                                        \ u-unw cngs-ned' u-unw2 rul0'
+    \ Calc number unwanted changes.
+    2dup swap                                   \ reg-to reg-from rul0 | cngs-ned' rul1' rul0' rul0' rul1'
+    rule-combine2                               \ reg-to reg-from rul0 | cngs-ned' rul1' rul0' rul3'
+    #3 pick over                                \ reg-to reg-from rul0 | cngs-ned' rul1' rul0' rul3' cngs-ned' rul3'
+    rule-number-unwanted-changes                \ reg-to reg-from rul0 | cngs-ned' rul1' rul0' rul3' u-unw
+    swap rule-deallocate                        \ reg-to reg-from rul0 | cngs-ned' rul1' rul0' u-unw
+    rot rule-deallocate                         \ reg-to reg-from rul0 | cngs-ned' rul0' u-unw
+    rot changes-deallocate                      \ reg-to reg-from rul0 | rul0' u-unw
+    swap                                        \ reg-to reg-from rul0 | u-unw rul0'
 
     \ Make step.
-    cur-action-xt execute                       \ | u-unw cngs-ned' u-unw2 rul0' act
-    step-new-xt execute                         \ | u-unw cngs-ned' u-unw2 stp
+    cur-action-xt execute                       \ | u-unw rul0' act
+    step-new-xt execute                         \ | u-unw stp
 
     \ Update unwanted number of changes.
-    rot changes-deallocate                      \ | u-unw u-unw2 stp
-    -rot                                        \ | stp u-unw u-unw2
-    +                                           \ | stp u-unw3
-    over                                        \ | stp u-unw3 stp
-    step-set-number-unwanted-changes-xt         \ | stp u-unw3 stp xt
+    tuck                                        \ | stp u-unw stp
+    step-set-number-unwanted-changes-xt         \ | stp u-unw stp xt
     execute                                     \ | stp
     \ cr ." indirect step: " dup .step-xt execute cr
 
@@ -1696,40 +1680,75 @@ rule-m11    cell+ constant rule-m10
         exit
     then
 
-    \ reg-to does not intersect rule result-region. 
+    \ reg-to does not intersect rule result-region.
+                                                 \ reg-to reg-from rul0 | u-unw ned-cngs'
 
-    \ Check changes needed to reach reg-to the rule result-region.
-                                                \ reg-to reg-from rul0 ned-cngs'
-    over                                        \ reg-to reg-from rul0 ned-cngs' rul0
-    rule-calc-result-region                     \ reg-to reg-from rul0 ned-cngs' r-reg'
-    #4 pick                                     \ reg-to reg-from rul0 ned-cngs' r-reg' reg-to
-    over                                        \ reg-to reg-from rul0 ned-cngs' r-reg' reg-to r-reg'
-    changes-new-region-to-region                \ reg-to reg-from rul0 ned-cngs' i-reg' i-cngs'
-\ todo
-    dup                                         \ reg-to reg-from rul0 ned-cngs' i-reg' i-cngs' i-cngs'
-    #3 pick                                     \ reg-to reg-from rul0 ned-cngs' i-reg' i-cngs' i-cngs' ned-cngs'
-    changes-intersect                           \ reg-to reg-from rul0 ned-cngs' i-reg' i-cngs' bool
-    swap changes-deallocate                     \ reg-to reg-from rul0 ned-cngs' i-reg' bool
-    swap region-deallocate                      \ reg-to reg-from rul0 ned-cngs' bool
+    \ Restrict rule to likely limits based on reg-to.
+    \ X->1 1 = X->1
+    \ X->0 0 = X->0
+    \ X->X 1 = 1->1
+    \ X->X 0 = 0->0
+    \ X->x 0 = 1->0
+    \ X->x 1 = 0->1
+    #3 pick                                     \ | u-unw ned-cngs' rul0
+    rule-calc-result-region                     \ | u-unw ned-cngs' rul0-r-reg'
+    dup                                         \ | u-unw ned-cngs' rul0-r-reg' rul0-r-reg'
+    #6 pick                                     \ | u-unw ned-cngs' rul0-r-reg' rul0-r-reg' reg-to 
+    region-translate-to-region                  \ | u-unw ned-cngs' rul0-r-reg' rul0-int-reg'
+    swap region-deallocate                      \ | u-unw ned-cngs' rul0-int-reg'
+    dup                                         \ | u-unw ned-cngs' rul0-int-reg' rul0-int-reg'
+    #4 pick                                     \ | u-unw ned-cngs' rul0-int-reg' rul0-int-reg' rul0
+    rule-restrict-result-region                 \ | u-unw ned-cngs' rul0-int-reg' rul0'
+
+    \ Get changes from rule result-region to reg-to
+    swap                                        \ | u-unw ned-cngs' rul0' rul0-int-reg'
+    #6 pick                                     \ | u-unw ned-cngs' rul0' rul0-int-reg' reg-to
+    over                                        \ | u-unw ned-cngs' rul0' rul0-int-reg' reg-to rul0-int-reg'
+    changes-new-region-to-region                \ | u-unw ned-cngs' rul0' rul0-int-reg' ex-cngs'
+    swap region-deallocate                      \ | u-unw ned-cngs' rul0' ex-cngs'
+
+    \ Check if premature changes are required.                                                                                                    
+    dup                                         \ | u-unw cngs-ned' rul0' ex-cngs' ex-cngs'
+    #3 pick                                     \ | u-unw cngs-ned' rul0' ex-cngs' ex-cngs' cngs-ned'
+    changes-intersection                        \ | u-unw cngs-ned' rul0' ex-cngs' cngs-int'
+    dup changes-null                            \ | u-unw cngs-ned' rul0' ex-cngs' cngs-int' bool
+    swap changes-deallocate                     \ | u-unw cngs-ned' rul0' ex-cngs' bool
     if
+    else
         changes-deallocate
+        rule-deallocate
+        changes-deallocate
+        drop
         3drop
         false
         exit
     then
 
+    \ Add to unwanted changes, rule result region to reg-to.
+    #2 pick changes-invert                      \ | u-unw cngs-ned' rul0' ex-cngs' cngs-ned''
+    2dup changes-intersection                   \ | u-unw cngs-ned' rul0' ex-cngs' cngs-ned'' cngs-int'
+    dup changes-number-changes                  \ | u-unw cngs-ned' rul0' ex-cngs' cngs-ned'' cngs-int' u-unw2
+    swap changes-deallocate                     \ | u-unw cngs-ned' rul0' ex-cngs' cngs-ned'' u-unw2
+    swap changes-deallocate                     \ | u-unw cngs-ned' rul0' ex-cngs' u-unw2
+    swap changes-deallocate                     \ | u-unw cngs-ned' rul0' u-unw2
+    swap                                        \ | u-unw cngs-ned' u-unw2 rul0'
+
     \ Make step.
-                                                \ reg-to reg-from rul0 ned-cngs'
-    over rule-get-changes                       \ reg-to reg-from rul0 ned-cngs' r-cngs'
-    2dup changes-intersection                   \ reg-to reg-from rul0 ned-cngs' r-cngs' int-cngs'
-    swap changes-deallocate
-    swap changes-deallocate                     \ reg-to reg-from rul0 int-cngs'
-    tuck swap                                   \ reg-to reg-from int-cngs' int-cngs' rul0
-    rule-isolate-changes                        \ reg-to reg-from int-cngs' rul0'
-    swap changes-deallocate                     \ reg-to reg-from rul0'
-    nip nip                                     \ rul0'
-    cur-action-xt execute                       \ rul0' act
-    step-new-xt execute                         \ stp
+    cur-action-xt execute                       \ | u-unw cngs-ned' u-unw2 rul0' act
+    step-new-xt execute                         \ | u-unw cngs-ned' u-unw2 stp
+
+    \ Update unwanted number of changes.
+    rot changes-deallocate                      \ | u-unw u-unw2 stp
+    -rot                                        \ | stp u-unw u-unw2
+    +                                           \ | stp u-unw3
+    over                                        \ | stp u-unw3 stp
+    step-set-number-unwanted-changes-xt         \ | stp u-unw3 stp xt
+    execute                                     \ | stp
+
+    \ Clean up.
+    2nip nip                                     \ stp
+
+    \ Return
     true
 ;
 

@@ -1,20 +1,61 @@
 \ Tests for the rule struct functions.
 
 : rule-test-restrict-initial-region
-    s" 011X" region-from-string-a   \ reg1
-    s" XX/11/X0/10/" rule-from-string  \ reg1 rul1 
+    \ Test 1.
+    s" 0011" region-from-string-a   \ reg1
+    s" 00/01/11/10/" rule-from-string  \ reg1 rul1 
     2dup                            \ reg1 rul1 reg1 rul1
     rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
     if
-        s" 00/11/10/10/" rule-from-string 
+        s" 00/01/11/10/" rule-from-string 
     
         2dup rule-eq
-        0= abort" rules ne?"
+        0= abort" rule-test-restrict-initial-region 1: rules ne?"
 
         rule-deallocate
         rule-deallocate
     else
-        ." rule-restrict-initial-region failed?"
+        ." rule-test-restrict-initial-region 1: rule-restrict-initial-region failed?"
+        abort
+    then
+    rule-deallocate
+    region-deallocate
+
+    \ Test 2.
+    s" 1010" region-from-string-a   \ reg1
+    s" X1/X1/X0/X0/" rule-from-string  \ reg1 rul1 
+    2dup                            \ reg1 rul1 reg1 rul1
+    rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
+    if
+        s" 11/01/10/00/" rule-from-string 
+    
+        2dup rule-eq
+        0= abort" rule-test-restrict-initial-region 2: rules ne?"
+
+        rule-deallocate
+        rule-deallocate
+    else
+        ." rule-test-restrict-initial-region 2: rule-restrict-initial-region failed?"
+        abort
+    then
+    rule-deallocate
+    region-deallocate
+
+    \ Test 3.
+    s" 1010" region-from-string-a   \ reg1
+    s" XX/XX/Xx/Xx/" rule-from-string  \ reg1 rul1 
+    2dup                            \ reg1 rul1 reg1 rul1
+    rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
+    if
+        s" 11/00/10/01/" rule-from-string 
+    
+        2dup rule-eq
+        0= abort" rule-test-restrict-initial-region 3: rules ne?"
+
+        rule-deallocate
+        rule-deallocate
+    else
+        ." rule-test-restrict-initial-region 3: rule-restrict-initial-region failed?"
         abort
     then
     rule-deallocate
@@ -25,65 +66,43 @@
 
 : rule-test-restrict-result-region
     \ Test 1.
-    s" 0X00" region-from-string-a       \ reg1
+    s" 0101" region-from-string-a       \ reg1
 
-    s" XX/11/X0/10/" rule-from-string   \ reg1 rul1
+    s" 00/11/XX/XX/" rule-from-string   \ reg1 rul1
 
     2dup                                \ reg1 rul1 reg1 rul1
     rule-restrict-result-region         \ reg1 rul1, rul2 t | f
     if
-        s" 00/11/X0/10/" rule-from-string   \ reg1 rul1 rul2 rul3
+        s" 00/11/00/11/" rule-from-string   \ reg1 rul1 rul2 rul3
         2dup rule-eq                        \ reg1 rul1 rul2 rul3 flag
-        0= abort" rules ne?"
+        0= abort" rule-test-restrict-result-region: rules ne?"
 
         rule-deallocate
         rule-deallocate
     else
-        ." rule-test-restrict-result-region failed?"
+        ." rule-test-restrict-result-region 1: rule-test-restrict-result-region failed?"
         abort
     then
     rule-deallocate
     region-deallocate
 
     \ Test 2.
-    s" 0101" region-from-string-a       \ reg1
+    s" 1001" region-from-string-a       \ reg1
 
-    s" Xx/Xx/XX/XX/" rule-from-string   \ reg1 rul1
+    s" X1/X0/Xx/Xx/" rule-from-string   \ reg1 rul1
 
     2dup                                \ reg1 rul1 reg1 rul1
     rule-restrict-result-region         \ reg1 rul1, rul2 t | f
     if
-        \ cr ." rslt2: " dup .rule cr
-        s" 10/01/00/11/" rule-from-string   \ reg1 rul1 rul2 rul3
+        s" X1/X0/10/01/" rule-from-string   \ reg1 rul1 rul2 rul3
         2dup rule-eq                        \ reg1 rul1 rul2 rul3 flag
-        0= abort" rules ne?"
+        0= abort" rule-test-restrict-result-region 2: rules ne?"
         rule-deallocate
         rule-deallocate
         rule-deallocate
         region-deallocate
     else
-        ." rule-test-restrict-result-region failed?"
-        abort
-    then
-
-    \ Test 3.
-    s" 0101" region-from-string-a       \ reg1
-
-    s" X0/X1/XX/XX/" rule-from-string   \ reg1 rul1
-
-    2dup                                \ reg1 rul1 reg1 rul1
-    rule-restrict-result-region         \ reg1 rul1, rul2 t | f
-    if
-        \ cr ." rslt3: " dup .rule cr
-        s" X0/X1/00/11/" rule-from-string   \ reg1 rul1 rul2 rul3
-        2dup rule-eq                        \ reg1 rul1 rul2 rul3 flag
-        0= abort" rules ne?"
-        rule-deallocate
-        rule-deallocate
-        rule-deallocate
-        region-deallocate
-    else
-        ." rule-test-restrict-result-region failed?"
+        ." rule-test-restrict-result-region: rule-test-restrict-result-region failed?"
         abort
     then
 
@@ -447,18 +466,23 @@
     \ Test 1, reg-from intersects rule initial-region.
     %1101 %1101 region-new                  \ reg-to
     %0100 %0100 region-new                  \ reg-to reg-from
-    s" Xx/XX/00/01/" rule-from-string       \ reg-to reg-from rulx
+    s" Xx/XX/01/01/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
+        cr ." step: " dup .step cr
         \ cr dup .step cr
         dup step-get-rule                   \ reg-to reg-from rulx | stp stp-rul
-        s" 01/11/00/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        s" 01/11/01/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
         is-false abort" rule-test-calc-step-fc 1: unexpected rule?"
 
-        rule-deallocate
+        rule-deallocate                     \ reg-to reg-from rulx | stp
+        dup                                 \ reg-to reg-from rulx | stp stp
+        step-get-number-unwanted-changes    \ reg-to reg-from rulx | stp u-unw
+        1 = is-false abort" rule-test-calc-step-fc 1: invalid number of unwanted changes"
+
         step-deallocate
         rule-deallocate
         region-deallocate
@@ -472,18 +496,23 @@
     \ but the rule initial region is reachable without using another needed change.
     %1101 %1101 region-new                  \ reg-to
     %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/XX/11/Xx/" rule-from-string       \ reg-to reg-from rulx
+    s" 01/Xx/11/Xx/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
+    cr ." step: " dup .step cr
         dup step-get-rule                   \ reg-to reg-from rulx | stp stp-rul
-        s" 01/11/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        s" 01/10/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         \ cr ." expt: " dup .rule space ." found: " over .rule cr
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
         is-false abort" rule-test-calc-step-fc 2: unexpected rule?"
 
-        rule-deallocate
+        rule-deallocate                     \ reg-to reg-from rulx | stp
+        dup                                 \ reg-to reg-from rulx | stp stp
+        step-get-number-unwanted-changes    \ reg-to reg-from rulx | stp u-unw
+        2 = is-false abort" rule-test-calc-step-fc 2: invalid number of unwanted changes"
+
         step-deallocate
         rule-deallocate
         region-deallocate
