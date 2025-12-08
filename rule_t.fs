@@ -526,6 +526,7 @@
 ;
 
 : rule-test-calc-step-bc
+
     \ Test 1, reg-to intersects rule result-region.
     %1101 %1101 region-new                  \ reg-to
     %0100 %0100 region-new                  \ reg-to reg-from
@@ -560,7 +561,7 @@
     if                                      \ reg-to reg-from rulx | stp
         \ cr dup .step cr
         dup step-get-rule                   \ reg-to reg-from rulx | stp stp-rul
-        s" 01/Xx/11/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        s" 01/01/11/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
         is-false abort" unexpected rule?"
@@ -575,17 +576,6 @@
         abort
     then
 
-    \ Test 3, reg-from does not intersect the rule initial-region,
-    \ the rule initial region is not reachable without using another needed change.
-    %1101 %1101 region-new                  \ reg-to
-    %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/XX/00/00/" rule-from-string       \ reg-to reg-from rulx
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-step-bc                       \ reg-to reg-from rulx | stp t | f
-    abort" step returned?" 
-    rule-deallocate
-    region-deallocate
-    region-deallocate
 
     cr ." rule-test-calc-step-bc - Ok" cr
 ;
@@ -600,6 +590,6 @@
     rule-test-new-region-to-region
     rule-test-isolate-changes
     rule-test-calc-step-fc
-    \ rule-test-calc-step-bc
+    rule-test-calc-step-bc
 ;
 

@@ -79,6 +79,7 @@
 ;
 
 : region-test-translate-to-region
+    \ Test 1.
     %0101 %0101 region-new          \ reg-from'           0101
     %1001 %1001 region-new          \ reg-from' reg-to'   1001
     swap                            \ reg-to' reg-from'
@@ -91,6 +92,7 @@
     region-deallocate
     region-deallocate
 
+    \ Test 2.
     %0101 %0101 region-new          \ reg-from' 0101
     %0000 %1111 region-new          \ reg-to'   1001
     swap                            \ reg-to' reg-from'
@@ -102,7 +104,7 @@
     region-deallocate
     region-deallocate
     region-deallocate
-    
+
     cr ." region-test-translate-to-region - Ok" cr
 ;
 

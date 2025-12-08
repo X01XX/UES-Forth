@@ -448,7 +448,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     \ Check args.
     assert-tos-is-group
     assert-nos-is-region
-    assert-tos-is-region
+    assert-3os-is-region
     \ cr ." group-calc-forward-steps:" cr
 
     group-get-rules         \ reg-to reg-from rul-str

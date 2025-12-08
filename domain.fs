@@ -471,7 +471,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-3os-is-region
     #2 pick #2 pick                             \ | reg-to reg-from
     2dup region-superset-of                     \ | reg-to reg-from bool
-    abort" dowain-calc-step-fc: region subset?" \ | reg-to reg-from
+    abort" domain-calc-step-fc: region subset?" \ | reg-to reg-from
     swap region-superset-of                     \ | bool
     abort" domain-calc-step-fc: region subset?" \ |
 
@@ -751,7 +751,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         exit
     then
 
-    \ #3 0 do
+    #3 0 do
         #3 pick #3 pick #3 pick #3 pick
 
         domain-get-plan2-fc         \ depth reg-to reg-from dom0 | pln t | f
@@ -760,10 +760,10 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             2nip nip nip            \ pln
             \ Return.
             true                    \ pln t
-     \       unloop
+            unloop
             exit
         then
-    \ loop
+    loop
                                     \ depth reg-to reg-from dom0
     \ Clean up.
     2drop 2drop
@@ -774,28 +774,37 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 ' domain-get-plan-fc to domain-get-plan-fc-xt
 
 : domain-calc-step-bc ( reg-to reg-from dom0 -- step true | false )
+    \ cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
     \ Check args.
     assert-tos-is-domain
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
+    #2 pick #2 pick                             \ | reg-to reg-from
+    2dup region-superset-of                     \ | reg-to reg-from bool 
+    abort" domain-calc-step-bc: region subset?" \ | reg-to reg-from
+    swap region-superset-of                     \ | bool 
+    abort" domain-calc-step-bc: region subset?" \ |
+    \ cr ." at 1: " .stack-structs-xt execute cr
 
     \ Init aggregate step list.
-    list-new swap                   \ reg-to reg-from stp-lst dom0
+    list-new                                    \ | stp-lst
 
     \ Get steps from each action.
-    dup domain-get-actions          \ reg-to reg-from stp-lst dom0 act-lst
-    list-get-links                  \ reg-to reg-from stp-lst dom0 link
+    over domain-get-actions         \ | stp-lst act-lst
+    list-get-links                  \ | stp-lst link
     begin
         ?dup
-    while                           \ reg-to reg-from stp-lst dom0 link |
-        dup link-get-data           \ | actx
-        dup                         \ | actx actx
-        #3 pick                     \ | actx actx dom
-        domain-set-current-action   \ | actx
-        #4 pick swap                \ | reg-to reg-from actx
-        action-calc-steps-bc        \ | act-stps
-        dup                         \ | act-stps act-stps
-        #4 pick step-list-append    \ | act-stps
-        step-list-deallocate        \ |
+    while                           \ | stp-lst link
+        dup link-get-data           \ | stp-lst link actx
+        dup                         \ | stp-lst link actx actx
+        #4 pick                     \ | stp-lst link actx actx dom
+        domain-set-current-action   \ | stp-lst link actx
+        #5 pick swap                \ | stp-lst link reg-to actx
+        #5 pick swap                \ | stp-lst link reg-to reg-from actx
+        action-calc-steps-bc        \ | stp-lst link act-stps
+        dup                         \ | stp-lst link act-stps act-stps
+        #3 pick step-list-append    \ | stp-lst link act-stps
+        step-list-deallocate        \ | stp-lst link
 
         link-get-next
     repeat
@@ -804,103 +813,263 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ space ." for: " 2 pick .sample
     \ space ." Possible steps: " over .step-list cr
 
-    \ Isolate step list
-    drop nip                        \ stp-lst
-    dup list-is-empty               \ stp-lst flag
-    if
+    \ Clean up.
+    2nip nip                        \ stp-lst
+
+    \ Check for no steps.
+    dup list-is-empty               \ stp-lst flag 
+    if   
         step-list-deallocate
         false
-        exit
-    then
+        exit 
+    then 
 
-    \ Pick a step.calc-steps
-    dup list-get-length             \ stp-lst len
-    random                          \ stp-lst inx
-    over                            \ stp-lst inx stp-lst
+    \ Generate a list of each different number of unwanted changes in steps.
+    list-new                        \ stp-lst lst-unw
+    over list-get-links             \ stp-lst lst-unw link
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ stp-lst lst-unw link stpx
+        step-get-number-unwanted-changes    \ stp-lst lst-unw link u-unw
+
+        \ Check if the number is already in the list.
+        [ ' = ] literal                     \ stp-lst lst-unw link u-uw xt
+        over                                \ stp-lst lst-unw link u-uw xt u-unw
+        #4 pick                             \ stp-lst lst-unw link u-uw xt u-unw lst-unw
+        list-member                         \ stp-lst lst-unw link u-uw bool
+        if                                  \ stp-lst lst-unw link u-uw 
+            drop                            \ stp-lst lst-unw link
+        else                                \ stp-lst lst-unw link u-uw
+            #2 pick                         \ stp-lst lst-unw link u-uw  lst-unw
+            list-push                       \ stp-lst lst-unw link
+        then
+        
+        link-get-next                       \ stp-lst lst-unw link
+    repeat
+
+
+    \ Sort the list of numbers, ascending   \ stp-lst lst-unw
+    [ ' > ] literal over list-sort          \ stp-lst lst-unw
+
+    \ Get first, lowest, number.
+    0 over list-get-item                    \ stp-lst lst-unw u-unw
+    swap list-deallocate                    \ stp-lst u-unw
+
+    \ Get steps with lowest number unwanted changes.
+    over step-list-match-number-unwanted-changes    \ stp-lst stp-lst2
+    swap step-list-deallocate                       \ stp-lst2
+
+    \ Pick a step.
+    dup list-get-length             \ stp-lst2 len
+    random                          \ stp-lst2 inx
+    over                            \ stp-lst2 inx stp-lst
 
     \ Extract step.
-    step-list-remove-item           \ stp-lst, stpx true | false
-    0= abort" Step not found?"      \ stp-lst stpx
+    step-list-remove-item           \ stp-lst2, stpx true | false
+    0= abort" domain-calc-step-bc: Step not found?"      \ stp-lst2 stpx
 
-    \ Clean up.
+    \ Clean up.                     \ stp-lst2 stpx
     swap step-list-deallocate       \ stpx
+    \ cr ." domain-calc-step-bc: returning: " dup .step cr
+
     \ Return.
     true
 ;
 
 \ Form a plan by getting successive steps closer, between
 \ a sample result state to a sample initial state.
-: domain-get-plan2-bc ( reg-to reg-from dom0 -- plan true | false )
-    \ cr ." domain-get-plan2-b" cr
+: domain-get-plan2-bc ( depth reg-to reg-from dom0 -- plan true | false )
+    \ cr ." domain-get-plan2-bc: start: depth: " #3 pick . space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
     \ Check args.
     assert-tos-is-domain
-    assert-nos-is-sample
+    assert-3os-is-region
+    #3 pick 0 5 within is-false abort" invalid depth?"
+    #2 pick #2 pick                             \ | reg-to reg-from
+    2dup region-superset-of                     \ | reg-to reg-from bool
+    abort" domain-get-plan2-bc: region subset?" \ | reg-to reg-from
+    swap region-superset-of                     \ | bool
+    abort" domain-get-plan2-bc: region subset?" \ |
 
-    \ Copy sample for later deallocation in loop.
-    swap sample-copy swap           \ smpl2 dom0
+    \ Put read-only arguments at the bottom of the function's logical stack frame.
+    rot                             \ depth reg-from dom0 | reg-to
+
     \ Init return plan.
-    dup plan-new                    \ smpl2 dom0 pln
-    -rot                            \ pln smpl2 dom0
+    over plan-new                   \ depth reg-from dom0 | reg-to pln
+    swap                            \ depth reg-from dom0 | pln reg-to
 
     begin
-        2dup domain-calc-step-bc    \ pln smpl2 dom0 | stpx true | false
+        dup                         \ depth reg-from dom0 | pln reg-to | reg-to
+        #4 pick                     \ depth reg-from dom0 | pln reg-to | reg-to reg-from
+        #4 pick                     \ depth reg-from dom0 | pln reg-to | reg-to reg-to dom0
+        domain-calc-step-bc         \ depth reg-from dom0 | pln reg-to | stpx true | false
 
-        0= if
+        is-false if                 \ depth reg-from dom0 | pln reg-to |
+            \ cr ." returning from domain-get-plan-bc 1: f depth: " #4 pick . cr
+            \ No step found, done.
             drop
-            sample-deallocate
             plan-deallocate
+            3drop
             false
             exit
-         then
+        then
 
-        \ Check if this is the last step needed.
-        #2 pick                         \ pln smpl2 dom0 | stpx smpl2
-        sample-get-initial              \ pln smpl2 dom0 | stpx s-i
-        over step-get-initial-region    \ pln smpl2 dom0 | stpx s-i stp-i
-        = if                            \ pln smpl2 dom0 | stpx
-            \ Clean up.
-            swap drop               \ pln smpl2 stpx
-            swap sample-deallocate  \ pln stpx
-            \ Add step to plan.
-            over                    \ pln stpx pln
-            plan-push               \ pln
+        \ Check if step backtracks.
+        dup                                     \ depth reg-from dom0 | pln reg-to | stpx stpx
+        #3 pick                                 \ depth reg-from dom0 | pln reg-to | stpx stpx pln
+        plan-check-step-initial                 \ depth reg-from dom0 | pln reg-to | stpx bool
+        if
+            \ cr ." returning from domain-get-plan-bc 2: f depth: " #5 pick . cr
+            step-deallocate
+            drop
+            plan-deallocate
+            3drop
+            false
+            exit
+        then
 
-            \ Return.
+        \ Check if step intersects reg-to.
+                                                \ depth reg-from dom0 | pln reg-to | stpx
+        over                                    \ depth reg-from dom0 | pln reg-to | stpx reg-to
+        over step-get-result-region             \ depth reg-from dom0 | pln reg-to | stpx reg-from stp-r
+        region-intersects                       \ depth reg-from dom0 | pln reg-to | stpx bool
+        if
+            \ cr ." plan: " #2 pick .plan space ." add intersecting step bc: " dup .step cr
+            \ Add intersecting step to plan.
+                                            \ depth reg-from dom0 | pln reg-to | stpx
+            #2 pick                         \ depth reg-from dom0 | pln reg-to | stpx pln
+            \ Check if this is the first step.
+            dup plan-is-empty
+            if
+                plan-push                       \ depth reg-from dom0 | pln reg-to |
+                \ cr ." next interation of plan: " over .plan cr
+                drop
+                dup plan-get-initial-region     \ depth reg-from dom0 | pln reg-to |
+            else                                \ depth reg-from dom0 | pln reg-to | stpx pln
+                2dup                            \ depth reg-from dom0 | pln reg-to | stpx pln stpx pln
+                plan-link-step-to-initial-region \ depth reg-from dom0 | pln reg-to | stpx pln, pln' t | f
+                if                              \ depth reg-from dom0 | pln reg-to | stpx pln pln'
+                    \ cr ." next interation of plan: " dup .plan cr
+                    \ Replace previous plan with current plan.
+                    nip nip                     \ depth reg-from dom0 | pln reg-to | pln'
+                    rot                         \ depth reg-from dom0 | reg-to | pln' pln
+                    plan-deallocate             \ depth reg-from dom0 | reg-to | pln'
+                    nip                         \ depth reg-from dom0 | pln'
+                    dup plan-get-initial-region \ depth reg-from dom0 | pln' reg-to |
+                else                            \ depth reg-from dom0 | pln reg-to | stpx pln
+                    \ cr ." returning from domain-get-plan-bc 3: f depth: " #6 pick . cr
+                    \ plan link failed, done.
+                    drop                        \ depth reg-from dom0 | pln reg-to | stpx
+                    step-deallocate
+                    drop
+                    plan-deallocate
+                    3drop
+                    false
+                    exit
+                then
+            then
+        else                                        \ depth reg-from dom0 | pln reg-to | stpx 
+        \ Process non-intersecting step.
+                                                    \ depth reg-from dom0 | pln reg-to | stpx
+            \ cr ." plan: " #2 pick .plan space ." add extending step bc: " dup .step cr 
+            \ Set up for recursion.
+            #5 pick 1-                              \ depth reg-from dom0 | pln reg-to | stpx | depth   ( -1 to prevent infinite recursion )
+            over step-get-result-region             \ depth reg-from dom0 | pln reg-to | stpx | depth stp-r
+            #3 pick                                 \ depth reg-from dom0 | pln reg-to | stpx | depth stp-r reg-to
+            swap                                    \ depth reg-from dom0 | pln reg-to | stpx | depth reg-to stp-r
+            #6 pick                                 \ depth reg-from dom0 | pln reg-to | stpx | depth reg-to stp-r dom
+            \ cr ." calling domain-get-plan-bc depth " #3 pick . cr
+            domain-get-plan-bc-xt execute           \ depth reg-from dom0 | pln reg-to | stpx | pln2 t | f
+            if                                      \ depth reg-from dom0 | pln reg-to | stpx | pln2
+                \ cr ." returned from domain-get-plan-bc: t " dup .plan space ." depth: " #6 pick . space ." continuing" cr
+                swap step-deallocate                \ depth reg-from dom0 | pln reg-to | pln2
+                #2 pick                             \ depth reg-from dom0 | pln reg-to | pln2 pln
+                dup plan-is-empty                   \ depth reg-from dom0 | pln reg-to | pln2 pln bool
+                if                                  \ depth reg-from dom0 | pln reg-to | pln2 pln
+                    \ pln2 replaces pln.
+                    drop                            \ depth reg-from dom0 | pln reg-to | pln2
+                    nip                             \ depth reg-from dom0 | pln pln2
+                    swap                            \ depth reg-from dom0 | pln2 pln
+                    plan-deallocate                 \ depth reg-from dom0 | pln2
+                    dup plan-get-initial-region     \ depth reg-from dom0 | pln2 reg-to
+                else                                \ depth reg-from dom0 | pln reg-to | pln2 pln
+                    2dup                            \ depth reg-from dom0 | pln reg-to | pln2 pln pln2 pln
+                    swap                            \ depth reg-from dom0 | pln reg-to | pln2 pln pln pln2
+                    plan-link                       \ depth reg-from dom0 | pln reg-to | pln2 pln, pln3 t | f
+                    if
+                        nip                         \ depth reg-from dom0 | pln reg-to | pln2 pln3
+                        swap plan-deallocate        \ depth reg-from dom0 | pln reg-to | pln3
+                        rot plan-deallocate         \ depth reg-from dom0 | reg-to pln3
+                        nip                         \ depth reg-from dom0 | pln3
+                        dup plan-get-initial-region \ depth reg-from dom0 | pln3 reg-to-next
+                    else                            \ depth reg-from dom0 | pln reg-to | pln2 pln
+                        \ cr ." returning from domain-get-plan-bc 4: f depth: " #6 pick . cr
+                        drop
+                        plan-deallocate
+                        drop
+                        plan-deallocate
+                        3drop
+                        false
+                        exit
+                    then
+                then
+            else                                \ depth reg-from dom0 | pln reg-to | stpx
+                \ cr ." returning from domain-get-plan-bc 5: f depth: " #5 pick . cr
+                step-deallocate
+                drop
+                plan-deallocate
+                3drop
+                false
+                exit
+            then
+        then
+
+        \ Check if the plan result, the current reg-from, is a subset of the from region.
+                                            \ depth reg-from dom0 | pln' reg-to |
+        \ cr ." Checking end of plan: " over .plan space ." cur reg-from: " dup .region space ." reg-to: " #3 pick .region space ." depth: " #4 pick . cr
+        
+        #3 pick                             \ depth reg-from dom0 | pln' reg-to | reg-from
+        over                                \ depth reg-from dom0 | pln' reg-to | reg-from reg-to
+        swap                                \ depth reg-from dom0 | pln' reg-to | reg-to reg-from
+        region-superset-of                  \ depth reg-from dom0 | pln' reg-to | bool
+        if
+            \ Plan finished.
+            drop                            \ depth reg-from dom0 | pln'
+            \ cr ." returning from domain-get-plan2-bc 6: t " dup .plan space ." depth: " #3 pick . cr
+            2nip nip                        \ pln
             true
             exit
         then
 
-        \ Add step to plan.         \ pln smpl2 dom0 | stpx
-        dup                         \ pln smpl2 dom0 | stpx stpx
-        #4 pick                     \ pln smpl2 dom0 | stpx stpx pln
-        plan-push                   \ pln smpl2 dom0 | stpx
-
-        \ Create new sample.
-        step-get-initial-region     \ pln smpl2 dom0 | stp-r
-        #2 pick sample-get-initial  \ pln smpl2 dom0 | stp-r smpl-r
-        sample-new                  \ pln smpl2 dom0 | smpl3
-        \ Clean up.
-        rot sample-deallocate       \ pln dom0 smpl3
-        swap                        \ pln smpl3 dom
     again
 ;
 
 \ Using a random depth-first backward-chaining strategy. Try a number
 \ of times to find a plan to accomplish a desired sample.
-: domain-get-plan-bc ( reg-to reg-from dom0 -- plan true | false )
+: domain-get-plan-bc ( depth reg-to reg-from dom0 -- plan true | false )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick region-intersects abort" from/to regions intersect"
+    #3 pick 0 5 within is-false abort" invalid depth?"
+
+    \ Check depth.
+    #3 pick 1 < if 
+        cr ." domain-get-plan-bc: Depth exceeded." cr
+        2drop 2drop
+        false
+        exit 
+    then 
 
     #3 0 do
-        2dup domain-get-plan2-bc    \ reg-to reg-from dom0 | pln t | f
-        if                          \ reg-to reg-from dom0 | pln
+        #3 pick #3 pick #3 pick #3 pick         \ depth reg-to reg-from dom0 | 
+        domain-get-plan2-bc                     \ depth reg-to reg-from dom0 | pln t | f
+        if                                      \ depth reg-to reg-from dom0 | pln
             \ Clean up.
-            nip nip                 \ pln
+            2nip nip nip                        \ pln
             \ Return.
-            true                    \ pln t
+            true                                \ pln t
             unloop
             exit
         then
@@ -908,10 +1077,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                                     \ reg-to reg-from dom0
 
     \ Clean up.
-    2drop
+    2drop 2drop
     \ Return.
     false
 ;
+
+' domain-get-plan-bc to domain-get-plan-bc-xt
 
 \ Try forward and backward chaining to make a plan
 \ for going from an initial region to a non-intersecting result region.
@@ -930,9 +1101,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     #2 random
     if
         \ Try forward-chaining first.
-        3                           \ reg-to reg-from dom0 | 3
+        #3                          \ reg-to reg-from dom0 | 3
         #3 pick #3 pick #3 pick     \ reg-to reg-from dom0 | 3 reg-to reg-from dom0
-        2dup domain-get-plan-fc     \ reg-to reg-from dom0 | pln t | f
+        domain-get-plan-fc          \ reg-to reg-from dom0 | pln t | f
         if
             2nip nip
             cr ." plan found (fc) " dup .plan cr
@@ -940,7 +1111,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             exit
         then
         \ Try backward-chaining second.
-        3                           \ reg-to reg-from dom0 | 3
+        #3                          \ reg-to reg-from dom0 | 3
         #3 pick #3 pick #3 pick     \ reg-to reg-from dom0 | 3 reg-to reg-from dom0
         domain-get-plan-bc          \ reg-to reg-from dom0 | pln t | f
         if
@@ -951,9 +1122,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         then
     else
         \ Try backward-chaining first.
-        3                           \ reg-to reg-from dom0 | 3
+        #3                          \ reg-to reg-from dom0 | 3
         #3 pick #3 pick #3 pick     \ reg-to reg-from dom0 | 3 reg-to reg-from dom0
-        domain-get-plan-bc          \ reg-to reg-from dom0 | pln t | f
+         domain-get-plan-bc         \ reg-to reg-from dom0 | pln t | f
         if
             2nip nip
             cr ." plan found (bc) " dup .plan cr
@@ -961,7 +1132,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
             exit
         then
         \ Try forward-chaining second.
-        3                           \ reg-to reg-from dom0 | 3
+        #3                          \ reg-to reg-from dom0 | 3
         #3 pick #3 pick #3 pick     \ reg-to reg-from dom0 | 3 reg-to reg-from dom0
         domain-get-plan-fc          \ reg-to reg-from dom0 | p t | f
         if
@@ -1162,36 +1333,10 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     \ cr ." domain-get-plan" cr
 
-\    2dup domain-get-plan-fb            \ reg-to reg-from dom0, plan t | f
-    \ Add depth limit.
-    #3                                  \ reg-to reg-from dom0 | 3
-    \ Copy paramaters.
-    #3 pick #3 pick #3 pick             \ reg-to reg-from dom0 | 3 reg-to reg-from dom0
-
-\   Init before count.
-\   region-mma mma-in-use >r
-
-    domain-get-plan-fc                  \ reg-to reg-from dom0, plan t | f
+    3dup domain-get-plan-fb            \ reg-to reg-from dom0, plan t | f
     if
-        \ Check before after count.
-\        dup plan-get-length 2 *
-\        cr ." domain-get-plan: plan regions " dup .
-\        r>
-\        space ." + starting regions " dup .
-\        space ." = " + dup .
-\        region-mma mma-in-use
-\        space ." ending regions: " dup .
-\        <> abort" numbers ne"
-        
         2nip nip true                   \ plan t
     else
-         \ Check before after count.
-\        r>
-\        space ." domain-get-plan: starting regions " dup .
-\        region-mma mma-in-use
-\        space ." ending regions: " dup .
-\        <> abort" numbers ne"
-        
         3drop
         false
 \        domain-asymmetric-chaining-fc   \ plan t | f

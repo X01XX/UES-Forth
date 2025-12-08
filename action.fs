@@ -1426,10 +1426,10 @@ action-groups               cell+ constant action-function              \ An xt 
     2drop                               \ ret-lst
 ;
 
-\ Return a list of possible forward-chaining steps, given a sample.
+\ Return a list of possible forward-chaining steps, given region-from and region-to regions.
 \ Steps may, or may not, intersect the from region.
 \ If they do not intersect reg-from, going reg-from to the step initial-region cannot require a needed change.
-: action-calc-steps-fc ( reg2 reg1 act0 -- stp-lst )
+: action-calc-steps-fc ( reg-to reg-from act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
@@ -1445,36 +1445,36 @@ action-groups               cell+ constant action-function              \ An xt 
     \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
 
     \ Init return list.
-    list-new swap                       \ reg2 reg1 ret-lst act0
-    2swap                               \ ret-lst act0 reg2 reg1
-    rot                                 \ ret-lst reg2 reg1 act0
+    list-new swap                       \ reg-to reg-from ret-lst act0
+    2swap                               \ ret-lst act0 reg-to reg-from
+    rot                                 \ ret-lst reg-to reg-from act0
 
-    action-get-groups                   \ ret-lst reg2 reg1 grp-lst
-    list-get-links                      \ ret-lst reg2 reg1 link
+    action-get-groups                   \ ret-lst reg-to reg-from grp-lst
+    list-get-links                      \ ret-lst reg-to reg-from link
     begin
         ?dup
     while
-        dup link-get-data               \ ret-lst reg2 reg1 link grpx
+        dup link-get-data               \ ret-lst reg-to reg-from link grpx
 
         \ Check if group might apply.
-        group-get-pn                    \ ret-lst reg2 reg1 link pn
-        #3 <                            \ ret-lst reg2 reg1 link flag
-        if                              \ ret-lst reg2 reg1 link
-            #2 pick #2 pick #2 pick     \ ret-lst reg2 reg1 link reg2 reg1 link
-            link-get-data               \ ret-lst reg2 reg1 link reg2 reg1 grpx
-            group-calc-steps-fc         \ ret-lst reg2 reg1 link stp-lst
-            dup list-is-empty           \ ret-lst reg2 reg1 link stp-lst bool
-            is-false if                 \ ret-lst reg2 reg1 link stp-lst
-                dup                     \ ret-lst reg2 reg1 link stp-lst stp-lst
-                #5 pick                 \ ret-lst reg2 reg1 link stp-lst stp-lst ret-lst
-                step-list-append        \ ret-lst reg2 reg1 link stp-lst
+        group-get-pn                    \ ret-lst reg-to reg-from link pn
+        #3 <                            \ ret-lst reg-to reg-from link flag
+        if                              \ ret-lst reg-to reg-from link
+            #2 pick #2 pick #2 pick     \ ret-lst reg-to reg-from link reg-to reg-from link
+            link-get-data               \ ret-lst reg-to reg-from link reg-to reg-from grpx
+            group-calc-steps-fc         \ ret-lst reg-to reg-from link stp-lst
+            dup list-is-empty           \ ret-lst reg-to reg-from link stp-lst bool
+            is-false if                 \ ret-lst reg-to reg-from link stp-lst
+                dup                     \ ret-lst reg-to reg-from link stp-lst stp-lst
+                #5 pick                 \ ret-lst reg-to reg-from link stp-lst stp-lst ret-lst
+                step-list-append        \ ret-lst reg-to reg-from link stp-lst
             then
-            step-list-deallocate        \ ret-lst reg2 reg1 link
+            step-list-deallocate        \ ret-lst reg-to reg-from link
         then
 
-        link-get-next                   \ ret-lst reg2 reg1 link
+        link-get-next                   \ ret-lst reg-to reg-from link
     repeat
-                                        \ ret-lst reg2 reg1
+                                        \ ret-lst reg-to reg-from
     2drop                               \ ret-lst
     \ cr ." returning steps: " dup .step-list cr
 ;
@@ -1482,46 +1482,52 @@ action-groups               cell+ constant action-function              \ An xt 
 \ Return a list of possible backward-chaining steps, given a sample.
 \ Steps may, or may not, intersect region reg-to.
 \ If they do not intersect reg-to, going from the step initial-region to reg-to cannot require a needed change.
-: action-calc-steps-bc ( reg2 reg1 act0 -- stp-lst )
+: action-calc-steps-bc ( reg-to reg-from act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
     assert-3os-is-region
+    #2 pick #2 pick                                 \ | reg-to reg-from
+    2dup region-superset-of                         \ | reg-to reg-from bool
+    abort" action-calc-steps-bc: region subset?"    \ | reg-to reg-from
+    swap region-superset-of                         \ | bool
+    abort" action-calc-steps-bc: region subset?"    \ |  
 
     \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-bc: " #2 pick .region space over .region cr
 
     \ Init return list.
-    list-new swap                   \ reg2 reg1 ret-lst act0
-    2swap                           \ ret-lst act0 reg2 reg1
-    rot                             \ ret-lst reg2 reg1 act0
+    list-new swap                   \ reg-to reg-from ret-lst act0
+    2swap                           \ ret-lst act0 reg-to reg-from
+    rot                             \ ret-lst reg-to reg-from act0
 
-    action-get-groups               \ ret reg2 reg1 grp-lst
-    list-get-links                  \ ret reg2 reg1 link
+    action-get-groups               \ ret reg-to reg-from grp-lst
+    list-get-links                  \ ret reg-to reg-from link
     begin
         ?dup
     while
-        #2 pick #2 pick #2 pick     \ ret reg2 reg1 link reg2 reg1 link
-        link-get-data               \ ret reg2 reg1 link reg2 reg1 grpx
+        dup link-get-data           \ ret reg-to reg-from link reg-to reg-from grpx
 
         \ Check if group might apply.
-        group-get-pn                \ ret-lst reg2 reg1 link pn
-        #3 <                        \ ret-lst reg2 reg1 link flag
-        if                          \ ret-lst reg2 reg1 link
+        group-get-pn                \ ret-lst reg-to reg-from link pn
+        #3 <                        \ ret-lst reg-to reg-from link flag
+        if                          \ ret-lst reg-to reg-from link
             \ Get backward steps, step-list returned may be empty.
-            group-calc-steps-bc     \ ret-lst reg2 reg1 link stp-lst
-            dup list-is-empty       \ ret-lst reg2 reg1 link stp-lst bool
+            #2 pick #2 pick #2 pick \ ret-lst reg-to reg-from link reg-to reg-from link                                                                              
+            link-get-data           \ ret-lst reg-to reg-from link reg-to reg-from grpx 
+            group-calc-steps-bc     \ ret-lst reg-to reg-from link stp-lst
+            dup list-is-empty       \ ret-lst reg-to reg-from link stp-lst bool
             is-false if
-                dup                 \ ret-lst reg2 reg1 link stp-lst stp-lst
-                #5 pick             \ ret-lst reg2 reg1 link stp-lst stp-lst ret-lst
-                step-list-append    \ ret-lst reg2 reg1 link stp-lst
+                dup                 \ ret-lst reg-to reg-from link stp-lst stp-lst
+                #5 pick             \ ret-lst reg-to reg-from link stp-lst stp-lst ret-lst
+                step-list-append    \ ret-lst reg-to reg-from link stp-lst
             then
-            step-list-deallocate    \ ret-lst reg2 reg1 link
+            step-list-deallocate    \ ret-lst reg-to reg-from link
         then
 
-        link-get-next               \ ret-lst reg2 reg1 link
+        link-get-next               \ ret-lst reg-to reg-from link
     repeat
-                                    \ ret-lst reg2 reg1
+                                    \ ret-lst reg-to reg-from
     2drop                           \ ret-lst
 ;

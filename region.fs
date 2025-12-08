@@ -730,7 +730,7 @@ region-state-0-disp cell+ constant region-state-1-disp
 \ To:    0 1 X | 0 1 X | 0 1 X
 \ =:     0 1 0 | 0 1 1 | 0 1 X
 : region-translate-to-region ( reg-to reg-from -- reg )
-    \ cr ." region-translate-to-region: from: " dup .region space ." to: " over .region cr
+    \ cr ." region-translate-to-region: from: " dup .region space ." to: " over .region
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
@@ -753,4 +753,5 @@ region-state-0-disp cell+ constant region-state-1-disp
     \ Clean up, return.
     swap region-deallocate  \ reg-to reg-from reg-to''
     nip nip                 \ reg-to''
+    \ space ." = " dup .region cr
 ;

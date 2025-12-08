@@ -624,18 +624,16 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     tuck plan-push              \ pln-from pln-to
 
     \ Link plans.
-    swap                        \ pln-to pln-from
-    2dup plan-link              \ pln-to pln-from, pln-rslt t | f
+    tuck swap                   \ pln-to pln-to pln-from
+    plan-link                   \ pln-to, pln-rslt t | f
 
     \ Check result.
-    if                          \ pln-to pln-from pln-rslt
-        nip                     \ pln-to pln-rslt
+    if                          \ pln-to pln-rslt
         swap                    \ pln-rslt pln-to
         dup plan-pop if drop then   \ Protect step from deallocation.
         plan-deallocate         \ pln-rslt
         true
-    else                        \ pln-to pln-from
-        drop                    \ pln-to
+    else                        \ pln-to
         dup plan-pop if drop then   \ Protect step from deallocation.
         plan-deallocate         \
         false
@@ -658,24 +656,21 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     then
 
     \ Make plan from step.
-    over                        \ stp-from pln-to stp-from
-    dup struct-inc-use-count    \ stp-from pln-from stp-from ( gaurd against later plan-deallocate )
-    step-copy                   \ stp-from pln-to stp-from' ( avoid use count problems when the pln-from is deallocated )
-    over plan-get-domain        \ stp-from pln-to stp-from' dom
-    plan-new                    \ stp-from pln-to stp pln-from
-    tuck plan-push              \ stp-from pln-to pln-from
+    swap                        \ pln-to stp-from
+    over plan-get-domain        \ pln-to stp-from' dom
+    plan-new                    \ pln-to stp pln-from
+    tuck plan-push              \ pln-to pln-from
 
     \ Link plans.
-    2dup plan-link              \ stp-from pln-to pln-from, pln-rslt t | f
-    if                          \ stp-from pln-to pln-from pln-rslt
-        swap                    \ stp-from pln-to pln-rslt pln-from
+    tuck plan-link                  \ pln-from, pln-rslt t | f
+    if                              \ pln-from pln-rslt
+        swap                        \ pln-rslt pln-from
         dup plan-pop if drop then   \ Protect step from deallocation.
-        plan-deallocate    \ stp-from pln-to pln-rslt
-        nip                     \ stp-from pln-rslt
+        plan-deallocate             \ pln-rslt
         true
-    else                        \ stp-from pln-to pln-from
+    else                            \ pln-from
         dup plan-pop if drop then   \ Protect step from deallocation.
-        plan-deallocate         \ stp-from pln-to
+        plan-deallocate             \ stp-from pln-to
         drop
         false
     then

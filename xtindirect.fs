@@ -45,6 +45,8 @@
 
 ' xtabort value domain-get-plan-fc-xt
 
+' xtabort value domain-get-plan-bc-xt
+
 
 ' xtabort value assert-tos-is-domain-xt
 
