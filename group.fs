@@ -455,16 +455,21 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     rulestore-calc-steps-bc \ stp-lst
 ;
 
-\ Return a list of steps having needed changes, given a from-region (tos) and a to-region (nos).
-: group-calc-steps ( reg-to reg-from grp0 -- stp-lst )
+\ Return a list of steps having needed changes, given a group (tos) and needed changes (nos).
+: group-calc-steps-by-changes ( cngs1 grp0 -- stp-lst )
     \ Check args.
     assert-tos-is-group
-    assert-nos-is-region
-    assert-tos-is-region
-    \ cr ." group-calc-forward-steps:" cr
+    assert-nos-is-changes
+    \ cr ." group-calc-steps-by-changes:" cr
+    over changes-null
+    if
+        2drop
+        false
+        exit
+    then
 
-    group-get-rules         \ reg-to reg-from rul-str
-    rulestore-calc-steps    \ stp-lst
+    group-get-rules                     \ cngs1 rul-str
+    rulestore-calc-steps-by-changes     \ stp-lst
 ;
 
 \ Return a fill need, if any.

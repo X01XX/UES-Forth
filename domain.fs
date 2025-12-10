@@ -575,7 +575,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 5 within is-false abort" invalid depth?"
+    #3 pick 0 #5 within is-false abort" invalid depth?"
     #2 pick #2 pick                             \ | reg-to reg-from
     2dup region-superset-of                     \ | reg-to reg-from bool
     abort" domain-get-plan2-fc: region subset?" \ | reg-to reg-from
@@ -741,7 +741,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 5 within is-false abort" invalid depth?"
+    #3 pick 0 #5 within is-false abort" invalid depth?"
 
     \ Check depth.
     #3 pick 1 < if
@@ -884,7 +884,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check args.
     assert-tos-is-domain
     assert-3os-is-region
-    #3 pick 0 5 within is-false abort" invalid depth?"
+    #3 pick 0 #5 within is-false abort" invalid depth?"
     #2 pick #2 pick                             \ | reg-to reg-from
     2dup region-superset-of                     \ | reg-to reg-from bool
     abort" domain-get-plan2-bc: region subset?" \ | reg-to reg-from
@@ -1052,7 +1052,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick region-intersects abort" from/to regions intersect"
-    #3 pick 0 5 within is-false abort" invalid depth?"
+    #3 pick 0 #5 within is-false abort" invalid depth?"
 
     \ Check depth.
     #3 pick 1 < if 
@@ -1146,175 +1146,183 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     false
 ;
 
-: domain-calc-steps-by-changes-fc ( reg-to reg-from dom0 -- stp-lst )
+\ Return a list of all steps that can make at least one needed change.
+: domain-calc-steps-by-changes ( cngs1 dom0 -- stp-lst )
     \ Check args.
     assert-tos-is-domain
-    assert-nos-is-sample
+    assert-nos-is-changes
 
     \ Init return list.
-    list-new swap                   \ reg-to reg-from stp-lst dom0
+    list-new -rot                       \ stp-lst cngs1 dom0
 
     \ Get steps from each action.
-    dup domain-get-actions          \ reg-to reg-from stp-lst dom0 act-lst
-    list-get-links                  \ reg-to reg-from stp-lst dom0 link
+    dup domain-get-actions              \ stp-lst cngs1 dom0 act-lst
+    list-get-links                      \ stp-lst cngs1 dom0 link
     begin
         ?dup
-    while                               \ reg-to reg-from stp-lst dom0 link |
+    while                               \ stp-lst cngs1 dom0 link |
         dup link-get-data               \ | actx
         dup                             \ | actx actx
         #3 pick                         \ | actx actx dom
         domain-set-current-action       \ | actx
-        #4 pick swap                    \ | reg-to reg-from actx
-        action-calc-steps               \ | act-stps
+        #3 pick swap                    \ | cngs1 actx
+        action-calc-steps-by-changes    \ | act-stps
         dup                             \ | act-stps act-stps
-        #4 pick step-list-append        \ | act-stps
+        #5 pick step-list-append        \ | act-stps
         step-list-deallocate            \ |
 
         link-get-next
     repeat
-    drop                                \ reg-to reg-from stp-lst
-    nip                                 \ stp-lst
+    2drop                               \ stp-lst
 ;
 
-\ Asymmetric chaining, forward.
+\ Asymmetric chaining.
 \ Get rules for each required single bit change.
 \ Find steps that change a single bit and contain no rules that intersect a from-region or goal-region.
 \ Randomly choose one of those steps.
 \ Try making a plan that goes from the from-region to the step initial-region.
 \ Restrict the steps initial-region.
 \ Try making a plan that goes from the step result-region to the goal region. 
-: domain-asymmetric-chaining-fc ( reg-to reg-from dom0 -- plan t | f )
+: domain-asymmetric-chaining ( reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain
-    assert-nos-is-sample
+    assert-nos-is-region
+    assert-3os-is-region
 
     \ Find an asymmetric rule.
-    2dup                                    \ reg-to reg-from dom0 | reg-to reg-from dom0
-    domain-calc-steps-by-changes-fc         \ reg-to reg-from dom0 | stp-lst
+    #2 pick #2 pick                         \ reg-to reg-from dom0 | reg-to reg-from
+    changes-new-region-to-region            \ reg-to reg-from dom0 | cngs'
+    2dup swap                               \ reg-to reg-from dom0 | cngs' cngs' dom0
+    domain-calc-steps-by-changes            \ reg-to reg-from dom0 | cngs' stp-lst
     dup list-is-empty if
         list-deallocate
-        2drop
+        changes-deallocate
+        3drop
         false
         exit
     then
-    
+
     \ Prep for loop by single-bit change.
-    #2 pick sample-calc-changes             \ reg-to reg-from dom0 | stp-lst cngs
-    dup changes-split                       \ reg-to reg-from dom0 | stp-lst cngs cng-lst
-    swap changes-deallocate                 \ reg-to reg-from dom0 | stp-lst cng-lst
-    list-new swap                           \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst
-    dup list-get-links                      \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
+    swap dup changes-split                  \ reg-to reg-from dom0 | stp-lst cngs' cng-lst'
+    swap changes-deallocate                 \ reg-to reg-from dom0 | stp-lst cng-lst'
+
+    list-new swap                           \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst'
+    dup list-get-links                      \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link
 
     \ For each single-bit change, find steps that do not contain the sample initial states
     \ without any alternate steps that do.
     begin
         ?dup
-    while                                   \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
-        assert-tos-is-link
+    while                                   \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link
 
         \ Find steps that provide the one-bit change, but possibly others.
-        dup link-get-data                   \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link cng1
-        #4 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link cng1 stp-lst
-        step-list-intersects-changes        \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link stp-cng-lst
-        dup list-get-length                 \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst len
+        dup link-get-data                   \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link cng1
+        #4 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link cng1 stp-lst
+        step-list-intersects-changes        \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link stp-cng-lst'
 
         \ Check if the one-bit change is possible, else done.
-        0= if                               \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst
-            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
-            drop                            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst
+        dup list-get-length                 \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link stp-cng-lst' len
+        0= if                               \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link stp-cng-lst'
+            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link
+            drop                            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst'
             changes-list-deallocate         \ reg-to reg-from dom0 | stp-lst asym-lst
             step-list-deallocate            \ reg-to reg-from dom0 | stp-lst
             step-list-deallocate            \ reg-to reg-from dom0 |
-            2drop
+            3drop
             false
             exit
         then
 
         \ Check if there are only steps that do not match the reg-to reg-from initial state.
-        dup                                 \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst
-        #7 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst reg-to reg-from
-        \ swap step-list-any-match-sample     \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst flag
-        0= if                               \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst
+        #7 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to
+        #7 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to reg-from
+        #2 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to reg-from sc-list
+        step-list-any-from-to-intersections \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst bool
+        if
+            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
+        else
             \ Save the steps.
             dup #4 pick                     \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst asym-lst
             step-list-append                \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst
+            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
         then
-        step-list-deallocate                \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
 
         link-get-next                       \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
     repeat
 
+    \ Clean up.                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst
     changes-list-deallocate                 \ reg-to reg-from dom0 | stp-lst asym-lst
     swap step-list-deallocate               \ reg-to reg-from dom0 | asym-lst
 
+    \ Check list len.
     dup list-get-length                     \ reg-to reg-from dom0 | asym-lst len
-    0<> if
-        \ Randomly choose a step.
-        dup list-get-length                 \ reg-to reg-from dom0 | asym-lst len
-        random                              \ reg-to reg-from dom0 | asym-lst inx
-        over list-get-item                  \ reg-to reg-from dom0 | asym-lst stpx
-       \  dup step-get-sample                 \ reg-to reg-from dom0 | asym-lst stpx smpl2
-
-        \ Get plan reg-to reg-from-i to smpl2-i.
-        dup sample-get-initial              \ reg-to reg-from dom0 | asym-lst stpx smpl2 s2-i
-        #5 pick sample-get-initial          \ reg-to reg-from dom0 | asym-lst stpx smpl2 s2-i s1-i
-        sample-new                          \ reg-to reg-from dom0 | asym-lst stpx smpl2 smpl3
-
-        dup                                 \ reg-to reg-from dom0 | asym-lst stpx smpl2 smpl3 smpl3
-        #5 pick                             \ reg-to reg-from dom0 | asym-lst stpx smpl2 smpl3 smpl3 dom0
-        domain-get-plan-fb                  \ reg-to reg-from dom0 | asym-lst stpx smpl2 smpl3, plan t | f
-        if
-            swap sample-deallocate          \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1
-
-            \ Get plan 2
-            #5 pick sample-get-result       \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 s1-r
-            #2 pick sample-get-result       \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 s1-r s2-r
-            sample-new                      \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 smpl4
-
-            dup #6 pick                     \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 smpl4 smpl4 dom0
-            domain-get-plan-fb              \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 smpl4, plan2 t | f
-            if                              \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 smpl4 plan2
-                swap sample-deallocate      \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 plan2
-
-                \ Add step to plan1.
-                #3 pick                     \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 plan2 stpx
-                #2 pick                     \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 plan2 stpx plan1
-                plan-push-end               \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 plan2
-
-                \ Add plan2
-                2dup swap                   \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 plan2 plan2 plan1
-                plan-append                 \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 plan2
-
-                plan-deallocate             \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1
-                cr ." plan found (afc): " dup .plan cr
-                nip nip                     \ reg-to reg-from dom0 | asym-lst plan1
-                swap step-list-deallocate   \ reg-to reg-from dom0 plan1
-                nip nip                     \ plan1
-                true
-                exit
-            else                            \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1 smpl4
-                sample-deallocate           \ reg-to reg-from dom0 | asym-lst stpx smpl2 plan1
-                plan-deallocate             \ reg-to reg-from dom0 | asym-lst stpx smpl2
-                2drop                       \ reg-to reg-from dom0 | asym-lst
-                step-list-deallocate        \ reg-to reg-from dom0
-                2drop
-                false
-                \ cr ." domain-asymmetric-chaining-f: exit 4 " .s cr
-                exit
-            then
-        else
-                                            \ reg-to reg-from dom0 | asym-lst stpx smpl2 smpl3
-            sample-deallocate               \ reg-to reg-from dom0 | asym-lst stpx smpl2
-            2drop                           \ reg-to reg-from dom0 | asym-lst
-            step-list-deallocate            \ reg-to reg-from dom0
-            2drop
-            false
-            \ cr ." domain-asymmetric-chaining-f: exit 5 " .s cr
-            exit
-        then
-    else
+    0= if
         step-list-deallocate                \ reg-to reg-from dom0 |
-        2drop
+        3drop
+        false
+        exit
+    then
+
+    \ Randomly choose a step.
+    dup list-get-length                     \ reg-to reg-from dom0 | asym-lst len
+    random                                  \ reg-to reg-from dom0 | asym-lst inx
+    over step-list-remove-item              \ reg-to reg-from dom0 | asym-lst, stpx t | f
+    is-false abort" time not found?"
+
+    swap step-list-deallocate               \ reg-to reg-from dom0 | stpx
+
+    \ Get plan1 reg-from to step initial region.
+    dup step-get-initial-region             \ reg-to reg-from dom0 | stpx stp-i
+    #3 pick                                 \ reg-to reg-from dom0 | stpx stp-i reg-from
+    #3 pick                                 \ reg-to reg-from dom0 | stpx stp-i reg-from dom0
+    domain-get-plan-fb                      \ reg-to reg-from dom0 | stpx, plan1' t | f
+    is-false if                             \ reg-to reg-from dom0 | stpx
+        step-deallocate
+        3drop
+        false
+        exit
+    then
+
+    \ Link plan to step.                \ reg-to reg-from dom0 | stpx plan1'
+    2dup                                \ reg-to reg-from dom0 | stpx plan1' stpx plan1'
+    plan-link-step-to-result-region     \ reg-to reg-from dom0 | stpx plan1', plan2' t | f
+    is-false if                         \ reg-to reg-from dom0 | stpx plan1'
+        plan-deallocate
+        step-deallocate
+        3drop
+        false
+        exit
+    then
+
+    \ Clean up.                         \ reg-to reg-from dom0 | stpx plan1' plan2'
+    swap plan-deallocate
+    swap step-deallocate                \ reg-to reg-from dom0 | plan2'
+
+    \ Get plan part 2.
+    #3 pick                             \ reg-to reg-from dom0 | plan2' reg-to
+    over plan-get-result-region         \ reg-to reg-from dom0 | plan2' reg-to pln-r
+
+    #3 pick                             \ reg-to reg-from dom0 | plan2' reg-to pln-r dom0
+    domain-get-plan-fb                  \ reg-to reg-from dom0 | plan2', plan3' t | f
+    is-false if                         \ reg-to reg-from dom0 | plan2'
+        plan-deallocate
+        3drop
+        false
+        exit
+    then
+
+    \ Link plan2 to plan3                   \ reg-to reg-from dom0 | plan2', plan3'
+    swap                                    \ reg-to reg-from dom0 | plan3' plan2'
+    2dup plan-link                          \ reg-to reg-from dom0 | plan3' plan2', plan3' t | f
+    if                                      \ reg-to reg-from dom0 | plan3' plan2' plan3'
+        swap plan-deallocate
+        swap plan-deallocate
+        2nip nip
+        true
+    else                                    \ reg-to reg-from dom0 | plan3' plan2'
+        plan-deallocate
+        plan-deallocate
+        3drop
         false
     then
 ;
@@ -1331,15 +1339,17 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     swap region-superset-of                 \ | bool
     abort" domain-get-plan: region subset?" \ |
 
-    \ cr ." domain-get-plan" cr
-
     3dup domain-get-plan-fb            \ reg-to reg-from dom0, plan t | f
     if
         2nip nip true                   \ plan t
     else
-        3drop
-        false
-\        domain-asymmetric-chaining-fc   \ plan t | f
+        domain-asymmetric-chaining      \ plan t | f
+        if
+            cr ." plan found (asm) " dup .plan cr
+            true
+        else
+            false
+        then
     then
 ;
 

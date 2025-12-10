@@ -1274,104 +1274,21 @@ rule-m11    cell+ constant rule-m10
     swap changes-deallocate     \ u
 ;
 
-\ Return a step that may be applied to go from one region (tos) to another (nos).
+\ Return a step for a rule (tos) and needed changes (nos).
 \ If the rule has a needed change, a step will be returned.
-: rule-calc-step ( reg-to reg-from rul0 -- step t | f )
+: rule-calc-step-by-changes ( cngs1 rul0 -- step t | f )
     \ Check args.
     assert-tos-is-rule
-    assert-nos-is-region
-    assert-3os-is-region
-    #2 pick #2 pick region-intersects abort" Regions intersect?"
+    assert-nos-is-changes
 
-    \ Calc needed changes.
-    #2 pick #2 pick                     \ | reg-to reg-from
-    changes-new-region-to-region        \ | cngs'
-
-    \ Check if rul0 has any needed changes.
-    2dup swap                           \ | cngs' cngs' rul0
-    rule-intersects-changes             \ | cngs' bool
-    is-false if
-        changes-deallocate              \ |
-        3drop
-        false
-    then
-
-    \ Check for reg-from intersection.
-    #2 pick #2 pick                     \ | cngs' reg-from rul0
-    rule-calc-initial-region            \ | cngs' reg-from rul-i'
-    tuck region-intersects              \ | cngs' rul-i' bool
-    swap region-deallocate              \ | cngs' bool
+    2dup rule-intersects-changes    \ cgs1 rul0 bool
     if
-        #2 pick #2 pick                         \ | cngs' reg-from rul0
-        rule-restrict-initial-region            \ | cngs', rul0' t | f
-        if                                      \ | cngs' rul0'
-            2dup                                \ | cngs' rul0' cngs' rul0'
-            rule-number-unwanted-changes        \ | cngs' rul0' u
-            rot                                 \ | rul0' u cngs'
-            changes-deallocate                  \ | rul0' u
-            swap                                \ | u rul0'
-            cur-action-xt execute               \ | u rul0' act
-            step-new-xt execute                 \ | u stp
-            tuck                                \ | stp u stp
-            step-set-number-unwanted-changes-xt \ | stp u stp xt
-            execute                             \ | stp
-            2nip nip                            \ stp
-            true
-            exit
-        else
-            cr ." rule-calc-step: rule-restrict-initial-region failed?"
-            abort
-        then
-
-    then
-
-    \ Check for reg-to intersection.
-    #3 pick #2 pick                     \ reg-to reg-from rul0 | cngs' | reg-to rul0
-    rule-calc-result-region             \ reg-to reg-from rul0 | cngs' | reg-to rul-result'
-    tuck region-intersects              \ reg-to reg-from rul0 | cngs' | rul-result' bool
-    swap region-deallocate              \ reg-to reg-from rul0 | cngs' | bool
-    if
-        changes-deallocate              \ reg-to reg-from rul0
-        swap drop                       \ reg-to rul0
-        rule-restrict-result-region     \ rul0'
-        cur-action-xt execute           \ rul0' act
-        step-new-xt execute             \ stp
-        \ true over step-set-intersects-xt execute
+        nip                         \ rul0
+        cur-action-xt execute       \ rul0 act
+        step-new-xt execute         \ stp
         true
-        exit
-    then
-
-                                    \ reg-to reg-from rul0 | cngs' |
-    tuck swap                       \ reg-to reg-from cngs' cngs' rul0
-    rule-isolate-changes            \ reg-to reg-from rul0'
-    cur-action-xt execute           \ reg-to reg-from rul0' act
-    step-new-xt execute             \ reg-to reg-from stp
-    nip nip                         \ stp
-    true
-;
-
-\ Return true if a rule's initial region intersects a from region, and the result
-\ intersects the from-to region.
-: rule-intersects-fc ( reg-to reg-from rul0 -- bool )
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
-    assert-3os-is-region
-
-    \ Get result of using the rule.
-    2dup                            \ | reg-from rul0
-    rule-restrict-initial-region    \ | rul0' t | f
-    if                              \ | rul0'
-        dup rule-calc-result-region \ | rul0' reg-rslt'
-        swap rule-deallocate        \ | reg-rslt'
-        #3 pick #3 pick             \ | reg-rslt' reg-to reg-from
-        region-union                \ | reg-rslt' reg-ft'
-        2dup region-intersects      \ | reg-rslt' reg-ft' bool
-        swap region-deallocate      \ | reg-rslt' bool
-        swap region-deallocate      \ | bool
-        2nip nip                    \ bool
     else
-        3drop
+        2drop
         false
     then
 ;

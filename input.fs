@@ -581,7 +581,7 @@
         2drop                                       \ c-addr c-cnt c-addr c-cnt
 
         \ Get goal rlc.
-        2                                           \ add new length, 2.
+        #2                                          \ add new length, 2.
         region-list-corr-from-parsed-string         \ rlc t | f
 
         if

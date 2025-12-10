@@ -171,3 +171,41 @@
     then
 ;
 
+\ Return tru eif any step intersects reg-to or reg-from.
+: step-list-any-from-to-intersections ( reg-to reg-from stp-lst0 -- bool )
+    \ Check arg3.
+    assert-tos-is-list
+    assert-nos-is-region
+    assert-3os-is-region
+
+    list-get-links                  \ reg-to reg-from link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ reg-to reg-from link stpx
+        dup step-get-initial-region \ reg-to reg-from link stpx stp-i
+        #3 pick                     \ reg-to reg-from link stpx stp-i reg-from
+        region-intersects           \ reg-to reg-from link stpx bool
+        if
+            2drop 2drop
+            true
+            exit
+        then
+
+        step-get-result-region      \ reg-to reg-from link stp-r
+        #3 pick                     \ reg-to reg-from link stp-r reg-to
+        region-intersects           \ reg-to reg-from link bool
+        if
+            3drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+
+    2drop
+    false
+;
+ 

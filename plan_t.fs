@@ -100,7 +100,7 @@
     over plan-get-step-list             \ pln reg pln' 1 stp-lst
     list-get-item                       \ pln reg pln' stp1
     struct-get-use-count                \ pln reg pln' u
-    2 <> abort" use count of last step not 2?"
+    #2 <> abort" use count of last step not 2?"
 
     \ Clean up.
     plan-deallocate

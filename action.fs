@@ -1379,51 +1379,56 @@ action-groups               cell+ constant action-function              \ An xt 
     repeat
 ;
 
-\ Return a list of possible forward-chaining steps, given to/from regions.
+\ Return a list of possible steps, given to/from regions.
 \ Steps may, or may not, intersect the to/from regions.
 \ If they do not intersect, there are no restrictions.
-: action-calc-steps ( reg2 reg1 act0 -- stp-lst )
+: action-calc-steps-by-changes ( cngs1 act0 -- stp-lst )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-region
-    assert-3os-is-region
+    assert-nos-is-changes
+    over changes-null
+    if
+        2drop
+        false
+        exit
+    then
 
     \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
-    \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
+    \ space ." action-calc-steps-by-changes: " over .changes cr
 
     \ Init return list.
-    list-new swap                       \ reg2 reg1 ret-lst act0
-    2swap                               \ ret-lst act0 reg2 reg1
-    rot                                 \ ret-lst reg2 reg1 act0
+    list-new                            \ cngs1 act0 ret-lst
+    -rot                                \ ret-lst cngs1 act0
 
-    action-get-groups                   \ ret-lst reg2 reg1 grp-lst
-    list-get-links                      \ ret-lst reg2 reg1 link
+    action-get-groups                   \ ret-lst cngs1 grp-lst
+    list-get-links                      \ ret-lst cngs1 link
     begin
         ?dup
     while
-        dup link-get-data               \ ret-lst reg2 reg1 link grpx
+        dup link-get-data               \ ret-lst cngs1 link grpx
 
         \ Check if group might apply.
-        group-get-pn                    \ ret-lst reg2 reg1 link pn
-        #3 <                            \ ret-lst reg2 reg1 link flag
-        if                              \ ret-lst reg2 reg1 link
-            #2 pick #2 pick #2 pick     \ ret-lst reg2 reg1 link reg2 reg1 link
-            over link-get-data          \ ret-lst reg2 reg1 link reg2 reg1 grpx
-            group-calc-steps            \ ret-lst reg2 reg1 link stp-lst
-            dup list-is-empty           \ ret-lst reg2 reg1 link stp-lst bool
-            is-false if                 \ ret-lst reg2 reg1 link stp-lst
-                dup                     \ ret-lst reg2 reg1 link stp-lst stp-lst
-                #5 pick                 \ ret-lst reg2 reg1 link stp-lst stp-lst ret-lst
-                step-list-append        \ ret-lst reg2 reg1 link stp-lst
+        group-get-pn                    \ ret-lst cngs1 link pn
+        #3 <                            \ ret-lst cngs1 link flag
+        if                              \ ret-lst cngs1 link
+            2dup                        \ ret-lst cngs1 link cngs1 link
+            link-get-data               \ ret-lst cngs1 link cngs1 grpx
+            group-calc-steps-by-changes \ ret-lst cngs1 link stp-lst
+            dup list-is-empty           \ ret-lst cngs1 link stp-lst bool
+            if
+            else
+                dup                     \ ret-lst cngs1 link stp-lst stp-lst
+                #4 pick                 \ ret-lst cngs1 link stp-lst stp-lst ret-lst
+                step-list-append        \ ret-lst cngs1 link stp-lst
             then
-            step-list-deallocate        \ ret-lst reg2 reg1 link
+            step-list-deallocate        \ ret-lst cngs1 link
         then
 
-        link-get-next                   \ ret-lst reg2 reg1 link
+        link-get-next                   \ ret-lst cngs1 link
     repeat
-                                        \ ret-lst reg2 reg1
-    2drop                               \ ret-lst
+                                        \ ret-lst cngs1
+    drop                                \ ret-lst
 ;
 
 \ Return a list of possible forward-chaining steps, given region-from and region-to regions.

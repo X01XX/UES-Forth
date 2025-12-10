@@ -516,47 +516,50 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
                                 \ cngs
 ;
 
-\ Given a rulestore, a from region (tos) and a goal region (nos), return a list
-\ of steps that may help make the needed changes.
-: rulestore-calc-steps ( reg-to reg-from ruls0 -- stp-lst )
+\ Given a rulestore (tos), and needed changes (nos), return a list
+\ of steps that make the needed changes.
+: rulestore-calc-steps-by-changes ( cngs1 ruls0 -- stp-lst )
     \ Check args.
     assert-tos-is-rulestore
-    assert-nos-is-region
-    assert-3os-is-region
-
-    \ Init return list.
-    list-new                                \ reg-to reg-from ruls0 stp-lst
-    swap                                    \ reg-to reg-from stp-lst ruls0
-    2swap                                   \ stp-lst ruls0 reg-to reg-from
-
-    \ Process rule 0.
-    #2 pick                                 \ stp-lst ruls0 reg-to reg-from ruls0
-    rulestore-get-rule-0                    \ stp-lst ruls0 reg-to reg-from rul0
-    ?dup if
-        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to
-        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to reg-from
-        rot                                 \ stp-lst ruls0 reg-to reg-from reg-to reg-from rul0
-        rule-calc-step                      \ stp-lst ruls0 reg-to reg-from, stp t | f
-        if                                  \ stp-lst ruls0 reg-to reg-from stp
-            #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
-            step-list-push-xt execute       \ stp-lst ruls0 reg-to reg-from
-        then
-    else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
-        3drop                               \ stp-lst
+    assert-nos-is-changes
+    over changes-null
+    if
+        2drop
+        false
         exit
     then
-                                            \ stp-lst ruls0 reg-to reg-from
-    \ Process rule 1.
-    rot                                     \ stp-lst reg-to reg-from ruls0
-    rulestore-get-rule-1                    \ stp-lst reg-to reg-from rul1
+
+    \ Init return list.
+    list-new                                \ cngs1 ruls0 stp-lst
+    swap                                    \ cngs1 stp-lst ruls0
+    rot                                     \ stp-lst ruls0 cngs1
+
+    \ Process rule 0.
+    dup                                     \ stp-lst ruls0 cngs1 cngs1
+    #2 pick                                 \ stp-lst ruls0 cngs1 cngs1 ruls0
+    rulestore-get-rule-0                    \ stp-lst ruls0 cngs1 cngs1 rul0
     ?dup if
-        rule-calc-step                      \ stp-lst, stp t | f
+        rule-calc-step-by-changes           \ stp-lst ruls0 cngs1, stp t | f
+        if                                  \ stp-lst ruls0 cngs1 stp
+            #3 pick                         \ stp-lst ruls0 cngs1 stp stp-lst
+            step-list-push-xt execute       \ stp-lst ruls0 cngs1
+        then
+    else                                    \ stp-lst ruls0 cngs1
+        2drop                               \ stp-lst
+        exit
+    then
+                                            \ stp-lst ruls0 cngs1
+    \ Process rule 1.
+    swap                                    \ stp-lst cngs1 ruls0
+    rulestore-get-rule-1                    \ stp-lst cngs1 rul1
+    ?dup if
+        rule-calc-step-by-changes           \ stp-lst, stp t | f
         if                                  \ stp-lst stp
             over                            \ stp-lst stpx stp-lst
             step-list-push-xt execute       \ stp-lst
         then
     else
-        2drop                               \ stp-lst
+        drop                                \ stp-lst
     then
 ;
 

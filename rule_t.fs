@@ -511,7 +511,7 @@
         rule-deallocate                     \ reg-to reg-from rulx | stp
         dup                                 \ reg-to reg-from rulx | stp stp
         step-get-number-unwanted-changes    \ reg-to reg-from rulx | stp u-unw
-        2 = is-false abort" rule-test-calc-step-fc 2: invalid number of unwanted changes"
+        #2 = is-false abort" rule-test-calc-step-fc 2: invalid number of unwanted changes"
 
         step-deallocate
         rule-deallocate

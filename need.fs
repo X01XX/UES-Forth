@@ -69,7 +69,7 @@ need-action  cell+ constant need-target     \ A state.
 : assert-nos-is-need-number ( u1 arg0 )
     over dup                     \ u1 arg0 u1 u1
     1 < swap                     \ u1 arg0 b1 u1
-    5 >                          \ u1 arg0 b1 b2
+    #5 >                         \ u1 arg0 b1 b2
     or
     if
         s" nos invalid need number?"
@@ -81,7 +81,7 @@ need-action  cell+ constant need-target     \ A state.
 : assert-3os-is-need-number ( u2 arg1 arg0 )
     #2 pick dup                  \ u2 arg1 arg0 u2 u2
     1 < swap                     \ u2 arg1 arg0 b1 u2
-    5 >                          \ u2 arg1 arg0 b1 b2
+    #5 >                         \ u2 arg1 arg0 b1 b2
     or
    if
         s" 3os invalid need number?"
