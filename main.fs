@@ -16,11 +16,11 @@
 \ Sample Action Session Domain Need   Changes
 \ 23719, 29717, 31319,  31379, 19717, 31973
 \
-\ Step   Plan   Group  Rate   RlcRate   SampleCorr
-\ 37171, 37379, 43717, 41719, 41737,    47317
+\ Step   Plan   Group  Rate   RlcRate
+\ 37171, 37379, 43717, 41719, 41737
 \
 \ Struct ids not yet used:
-\ 53171, 53173, 53197, 53717, 53719,
+\ 47317, 53171, 53173, 53197, 53717, 53719,
 \ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
@@ -75,8 +75,6 @@ include needlist.fs
 include step.fs
 include steplist.fs
 
-include samplecorr.fs
-
 include regionlistcorr.fs
 include rlclist.fs
 include rate.fs
@@ -86,6 +84,7 @@ include rlcratelist.fs
 include plan.fs
 include planlist.fs
 include plan_t.fs
+include planlistcorr.fs
 
 include group.fs
 include grouplist.fs
@@ -114,7 +113,6 @@ cs
     cr #4 spaces ." RuleStore mma:    " rulestore-mma .mma-usage
     cr #4 spaces ." Square mma:       " square-mma .mma-usage
     cr #4 spaces ." Sample mma:       " sample-mma .mma-usage
-    cr #4 spaces ." SampleCorr mma:   " samplecorr-mma .mma-usage
     cr #4 spaces ." Changes mma:      " changes-mma .mma-usage
     cr #4 spaces ." Group mma:        " group-mma .mma-usage
     cr #4 spaces ." Need mma:         " need-mma .mma-usage
@@ -140,7 +138,6 @@ cs
     assert-square-mma-none-in-use
     assert-group-mma-none-in-use
     assert-sample-mma-none-in-use
-    assert-samplecorr-mma-none-in-use
     assert-need-mma-none-in-use
     assert-step-mma-none-in-use
     assert-plan-mma-none-in-use
@@ -178,7 +175,6 @@ cr ." main.fs"
 #405 rulestore-mma-init
 #306 square-mma-init
 #250 sample-mma-init
-#100 samplecorr-mma-init
 #150 changes-mma-init
 #100 group-mma-init
 #200 need-mma-init
@@ -201,7 +197,6 @@ cr
     rulestore-mma mma-free
     square-mma mma-free
     sample-mma mma-free
-    samplecorr-mma mma-free
     changes-mma mma-free
     group-mma mma-free
     need-mma mma-free

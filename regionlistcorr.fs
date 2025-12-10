@@ -1,4 +1,4 @@
-\ Functions for region list corresponding (to domains) lists. 
+\ Functions for region list corresponding (to domains) (RLC) lists. 
 
 \ Print a region-list corresponding to the session domain list.
 : .region-list-corr ( reg-lst0 )

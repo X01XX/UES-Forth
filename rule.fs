@@ -1727,3 +1727,41 @@ rule-m11    cell+ constant rule-m10
 
     swap rule-deallocate            \ rul-0b1
 ;
+
+\ Return true if a rule is valid.
+: rule-is-valid ( rul0 - bool )
+    \ Check arg.
+    assert-tos-is-rule
+
+    dup rule-get-m00            \ rul0 m00
+    over rule-get-m01           \ rul0 m00 m01
+    and                         \ rul0 m0x
+    0<> if
+        \ cr ." rule " over .rule space ." m0x: " dup .value cr
+        2drop
+        false
+        exit
+    then
+
+    dup rule-get-m11            \ rul0 m11
+    over rule-get-m10           \ rul0 m11 m10
+    and                         \ rul0 m1x
+    0<> if
+        \ cr ." rule " over .rule space ." m1x: " dup .value cr
+        2drop
+        false
+        exit
+    then
+
+    dup rule-get-m00 swap       \ m00 rul0
+    dup rule-get-m01 swap       \ m00 m01 rul0
+    dup rule-get-m11 swap       \ m00 m01 m11 rul0
+    rule-get-m10                \ m00 m01 m11 m10
+    or or or                    \ mxx
+    cur-domain-xt execute       \ mxx dom
+    domain-get-all-bits-mask-xt \ mxx dom xt
+    execute                     \ mxx dxx
+    \ cr ." mxx: " over .value space ." dxx : " dup .value cr
+
+    =                           \ bool
+;

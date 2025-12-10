@@ -254,6 +254,12 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-step
+\    over step-get-rule rule-is-valid
+\    if
+\    else
+\        cr ." plan-push: " over .step cr
+\        abort
+\    then
     \ cr ." plan-push-end: " dup .plan space over .step cr
 
     2dup plan-check-step-result     \ stp1 pln0 flag
@@ -299,6 +305,12 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     assert-tos-is-plan
     assert-nos-is-step
     \ cr ." plan-push: " over .step space dup .plan cr
+\    over step-get-rule rule-is-valid
+\    if
+\    else
+\        cr ." plan-push: " over .step cr
+\        abort
+\    then
 
     2dup plan-check-step-initial    \ stp1 pln0 flag
     if
@@ -325,7 +337,6 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Run a plan.  Return true if it works.
 : plan-run ( pln0 -- flag )
- cr ." plan-run: " dup .plan
     \ Check arg.
     assert-tos-is-plan
 
@@ -335,6 +346,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     current-session                 \ pln0 dom dom sess
     session-set-current-domain-xt
     execute                         \ pln0 dom
+    cr ." plan-run: " over .plan
 
     dup domain-get-current-state-xt
     execute                         \ pln0 dom cur-sta

@@ -1,6 +1,6 @@
 \ Implement a rlcrate struct and functions.
 \
-\ The rlcrate represents a RLC and value.
+\ The rlcrate represents a Region List Corresponding (to domains) (RLC) and a value.
 
 #41737 constant rlcrate-id
     #3 constant rlcrate-struct-number-cells

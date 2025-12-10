@@ -1,4 +1,4 @@
-\ Region-list-core + rate, rlcrate, list functions.
+\ Functions for a list of Region-list-core + rate, rlcrate, structures.
 
 \ Deallocate a rlcrate list.                                                                                                             
 : rlcrate-list-deallocate ( lst0 -- )

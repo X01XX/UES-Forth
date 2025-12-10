@@ -64,70 +64,38 @@
     then
 ;
 
-: do-to-command ( rlc0 -- )
-    current-session session-get-current-states   \ rlc0 sta-corr
+: do-to-command ( rlc-to -- )
+    current-session session-get-current-regions \ rlc-to rlc-from
 
     \ Check if the current states are already at the goal.
-    2dup swap                                   \ rlc0 sta-corr sta-corr rlc0
-    region-list-corr-superset-states            \ rlc0 sta-corr bool
+    2dup swap                                   \ rlc-to rls-from rlc-from rlc-to
+    region-list-corr-superset                   \ rlc-to rlc-from bool
     if
         cr ." The current states are already at goal." cr
-        list-deallocate
+        region-list-deallocate
         drop
         exit
     then
-                                                \ rlc0 sta-corr
-    2dup swap region-list-corr-translate-states \ rlc0 sta-lst sta-lst2
-                                                \ rlc0 sta-corr sta-lst2
-    swap samplecorr-new                         \ rlc0 smplcor
-    cr ." Desired sample corr: " dup .samplecorr cr
 
-
-    dup                                         \ rlc0 smplcor smplcor
-    current-session                             \ rlc0 smplcor smplcor sess
-    session-rlc-rate-for-samplecorr             \ rlc0 smplcor rlc-lst rate
-    cr ." rate: " .  space dup ." rlc: " .rlc-list
-                                                \ rlc0 smplcor rlc-lst
-    2dup                                        \ rlc0 smplcor rlc-lst smplcor rlc-lst
-    rlc-list-one-superset-samplecorr            \ rlc0 smplcor rlc-lst bool
-    space
-    if                                          \ rlc0 smplcor rlc-lst
-        \ In one rlc, TODO: do direct f/b chaining.
-        ." rlc supersets: "
-
-        over samplecorr-get-initial             \ rlc0 smplcor rlc-lst smplcor-i
-        over                                    \ rlc0 smplcor rlc-lst smplcor-i rlc-lst
-        rlc-list-superset-states-rlc-list       \ rlc0 smplcor rlc-lst rlc-lst2
-        space
-        dup .rlc-list
-        rlc-list-deallocate                     \ rlc0 smplcor rlc-lst
-        drop                                    \ rlc0 smplcor
-    else                                        \ rlc0 smplcor rlc-lst
-        \ Not in one rlc. TODO: find least different rlc between.
-        ." not in one rlc" cr
-
-        over samplecorr-get-initial             \ rlc0 smplcor rlc-lst smplcor-i
-        space ." supersets: " dup .state-list-corr
-        over                                    \ rlc0 smplcor rlc-lst smplcor-i rlc-lst
-        rlc-list-superset-states-rlc-list       \ rlc0 smplcor rlc-lst rlc-lst2
-        space
-        ." are " dup .rlc-list
-        rlc-list-deallocate                     \ rlc0 smplcor rlc-lst
-        cr
-        over samplecorr-get-result              \ rlc0 smplcor rlc-lst smplcor-i
-        space ." supersets of: " dup .state-list-corr
-        over                                    \ rlc0 smplcor rlc-lst smplcor-i rlc-lst
-        rlc-list-superset-states-rlc-list       \ rlc0 smplcor rlc-lst rlc-lst2
-        space
-        ." are " dup .rlc-list
-        rlc-list-deallocate                     \ rlc0 smplcor rlc-lst
-        cr
-        drop                                    \ rlc0 smplcor
+    tuck                                        \ rlc-from rlc-to rlc-from
+    current-session                             \ rlc-from rlc-to rlc-from sess
+    session-get-plc                             \ rlc-from plc t | f
+    if                                          \ rlc-from plc
+        cr ." plan found: " dup .plan-list cr
+        swap region-list-deallocate             \ plc
+        dup                                     \ plc plc
+        current-session                         \ plc plc sess
+        session-run-plc                         \ plc bool
+        if
+            cr ." plan succeeded" cr
+        else
+            cr ." plan failed"
+        then
+        plan-list-deallocate
+    else
+        region-list-deallocate
+        cr ." plan not found" cr
     then
-    cr
-    samplecorr-deallocate                       \ rlc0
-
-    drop
 ;
 
 \ Zero-token logic, get/show/act-on needs.
@@ -779,7 +747,7 @@
         cr ." psd <domain ID> <action ID> - Print Square Detail, for a given domain/action."
         cr ." scs <domain id> <action id> - Sample the Current State of a domain, with an action."
         cr ." sas <domain id> <action id> <state> - Sample an Arbitrary State. Change domain current state, then sample with an action."
-\        cr ." to - Change all domain states, like: to (0X00 000X1)"
+        cr ." to - Change all domain states, like: to (0X00 000X1)"
         cr ." mu - Display Memory Use."
         cr
         cr ." <state> will usually be like: %0101, leading zeros can be ommitted."

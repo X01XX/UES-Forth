@@ -193,9 +193,9 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
 \ Set results item, given index and result, use only in this file.
 : _square-set-result ( result2 index1 sqr0 -- )
-    cr ." sqr " dup square-get-state .value
-    space ." set result # " over dec.
-    space ." to " #2 pick .value cr
+    \ cr ." sqr " dup square-get-state .value
+    \ space ." set result # " over dec.
+    \ space ." to " #2 pick .value cr
 
     over dup                    \ r2 i1 s0 i i
     0< swap #3 > or             \ r2 i1 s0 flag

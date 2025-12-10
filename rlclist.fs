@@ -1,4 +1,4 @@
-\ Functions for rlc lists.
+\ Functions for Region List Corresponding (to domains) (RLC) lists.
 
 \ Deallocate an rlc list.
 : rlc-list-deallocate ( lst0 -- )
@@ -531,58 +531,58 @@
 ;
 
 \ Return true if a rlclist has at least one superset of the initial and result
-\ states of a samplecorr.
-: rlc-list-any-superset-samplecorr ( smpc1 rlcl0 -- bool )
+\ states of a regioncorr.
+\ : _rlc-list-any-superset-regioncorr ( reglstcor1 rlcl0 -- bool )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-samplecorr
+\    assert-tos-is-list
+\    assert-nos-is-list
 
-    \ Check for superest of samplecorr initial states.
-    over samplecorr-get-initial         \ smpc1 rlcl0 smpc1-i
-    over                                \ smpc1 rlcl0 smpc1-i rlcl0
-    rlc-list-any-superset-states        \ smpc1 rlcl0 bool
-    is-false if
-        2drop
-        false
-        exit
-    then
+\    \ Check for superest of regioncorr initial states.
+\    over regioncorr-get-initial         \ smpc1 rlcl0 smpc1-i
+\    over                                \ smpc1 rlcl0 smpc1-i rlcl0
+\    rlc-list-any-superset-states        \ smpc1 rlcl0 bool
+\    is-false if
+\        2drop
+\        false
+\        exit
+\    then
 
-    \ Check for superest of samplecorr result states.
-    swap samplecorr-get-result      \ rlcl0 smpc1-r
-    swap                            \ smpc1-r rlgl0
-    rlc-list-any-superset-states    \ bool
-;
+\    \ Check for superest of regioncorr result states.
+\    swap regioncorr-get-result      \ rlcl0 smpc1-r
+\    swap                            \ smpc1-r rlgl0
+\    rlc-list-any-superset-states    \ bool
+\ ;
 
-\ Return true if an rlc, in a rlc list, is a superset of both states in a samplecorr.
-: rlc-list-one-superset-samplecorr ( smplc1 rlc0 -- bool )
+\ Return true if an rlc, in a rlc list, is a superset of both states in a regioncorr.
+\ : _rlc-list-one-superset-regioncorr ( reglstcor1 rlc0 -- bool )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-samplecorr
+\    assert-tos-is-list
+\    assert-nos-is-list
 
-    list-get-links                              \ smplc1 link
-    begin
-        ?dup
-    while
-        over samplecorr-get-initial             \ smplc1 link smpl-i
-        over link-get-data                      \ smplc1 link smpl-i rlcx
-        region-list-corr-superset-states        \ smplc1 link bool
-        if                                      \ smplc1 link
-            over samplecorr-get-result          \ smplc1 link smpl-r
-            over link-get-data                  \ smplc1 link smpl-r rlcx
-            region-list-corr-superset-states    \ smplc1 link bool
-            if                                  \ smplc1 link
-                2drop                           \
-                true                            \ bool
-                exit
-            then
-        then
+\    list-get-links                              \ smplc1 link
+\    begin
+\        ?dup
+\    while
+\        over regioncorr-get-initial             \ smplc1 link smpl-i
+\        over link-get-data                      \ smplc1 link smpl-i rlcx
+\        region-list-corr-superset-states        \ smplc1 link bool
+\        if                                      \ smplc1 link
+\            over regioncorr-get-result          \ smplc1 link smpl-r
+\            over link-get-data                  \ smplc1 link smpl-r rlcx
+\            region-list-corr-superset-states    \ smplc1 link bool
+\            if                                  \ smplc1 link
+\                2drop                           \
+\                true                            \ bool
+\                exit
+\            then
+\        then
 
-        link-get-next
-    repeat
-                                                \ smplc1
-    drop                                        \
-    false                                       \ bool
-;
+\        link-get-next
+\    repeat
+\                                                \ smplc1
+\    drop                                        \
+\    false                                       \ bool
+\ ;
 
 \ Return a list of rlcs superset of a state-list-corr.
 : rlc-list-superset-states-rlc-list ( slc1 rlc0 -- bool )

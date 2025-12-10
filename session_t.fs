@@ -9,8 +9,6 @@
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
 
-    current-session session-process-rlcrates
-
     \ Add act1, act2 and act3.
     [ ' noop ] literal over domain-add-action   \ dom
     [ ' noop ] literal over domain-add-action   \ dom
@@ -76,8 +74,6 @@
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
 
-    current-session session-process-rlcrates
-
     \ Add act1, act2 and act3.
     [ ' noop ] literal over domain-add-action   \ dom
     [ ' noop ] literal over domain-add-action   \ dom
@@ -131,7 +127,6 @@
 
     current-session .session
 
-    
     current-session-deallocate
 
     cr ." session-test-domain-get-plan-bc - Ok" cr
@@ -144,8 +139,6 @@
     #4 domain-new dup                   \ dom dom
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
-
-    current-session session-process-rlcrates
 
     \ Add act1, act2 and act3.
     [ ' noop ] literal over domain-add-action   \ dom

@@ -18,7 +18,29 @@
 : .plan-list ( list0 -- )
     \ Check args.
     assert-tos-is-list
-    [ ' .plan ] literal swap .list
+
+    ." ("
+    current-session swap                \ sess list0
+    list-get-links                      \ sess link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ sess link plnx
+        dup plan-get-domain             \ sess link plnx domx
+        #3 pick                         \ sess link plnx domx sess
+        session-set-current-domain-xt   \ sess link plnx sess xt
+        execute                         \ sess link plnx
+        .plan                           \ sess link
+
+        link-get-next                   \ sess link
+        dup 0<> if
+            space
+        then
+    repeat
+
+    drop
+    ." )"
 ;
 
 \ Push a plan to the end of a plan-list.

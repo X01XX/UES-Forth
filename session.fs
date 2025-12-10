@@ -190,10 +190,23 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 : _session-set-rlcrate-le0-rates ( rlcrt-lst1 ses0 -- )
     \ Check args.
     assert-tos-is-session
-    over 0<> if
-        assert-nos-is-list
-        over struct-inc-use-count
-    then
+    assert-nos-is-list
+
+    over struct-inc-use-count
+
+    session-rlcrate-le0-rates-disp +    \ Add offset.
+    !                                   \ Set the field.
+;
+
+: _session-update-rlcrate-le0-rates ( rlcrt-lst1 ses0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
+
+    dup session-get-rlcrate-le0-rates
+    list-deallocate
+
+    over struct-inc-use-count
 
     session-rlcrate-le0-rates-disp +    \ Add offset.
     !                                   \ Set the field.
@@ -212,10 +225,26 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 : _session-set-rlclist-by-rate ( rlcrt-lst1 ses0 -- )
     \ Check args.
     assert-tos-is-session
-    over 0<> if
-        assert-nos-is-list
-        over struct-inc-use-count
-    then
+    assert-nos-is-list
+
+    over struct-inc-use-count
+
+    session-rlclist-by-rate-disp +  \ Add offset.
+    !                               \ Set the field.
+;
+
+\ Update the session-rlclist-by-rates for an session instance.
+: _session-update-rlclist-by-rate ( rlcrt-lst1 ses0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
+
+    dup session-get-rlclist-by-rate
+    dup  
+    [ ' rlc-list-deallocate ] literal swap list-apply
+    list-deallocate
+
+    over struct-inc-use-count
 
     session-rlclist-by-rate-disp +  \ Add offset.
     !                               \ Set the field.
@@ -281,10 +310,10 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     list-new over _session-set-rlcrate-fragments  \ sess
 
     \ Init session-rlcrate-le0-rates.
-    0 over _session-set-rlcrate-le0-rates
+    list-new over _session-set-rlcrate-le0-rates
 
     \ Init session rlclist-by-rate.
-    0 over _session-set-rlclist-by-rate
+    list-new over _session-set-rlclist-by-rate
 
     \ Init list of rule-list-corrs, by rate.
     list-new over _session-set-rules-by-rate
@@ -440,8 +469,8 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     then
 ;
 
-\ Return a list of states, onu for eack domain, in domain list order.
-: session-get-current-states ( sess0 -- sta-lst )
+\ Return a list of states, one for each domain, in domain list order.
+: session-get-current-states ( sess0 -- sta-corr-lst )
     \ Check args.
     assert-tos-is-session
 
@@ -464,6 +493,34 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
         link-get-next               \ sess0 sta-lst link
     repeat
                                     \ sess0 sta-lst
+    nip
+;
+
+\ Return a list of regions, one for each domain, in domain list order.
+: session-get-current-regions ( sess0 -- reg-corr-lst )
+    \ Check args.
+    assert-tos-is-session
+
+    list-new                        \ sess0 sat-lst
+    over session-get-domains        \ sess0 reg-lst dom-lst
+
+    list-get-links                   \ sess0 reg-lst link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \  sess0 reg-lst link domx
+
+        dup #4 pick session-set-current-domain
+        
+        domain-get-current-state    \ sess0 reg-lst link stax
+        dup region-new              \ sess0 reg-lst link regx
+        #2 pick                     \ sess0 reg-lst link regx reg-lst
+        list-push-end               \ sess0 reg-lst link
+
+        link-get-next               \ sess0 reg-lst link
+    repeat
+                                    \ sess0 reg-lst
     nip
 ;
 
@@ -873,13 +930,13 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     drop                                        \ sess0 val-lst rslt-lst
 
     \ Process result list.
-    #2 pick _session-set-rlclist-by-rate         \ sess0 val-lst
+    #2 pick _session-update-rlclist-by-rate     \ sess0 val-lst
 
     0 over list-push
     dup [ ' < ] literal swap list-sort
     \ cr ." values: " [ ' . ] literal  over .list cr
 
-    over _session-set-rlcrate-le0-rates         \ sess0
+    over _session-update-rlcrate-le0-rates      \ sess0
 
     \ Process rlcs by rate.
     dup session-get-rlclist-by-rate                     \ sess rlc-lst-lst
@@ -968,26 +1025,26 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 
 ' session-get-domain-list to session-get-domain-list-xt
 
-\ Return the rate and rlc list for a path to satisfy a desired samplecorr.
-: session-rlc-rate-for-samplecorr ( smplcr1 sess0 -- rlc rate )
+\ Return the rate and rlc list for a path to satisfy a desired region-list-corr.
+: session-rlc-rate ( rlc1 sess0 -- rlc rate )
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-samplecorr
+    assert-nos-is-list
 
-    dup session-get-rlcrate-le0-rates       \ smplcr1 sess0 rt-lst
-    list-get-links                          \ smplcr1 sess0 rt-lnk
-    swap session-get-rlclist-by-rate        \ smplcr1 rt-lnk rlc-lst
-    list-get-links                          \ smplcr1 rt-lnk rlc-lnk
+    dup session-get-rlcrate-le0-rates       \ rlc1 sess0 rt-lst
+    list-get-links                          \ rlc1 sess0 rt-lnk
+    swap session-get-rlclist-by-rate        \ rlc1 rt-lnk rlc-lst
+    list-get-links                          \ rlc1 rt-lnk rlc-lnk
 
     begin
         ?dup
     while
-        #2 pick                             \ smplcr1 rt-lnk rlc-lnk smplcr1
-        over link-get-data                  \ smplcr1 rt-lnk rlc-lnk smplcr1 rlc-lstx
-        rlc-list-any-superset-samplecorr    \ smplcr1 rt-lnk rlc-lnk bool
+        #2 pick                             \ rlc1 rt-lnk rlc-lnk rlc1
+        over link-get-data                  \ rlc1 rt-lnk rlc-lnk rlc1 rlc-lstx
+        rlc-list-any-superset               \ rlc1 rt-lnk rlc-lnk bool
         if
-            link-get-data                   \ smplcr1 rt-lnk rlcx
-            swap link-get-data              \ smplcr1 rlcx rate
+            link-get-data                   \ rlc1 rt-lnk rlcx
+            swap link-get-data              \ rlc1 rlcx rate
             rot drop                        \ rlcx rate
             exit
         then
@@ -996,7 +1053,114 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
         link-get-next swap
     repeat
 
-    cr ." session-rlc-rate-for-samplecorr: drop-through?" cr
+    cr ." session-rlc-rate: drop-through?" cr
     2drop
     0 list-new
+;
+
+\ Return plan-list-corr (plc), a multi-domain plan, for moving domain states from one rlc to another.
+: session-get-plc ( rlc-to rlc-from sess0 -- plc t | f )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
+    assert-nos-is-list
+
+    list-new                        \ rlc-to rlc-from sess0 ret-plc
+    #3 pick list-get-links          \ rlc-to rlc-from sess0 ret-plc to-link
+    #3 pick list-get-links          \ rlc-to rlc-from sess0 ret-plc to-link from-link
+    #3 pick session-get-domains     \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-lst
+    list-get-links                  \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link domx
+        #5 pick                     \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link domx sess0
+        session-set-current-domain  \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link
+
+        \ Check for noop plan.
+        #2 pick link-get-data       \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link reg-to
+        #2 pick link-get-data       \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link reg-to reg-from
+        region-subset-of            \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link bool
+        if
+            \ Make noop plan.
+            dup link-get-data       \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link dom
+            plan-new                \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx
+            #3 pick link-get-data   \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx reg-to
+            #3 pick link-get-data   \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx reg-to reg-from
+            rule-new-region-to-region   \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx rul'
+
+            0                       \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx rul' 0
+            #3 pick link-get-data   \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx rul' 0 dom
+            domain-find-action      \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx rul', act t | f
+            is-false abort" action zero not found?"
+
+                                    \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx rul' act
+            step-new                \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx stp
+            over plan-push          \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx
+            #4 pick                 \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx ret-plc
+            plan-list-push-end      \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link
+        else                        \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link
+            \ Get plan for domain.
+            #2 pick link-get-data       \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link reg-to
+            #2 pick link-get-data       \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link reg-to reg-from
+            #2 pick link-get-data       \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link reg-to reg-from domx
+            domain-get-plan             \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link, plnx t | f
+            if                          \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx
+                \ Store plan.
+                #4 pick                 \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx ret-plc
+                plan-list-push-end      \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link
+            else                        \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link
+                \ Return false.
+                3drop
+                plan-list-deallocate    \ rlc-to rlc-from sess0
+                3drop
+                false
+                exit
+            then
+        then
+
+        link-get-next rot
+        link-get-next rot
+        link-get-next rot
+    repeat
+
+    \ Return plan.                  \ rlc-to rlc-from sess0 ret-plc to-link from-link
+    2drop                           \ rlc-to rlc-from sess0 ret-plc
+    2nip                            \ sess0 ret-plc
+    nip                             \ ret-plc
+    true
+;
+
+\ Run a plan-list-corr (plc), a multi-domain plan, to move domain states from one rlc to another.
+: session-run-plc ( plc1 sess0 -- bool )
+\ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
+
+    over list-get-links             \ plc1 sess0 plc1-link
+    over session-get-domains        \ plc1 sess0 plc1-link dom-lst
+    list-get-links                  \ plc1 sess0 plc1-link dom-link
+
+    begin
+        ?dup
+    while
+        \ Run domain plan.
+        over link-get-data          \ plc1 sess0 plc1-link dom-link pln
+        plan-run                    \ plc1 sess0 plc1-link dom-link bool
+        is-false if
+            2drop
+            2drop
+            false
+            exit
+        then
+
+        link-get-next swap
+        link-get-next swap
+    repeat
+
+                                    \ plc1 sess0 plc1-link
+    3drop
+    true
 ;

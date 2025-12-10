@@ -164,6 +164,13 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     assert-tos-is-action-xt execute
     assert-nos-is-rule
 
+\    over rule-is-valid              \ rul1 stp0 bool
+\    if
+\    else
+\        cr ." step-new: invalid rule? " over .rule cr
+\        abort
+\    then
+
    \ Allocate space.
     step-mma mma-allocate           \ rul1 a0 stpx
 
