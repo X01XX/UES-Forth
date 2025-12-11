@@ -734,6 +734,32 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 
 ' session-max-regions to session-max-regions-xt
 
+: .session-rlclist-by-rate ( sess0 -- )
+    \ Check arg.
+    assert-tos-is-session
+
+    dup session-get-rlcrate-le0-rates   \ sess0 rate-lst
+    list-get-links                      \ sess0 rate-link
+    over session-get-rlclist-by-rate    \ sess0 rate-link rlclist-lst
+    list-get-links                      \ sess0 rate-link rlclist-link
+    cr ." Lowest  Within"
+    cr ." Rate    Regions" cr
+    begin
+        ?dup
+    while
+        cr
+        over link-get-data #5 dec.r
+        dup link-get-data               \ sess0 rate-link rlclist-link rlclist
+        #3 spaces .rlc-list                 \ sess0 rate-link rlclist-link
+        cr
+
+        swap link-get-next
+        swap link-get-next
+    repeat
+                                        \ sess0 rate-link 
+    2drop
+;
+
 \ Process the given rlcrates.
 : session-process-rlcrates ( sess0 -- )
     \ Check arg.
@@ -744,8 +770,8 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     \ Get given rlcrates.
     dup session-get-rlcrate-list                \ sess0 rlcrt-lst
 
-   \  cr ." Given rlcrates:  " dup .rlcrate-list cr
-    
+    cr ." Given rlcrates:  " dup .rlcrate-list cr
+
     rlcrate-list-to-rlc-list                    \ sess0 rlc-lst
     dup                                         \ sess0 rlc-lst rlc-lst
 
@@ -833,7 +859,7 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     rlc-list-deallocate                         \ sess0 rlcrt-lst
     drop                                        \ sess0
     dup session-get-rlcrate-fragments           \ sess0 frg-lst
-    \ cr ." Fragment rlcrates: " dup .rlcrate-list cr
+    cr ." Fragment rlcrates: " dup .rlcrate-list cr
                                                 \ sess0 frg-lst
     \ Get all rate negative values.
 
@@ -880,7 +906,6 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     \
     dup [ ' > ] literal swap list-sort
 
-    
     \ cr ." values: " [ ' . ] literal  over .list cr
 
     \ Calculate rlc lists for change navigation.
@@ -934,68 +959,70 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 
     0 over list-push
     dup [ ' < ] literal swap list-sort
-    \ cr ." values: " [ ' . ] literal  over .list cr
+\    cr ." Fragment values: " [ ' . ] literal  over .list cr
 
     over _session-update-rlcrate-le0-rates      \ sess0
 
+    dup .session-rlclist-by-rate                \ sess0
+
     \ Process rlcs by rate.
-    dup session-get-rlclist-by-rate                     \ sess rlc-lst-lst
-    list-get-links                                      \ sess0 link
-    begin
-        ?dup
-    while
-        dup link-get-data                               \ sess0 link rlc-lst
-        \ cr ." process " dup .rlc-list cr
-        list-get-links                                  \ sess0 link link2
-        begin
-            ?dup
-        while
-            dup link-get-next                           \ sess0 link link2 link2+
-            begin
-                ?dup
-            while
-                over link-get-data                      \ sess0 link link2 link2+ rlc2
-                over link-get-data                      \ sess0 link link2 link2+ rlc2 rlc2+
-                \ cr ." compare "  2dup swap .region-list-corr space ." and " .region-list-corr
-                2dup region-list-corr-intersection      \ sess0 link link2 link2+ rlc2 rlc2+, rlc-int t | f
-                if
-                    \ space ." int: " dup .region-list-corr
-                                                        \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-                    dup                                 \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int
-                    #3 pick                             \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int rlc2
-                    rule-list-corr-new-rlc-to-rlc       \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int, rul2 t | f
-                    if
-                        \ space ." rul " dup .rule-list-corr
-                        rule-list-deallocate            \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-                    else
-                        abort" region-to-region failed?"
-                    then
-
-                    dup                                 \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int
-                    #2 pick                             \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int rlc2+
-                    rule-list-corr-new-rlc-to-rlc       \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int, rul2+ t | f
-                    if
-                        \ space ." rul " dup .rule-list-corr
-                        rule-list-deallocate            \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-                    else
-                        abort" region-to-region failed?"
-                    then
-                                                        \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-                    region-list-deallocate              \ sess0 link link2 link2+ rlc2 rlc2+
-                    2drop
-                else
-                    2drop
-                then
-                \ cr
-
-                link-get-next
-            repeat
-
-            link-get-next
-        repeat
-
-        link-get-next
-    repeat
+\    dup session-get-rlclist-by-rate                     \ sess rlc-lst-lst
+\    list-get-links                                      \ sess0 link
+\    begin
+\        ?dup
+\    while
+\        dup link-get-data                               \ sess0 link rlc-lst
+\        \ cr ." process " dup .rlc-list cr
+\        list-get-links                                  \ sess0 link link2
+\        begin
+\            ?dup
+\        while
+\            dup link-get-next                           \ sess0 link link2 link2+
+\            begin
+\                ?dup
+\            while
+\                over link-get-data                      \ sess0 link link2 link2+ rlc2
+\                over link-get-data                      \ sess0 link link2 link2+ rlc2 rlc2+
+\                \ cr ." compare "  2dup swap .region-list-corr space ." and " .region-list-corr
+\                2dup region-list-corr-intersection      \ sess0 link link2 link2+ rlc2 rlc2+, rlc-int t | f
+\                if
+\                    \ space ." int: " dup .region-list-corr
+\                                                        \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
+\                    dup                                 \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int
+\                    #3 pick                             \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int rlc2
+\                    rule-list-corr-new-rlc-to-rlc       \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int, rul2 t | f
+\                    if
+\                        \ space ." rul " dup .rule-list-corr
+\                        rule-list-deallocate            \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
+\                    else
+\                        abort" region-to-region failed?"
+\                    then
+\
+\                    dup                                 \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int
+\                    #2 pick                             \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int rlc2+
+\                    rule-list-corr-new-rlc-to-rlc       \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int, rul2+ t | f
+\                    if
+\                        \ space ." rul " dup .rule-list-corr
+\                        rule-list-deallocate            \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
+\                    else
+\                        abort" region-to-region failed?"
+\                    then
+\                                                        \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
+\                    region-list-deallocate              \ sess0 link link2 link2+ rlc2 rlc2+
+\                    2drop
+\                else
+\                    2drop
+\                then
+\                \ cr
+\
+\                link-get-next
+\            repeat
+\
+\            link-get-next
+\        repeat
+\
+\        link-get-next
+\    repeat
                                                         \ sess0
     drop                                                \
 ;

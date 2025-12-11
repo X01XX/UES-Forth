@@ -1,0 +1,39 @@
+
+Given rlcrates:  ([(0 -2), (1xx1 01x1x)] [(2 -1), (x1x1 01x1x)])
+
+Fragment rlcrates: ([(0 -2), (10X1 01x1x)] [(2 -1), (01X1 01x1x)] [(2 -3), (11X1 01X1X)])
+
+
+Fragment values: (0  -1  -2  -3 )
+
+\ Does not contain -1, -2 or -3, so rate 0.
+((00xx xxxxx)(XXX0 xxxxx)(xxxx 1XXXX)(xxxx X0XXX)(xxxx XXX0X))
+ (01X1 01x1x)(01X1 01x1x)(01X1 01x1x)(01X1 01x1x)(01X1 01x1x)
+   *             *             *            *             *
+
+ (10X1 01x1x)(10X1 01x1x)(10X1 01x1x)(10X1 01x1x)(10X1 01x1x)
+  *              *             *            *             *
+
+ (11X1 01X1X)(11X1 01X1X)(11X1 01X1X)(11X1 01X1X)(11X1 01X1X)
+  *              *             *            *             *
+
+
+
+\ Contains -1, but not -2 and -3, so rate -1.
+((0XXX xxxxx)(XXX0 xxxxx)(xxxx 1XXXX)(xxxx X0XXX)(xxxx XXX0X))
+ (10X1 01x1x)(10X1 01x1x)(10X1 01x1x)(10X1 01x1x)(10X1 01x1x)
+  *              *             *            *             *
+
+ (11X1 01X1X)(11X1 01X1X)(11X1 01X1X)(11X1 01X1X)(11X1 01X1X)
+  *              *             *            *             *
+
+
+
+\ Contains -1, -2 but not -3, so rate -2
+((0XXX xxxxx)(X0XX xxxxx)(XXX0 xxxxx)(xxxx 1XXXX)(xxxx X0XXX)(xxxx XXX0X))
+ (11X1 01X1X)(11X1 01X1X)(11X1 01X1X)(11X1 01X1X)(11X1 01X1X)(11X1 01X1X)
+  *            *             *             *            *             *
+
+\ Contains all fragments, so rate -3
+((xxxx xxxxx))
+

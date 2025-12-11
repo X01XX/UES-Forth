@@ -1,6 +1,9 @@
 \ Implement a rlcrate struct and functions.
 \
 \ The rlcrate represents a Region List Corresponding (to domains) (RLC) and a value.
+\
+\ (x1x1 1x1x1) means x1x1 and 1x1x1.
+\ (x1x1 xxxxx), (xxxx 1x1x1) means x1x1 or 1x1x1.
 
 #41737 constant rlcrate-id
     #3 constant rlcrate-struct-number-cells
