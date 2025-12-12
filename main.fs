@@ -19,8 +19,11 @@
 \ Step   Plan   Group  Rate   RlcRate
 \ 37171, 37379, 43717, 41719, 41737
 \
+\ Memory
+\ 47317
+\
 \ Struct ids not yet used:
-\ 47317, 53171, 53173, 53197, 53717, 53719,
+\ 53171, 53173, 53197, 53717, 53719,
 \ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
@@ -276,7 +279,7 @@ cr
     \ cr ." rlcrate: " dup .rlcrate cr
     over session-add-rlcrate                    \ sess
 
-    dup session-process-rlcrates                \ sess
+    dup session-process-rlcrates                \ Required after adding domains.
 
     drop                                        \
 ;
@@ -337,7 +340,7 @@ cr
     current-session                     \ dom sess
     session-add-domain                  \ dom
 
-    current-session session-process-rlcrates
+    \ current-session session-process-rlcrates
 
     \ Set current domain to the first.
     \ Most tests assume a 4-bit domain.

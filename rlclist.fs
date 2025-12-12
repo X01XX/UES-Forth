@@ -264,7 +264,7 @@
     \ Max list of maximum regions.
     list-new                            \ rlc-lst0 max-rlc-lst
     current-session                     \ rlc-lst0 max-rlc-lst sess
-    session-max-regions-xt execute      \ rlc-lst0 max-rlc-lst rlc-max
+    session-calc-max-regions-xt execute \ rlc-lst0 max-rlc-lst rlc-max
     over                                \ rlc-lst0 max-rlc-lst rlc-max max-rlc-lst
     rlc-list-push                       \ rlc-lst0 max-rlc-lst
 

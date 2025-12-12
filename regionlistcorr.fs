@@ -391,7 +391,7 @@
     assert-tos-is-list
 
     current-session                     \ lst0 sess
-    session-max-regions-xt execute      \ lst0 lst-max
+    session-calc-max-regions-xt execute \ lst0 lst-max
     tuck                                \ lst-max lst0 lst-max
     region-list-corr-subtract           \ lst-max, lst t | f
     is-false abort" subtract failed?"

@@ -21,7 +21,7 @@
 
 ' xtabort value session-get-domain-list-xt
 
-' xtabort value session-max-regions-xt
+' xtabort value session-calc-max-regions-xt
 
 ' xtabort value session-stack-tos-xt
 

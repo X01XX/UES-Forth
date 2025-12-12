@@ -2,12 +2,15 @@
 \ Test using a non-intersecting step, the first, to find a plan, using forward-chaining.
 \ Implementing the example in the sections of theory.html named "Choosing the next rule" and "A reason to not choose a rule".
 : session-test-domain-get-plan-fc
+    \ Init session.
     current-session-new
 
-    \ Init session and domain.
+    \ Init domain.
     #4 domain-new dup                   \ dom dom
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
+
+    current-session session-process-rlcrates    \ Required after adding domains.
 
     \ Add act1, act2 and act3.
     [ ' noop ] literal over domain-add-action   \ dom
@@ -67,12 +70,15 @@
 ;
 
 : session-test-domain-get-plan-bc
+    \ Init session.
     current-session-new
 
-    \ Init session and domain.
+    \ Init domain.
     #4 domain-new dup                   \ dom dom
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
+
+    current-session session-process-rlcrates    \ Required after adding domains.
 
     \ Add act1, act2 and act3.
     [ ' noop ] literal over domain-add-action   \ dom
@@ -133,9 +139,10 @@
 ;
 
 : session-test-domain-asymmetric-chaining
+    \ Init session.
     current-session-new
 
-    \ Init session and domain.
+    \ Init domain.
     #4 domain-new dup                   \ dom dom
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
@@ -145,6 +152,8 @@
     [ ' noop ] literal over domain-add-action   \ dom
     [ ' noop ] literal over domain-add-action   \ dom
 
+    current-session session-process-rlcrates    \ Required after adding domains.
+    
     \ Set up group for act0.
     0 over domain-find-action                   \ dom, act0 t | f
     0= abort" can't find act0?"
@@ -196,6 +205,42 @@
     current-session-deallocate
 
     cr ." session-test-domain-asymmetric-chaining - Ok" cr
+;
+
+: session-test-rlc
+    \ Init session.
+    current-session-new
+
+    \ Init domain 0.
+    #4 domain-new dup                               \ dom0 dom0
+    current-session                                 \ dom0 dom0 sess
+    session-add-domain                              \ dom0
+
+    \ Init domain 1.
+    #5 domain-new dup                               \ dom0 dom1 dom1
+    current-session                                 \ dom0 dom1 dom1 sess
+    session-add-domain                              \ dom0 dom1
+
+    current-session                                 \ dom0 dom1 sess
+    s" (X1X1 01X1X)" region-list-corr-from-string-a \ dom0 dom1 sess rlc
+    -1 #2 rate-new                                  \ dom0 dom1 sess rlc rt
+    rlcrate-new                                     \ dom0 dom1 sess rlc-rt
+    \ cr ." rlcrate: " dup .rlcrate cr
+    over session-add-rlcrate                        \ dom0 dom1 sess
+
+    s" (1XX1 01X1X)" region-list-corr-from-string-a \ dom0 dom1 sess rlc
+    #-2 0 rate-new                                  \ dom0 dom1 sess
+    rlcrate-new                                     \ dom0 dom1 sess rlc-rt
+    \ cr ." rlcrate: " dup .rlcrate cr
+    over session-add-rlcrate                        \ dom0 dom1 sess
+
+    dup session-process-rlcrates                    \ Required after adding domains.
+
+    \ Clean up.
+    3drop
+    current-session-deallocate
+
+    cr ." session-test-rlc - Ok" cr
 ;
 
 : session-tests

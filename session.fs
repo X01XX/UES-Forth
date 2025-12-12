@@ -277,7 +277,42 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 : session-stack-tos ( -- sess )
     session-stack stack-tos
 ;
+
 ' session-stack-tos to session-stack-tos-xt
+
+\ Return an rlc of max domain regions.
+: session-calc-max-regions ( sess0 -- rlc )
+
+    \ Get domain-list.
+    session-get-domains                     \ dom-lst
+
+   \ Init return list.
+    list-new swap                           \ ret-lst dom-lst
+
+    \ Prep for loop.
+    list-get-links                          \ ret-lst d-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ lst0 ret-lst link1 link0 d-link domx
+        domain-set-current-xt
+        execute                     \ lst0 ret-lst link1 link0 d-link
+
+        \ Add next region.
+        dup link-get-data       \ ret-lst d-lisk domx
+        domain-get-max-region-xt
+        execute                 \ ret-lst d-lisk regx
+        #2 pick                 \ ret-lst d-lisk regx ret-lst
+        region-list-push-end    \ ret-lst d-lisk
+
+        link-get-next           \ ret-lst d-link
+    repeat
+                                \ ret-lst
+;
+
+' session-calc-max-regions to session-calc-max-regions-xt
 
 \ Create an session, given an instance ID.
 : current-session-new ( -- ) \ new session pushed onto session stack.
@@ -301,19 +336,21 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     0 over session-set-current-domain
 
     \ Init need-list.
-    list-new over _session-set-needs    \ ses
+    list-new over _session-set-needs                \ sess
 
     \ Init rlcrate-list.
-    list-new over _session-set-rlcrate-list  \ sess
+    list-new over _session-set-rlcrate-list         \ sess
 
     \ Init rlcrate-fragments.
-    list-new over _session-set-rlcrate-fragments  \ sess
+    list-new over _session-set-rlcrate-fragments    \ sess
 
     \ Init session-rlcrate-le0-rates.
-    list-new over _session-set-rlcrate-le0-rates
+    list-new                                        \ sess lst
+    over _session-set-rlcrate-le0-rates             \ sess
 
     \ Init session rlclist-by-rate.
-    list-new over _session-set-rlclist-by-rate
+    list-new
+    over _session-set-rlclist-by-rate               \ sess
 
     \ Init list of rule-list-corrs, by rate.
     list-new over _session-set-rules-by-rate
@@ -374,9 +411,7 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     repeat
     cr
                                         \ sess0 rcllist-link
-    drop                                \ sess0
-
-    drop                                \
+    2drop                               \
 ;
 
 \ Deallocate the session.
@@ -700,39 +735,36 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     rlcrate-list-push               \
 ;
 
-\ Return an rlc of max domain regions.
-: session-max-regions ( sess0 -- rlc )
+\ Return the highest rate for a rlc, the highest rate rlclist that has a superset rlc.
+: session-highest-rate-rlclist ( rlc1 sess0 -- n )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
 
-    \ Get domain-list.
-    session-get-domains                     \ dom-lst
-
-   \ Init return list.
-    list-new swap                           \ ret-lst dom-lst
-
-    \ Prep for loop.
-    list-get-links                          \ ret-lst d-link
+    dup session-get-rlcrate-le0-rates   \ rlc1 sess0 rate-lst
+    list-get-links                      \ rlc1 sess0 rate-link
+    over session-get-rlclist-by-rate    \ rlc1 sess0 rate-link rlclist-lst
+    list-get-links                      \ rlc1 sess0 rate-link rlclist-link
 
     begin
         ?dup
     while
-        \ Set current domain.
-        dup link-get-data           \ lst0 ret-lst link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ lst0 ret-lst link1 link0 d-link
+        #3 pick                         \ rlc1 sess0 rate-link rlclist-link rlc1
+        over link-get-data              \ rlc1 sess0 rate-link rlclist-link rlc1 rlclist
+        rlc-list-any-superset           \ rlc1 sess0 rate-link rlclist-link bool
+        if                              \ rlc1 sess0 rate-link rlclist-link
+            over link-get-data          \ rlc1 sess0 rate-link rlclist-link rate
+            2nip                        \ rlc1 rlclist-link rate
+            nip nip                     \ rate
+            exit
+        then
 
-        \ Add next region.
-        dup link-get-data       \ ret-lst d-lisk domx
-        domain-get-max-region-xt
-        execute                 \ ret-lst d-lisk regx
-        #2 pick                 \ ret-lst d-lisk regx ret-lst
-        region-list-push-end    \ ret-lst d-lisk
-
-        link-get-next           \ ret-lst d-link
+        swap link-get-next
+        swap link-get-next
     repeat
-                                \ ret-lst
+    cr ." session-highest-rate-rlclist: drop-through?"
+    abort
 ;
-
-' session-max-regions to session-max-regions-xt
 
 : .session-rlclist-by-rate ( sess0 -- )
     \ Check arg.
@@ -911,7 +943,7 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     \ Calculate rlc lists for change navigation.
 
     \ Init running subtraction list.
-    over session-max-regions                    \ sess0 val-lst max-rlc
+    over session-calc-max-regions               \ sess0 val-lst max-rlc
     list-new                                    \ sess0 val-lst max-rlc sub-lst
     tuck                                        \ sess0 val-lst sub-lst max-rlc sub-lst
     rlc-list-push                               \ sess0 val-lst sub-lst
