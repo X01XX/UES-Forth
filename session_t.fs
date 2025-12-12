@@ -10,8 +10,6 @@
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
 
-    current-session session-process-rlcrates    \ Required after adding domains.
-
     \ Add act1, act2 and act3.
     [ ' noop ] literal over domain-add-action   \ dom
     [ ' noop ] literal over domain-add-action   \ dom
@@ -77,8 +75,6 @@
     #4 domain-new dup                   \ dom dom
     current-session                     \ dom dom sess
     session-add-domain                  \ dom
-
-    current-session session-process-rlcrates    \ Required after adding domains.
 
     \ Add act1, act2 and act3.
     [ ' noop ] literal over domain-add-action   \ dom
@@ -152,8 +148,6 @@
     [ ' noop ] literal over domain-add-action   \ dom
     [ ' noop ] literal over domain-add-action   \ dom
 
-    current-session session-process-rlcrates    \ Required after adding domains.
-    
     \ Set up group for act0.
     0 over domain-find-action                   \ dom, act0 t | f
     0= abort" can't find act0?"
@@ -201,7 +195,6 @@
 
     current-session .session
 
-    
     current-session-deallocate
 
     cr ." session-test-domain-asymmetric-chaining - Ok" cr
@@ -234,7 +227,7 @@
     \ cr ." rlcrate: " dup .rlcrate cr
     over session-add-rlcrate                        \ dom0 dom1 sess
 
-    dup session-process-rlcrates                    \ Required after adding domains.
+    current-session .session
 
     \ Clean up.
     3drop

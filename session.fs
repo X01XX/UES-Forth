@@ -447,21 +447,6 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     session-mma mma-deallocate
 ;
 
-: session-add-domain ( dom1 sess0 -- )
-    \ Check args.
-    assert-tos-is-session
-    assert-nos-is-domain
-    \ cr ." session-add-domain: " over . cr
-
-    \ Add domain
-    2dup                    \ dom1 sess0 dom1 sess0
-    session-get-domains     \ dom1 sess0 dom1 dom-lst
-    domain-list-push-end    \ dom1 sess0
-
-    \ Set current-domain, if it is zero/invalid.
-    session-set-current-domain
-;
-
 \ Get a sample from an action in a domain.
 : session-get-sample ( act2 dom1 sess0 -- sample )
     \ Check args.
@@ -717,15 +702,6 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     true
 ;
 
-: session-add-rlcrate ( rlcrt1 sess0 -- )
-    \ Check args.
-    assert-tos-is-session
-    assert-nos-is-rlcrate
-
-    session-get-rlcrate-list        \ rlcrt1 rlcrt-lst
-    rlcrate-list-push               \
-;
-
 : session-add-rlcrate-fragment ( rlcrt1 sess0 -- )
     \ Check args.
     assert-tos-is-session
@@ -802,7 +778,7 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     \ Get given rlcrates.
     dup session-get-rlcrate-list                \ sess0 rlcrt-lst
 
-    cr ." Given rlcrates:  " dup .rlcrate-list cr
+    \ cr ." Given rlcrates:  " dup .rlcrate-list cr
 
     rlcrate-list-to-rlc-list                    \ sess0 rlc-lst
     dup                                         \ sess0 rlc-lst rlc-lst
@@ -891,7 +867,7 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
     rlc-list-deallocate                         \ sess0 rlcrt-lst
     drop                                        \ sess0
     dup session-get-rlcrate-fragments           \ sess0 frg-lst
-    cr ." Fragment rlcrates: " dup .rlcrate-list cr
+    \ cr ." Fragment rlcrates: " dup .rlcrate-list cr
                                                 \ sess0 frg-lst
     \ Get all rate negative values.
 
@@ -995,68 +971,38 @@ session-rlclist-by-rate-disp    cell+ constant session-rules-by-rate-disp       
 
     over _session-update-rlcrate-le0-rates      \ sess0
 
-    dup .session-rlclist-by-rate                \ sess0
+    \ dup .session-rlclist-by-rate                \ sess0
 
-    \ Process rlcs by rate.
-\    dup session-get-rlclist-by-rate                     \ sess rlc-lst-lst
-\    list-get-links                                      \ sess0 link
-\    begin
-\        ?dup
-\    while
-\        dup link-get-data                               \ sess0 link rlc-lst
-\        \ cr ." process " dup .rlc-list cr
-\        list-get-links                                  \ sess0 link link2
-\        begin
-\            ?dup
-\        while
-\            dup link-get-next                           \ sess0 link link2 link2+
-\            begin
-\                ?dup
-\            while
-\                over link-get-data                      \ sess0 link link2 link2+ rlc2
-\                over link-get-data                      \ sess0 link link2 link2+ rlc2 rlc2+
-\                \ cr ." compare "  2dup swap .region-list-corr space ." and " .region-list-corr
-\                2dup region-list-corr-intersection      \ sess0 link link2 link2+ rlc2 rlc2+, rlc-int t | f
-\                if
-\                    \ space ." int: " dup .region-list-corr
-\                                                        \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-\                    dup                                 \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int
-\                    #3 pick                             \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int rlc2
-\                    rule-list-corr-new-rlc-to-rlc       \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int, rul2 t | f
-\                    if
-\                        \ space ." rul " dup .rule-list-corr
-\                        rule-list-deallocate            \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-\                    else
-\                        abort" region-to-region failed?"
-\                    then
-\
-\                    dup                                 \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int
-\                    #2 pick                             \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int rlc-int rlc2+
-\                    rule-list-corr-new-rlc-to-rlc       \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int, rul2+ t | f
-\                    if
-\                        \ space ." rul " dup .rule-list-corr
-\                        rule-list-deallocate            \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-\                    else
-\                        abort" region-to-region failed?"
-\                    then
-\                                                        \ sess0 link link2 link2+ rlc2 rlc2+ rlc-int
-\                    region-list-deallocate              \ sess0 link link2 link2+ rlc2 rlc2+
-\                    2drop
-\                else
-\                    2drop
-\                then
-\                \ cr
-\
-\                link-get-next
-\            repeat
-\
-\            link-get-next
-\        repeat
-\
-\        link-get-next
-\    repeat
-                                                        \ sess0
-    drop                                                \
+    drop
+;
+
+: session-add-domain ( dom1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-domain
+    \ cr ." session-add-domain: " over . cr
+
+    \ Add domain
+    2dup                    \ dom1 sess0 dom1 sess0
+    session-get-domains     \ dom1 sess0 dom1 dom-lst
+    domain-list-push-end    \ dom1 sess0
+
+    \ Set current-domain, if it is zero/invalid.
+    tuck session-set-current-domain
+
+    session-process-rlcrates        \ to get rate 0, max region rlc.
+;
+
+\ Add a rlcrate, to give a value to some arbitrary configuration of domain regions.
+: session-add-rlcrate ( rlcrt1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-rlcrate
+
+    tuck session-get-rlcrate-list   \ sess0 rlcrt1 rlcrt-lst
+    rlcrate-list-push               \ sess0
+
+    session-process-rlcrates        \ recalc with new rlcrate.
 ;
 
 \ Return the number of domains.

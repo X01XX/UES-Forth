@@ -279,8 +279,6 @@ cr
     \ cr ." rlcrate: " dup .rlcrate cr
     over session-add-rlcrate                    \ sess
 
-    dup session-process-rlcrates                \ Required after adding domains.
-
     drop                                        \
 ;
 
@@ -339,8 +337,6 @@ cr
     #5 domain-new                       \ dom
     current-session                     \ dom sess
     session-add-domain                  \ dom
-
-    \ current-session session-process-rlcrates
 
     \ Set current domain to the first.
     \ Most tests assume a 4-bit domain.
