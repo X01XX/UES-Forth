@@ -5,7 +5,7 @@
     list-new                                \ lst1
      s" X10X" region-from-string-a          \ lst1 regx
     over region-list-push                   \ lst1
-    
+
     list-new                                \ lst1 lst2
     s" 0XX1" region-from-string-a           \ lst1 lst2 regx
     over region-list-push                   \ lst1 lst2
@@ -61,7 +61,7 @@
 
     s" 0X00" region-from-string-a   \ lst1 lst2 lst3 reg
     over                            \ lst1 lst2 lst3 reg lst3
-    
+
     over swap                       \ lst1 lst2 lst3 reg reg lst3
     region-list-member              \ lst1 lst2 lst3 reg flag
     0= abort" 0x00 not found"
@@ -70,7 +70,7 @@
 
     s" X100" region-from-string-a   \ lst1 lst2 lst3 reg
     over                            \ lst1 lst2 lst3 reg lst3
-    
+
     over swap                       \ lst1 lst2 lst3 reg reg lst3
     region-list-member              \ lst1 lst2 lst3 reg flag
     0= abort" x100 not found in "
@@ -109,7 +109,7 @@
 
     list-deallocate
     region-list-deallocate
-    
+
     cr ." region-list-test-states - Ok"
 ;
 
@@ -155,7 +155,7 @@
     0= abort" 15 not in one region?"
 
     region-list-deallocate
-    
+
     cr ." region-list-test-state-in-one-region - Ok"
 ;
 

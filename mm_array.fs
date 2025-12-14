@@ -55,7 +55,7 @@
 \ Use <struct>-mma .mma-in-use to see the addresses of the still-allocated structs.
 \ Use .<struct> on one of the addresses to determine its source.
 
-include stack.fs 
+include stack.fs
 
 ' @ alias _mma-get-stack ( mma-addr -- stack-addr )
 ' ! alias _mma-set-stack ( stack-addr mma-addr -- )
@@ -99,12 +99,12 @@ include stack.fs
     dup mma-array-start-addr    \ addr mma-addr start-addr
     #2 pick                     \ addr mma-addr start-addr addr
     swap                        \ addr mma-addr addr start-addr
-    <                           \ addr mma-addr 
+    <                           \ addr mma-addr
     if
         2drop false exit
     then
 
-    _mma-get-end-addr            \ addr end-adder 
+    _mma-get-end-addr            \ addr end-adder
     >= if
         false
     else
@@ -160,7 +160,7 @@ include stack.fs
 
     \ Allocate memory for mma-array instance.
     allocate    \ n-i item-size total-size array-addr flag
-    0<> 
+    0<>
     abort" mma-new: memory allocation error"
 
     \ n-i item-size total-size mma-addr
@@ -176,7 +176,7 @@ include stack.fs
     rot                 \ item-size mma-addr n-i
     2dup                \ item-size mma-addr n-i mma-addr n-i
     stack-new           \ item-size mma-addr n-i mma-addr stack-addr ( stack allocated )
-    swap                \ item-size mma-addr n-i stack-addr mma-addr 
+    swap                \ item-size mma-addr n-i stack-addr mma-addr
     _mma-set-stack      \ item-size mma-addr n-i ( stack-addr stored in first array cell )
 
     \ Store item size
@@ -203,7 +203,7 @@ include stack.fs
         over            \ mma-addr item-size item-addr item-size
         +               \ mma-addr item-size next-item-addr
     loop
-    
+
     \ Clean up.
     2drop                       \ array-addr
 
@@ -219,7 +219,7 @@ include stack.fs
     free                        \ mma-addr
     0<> if ." mma-array stack free failed" then
     free
-    0<> if ." mma-array free failed" then   
+    0<> if ." mma-array free failed" then
 ;
 
 \ Return the number of struct instances in use.
@@ -231,7 +231,7 @@ include stack.fs
     -                       \ in-use
 ;
 
-\ Print one-line of  
+\ Print one-line of
 \ Run like: "<struct name>-mma .mma-usage
 : .mma-usage ( mma-addr -- )
     dup             \ mma-addr mma-addr
@@ -283,7 +283,7 @@ include stack.fs
    \ Add mma overhead
    #3 cells +               \ mma-addr stack-addr | o-bytes
    #6 dec.r  #2 spaces      \ mma-addr stack-addr |
-   
+
    ." Total: "
    \ Get mma size
     over                    \ mma-addr stack-addr | mma-addr

@@ -327,7 +327,7 @@
     rlc-list-deallocate         \ rlc-lst rlc-lst'
     rlc-list-deallocate         \ rlc-lst
     rlc-list-deallocate         \
-    
+
     cr ." rlc-list-test-complement - Ok" cr
 ;
 

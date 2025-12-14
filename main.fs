@@ -5,7 +5,7 @@
 \ Struct IDs.
 \
 \ Each number is prime, 5 digits, and fits within 16 bits.
-\ The digit pairs [0][1], [1][2], [2][3], and [3][4] are prime. 
+\ The digit pairs [0][1], [1][2], [2][3], and [3][4] are prime.
 \ No digit appears more than twice. (avoids 111)
 \ No digit appears consecutively.   (avoids 11)
 \
@@ -19,7 +19,7 @@
 \ Step   Plan   Group  Rate   RlcRate
 \ 37171, 37379, 43717, 41719, 41737
 \
-\ Memory
+\ RlcIntPair
 \ 47317
 \
 \ Struct ids not yet used:
@@ -99,6 +99,9 @@ include actionxts.fs
 include domain.fs
 include domainlist.fs
 
+include rlcintpair.fs
+include rlcintpairlist.fs
+
 include session.fs
 
 include input.fs
@@ -149,8 +152,8 @@ cs
     assert-rate-mma-none-in-use
     assert-rlcrate-mma-none-in-use
 
-    depth 0<> 
-    if  
+    depth 0<>
+    if
         cr ." stack not empty " .s cr
     then
 ;
@@ -279,7 +282,7 @@ cr
     \ cr ." rlcrate: " dup .rlcrate cr
     over session-add-rlcrate                    \ sess
 
-    drop                                        \
+    .session
 ;
 
 0 value step-num
@@ -292,7 +295,7 @@ cr
         \ Inc step num.
 
         step-num 1+ to step-num
-        
+
         \ Print header.
         cr ." ***************************"
         cr ." Step: " step-num .
@@ -310,7 +313,7 @@ cr
             abort
         then
     repeat
-    
+
     \ Clean up
     memory-use
     cr cr ." Deallocating ..." cr

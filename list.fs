@@ -34,8 +34,8 @@
     #2 constant list-struct-number-cells
 
 \ List struct fields.
-0 constant  list-header             \ 16-bits [0] struct id [1] use count [2] length.
-list-header cell+ constant list-links
+0                           constant list-header-disp  \ 16-bits, [0] struct id, [1] use count, [2] length.
+list-header-disp    cell+   constant list-links-disp
 
 0 value list-mma  \ Storage for list mma struct instance.
 
@@ -66,7 +66,7 @@ list-header cell+ constant list-links
     list-id =       \ An unallocated instance should have an ID of zero.
 ;
 
-\ Check TOS for list, unconventional, leaves stack unchanged. 
+\ Check TOS for list, unconventional, leaves stack unchanged.
 : assert-tos-is-list ( lst0 -- lst0 )
     dup is-allocated-list
     if
@@ -76,7 +76,7 @@ list-header cell+ constant list-links
     then
 ;
 
-\ Check NOS for list, unconventional, leaves stack unchanged. 
+\ Check NOS for list, unconventional, leaves stack unchanged.
 : assert-nos-is-list ( lst1 arg0 -- lst1 arg0 )
     over is-allocated-list
     if
@@ -86,7 +86,7 @@ list-header cell+ constant list-links
     then
 ;
 
-\ Check 3OS for list, unconventional, leaves stack unchanged. 
+\ Check 3OS for list, unconventional, leaves stack unchanged.
 : assert-3os-is-list ( lst2 arg1 arg0 -- lst2 arg1 arg0 )
     #2 pick is-allocated-list
     if
@@ -116,12 +116,12 @@ list-header cell+ constant list-links
     \ Check arg.
     assert-tos-is-list
 
-    list-links + @
+    list-links-disp + @
 ;
 
 \ Set list links, use only in this file.
 : _list-set-links ( links-value list-addr -- )
-    list-links + !
+    list-links-disp + !
 ;
 
 \ Increment the list length.
@@ -419,7 +419,7 @@ list-header cell+ constant list-links
         false
         exit
     then
-    
+
     \ Adjust first list pointer.
     dup list-get-links  \ lst0 link
     dup link-get-next   \ lst0 link link-next
@@ -439,7 +439,7 @@ list-header cell+ constant list-links
     true                \ data true
 ;
 
-\ Scan a list for the first item that returns true for the given xt, 
+\ Scan a list for the first item that returns true for the given xt,
 \ remove that link, returning the link-data contents.
 \ xt signature is ( item link-data -- flag ) or ( filler link-data -- flag )
 \
@@ -616,11 +616,11 @@ list-header cell+ constant list-links
 
     dup struct-get-use-count        \ list-addr count
 
-    dup 0 < 
+    dup 0 <
     abort" invalid use count"
 
-    #2 < 
-    if  
+    #2 <
+    if
         _list-deallocate-uc-1
     else
         struct-dec-use-count
@@ -682,7 +682,7 @@ list-header cell+ constant list-links
     \ Allocate list to return.
     list-new                    \ xt list1 list0 list-ret
 
-    \ Get list0 items 
+    \ Get list0 items
     swap list-get-links         \ xt list1 list-ret links0
     begin
         dup                     \ xt list1 list-ret link0 link0
@@ -703,7 +703,7 @@ list-header cell+ constant list-links
                                 \ xt list1 list-ret 0
     drop                        \ xt list1 list-ret
 
-    \ Get list1 items 
+    \ Get list1 items
     swap list-get-links         \ xt list-ret links1
     begin
         dup                     \ xt list-ret link1 link1
@@ -801,7 +801,7 @@ list-header cell+ constant list-links
     over                        \ u list u
     over list-get-length        \ u list u len
     over                        \ u list u len u
-    0<                          
+    0<
     abort" index LT 0"
                                 \ u list u len
     >=

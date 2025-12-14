@@ -20,21 +20,21 @@
     s" fghi" compare 0<> abort" fghi not found"
 
     depth 0<> abort" Test 2 stack not empty"
-    
+
     \ Try no string.
     s" " parse-string
     0 <>
     abort" No tokens not found"
 
     depth 0<> abort" Test 3 stack not empty"
-    
+
     \ Try only one separator.
     s"  " parse-string
     0 <>
     abort" No tokens not found"
 
     depth 0<> abort" Test 4 stack not empty"
-    
+
     \ Try only two separators.
     s"   " parse-string
     0 <>

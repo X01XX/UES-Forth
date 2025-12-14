@@ -1,6 +1,6 @@
 \ Functions for a list of Region-list-core + rate, rlcrate, structures.
 
-\ Deallocate a rlcrate list.                                                                                                             
+\ Deallocate a rlcrate list.
 : rlcrate-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -48,7 +48,7 @@
     over struct-inc-use-count
     list-push
 ;
- 
+
 \ Print a rlcrate-list
 : .rlcrate-list ( list0 -- )
     \ Check args.

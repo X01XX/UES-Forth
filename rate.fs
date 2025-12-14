@@ -6,7 +6,7 @@
     #1 constant rate-struct-number-cells
 
 \ Struct fields
-0 constant rate-header        \ 16-bits [0] struct id [1] use count, [2] Positive quantity, [3] (ABS) negative quantity.
+0 constant rate-header-disp \ 16-bits, [0] struct id, [1] use count, [2] Positive quantity, [3] (ABS) negative quantity.
 
 0 value rate-mma \ Storage for rate mma instance.
 
@@ -34,10 +34,10 @@
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    rate-id =     
+    rate-id =
 ;
 
-\ Check TOS for rate, unconventional, leaves stack unchanged. 
+\ Check TOS for rate, unconventional, leaves stack unchanged.
 : assert-tos-is-rate ( arg0 -- arg0 )
     dup is-allocated-rate
     is-false if
@@ -46,7 +46,7 @@
     then
 ;
 
-\ Check NOS for rate, unconventional, leaves stack unchanged. 
+\ Check NOS for rate, unconventional, leaves stack unchanged.
 : assert-nos-is-rate ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-rate
     is-false if
@@ -55,7 +55,7 @@
     then
 ;
 
-\ Check 3OS for rate, unconventional, leaves stack unchanged. 
+\ Check 3OS for rate, unconventional, leaves stack unchanged.
 : assert-3os-is-rate ( arg2 arg1 arg0 -- arg1 arg0 )
     #2 pick is-allocated-rate
     is-false if
@@ -73,7 +73,7 @@
 
     2w@                     \ Fetch the field.
 ;
- 
+
 \ Return the second field from a rate instance.
 : rate-get-negative ( rt0 -- n )
     \ Check arg.
@@ -86,7 +86,7 @@
         -1 *
     then
 ;
- 
+
 \ Set the first field from a rate instance, use only in this file.
 : _rate-set-positive ( u1 rt0 -- )
     \ Check args.
@@ -95,7 +95,7 @@
 
     2w!                     \ Set third header field.
 ;
- 
+
 \ Set the second field from a rate instance, use only in this file.
 : _rate-set-negative ( u1 addr -- )
     \ Check args.

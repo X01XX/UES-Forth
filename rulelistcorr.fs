@@ -19,7 +19,7 @@
         over link-get-data          \ ret-lst link2 link1 reg2
         over link-get-data          \ ret-lst link2 link1 reg2 reg1
         rule-new-region-to-region   \ ret-lst link2 link1 rulx ( rule may have no changes )
-        #3 pick                     \ ret-lst link2 link1 rulx ret-lst 
+        #3 pick                     \ ret-lst link2 link1 rulx ret-lst
         rule-list-push-end          \ ret-lst link2 link1
 
         link-get-next swap

@@ -72,9 +72,9 @@
     cr ." removing group " over .region cr
     [ ' group-region-eq ] literal   \ reg list xt
     -rot                            \ xt reg list
-    
+
     list-remove                     \ grp true | false
-    if  
+    if
         group-deallocate
         true
     else

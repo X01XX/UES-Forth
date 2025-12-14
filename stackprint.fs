@@ -214,7 +214,7 @@
     then
     depth 0 do
         depth 1- i - pick
-        .stack-structs2 
+        .stack-structs2
     loop
 ;
 

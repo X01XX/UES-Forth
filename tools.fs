@@ -5,12 +5,12 @@
     abort" exp: exponent is negative"
 
     1 swap 0
-    ?do 
+    ?do
         cr .s
-        over * 
+        over *
         dup 0=
         abort" exp: overflow"
-    loop 
+    loop
     nip \ Do exponentiation.
 ;
 
@@ -54,7 +54,7 @@
     abort" isolate-a-bit: argument is zero"
 
     \ Remove lsb.
-    dup 1- over and     \ u u-lsb 
+    dup 1- over and     \ u u-lsb
 
     \ Isolate lsb.
     tuck xor            \ u-lsb lsb
@@ -225,7 +225,7 @@
 
 \ Return the struct id from a struct instance.
 : struct-get-id ( addr -- u1 )
-    0w@               \ Fetch the ID. 
+    0w@               \ Fetch the ID.
 ;
 
 \ Set the struct id,
@@ -235,12 +235,12 @@
 
 \ Get struct use count.
 : struct-get-use-count ( struct-addr -- u-uc )
-    1w@ 
+    1w@
 ;
 
 \ Set struct use count.
 : struct-set-use-count ( u-16 struct-addr -- )
-    1w! 
+    1w!
 ;
 
 \ Decrement struct use count.
@@ -256,7 +256,7 @@
 \ Increment struct use count.
 : struct-inc-use-count ( struct-addr -- )
     dup struct-get-use-count      \ struct-addr use-count
-    1+  
+    1+
     swap struct-set-use-count
 ;
 
@@ -282,7 +282,7 @@
 ;
 
 \ Return a terrible random number, from 0 to a given limit - 1.
-\ Used to exercise different sections of code, purity of randomness is not important. 
+\ Used to exercise different sections of code, purity of randomness is not important.
 : random ( limit -- result )
     dup 1 < abort" limit is zero?"
 
@@ -322,12 +322,12 @@
     dup 0= if           \ c-start 0
         nip
         exit
-    then    
+    then
 
     \ Prep for loop.    \ c-start c-cnt
 
     \ Calc string end address.
-    2dup + 1-           \ c-start c-cnt c-end 
+    2dup + 1-           \ c-start c-cnt c-end
 
     \ Init token counter.
     0 swap              \ c-start fl t-cnt c-end    \ c-cnt is a filler at this point, so -2rot works.
@@ -344,7 +344,7 @@
 
         \ Check for a separator.
         bl =                        \ c-start fl t-cnt c-end flag
-        
+
         if
             \ Check length GT zero.
             dup i -                 \ c-start fl t-cnt c-end s-len
@@ -358,7 +358,7 @@
                 swap                \ c-start fl t-cnt c-end t-start t-len
 
                 \ Store token def deeper into stack.
-                -2rot               \ c-start fl t-cnt c-end 
+                -2rot               \ c-start fl t-cnt c-end
 
                 \ Update token count.
                 swap 1+ swap        \ c-start fl t-cnt c-end

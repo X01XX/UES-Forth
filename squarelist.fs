@@ -1,6 +1,6 @@
 \ Functions for square lists.
 
-\ Deallocate a square list.                                                                                                             
+\ Deallocate a square list.
 : square-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -296,7 +296,7 @@
         square-get-pn               \ rul-str max-pn link sqr-pn
         #2 pick                     \ rul-str max-pn link sqr-pn max-pn
         =                           \ rul-str max-pn link flag
-        
+
         if                          \ rul-str max-pn link
             \ Update the return rulestore.
             rot                             \ max-pn link rul-str

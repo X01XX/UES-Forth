@@ -16,15 +16,15 @@
     #3 constant changes-struct-number-cells
 
 \ Struct fields.
-0 constant changes-header      \ 16-bits [0] struct id [1] use count.
-changes-header      cell+ constant changes-m01-disp
-changes-m01-disp    cell+ constant changes-m10-disp
+0                           constant changes-header-disp    \ 16-bits [0] struct id, [1] use count.
+changes-header-disp cell+   constant changes-m01-disp       \ 0->1 mask.
+changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 0 value changes-mma    \ Storage for changes mma instance.
 
 \ Init changes mma, return the addr of allocated memory.
 : changes-mma-init ( num-items -- ) \ sets changes-mma.
-    dup 1 < 
+    dup 1 <
     abort" changes-mma-init: Invalid number of items."
 
     cr ." Initializing Changes store."
@@ -47,10 +47,10 @@ changes-m01-disp    cell+ constant changes-m10-disp
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    changes-id =     
+    changes-id =
 ;
 
-\ Check TOS for changes, unconventional, leaves stack unchanged. 
+\ Check TOS for changes, unconventional, leaves stack unchanged.
 : assert-tos-is-changes ( cngs0 -- )
     dup is-allocated-changes
     is-false if
@@ -59,7 +59,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
     then
 ;
 
-\ Check NOS for changes, unconventional, leaves stack unchanged. 
+\ Check NOS for changes, unconventional, leaves stack unchanged.
 : assert-nos-is-changes ( rul1 ??? -- )
     over is-allocated-changes
     is-false if
@@ -79,7 +79,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
     @                   \ Fetch the field.
 ;
 
-\ Set the m01 field of a changes instance, use only in this file. 
+\ Set the m01 field of a changes instance, use only in this file.
 : _changes-set-m01 ( u1 cngs0 -- )
     changes-m01-disp +  \ Add offset.
     !                   \ Set the field.
@@ -94,7 +94,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
     @                   \ Fetch the field.
 ;
 
-\ Set the m10 field of a changes instance, use only in this file. 
+\ Set the m10 field of a changes instance, use only in this file.
 : _changes-set-m10 ( u1 cngs0 -- )
     changes-m10-disp +  \ Add offset.
     !                   \ Set the field.
@@ -102,7 +102,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
 
 \ End accessors.
 
-\ Allocate a changes, setting id and use count only, use only in this file. 
+\ Allocate a changes, setting id and use count only, use only in this file.
 : _changes-allocate ( -- cngs0 )
     \ Allocate space.
     changes-mma mma-allocate   \ addr
@@ -208,7 +208,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
     dup region-x-mask -rot      \ fx reg-to reg-from
     dup region-0-mask -rot      \ fx f0 reg-to reg-from
     region-1-mask swap          \ fx f0 f1 reg-to
-    
+
     \ Get reg-to masks.
     dup region-0-mask swap      \ fx f0 f1 t0 reg-to
     region-1-mask               \ fx f0 f1 t0 t1
@@ -318,7 +318,7 @@ changes-m01-disp    cell+ constant changes-m10-disp
     assert-tos-is-changes
 
     dup changes-get-m10 !not    \ cngs0 m10'
-    
+
     swap changes-get-m01 !not   \ m10' m01'
 
     changes-new                 \ cngs

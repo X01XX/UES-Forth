@@ -1,6 +1,6 @@
 ' 0= alias is-false
 
-\ Check TOS for bool, unconventional, leaves stack unchanged. 
+\ Check TOS for bool, unconventional, leaves stack unchanged.
 : assert-tos-is-bool ( u -- )
     dup is-false
     over -1 =
@@ -11,7 +11,7 @@
     then
 ;
 
-\ Check NOS for bool, unconventional, leaves stack unchanged. 
+\ Check NOS for bool, unconventional, leaves stack unchanged.
 : assert-nos-is-bool ( u ?? -- )
     over dup is-false
     swap -1 =
@@ -22,7 +22,7 @@
     then
 ;
 
-\ Check 3OS for bool, unconventional, leaves stack unchanged. 
+\ Check 3OS for bool, unconventional, leaves stack unchanged.
 : assert-3os-is-bool ( u ?? ?? -- )
     #2 pick dup is-false
     swap -1 =

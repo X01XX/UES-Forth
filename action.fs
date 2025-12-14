@@ -1,21 +1,21 @@
-\ Implement a Action struct and functions.                                                          
+\ Implement a Action struct and functions.
 
 #29717 constant action-id
     #6 constant action-struct-number-cells
 
 \ Struct fields
-0 constant action-header    \ (16) struct id (16) use count (8) instance id 
-action-header               cell+ constant action-squares               \ A square-list
-action-squares              cell+ constant action-incompatible-pairs    \ A region-list
-action-incompatible-pairs   cell+ constant action-logical-structure     \ A region-list
-action-logical-structure    cell+ constant action-groups                \ A group-list.
-action-groups               cell+ constant action-function              \ An xt to run to get a sample.
+0                                       constant action-header-disp             \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits).
+action-header-disp               cell+  constant action-squares-disp            \ A square-list
+action-squares-disp              cell+  constant action-incompatible-pairs-disp \ A region-list
+action-incompatible-pairs-disp   cell+  constant action-logical-structure-disp  \ A region-list
+action-logical-structure-disp    cell+  constant action-groups-disp             \ A group-list.
+action-groups-disp               cell+  constant action-function-disp           \ An xt to run to get a sample.
 
 0 value action-mma \ Storage for action mma instance.
 
 \ Init action mma, return the addr of allocated memory.
 : action-mma-init ( num-items -- ) \ sets action-mma.
-    dup 1 < 
+    dup 1 <
     abort" action-mma-init: Invalid number of items."
 
     cr ." Initializing Action store."
@@ -37,10 +37,10 @@ action-groups               cell+ constant action-function              \ An xt 
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    action-id =     
+    action-id =
 ;
 
-\ Check TOS for action, unconventional, leaves stack unchanged. 
+\ Check TOS for action, unconventional, leaves stack unchanged.
 : assert-tos-is-action ( arg0 -- arg0 )
     dup is-allocated-action
     is-false if
@@ -51,7 +51,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 ' assert-tos-is-action to assert-tos-is-action-xt
 
-\ Check NOS for action, unconventional, leaves stack unchanged. 
+\ Check NOS for action, unconventional, leaves stack unchanged.
 : assert-nos-is-action ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-action
     is-false if
@@ -62,7 +62,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
 ' assert-nos-is-action to assert-nos-is-action-xt
 
-\ Check 3OS for action, unconventional, leaves stack unchanged. 
+\ Check 3OS for action, unconventional, leaves stack unchanged.
 : assert-3os-is-action ( arg2 arg1 arg0 -- arg2 arg1 arg0 )
     #2 pick is-allocated-action
     is-false if
@@ -78,7 +78,7 @@ action-groups               cell+ constant action-function              \ An xt 
     \ Check arg.
     assert-tos-is-action
 
-    \ Get intst ID.
+    \ Get inst ID.
     4c@
 ;
 
@@ -105,38 +105,37 @@ action-groups               cell+ constant action-function              \ An xt 
     \ Check arg.
     assert-tos-is-action
 
-    action-squares +    \ Add offset.
-    @                   \ Fetch the field.
+    action-squares-disp +   \ Add offset.
+    @                       \ Fetch the field.
 ;
- 
+
 \ Set the square-list of an action instance, use only in this file.
 : _action-set-squares ( lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
 
-    action-squares +    \ Add offset.
-    !                   \ Set the field.
+    action-squares-disp +   \ Add offset.
+    !                       \ Set the field.
 ;
-
 
 \ Return the incompatible-pairs region-list from an action instance.
 : action-get-incompatible-pairs ( addr -- lst )
     \ Check arg.
     assert-tos-is-action
 
-    action-incompatible-pairs + \ Add offset.
-    @                           \ Fetch the field.
+    action-incompatible-pairs-disp +    \ Add offset.
+    @                                   \ Fetch the field.
 ;
- 
+
 \ Set the incompatible-pairs region-list of an action instance, use only in this file.
 : _action-set-incompatible-pairs ( u1 addr -- )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
 
-    action-incompatible-pairs + \ Add offset.
-    !                           \ Store it.
+    action-incompatible-pairs-disp +    \ Add offset.
+    !                                   \ Store it.
 ;
 
 \ Return the logical-structure region-list from an action instance.
@@ -144,10 +143,10 @@ action-groups               cell+ constant action-function              \ An xt 
     \ Check arg.
     assert-tos-is-action
 
-    action-logical-structure +  \ Add offset.
-    @                           \ Fetch the field.
+    action-logical-structure-disp + \ Add offset.
+    @                               \ Fetch the field.
 ;
- 
+
 \ Set the logical-structure region-list of an action instance, use only in this file.
 : _action-set-logical-structure ( new-ls addr -- )
     \ Check args.
@@ -155,8 +154,8 @@ action-groups               cell+ constant action-function              \ An xt 
     assert-nos-is-list
 
     \ Set new LS.
-    action-logical-structure +  \ Add offset.
-    !                           \ Store it.
+    action-logical-structure-disp + \ Add offset.
+    !                               \ Store it.
 ;
 
 
@@ -165,18 +164,18 @@ action-groups               cell+ constant action-function              \ An xt 
     \ Check arg.
     assert-tos-is-action
 
-    action-groups +     \ Add offset.
-    @                   \ Fetch the field.
+    action-groups-disp +    \ Add offset.
+    @                       \ Fetch the field.
 ;
- 
+
 \ Set the group-list of an action instance, use only in this file.
 : _action-set-groups ( lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
 
-    action-groups +     \ Add offset.
-    !                   \ Set the field.
+    action-groups-disp +    \ Add offset.
+    !                       \ Set the field.
 ;
 
 \ Return the function xt that implements the action.
@@ -184,17 +183,17 @@ action-groups               cell+ constant action-function              \ An xt 
     \ Check arg.
     assert-tos-is-action
 
-    action-function +   \ Add offset.
-    @                   \ Fetch the field.
+    action-function-disp +  \ Add offset.
+    @                       \ Fetch the field.
 ;
- 
+
 \ Set the futction xt that implements an action.
 : _action-set-function ( xt act0 -- )
     \ Check args.
     assert-tos-is-action
 
-    action-function +   \ Add offset.
-    !                   \ Set the field.
+    action-function-disp +  \ Add offset.
+    !                       \ Set the field.
 ;
 
 \ Return true if a region, in the logical structure, is a defining region.
@@ -203,16 +202,16 @@ action-groups               cell+ constant action-function              \ An xt 
     assert-tos-is-action
     assert-nos-is-region
 
-    2dup                            \ reg1 act0 reg1 act0
-    action-get-logical-structure    \ reg1 act0 reg1 LS
-    tuck                            \ reg1 act0 LS reg1 LS
-    region-list-member              \ reg1 act0 LS flag
+    2dup                                \ reg1 act0 reg1 act0
+    action-get-logical-structure        \ reg1 act0 reg1 LS
+    tuck                                \ reg1 act0 LS reg1 LS
+    region-list-member                  \ reg1 act0 LS flag
     0= abort" Region not in logical structure"
 
-    -rot                            \ LS reg1 act0
-    action-get-squares              \ LS reg1 sqr-lst
-    square-list-states-in-region    \ LS sta-lst
-    swap                            \ sta-lst LS
+    -rot                                \ LS reg1 act0
+    action-get-squares                  \ LS reg1 sqr-lst
+    square-list-states-in-region        \ LS sta-lst
+    swap                                \ sta-lst LS
 
     region-list-states-in-one-region    \ sta-lst2
 
@@ -305,7 +304,7 @@ action-groups               cell+ constant action-function              \ An xt 
 
     region-list-set-difference          \ act0 old-ls new-ls new-added'
     cr ." New LS regions added: " dup .region-list cr
-    region-list-deallocate              \ act0 old-ls new-ls 
+    region-list-deallocate              \ act0 old-ls new-ls
 
     \ Scan new regions.
     dup list-get-links                      \ act0 old-ls new-ls link
@@ -336,7 +335,7 @@ action-groups               cell+ constant action-function              \ An xt 
             dup link-get-data               \ act0 old-ls new-ls link region
             #4 pick                         \ act0 old-ls new-ls link region act0
             _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
-            if                              \ act0 old-ls new-ls link 
+            if                              \ act0 old-ls new-ls link
                 space ." deleted group"
             then
         else                                    \ act0 old-ls new-ls link sta-lst2
@@ -364,7 +363,7 @@ action-groups               cell+ constant action-function              \ An xt 
                     dup link-get-data               \ act0 old-ls new-ls link region
                     #4 pick                         \ act0 old-ls new-ls link region act0
                     _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
-                    if                              \ act0 old-ls new-ls link 
+                    if                              \ act0 old-ls new-ls link
                         space ." deleted group"
                     then
                 else
@@ -386,7 +385,7 @@ action-groups               cell+ constant action-function              \ An xt 
                         dup link-get-data               \ act0 old-ls new-ls link region
                         #4 pick                         \ act0 old-ls new-ls link region act0
                         _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
-                        if                              \ act0 old-ls new-ls link 
+                        if                              \ act0 old-ls new-ls link
                             space ." deleted group"
                         then
                     then
@@ -422,7 +421,7 @@ action-groups               cell+ constant action-function              \ An xt 
     \ Store struct id.
     action-id over              \ nb1 xt1 act id act
     struct-set-id               \ nb1 xt1 act
-    
+
     \ Init use count.
     0 over struct-set-use-count \ nb1 xt1 act
 
@@ -505,7 +504,7 @@ action-groups               cell+ constant action-function              \ An xt 
     dup struct-get-use-count      \ act0 count
 
     #2 <
-    if 
+    if
         \ Clear fields.
         dup action-get-squares square-list-deallocate
         dup action-get-incompatible-pairs region-list-deallocate
@@ -566,7 +565,7 @@ action-groups               cell+ constant action-function              \ An xt 
     2drop                                   \ retlst
     \ cr ." action-find-incompatible-pairs-nosups: end" cr
 ;
- 
+
 \ Check a new, or changed square.
 \ Could affect action-incompatible-pairs and action-logical-structure.
 : _action-check-square ( sqr1 act0 -- )
@@ -681,7 +680,7 @@ action-groups               cell+ constant action-function              \ An xt 
     while
         dup link-get-data       \ ret-lst act0 link region
         dup                     \ ret-lst act0 link region region
-    
+
         region-get-states       \ ret-lst act0 link region s1 s0
 
         \ Get square 0.
@@ -1062,7 +1061,6 @@ action-groups               cell+ constant action-function              \ An xt 
     \ cr ." Act: " dup action-get-inst-id . ." action-get-sample" cr
 
     tuck                        \ act0 sta1 act0
-    
 
     over                        \ act0 sta1 act0 sta1
     over action-get-squares     \ act0 sta1 act0 sta1 sqr-lst
@@ -1159,7 +1157,7 @@ action-groups               cell+ constant action-function              \ An xt 
             swap #4 pick                            \ reg1 ret-lst sta1 act0 | link flag s0 sta1
             =                                       \ reg1 ret-lst sta1 act0 | link flag flag
             or                                      \ reg1 ret-lst sta1 act0 | link flag
-    
+
             if
                 \ Make need.
                 dup link-get-data region-get-state-0    \ reg1 ret-lst sta1 act0 | link s0
@@ -1342,7 +1340,7 @@ action-groups               cell+ constant action-function              \ An xt 
         link-get-next
     repeat
                                 \ reg1 ret-lst sta1 act0
-    
+
     \ Clean up.
     2drop                       \ reg1 ret-lst
     nip                         \ ret-lst
@@ -1496,7 +1494,7 @@ action-groups               cell+ constant action-function              \ An xt 
     2dup region-superset-of                         \ | reg-to reg-from bool
     abort" action-calc-steps-bc: region subset?"    \ | reg-to reg-from
     swap region-superset-of                         \ | bool
-    abort" action-calc-steps-bc: region subset?"    \ |  
+    abort" action-calc-steps-bc: region subset?"    \ |
 
     \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
@@ -1519,8 +1517,8 @@ action-groups               cell+ constant action-function              \ An xt 
         #3 <                        \ ret-lst reg-to reg-from link flag
         if                          \ ret-lst reg-to reg-from link
             \ Get backward steps, step-list returned may be empty.
-            #2 pick #2 pick #2 pick \ ret-lst reg-to reg-from link reg-to reg-from link                                                                              
-            link-get-data           \ ret-lst reg-to reg-from link reg-to reg-from grpx 
+            #2 pick #2 pick #2 pick \ ret-lst reg-to reg-from link reg-to reg-from link
+            link-get-data           \ ret-lst reg-to reg-from link reg-to reg-from grpx
             group-calc-steps-bc     \ ret-lst reg-to reg-from link stp-lst
             dup list-is-empty       \ ret-lst reg-to reg-from link stp-lst bool
             is-false if

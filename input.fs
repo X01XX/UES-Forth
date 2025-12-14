@@ -401,7 +401,7 @@
                 \ Do domain-get-plan
                 dup region-new swap                 \ dom cur-reg to-sta
                 dup region-new swap                 \ dom to-reg cur-reg
-                
+
                 rot                                 \ to-reg cur-reg dom
                 #2 pick swap                        \ to-reg cur-reg to-reg dom
                 #2 pick swap                        \ to-reg cur-reg to-reg cur-reg dom
@@ -536,7 +536,7 @@
             drop
             true
             exit
-        then                    
+        then
 
         true
         exit
@@ -561,7 +561,7 @@
         true
         exit
     then
-    
+
     cr ." Three-token command not recognized" cr
     \ Clear tokens.
     2drop

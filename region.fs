@@ -7,14 +7,16 @@
 \
 \ The region is used as a two-state store, the states being not-equal, in
 \ action-incompatible-pairs list.
+\
+\ Order of the states does not matter.
 
 #19317 constant region-id
     #3 constant region-struct-number-cells
 
 \ Struct fields
-0 constant region-header        \ 16-bits [0] struct id [1] use count.
-region-header       cell+ constant region-state-0-disp
-region-state-0-disp cell+ constant region-state-1-disp
+0                           constant region-header-disp   \ 16-bits [0] struct id [1] use count.
+region-header-disp  cell+   constant region-state-0-disp  \ First state.
+region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
 0 value region-mma \ Storage for region mma instance.
 
@@ -42,10 +44,10 @@ region-state-0-disp cell+ constant region-state-1-disp
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    region-id =     
+    region-id =
 ;
 
-\ Check TOS for region, unconventional, leaves stack unchanged. 
+\ Check TOS for region, unconventional, leaves stack unchanged.
 : assert-tos-is-region ( arg0 -- arg0 )
     dup is-allocated-region
     is-false if
@@ -54,7 +56,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     then
 ;
 
-\ Check NOS for region, unconventional, leaves stack unchanged. 
+\ Check NOS for region, unconventional, leaves stack unchanged.
 : assert-nos-is-region ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-region
     is-false if
@@ -63,7 +65,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     then
 ;
 
-\ Check 3OS for region, unconventional, leaves stack unchanged. 
+\ Check 3OS for region, unconventional, leaves stack unchanged.
 : assert-3os-is-region ( arg2 arg1 arg0 -- arg1 arg0 )
     #2 pick is-allocated-region
     is-false if
@@ -82,7 +84,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     region-state-0-disp +   \ Add offset.
     @                       \ Fetch the field.
 ;
- 
+
 \ Return the second field from a region instance.
 : region-get-state-1 ( addr -- u)
     \ Check arg.
@@ -92,7 +94,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     region-state-1-disp +   \ Add offset.
     @                       \ Fetch the field.
 ;
- 
+
 \ Set the first field from a region instance, use only in this file.
 : _region-set-state-0 ( u1 addr -- )
     \ Check args.
@@ -101,7 +103,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     region-state-0-disp +   \ Add offset.
     !                       \ Set first field.
 ;
- 
+
 \ Set the second field from a region instance, use only in this file.
 : _region-set-state-1 ( u1 addr -- )
     \ Check args.
@@ -297,7 +299,7 @@ region-state-0-disp cell+ constant region-state-1-disp
 ;
 
 \ Return the intersection of two regions, or false if they do not intersect.
-\ Since this must check for intersection first, there may be no need to check 
+\ Since this must check for intersection first, there may be no need to check
 \ for intersection before calling this.
 : region-intersection ( reg1 reg0 -- reg true | false )
     \ Check args.
@@ -313,10 +315,10 @@ region-state-0-disp cell+ constant region-state-1-disp
 
         \ Get high and low state of reg1
         rot region-high-low \ reg0high reg0low reg1high reg1low
-  
+
         \ Group high/low states.
         rot                 \ reg0high reg1ghigh reg1low reg0low
-  
+
         \ Calc result
         or -rot and
         region-new
@@ -419,7 +421,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     assert-nos-is-value
 
     region-get-states       \ to-1 s1 s0
-    rot                     \ s1 s0 to-1 
+    rot                     \ s1 s0 to-1
     tuck                    \ s1 to-1 s0 to-1
     or                      \ s1 to-1 s0'
     -rot                    \ s0' s1 to-1
@@ -635,7 +637,7 @@ region-state-0-disp cell+ constant region-state-1-disp
             #2 pick                 \ reg0 ret-lst link data ret-lst
             list-push               \ reg0 ret-lst link
         then
-    
+
         link-get-next               \ reg0 ret-lst link
     repeat
                                     \ reg0 ret-lst
@@ -736,7 +738,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     assert-nos-is-region
 
     \ Change selected reg-from X positions to zero.
-    over region-x-mask      \ reg-to reg-from tx 
+    over region-x-mask      \ reg-to reg-from tx
     over region-0-mask      \ reg-to reg-from tx f0
     and                     \ reg-to reg-from 0x
 
@@ -744,7 +746,7 @@ region-state-0-disp cell+ constant region-state-1-disp
     region-x-to-0           \ reg-to reg-from reg-to'
 
     \ Change selected reg-from' X positions to one.
-    #2 pick region-x-mask   \ reg-to reg-from reg-to' tx 
+    #2 pick region-x-mask   \ reg-to reg-from reg-to' tx
     #2 pick region-1-mask   \ reg-to reg-from reg-to' tx f1
     and                     \ reg-to reg-from reg-to' 1x
 

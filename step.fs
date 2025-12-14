@@ -2,23 +2,23 @@
 \
 \ A step may be added to a step list in a plan.
 
-#37171 constant step-id                                                                                  
+#37171 constant step-id
     #6 constant step-struct-number-cells
 
 \ Struct fields.
-0 constant step-header                                              \ id (16) use count (16) number unwanted changes (8)
-step-header                 cell+ constant step-action-disp         \ An action instance addr.
-step-action-disp            cell+ constant step-rule-disp           \ A rule instance addr.
+0                                   constant step-header-disp         \ id (16) use count (16) number unwanted changes (8)
+step-header-disp            cell+   constant step-action-disp         \ An action instance addr.
+step-action-disp            cell+   constant step-rule-disp           \ A rule instance addr.
 \ Store frequently used calculated fields, to decrease cycles and memory allocation/deallocation.
-step-rule-disp              cell+ constant step-initial-region-disp \ A region instance addr.
-step-initial-region-disp    cell+ constant step-result-region-disp  \ A region instance addr.
-step-result-region-disp     cell+ constant step-changes-disp        \ A changes instance addr.
+step-rule-disp              cell+   constant step-initial-region-disp \ A region instance addr.
+step-initial-region-disp    cell+   constant step-result-region-disp  \ A region instance addr.
+step-result-region-disp     cell+   constant step-changes-disp        \ A changes instance addr.
 
 0 value step-mma \ Storage for step mma instance.
 
 \ Init step mma, return the addr of allocated memory.
 : step-mma-init ( num-items -- ) \ sets step-mma.
-    dup 1 < 
+    dup 1 <
     abort" step-mma-init: Invalid number of items."
 
     cr ." Initializing Step store."
@@ -35,15 +35,15 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
 : is-allocated-step ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup step-mma mma-within-array 0=
-    if  
+    if
         drop false exit
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    step-id =    
+    step-id =
 ;
 
-\ Check TOS for step, unconventional, leaves stack unchanged. 
+\ Check TOS for step, unconventional, leaves stack unchanged.
 : assert-tos-is-step ( arg0 -- arg0 )
     dup is-allocated-step
     is-false if
@@ -52,7 +52,7 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     then
 ;
 
-\ Check NOS for step, unconventional, leaves stack unchanged. 
+\ Check NOS for step, unconventional, leaves stack unchanged.
 : assert-nos-is-step ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-step
     is-false if
@@ -63,7 +63,7 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
 
 \ Start accessors.
 
-\ Return the step action. 
+\ Return the step action.
 : step-get-action ( stp0 -- act )
     \ Check arg.
     assert-tos-is-step
@@ -71,14 +71,14 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     step-action-disp +  \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
 \ Set the action of a step instance, use only in this file.
 : _step-set-action ( u1 stp0 -- )
     step-action-disp +  \ Add offset.
     !                   \ Set field.
 ;
 
-\ Return the step rule. 
+\ Return the step rule.
 : step-get-rule ( stp0 -- rul )
     \ Check arg.
     assert-tos-is-step
@@ -93,7 +93,7 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     !                   \ Set field.
 ;
 
-\ Return the step initial-region. 
+\ Return the step initial-region.
 : step-get-initial-region ( stp0 -- reg )
     \ Check arg.
     assert-tos-is-step
@@ -108,7 +108,7 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     !                               \ Set field.
 ;
 
-\ Return the step rule. 
+\ Return the step rule.
 : step-get-result-region ( stp0 -- reg )
     \ Check arg.
     assert-tos-is-step
@@ -123,7 +123,7 @@ step-result-region-disp     cell+ constant step-changes-disp        \ A changes 
     !                           \ Set field.
 ;
 
-\ Return the step changes. 
+\ Return the step changes.
 : step-get-changes ( stp0 -- cngs )
     \ Check arg.
     assert-tos-is-step

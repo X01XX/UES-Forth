@@ -9,15 +9,15 @@
     #3 constant sample-struct-number-cells
 
 \ Struct fields
-0 constant sample-header    \ 16-bits [0] struct id [1] use count.
-sample-header       cell+ constant sample-initial-disp
-sample-initial-disp cell+ constant sample-result-disp
+0                           constant sample-header-disp     \ 16-bits, [0] struct id, [1] use count.
+sample-header-disp  cell+   constant sample-initial-disp    \ Initial state.
+sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 
 0 value sample-mma \ Storage for sample mma instance.
 
 \ Init sample mma, return the addr of allocated memory.
 : sample-mma-init ( num-items -- ) \ sets sample-mma.
-    dup 1 < 
+    dup 1 <
     abort" sample-mma-init: Invalid number of items."
 
     cr ." Initializing Sample store."
@@ -39,10 +39,10 @@ sample-initial-disp cell+ constant sample-result-disp
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    sample-id =     
+    sample-id =
 ;
 
-\ Check TOS for sample, unconventional, leaves stack unchanged. 
+\ Check TOS for sample, unconventional, leaves stack unchanged.
 : assert-tos-is-sample ( smpl0 -- smpl0 )
     dup is-allocated-sample
     is-false if
@@ -51,7 +51,7 @@ sample-initial-disp cell+ constant sample-result-disp
     then
 ;
 
-\ Check NOS for sample, unconventional, leaves stack unchanged. 
+\ Check NOS for sample, unconventional, leaves stack unchanged.
 : assert-nos-is-sample ( smpl1 arg0 -- smpl1 arg0 )
     over is-allocated-sample
     is-false if
@@ -60,7 +60,7 @@ sample-initial-disp cell+ constant sample-result-disp
     then
 ;
 
-\ Check 3OS for sample, unconventional, leaves stack unchanged. 
+\ Check 3OS for sample, unconventional, leaves stack unchanged.
 : assert-3os-is-sample ( smpl2 arg1 arg0 -- smpl2 arg1 arg0 )
     #2 pick is-allocated-sample
     is-false if
@@ -79,7 +79,7 @@ sample-initial-disp cell+ constant sample-result-disp
     sample-initial-disp +   \ Add offset.
     @                       \ Fetch the field.
 ;
- 
+
 \ Return the result field from a sample instance.
 : sample-get-result ( addr -- u)
     \ Check arg.
@@ -97,7 +97,7 @@ sample-initial-disp cell+ constant sample-result-disp
     sample-initial-disp +   \ Add offset.
     !                       \ Set initial field.
 ;
- 
+
 \ Set the result field from a sample instance, use only in this file.
 : _sample-set-result ( u1 addr -- )
     \ Check args.
@@ -169,7 +169,7 @@ sample-initial-disp cell+ constant sample-result-disp
     dup struct-get-use-count      \ smp0 count
 
     #2 <
-    if 
+    if
         \ Clear fields.
         0 over _sample-set-initial
         0 over _sample-set-result

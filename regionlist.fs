@@ -1,6 +1,6 @@
 \ Functions for region lists.
 
-\ Deallocate a region list.                                                                                                             
+\ Deallocate a region list.
 : region-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -105,7 +105,7 @@
     -rot                        \ xt reg1 list0
 
     list-remove                 \ reg2 true | false
-    if  
+    if
         region-deallocate
         true
     else
@@ -125,7 +125,7 @@
     -rot                                \ xt reg1 list0
 
     list-remove                         \ reg2 true | false
-    if  
+    if
         region-deallocate
         true
     else
@@ -145,7 +145,7 @@
     -rot                                \ xt reg1 list0
 
     list-remove                         \ reg2 true | false
-    if  
+    if
         region-deallocate
         true
     else
@@ -230,7 +230,7 @@
         dup link-get-data       \ lst-n link region
         #2 pick                 \ lst-n link region lst-n
         region-list-push-end    \ lst-n link
-        
+
         link-get-next       \ lst-n link
     repeat
     \ lst-n 0
@@ -557,7 +557,7 @@
             \ Store counter.
             -rot            \ ctr sta lnk
         then
-        
+
         link-get-next       \ ctr sta lnk
     repeat
                             \ ctr sta
@@ -830,7 +830,7 @@
         \ cr
 
         \ Add left over to result list.
-        dup                                 \ ret-lst lst0' int-lst left-over-lst left-over-lst 
+        dup                                 \ ret-lst lst0' int-lst left-over-lst left-over-lst
         #4 pick                             \ ret-lst lst0' int-lst left-over-lst left-over-lst ret-lst
         region-list-append-nodups           \ ret-lst lst0' int-lst left-over-lst
 

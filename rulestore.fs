@@ -6,9 +6,9 @@
     #3 constant rulestore-struct-number-cells
 
 \ Struct fields
-0 constant rulestore-header     \ 16-bits [0] struct id [1] use count.
-rulestore-header cell+ constant rulestore-rule-0
-rulestore-rule-0 cell+ constant rulestore-rule-1
+0                               constant rulestore-header-disp  \ 16-bits, [0] struct id, [1] use count.
+rulestore-header-disp   cell+   constant rulestore-rule-0-disp  \ Rule 0, or null.
+rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or null.  Guaranteed null if rule 0 is null.
 
 0 value rulestore-mma \ Storage for rulestore mma instance.
 
@@ -33,10 +33,10 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    rulestore-id =     
+    rulestore-id =
 ;
 
-\ Check TOS for rulestore, unconventional, leaves stack unchanged. 
+\ Check TOS for rulestore, unconventional, leaves stack unchanged.
 : assert-tos-is-rulestore ( arg0 -- arg0 )
     dup is-allocated-rulestore
     is-false if
@@ -45,7 +45,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     then
 ;
 
-\ Check NOS for rulestore, unconventional, leaves stack unchanged. 
+\ Check NOS for rulestore, unconventional, leaves stack unchanged.
 : assert-nos-is-rulestore ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-rulestore
     is-false if
@@ -61,20 +61,20 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Check arg
     assert-tos-is-rulestore
 
-    rulestore-rule-0 +  \ Add offset.
-    @                   \ Fetch the field.
+    rulestore-rule-0-disp + \ Add offset.
+    @                       \ Fetch the field.
 ;
- 
+
 \ Return the second field from a rulestore instance.
 : rulestore-get-rule-1 ( addr -- u)
     \ Check arg
     assert-tos-is-rulestore
 
     \ Get second rule.
-    rulestore-rule-1 +  \ Add offset.
-    @                   \ Fetch the field.
+    rulestore-rule-1-disp + \ Add offset.
+    @                       \ Fetch the field.
 ;
- 
+
 \ Set the first field of a rulestore, use only in this file.
 \ The second arg can be zero, or a rule.
 : _rulestore-set-rule-0 ( rul0 addr -- )
@@ -85,12 +85,12 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         assert-nos-is-rule
     then
 
-    rulestore-rule-0 +  \ Add offset.
-    !                   \ Set first field.
+    rulestore-rule-0-disp + \ Add offset.
+    !                       \ Set first field.
 ;
 
 \ Set the second field of a rulestore, use only in this file.
-\ The second arg can be zero, or a rule. 
+\ The second arg can be zero, or a rule.
 : _rulestore-set-rule-1 ( rul0 addr -- )
     \ Check args
     assert-tos-is-rulestore
@@ -99,21 +99,21 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
         assert-nos-is-rule
     then
 
-    rulestore-rule-1 +  \ Add offset.
-    !                   \ Set second field.
+    rulestore-rule-1-disp + \ Add offset.
+    !                       \ Set second field.
 ;
 
 \ End accessors.
 
 \ Return a new rulestore instance, with no rules.
 : rulestore-new-0  ( -- rulestore )
-    \ Allocate space.                                                                         
+    \ Allocate space.
     rulestore-mma mma-allocate  \ addr
 
     \ Store id.
     rulestore-id over           \ addr id addr
     struct-set-id               \ addr
-        
+
     \ Init use count.
     0 over                      \ addr 0 addr
     struct-set-use-count        \ addr
@@ -132,13 +132,13 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     \ Check arg.
     assert-tos-is-rule
 
-    \ Allocate space.                                                                         
+    \ Allocate space.
     rulestore-mma mma-allocate  \ rul0 addr
 
     \ Store id.
     rulestore-id over           \ rul0 addr id addr
     struct-set-id               \ rul0 addr
-        
+
     \ Init use count.
     0 over                      \ rul0 addr 0 addr
     struct-set-use-count        \ rul0 addr
@@ -173,7 +173,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     region-deallocate
     region-deallocate
 
-    \ Allocate space.                                                                         
+    \ Allocate space.
     rulestore-mma mma-allocate  \ rul1 rul0 addr
 
     \ Store id.
@@ -409,7 +409,7 @@ rulestore-rule-0 cell+ constant rulestore-rule-1
     if                                  \ rs1 rs2 rs3
         nip nip true exit
     then
-    
+
     rulestore-union-10-by-changes       \ rs3 true | false
 ;
 

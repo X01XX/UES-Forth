@@ -1,21 +1,21 @@
 \ Implement a group struct and functions.
 
-#43717 constant group-id                                                                                  
+#43717 constant group-id
     #5 constant group-struct-number-cells
 
 \ Struct fields
-0 constant group-header                                 \ id (16) use count (16) pnc (8)
-group-header        cell+ constant group-region-disp    \ The group region.
-group-region-disp   cell+ constant group-r-region-disp  \ A Region covered the group rules, often a proper subset of the group-region.
-group-r-region-disp cell+ constant group-squares-disp   \ A square list.
-group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
+0                           constant group-header-disp      \ 16 bits, [0] struct id, [1] use count (16), [1] pnc (8 bits)
+group-header-disp   cell+   constant group-region-disp      \ The group region.
+group-region-disp   cell+   constant group-r-region-disp    \ A Region covered the group rules, often a proper subset of the group-region.
+group-r-region-disp cell+   constant group-squares-disp     \ A square list.
+group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 0 value group-mma \ Storage for group mma instance.
 
 \ Init group mma, return the addr of allocated memory.
 : group-mma-init ( num-items -- ) \ sets group-mma.
-    dup 1 < 
-    if  
+    dup 1 <
+    if
         ." group-mma-init: Invalid number of items."
         abort
     then
@@ -37,24 +37,24 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 : is-allocated-group ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup group-mma mma-within-array 0=
-    if  
+    if
         drop false exit
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    group-id =    
+    group-id =
 ;
 
-\ Check TOS for group, unconventional, leaves stack unchanged. 
+\ Check TOS for group, unconventional, leaves stack unchanged.
 : assert-tos-is-group ( arg0 -- arg0 )
     dup is-allocated-group
-    is-false if  
+    is-false if
         s" TOS is not an allocated group"
        .abort-xt execute
     then
 ;
 
-\ Check NOS for group, unconventional, leaves stack unchanged. 
+\ Check NOS for group, unconventional, leaves stack unchanged.
 : assert-nos-is-group ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-group
     is-false if
@@ -65,7 +65,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
 
 \ Start accessors.
 
-\ Return the group region. 
+\ Return the group region.
 : group-get-region ( addr -- reg )
     \ Check arg.
     assert-tos-is-group
@@ -73,7 +73,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     group-region-disp + \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
 \ Set the region of a group instance, use only in this file.
 : _group-set-region ( reg1 addr -- )
     over struct-inc-use-count
@@ -81,7 +81,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     !                   \ Set field.
 ;
 
-\ Return the group squares region. 
+\ Return the group squares region.
 : group-get-r-region ( addr -- reg )
     \ Check arg.
     assert-tos-is-group
@@ -89,7 +89,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     group-r-region-disp +   \ Add offset.
     @                       \ Fetch the field.
 ;
- 
+
 \ Set the square region of a group instance, use only in this file.
 : _group-set-r-region ( reg1 addr -- )
     over struct-inc-use-count
@@ -123,7 +123,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     group-rules-disp + !
 ;
 
-\ Return the group squares. 
+\ Return the group squares.
 : group-get-squares ( addr -- reg )
     \ Check arg.
     assert-tos-is-group
@@ -131,7 +131,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     group-squares-disp +    \ Add offset.
     @                       \ Fetch the field.
 ;
- 
+
 \ Set the squares field of a group instance, use only in this file.
 : _group-set-squares ( sqr-lst addr -- )
     group-squares-disp +    \ Add offset.
@@ -186,7 +186,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     \ Store id.
     group-id over               \ s r addr id addr
     struct-set-id               \ s r addr
-        
+
     \ Init use count.
     0 over                      \ s r addr 0 addr
     struct-set-use-count        \ s r addr
@@ -349,7 +349,6 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     else
         2drop
     then
-    
 ;
 
 \ Add a square to a group.
@@ -517,7 +516,7 @@ group-squares-disp  cell+ constant group-rules-disp     \ A RuleStore.
     ?dup
     if
         xor                     \ sta0'
-    
+
         \ Make need.
         #4 swap                 \ 4 sta0'
         cur-action-xt execute   \ 4 sta0' actx

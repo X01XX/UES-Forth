@@ -4,16 +4,16 @@
     #4 constant domain-struct-number-cells
 
 \ Struct fields
-0 constant domain-header    \ 16-bits (16) struct id (16) use count (8) instance id (8) num-bits
-domain-header               cell+ constant domain-actions               \ A action-list
-domain-actions              cell+ constant domain-current-state         \ A state/value.
-domain-current-state        cell+ constant domain-current-action        \ An action addr.
+0                                   constant domain-header-disp         \ 16-bits [0] struct id, [1] use count, [2] instance id (8 bits), num-bits (8 bits)
+domain-header-disp          cell+   constant domain-actions-disp        \ A action-list
+domain-actions-disp         cell+   constant domain-current-state-disp  \ A state/value.
+domain-current-state-disp   cell+   constant domain-current-action-disp \ An action addr.
 
 0 value domain-mma \ Storage for domain mma instance.
 
 \ Init domain mma, return the addr of allocated memory.
 : domain-mma-init ( num-items -- ) \ sets domain-mma.
-    dup 1 < 
+    dup 1 <
     abort" domain-mma-init: Invalid number of items."
 
     cr ." Initializing Domain store."
@@ -24,15 +24,15 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 : is-allocated-domain ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup domain-mma mma-within-array 0=
-    if  
+    if
         drop false exit
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    domain-id =    
+    domain-id =
 ;
 
-\ Check TOS for domain, unconventional, leaves stack unchanged. 
+\ Check TOS for domain, unconventional, leaves stack unchanged.
 : assert-tos-is-domain ( arg0 -- arg0 )
     dup is-allocated-domain
     is-false if
@@ -43,7 +43,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
 ' assert-tos-is-domain to assert-tos-is-domain-xt
 
-\ Check NOS for domain, unconventional, leaves stack unchanged. 
+\ Check NOS for domain, unconventional, leaves stack unchanged.
 : assert-nos-is-domain ( arg1 arg0 -- arg0 )
     over is-allocated-domain
     is-false if
@@ -61,8 +61,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check arg.
     assert-tos-is-domain
 
-    domain-actions +    \ Add offset.
-    @                   \ Fetch the field.
+    domain-actions-disp +   \ Add offset.
+    @                       \ Fetch the field.
 ;
 
 \ Return the action-list from an domain instance.
@@ -71,8 +71,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-tos-is-domain
     assert-nos-is-list
 
-    domain-actions +    \ Add offset.
-    !                   \ Set the field.
+    domain-actions-disp +   \ Add offset.
+    !                       \ Set the field.
 ;
 
 \ Return the instance ID from an domain instance.
@@ -132,7 +132,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check arg.
     assert-tos-is-domain
 
-    domain-current-state +
+    domain-current-state-disp +
     @
 ;
 
@@ -154,7 +154,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     <> abort" invalid state"
 
     \ Set inst id.
-    domain-current-state +
+    domain-current-state-disp +
     !
 ;
 
@@ -163,10 +163,10 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Check arg.
     assert-tos-is-domain
 
-    domain-current-action +
+    domain-current-action-disp +
     @
 ;
- 
+
 \ Set the current action of a domain instance.
 : domain-set-current-action ( act1 dom0 -- )
     \ Check args.
@@ -176,7 +176,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     then
 
     \ Set inst id.
-    domain-current-action +
+    domain-current-action-disp +
     !
 ;
 
@@ -190,7 +190,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 \
 \ The current state defaults to zero, but can be set with domain-set-current-state.
 : domain-new ( nb0 -- addr)
-    
+
     \ Allocate space.
     domain-mma mma-allocate         \ nb0 dom
 
@@ -208,7 +208,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     \ Set num bits.
     2dup _domain-set-num-bits       \ nb0 dom
 
-    \ Set actions list.             
+    \ Set actions list.
     list-new                        \ nb0 dom lst
     dup struct-inc-use-count        \ nb0 dom lst
     2dup swap                       \ nb0 dom lst lst dom
@@ -219,7 +219,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     [ ' act-0-get-sample ] literal  \ dom lst nb0 xt
     action-new                      \ dom lst act
     tuck swap                       \ dom act act lst
-    
+
     action-list-push-end            \ dom act
 
     over domain-set-current-action  \ dom
@@ -251,7 +251,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     dup struct-get-use-count      \ act0 count
 
     #2 <
-    if 
+    if
         \ Clear fields.
         dup domain-get-actions action-list-deallocate
 
@@ -281,8 +281,8 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 \ Return true if two domains are equal.
 : domain-eq ( grp1 grp0 -- flag )
      \ Check args.
-    assert-tos-is-group 
-    assert-nos-is-group 
+    assert-tos-is-group
+    assert-nos-is-group
 
     domain-get-inst-id
     swap
@@ -294,7 +294,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 \ Call only from session-get-sample, since current-domain in set there.
 : domain-get-sample ( act1 dom0 -- sample )
      \ Check args.
-    assert-tos-is-domain 
+    assert-tos-is-domain
     assert-nos-is-action
 
     \ Set domain current action.
@@ -307,7 +307,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     \ Set domain current state.
     dup sample-get-result           \ act1 dom0 | smpl sta
-    #2 pick                         \ act1 dom0 | smpl sta dom 
+    #2 pick                         \ act1 dom0 | smpl sta dom
     domain-set-current-state        \ act1 dom0 | smpl
 
     over domain-get-inst-id cr ." Dom: " dec.      \ act1 dom0 | smpl
@@ -337,7 +337,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
     dup domain-get-current-state    \ reg1 dom0 sta
     swap                            \ reg1 sta dom0
-    
+
     dup domain-get-actions          \ reg1 sta dom0 act-lst
 
     \ Init list to start appending action need lists to.
@@ -355,7 +355,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 
         \ Get action needs.
         #4 pick                     \ reg1 sta dom0 ret-lst link reg1
-        #4 pick                     \ reg1 sta dom0 ret-lst link reg1 sta 
+        #4 pick                     \ reg1 sta dom0 ret-lst link reg1 sta
         #2 pick link-get-data       \ reg1 sta dom0 ret-lst link reg1 sta actx
         action-get-needs            \ reg1 sta dom0 ret-lst link act-neds
 
@@ -529,13 +529,13 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         over                                \ stp-lst lst-unw link u-uw xt u-unw
         #4 pick                             \ stp-lst lst-unw link u-uw xt u-unw lst-unw
         list-member                         \ stp-lst lst-unw link u-uw bool
-        if                                  \ stp-lst lst-unw link u-uw 
+        if                                  \ stp-lst lst-unw link u-uw
             drop                            \ stp-lst lst-unw link
         else                                \ stp-lst lst-unw link u-uw
             #2 pick                         \ stp-lst lst-unw link u-uw  lst-unw
             list-push                       \ stp-lst lst-unw link
         then
-        
+
         link-get-next                       \ stp-lst lst-unw link
     repeat
 
@@ -625,7 +625,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         over step-get-initial-region            \ depth reg-to dom0 | pln reg-from | stpx reg-from stp-i
         region-intersects                       \ depth reg-to dom0 | pln reg-from | stpx bool
         if
-            \ cr ." plan: " #2 pick .plan space ." add intersecting step fc: " dup .step cr 
+            \ cr ." plan: " #2 pick .plan space ." add intersecting step fc: " dup .step cr
             \ Add intersecting step to plan.
                                             \ depth reg-to dom0 | pln reg-from | stpx
             #2 pick                         \ depth reg-to dom0 | pln reg-from | stpx pln
@@ -659,10 +659,10 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                     exit
                 then
             then
-        else                                    \ depth reg-to dom0 | pln reg-from | stpx 
+        else                                    \ depth reg-to dom0 | pln reg-from | stpx
             \ Process non-intersecting step.
                                                 \ depth reg-to dom0 | pln reg-from | stpx
-            \ cr ." plan: " #2 pick .plan space ." add extending step fc: " dup .step cr 
+            \ cr ." plan: " #2 pick .plan space ." add extending step fc: " dup .step cr
             \ Set up for recursion.
             #5 pick 1-                          \ depth reg-to dom0 | pln reg-from | stpx | depth   ( -1 to prevent infinite recursion )
             over step-get-initial-region        \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i
@@ -716,7 +716,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         \ Check if the plan result, the current reg-from, is a subset of the goal region.
                                             \ depth reg-to dom0 | pln' reg-from |
         \ cr ." Checking end of plan: " over .plan space ." cur reg-from: " dup .region space ." reg-to: " #3 pick .region space ." depth: " #4 pick . cr
-        
+
         #3 pick                             \ depth reg-to dom0 | pln' reg-from | reg-to
         over                                \ depth reg-to dom0 | pln' reg-from | reg-to reg-from
         swap                                \ depth reg-to dom0 | pln' reg-from | reg-from reg-to
@@ -780,9 +780,9 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick                             \ | reg-to reg-from
-    2dup region-superset-of                     \ | reg-to reg-from bool 
+    2dup region-superset-of                     \ | reg-to reg-from bool
     abort" domain-calc-step-bc: region subset?" \ | reg-to reg-from
-    swap region-superset-of                     \ | bool 
+    swap region-superset-of                     \ | bool
     abort" domain-calc-step-bc: region subset?" \ |
     \ cr ." at 1: " .stack-structs-xt execute cr
 
@@ -817,12 +817,12 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     2nip nip                        \ stp-lst
 
     \ Check for no steps.
-    dup list-is-empty               \ stp-lst flag 
-    if   
+    dup list-is-empty               \ stp-lst flag
+    if
         step-list-deallocate
         false
-        exit 
-    then 
+        exit
+    then
 
     \ Generate a list of each different number of unwanted changes in steps.
     list-new                        \ stp-lst lst-unw
@@ -838,13 +838,13 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         over                                \ stp-lst lst-unw link u-uw xt u-unw
         #4 pick                             \ stp-lst lst-unw link u-uw xt u-unw lst-unw
         list-member                         \ stp-lst lst-unw link u-uw bool
-        if                                  \ stp-lst lst-unw link u-uw 
+        if                                  \ stp-lst lst-unw link u-uw
             drop                            \ stp-lst lst-unw link
         else                                \ stp-lst lst-unw link u-uw
             #2 pick                         \ stp-lst lst-unw link u-uw  lst-unw
             list-push                       \ stp-lst lst-unw link
         then
-        
+
         link-get-next                       \ stp-lst lst-unw link
     repeat
 
@@ -968,10 +968,10 @@ domain-current-state        cell+ constant domain-current-action        \ An act
                     exit
                 then
             then
-        else                                        \ depth reg-from dom0 | pln reg-to | stpx 
+        else                                        \ depth reg-from dom0 | pln reg-to | stpx
         \ Process non-intersecting step.
                                                     \ depth reg-from dom0 | pln reg-to | stpx
-            \ cr ." plan: " #2 pick .plan space ." add extending step bc: " dup .step cr 
+            \ cr ." plan: " #2 pick .plan space ." add extending step bc: " dup .step cr
             \ Set up for recursion.
             #5 pick 1-                              \ depth reg-from dom0 | pln reg-to | stpx | depth   ( -1 to prevent infinite recursion )
             over step-get-result-region             \ depth reg-from dom0 | pln reg-to | stpx | depth stp-r
@@ -1027,7 +1027,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
         \ Check if the plan result, the current reg-from, is a subset of the from region.
                                             \ depth reg-from dom0 | pln' reg-to |
         \ cr ." Checking end of plan: " over .plan space ." cur reg-from: " dup .region space ." reg-to: " #3 pick .region space ." depth: " #4 pick . cr
-        
+
         #3 pick                             \ depth reg-from dom0 | pln' reg-to | reg-from
         over                                \ depth reg-from dom0 | pln' reg-to | reg-from reg-to
         swap                                \ depth reg-from dom0 | pln' reg-to | reg-to reg-from
@@ -1055,15 +1055,15 @@ domain-current-state        cell+ constant domain-current-action        \ An act
     #3 pick 0 #5 within is-false abort" invalid depth?"
 
     \ Check depth.
-    #3 pick 1 < if 
+    #3 pick 1 < if
         cr ." domain-get-plan-bc: Depth exceeded." cr
         2drop 2drop
         false
-        exit 
-    then 
+        exit
+    then
 
     #3 0 do
-        #3 pick #3 pick #3 pick #3 pick         \ depth reg-to reg-from dom0 | 
+        #3 pick #3 pick #3 pick #3 pick         \ depth reg-to reg-from dom0 |
         domain-get-plan2-bc                     \ depth reg-to reg-from dom0 | pln t | f
         if                                      \ depth reg-to reg-from dom0 | pln
             \ Clean up.
@@ -1182,7 +1182,7 @@ domain-current-state        cell+ constant domain-current-action        \ An act
 \ Randomly choose one of those steps.
 \ Try making a plan that goes from the from-region to the step initial-region.
 \ Restrict the steps initial-region.
-\ Try making a plan that goes from the step result-region to the goal region. 
+\ Try making a plan that goes from the step result-region to the goal region.
 : domain-asymmetric-chaining ( reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain

@@ -33,7 +33,7 @@
 
                                     \ reg-lst reg3
     region-deallocate               \ reg-lst
-    
+
     region-list-deallocate
 
     cr ." region-test-region-subtract - Ok" cr

@@ -61,7 +61,7 @@
     drop
 
     current-session .session
-    
+
     current-session-deallocate
 
     cr ." session-test-domain-get-plan-fc - Ok" cr
@@ -228,6 +228,9 @@
     over session-add-rlcrate                        \ dom0 dom1 sess
 
     current-session .session
+
+
+
 
     \ Clean up.
     3drop

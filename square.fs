@@ -1,23 +1,23 @@
 \ Implement a square struct and functions.
 
-#23197 constant square-id                                                                                  
+#23197 constant square-id
     #7 constant square-struct-number-cells
 
 \ Struct fields
-0 constant square-header                        \ id (16) use count (16) result count (16) pnc (8)
-square-header   cell+ constant square-state
-square-state    cell+ constant square-rules     \ A Rulestore.
-square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, starting here.
-                                                \ The result count, mod 4, will be the next element index to use
-                                                \ to store a new result.
-                                                \ The square is initialized with one result, so the result count will never be 0.
-                                                \ The most recent result index will be (result count - 1) mod 4.
+0                           constant square-header-disp     \ 16 bits, [0] id, [1] use count, [2] result count, [3] pnc (8 bits)
+square-header-disp  cell+   constant square-state-disp      \ The state represented by the square.
+square-state-disp   cell+   constant square-rules-disp      \ A Rulestore.
+square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of 4 cells, starting here.
+                                                            \ The result count, mod 4, will be the next element index to use
+                                                            \ to store a new result.
+                                                            \ The square is initialized with one result, so the result count will never be 0.
+                                                            \ The most recent result index will be (result count - 1) mod 4.
 
 0 value square-mma \ Storage for square mma instance.
 
 \ Init square mma, return the addr of allocated memory.
 : square-mma-init ( num-items -- ) \ sets square-mma.
-    dup 1 < 
+    dup 1 <
     abort" square-mma-init: Invalid number of items."
 
     cr ." Initializing Square store."
@@ -34,15 +34,15 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 : is-allocated-square ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup square-mma mma-within-array 0=
-    if  
+    if
         drop false exit
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    square-id =    
+    square-id =
 ;
 
-\ Check TOS for square, unconventional, leaves stack unchanged. 
+\ Check TOS for square, unconventional, leaves stack unchanged.
 : assert-tos-is-square ( arg0 -- arg0 )
     dup is-allocated-square
     is-false if
@@ -51,7 +51,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     then
 ;
 
-\ Check NOS for square, unconventional, leaves stack unchanged. 
+\ Check NOS for square, unconventional, leaves stack unchanged.
 : assert-nos-is-square ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-square
     is-false if
@@ -77,12 +77,12 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     \ Check arg.
     assert-tos-is-square
 
-    2w@ 
+    2w@
 ;
 
 \ Set square result count, use only in this file.
 : _square-set-result-count ( length-value sqr0 -- )
-    2w! 
+    2w!
 ;
 
 \ Increment square result count, use only in this file.
@@ -92,22 +92,22 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     swap _square-set-result-count
 ;
 
-\ Return the square state. 
+\ Return the square state.
 : square-get-state ( addr -- u )
     \ Check arg.
     assert-tos-is-square
 
-    square-state +      \ Add offset.
+    square-state-disp + \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
 \ Set the state of a square instance, use only in this file.
 : _square-set-state ( u1 addr -- )
     \ Check args.
     assert-tos-is-square
     assert-nos-is-value
 
-    square-state +      \ Add offset.
+    square-state-disp + \ Add offset.
     !                   \ Set field.
 ;
 
@@ -132,17 +132,17 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     \ Check arg.
     assert-tos-is-square
 
-    square-rules + @
+    square-rules-disp + @
 ;
 
 : _square-set-rules ( rulstr1 sqr0 -- )
     \ Check args.
     assert-tos-is-square
     assert-nos-is-rulestore
-    
+
     over struct-inc-use-count
 
-    square-rules + !
+    square-rules-disp + !
 ;
 
 : square-get-pn ( sqr0 -- pn )
@@ -151,8 +151,6 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
     square-get-rules
     rulestore-get-pn
-
-\    6c@
 ;
 
 \ Replace old rules with new rules.
@@ -180,11 +178,11 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     assert-tos-is-square
 
     over dup                    \ i1 s0 i i
-    0< swap #3 > or              \ i1 s0 flag
+    0< swap #3 > or             \ i1 s0 flag
     abort" invalid index"
 
     \ Point to results array.
-    square-results +            \ addr
+    square-results-disp +       \ addr
 
     \ Point to item in array
     swap cells +                \ addr
@@ -202,7 +200,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     abort" invalid index"
 
     \ Point to results array.
-    square-results +            \ addr
+    square-results-disp +       \ addr
 
     \ Point to item in array
     swap cells +                \ r2 addr
@@ -228,7 +226,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     \ Store id.
     square-id over              \ r s addr id addr
     struct-set-id               \ r s addr
-        
+
     \ Init use count.
     0 over struct-set-use-count \ r s addr
 
@@ -246,7 +244,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
 
     \ Set first result.
     tuck                        \ addr r addr
-    square-results +            \ addr r addr+
+    square-results-disp +       \ addr r addr+
     !                           \ addr
 
     \ Set pnc value.
@@ -407,7 +405,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
         then
         exit
     then
-    \ Result count > 3. 
+    \ Result count > 3.
                                         \ sqr0 >3
     drop                                \ sqr0
 
@@ -569,7 +567,7 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     =
 ;
 
-\ Compare two squares, TOS has pn 1, NOS has pn 1. 
+\ Compare two squares, TOS has pn 1, NOS has pn 1.
 : _square-compare-pn-1-1 ( sqr1 sqr0 -- char )
     square-get-rules rulestore-get-rule-0   \ sqr1 rul0
     swap                                    \ rul0 sqr1
@@ -602,8 +600,8 @@ square-rules    cell+ constant square-results   \ Circular buffer of 4 cells, st
     over square-get-rules rulestore-get-rule-0  \ sqr1 sqr2 | s1-r0 s2-r0
     over rule-union                             \ sqr1 sqr2 | s1-r0, rulx t | f
     if                                          \ sqr1 sqr2 | s1-r0 rulx
-        rule-deallocate                         \ sqr1 sqr2 | s1-r0 
-        true                                    \ sqr1 sqr2 | s1-r0 f0 
+        rule-deallocate                         \ sqr1 sqr2 | s1-r0
+        true                                    \ sqr1 sqr2 | s1-r0 f0
     else                                        \ sqr1 sqr2 | s1-r0
         false                                   \ sqr1 sqr2 | s1-r0 f0
     then

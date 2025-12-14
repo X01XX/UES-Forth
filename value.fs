@@ -6,7 +6,7 @@
     and                                 \ u0 u0'
     =                                   \ flag
 ;
- 
+
 \ Return true if a number is an invalid value.
 : is-not-value ( u0 -- flag )
     dup                         \ u0 u0
@@ -17,7 +17,7 @@
     <>                          \ flag
 ;
 
-\ Check TOS for value, unconventional, leaves stack unchanged. 
+\ Check TOS for value, unconventional, leaves stack unchanged.
 : assert-tos-is-value ( u -- u )
     dup is-not-value
     if
@@ -26,7 +26,7 @@
     then
 ;
 
-\ Check NOS for value, unconventional, leaves stack unchanged. 
+\ Check NOS for value, unconventional, leaves stack unchanged.
 : assert-nos-is-value ( u ?? -- u ??)
     over is-not-value
     if
@@ -35,7 +35,7 @@
     then
 ;
 
-\ Check 3OS for value, unconventional, leaves stack unchanged. 
+\ Check 3OS for value, unconventional, leaves stack unchanged.
 : assert-3OS-is-value ( u ?? ?? -- u ?? ??)
     #2 pick is-not-value
     if

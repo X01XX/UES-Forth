@@ -129,7 +129,7 @@
 ;
 
 \ Return true if a rlclist contains at least one rlc
-\ that intersects with a given rlc. 
+\ that intersects with a given rlc.
 : rlc-list-any-intersection-rlc ( rlc1 rlc-lst0 -- bool )
     \ Check args.
     assert-tos-is-list
@@ -186,7 +186,7 @@
                 \ Subtract rlc1 from rlc0.
                 over                            \ ret-lst rlc1 link0 rlc1
                 over link-get-data              \ ret-lst rlc1 link0 rlc1 rlc0
-                region-list-corr-subtract       \ ret-lst rlc1 link0, left-lst t | f 
+                region-list-corr-subtract       \ ret-lst rlc1 link0, left-lst t | f
                 if
                     \ Add whats left to the return list.
                     dup                         \ ret-lst rlc1 link0 left-lst left-lst
@@ -375,7 +375,7 @@
 ;
 
 \ Return all two-rlc intersections from an rlc-list.
-\ Duplicates will be suppresed, but propr subsets are Ok. 
+\ Duplicates will be suppresed, but propr subsets are Ok.
 : rlc-list-intersections ( rlc-lst -- rlc-lst )
     \ Check arg.
     assert-tos-is-list
@@ -491,7 +491,7 @@
         \ cr
 
         \ Add left over to result list.
-        dup                                 \ ret-lst lst0' int-lst left-over-lst left-over-lst 
+        dup                                 \ ret-lst lst0' int-lst left-over-lst left-over-lst
         #4 pick                             \ ret-lst lst0' int-lst left-over-lst left-over-lst ret-lst
         rlc-list-append-nodups              \ ret-lst lst0' int-lst left-over-lst
 
@@ -626,7 +626,7 @@
     cr ." rlc1 " #2 pick .region-list-corr
     space ." and " #3 pick .region-list-corr
     space ." is " dup . cr
-    
+
     swap                        \ rlc2 rlc1 dist rlc-lst0
 
     \ Prep for loop.
@@ -647,7 +647,7 @@
                 dup link-get-data           \ rlc2 rlc1 dist link rlcx
                 #4 pick                     \ rlc2 rlc1 dist link rlcx rlc2
                 region-list-corr-distance   \ rlc2 rlc1 dist link dist2
-                
+
                 \ Calc distance to rlc1.
                 over link-get-data          \ rlc2 rlc1 dist link dist2 rlcx
                 cr ." for " dup .region-list-corr

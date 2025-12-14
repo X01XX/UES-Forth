@@ -22,7 +22,7 @@
     cur-action-xt execute               \ reg pln rul act
     step-new                            \ reg pln stp
     over plan-push-end                  \ reg pln
- 
+
     cr ." plan1: " dup .plan
 
     \ Restrict initial-region.
@@ -46,7 +46,7 @@
     %1011 %1011 region-new tuck         \ reg pln' reg2 result reg2
     region-neq abort" result regions net eq?"
     region-deallocate                   \ reg pln'
-    
+
     \ Clean up.
     plan-deallocate
     region-deallocate
@@ -70,7 +70,7 @@
     cur-action-xt execute               \ reg pln rul act
     step-new                            \ reg pln stp
     over plan-push-end                  \ reg pln
- 
+
     cr ." plan1: " dup .plan
 
     \ Restrict initial-region.
@@ -130,7 +130,7 @@
     cur-action-xt execute               \ reg pln rul act
     step-new                            \ reg pln stp
     over plan-push-end                  \ reg pln
- 
+
     cr ." plan1: " dup .plan
 
     \ Restrict initial-region.
@@ -154,7 +154,7 @@
     %1011 %1011 region-new tuck         \ reg pln' reg2 result reg2
     region-neq abort" result regions net eq?"
     region-deallocate                   \ reg pln'
-    
+
     \ Clean up.
     plan-deallocate
     region-deallocate

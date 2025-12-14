@@ -282,7 +282,7 @@
 
     2dup square-compare
     assert-char-I
-    
+
     \ Try order 2.
     swap
     2dup square-compare
@@ -321,7 +321,7 @@
 
     2dup square-compare
     assert-char-M
-    
+
     \ Try order 2.
     swap
     2dup square-compare
@@ -359,7 +359,7 @@
 
     2dup square-compare
     assert-char-M
-    
+
     \ Try order 2.
     swap
     2dup square-compare
@@ -384,7 +384,7 @@
 
     2dup square-compare
     assert-char-I
-    
+
     \ Try order 2.
     swap
     2dup square-compare

@@ -1,6 +1,6 @@
 \ Functions for rule lists.
 
-\ Deallocate a rule list.                                                                                                             
+\ Deallocate a rule list.
 : rule-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc

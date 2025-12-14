@@ -1,6 +1,6 @@
 \ Functions for domain lists.
 
-\ Deallocate a domain list.                                                                                                             
+\ Deallocate a domain list.
 : domain-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc

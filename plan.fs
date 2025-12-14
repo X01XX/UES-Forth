@@ -1,18 +1,18 @@
 \ Implement a plan struct and functions.
 
-#37379 constant plan-id                                                                                  
+#37379 constant plan-id
     #3 constant plan-struct-number-cells
 
 \ Struct fields
-0 constant plan-header                          \ id (16) use count (16)
-plan-header   cell+ constant plan-domain        \ A domain addr.
-plan-domain   cell+ constant plan-step-list     \ A step-list.
+0                           constant plan-header-disp       \ 16 bits, [0] id, [1] use count.
+plan-header-disp    cell+   constant plan-domain-disp       \ A domain addr.
+plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
 0 value plan-mma \ Storage for plan mma instance.
 
 \ Init plan mma, return the addr of allocated memory.
 : plan-mma-init ( num-items -- ) \ sets plan-mma.
-    dup 1 < 
+    dup 1 <
     abort" plan-mma-init: Invalid number of items."
 
     cr ." Initializing Plan store."
@@ -29,15 +29,15 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 : is-allocated-plan ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup plan-mma mma-within-array 0=
-    if  
+    if
         drop false exit
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    plan-id =    
+    plan-id =
 ;
 
-\ Check TOS for plan, unconventional, leaves stack unchanged. 
+\ Check TOS for plan, unconventional, leaves stack unchanged.
 : assert-tos-is-plan ( arg0 -- arg0 )
     dup is-allocated-plan
     is-false if
@@ -46,7 +46,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     then
 ;
 
-\ Check NOS for plan, unconventional, leaves stack unchanged. 
+\ Check NOS for plan, unconventional, leaves stack unchanged.
 : assert-nos-is-plan ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-plan
     is-false if
@@ -55,7 +55,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     then
 ;
 
-\ Check 3OS for plan, unconventional, leaves stack unchanged. 
+\ Check 3OS for plan, unconventional, leaves stack unchanged.
 : assert-3os-is-plan ( pln2 arg1 arg0 -- arg1 arg0 )
     #2 pick is-allocated-plan
     is-false if
@@ -64,7 +64,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     then
 ;
 
-\ Check 4OS for plan, unconventional, leaves stack unchanged. 
+\ Check 4OS for plan, unconventional, leaves stack unchanged.
 : assert-4os-is-plan ( pln3 arg2 arg1 arg0 -- arg1 arg0 )
     #3 pick is-allocated-plan
     is-false if
@@ -75,34 +75,34 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
 
 \ Start accessors.
 
-\ Return the plan domain. 
+\ Return the plan domain.
 : plan-get-domain ( addr -- act )
     \ Check arg.
     assert-tos-is-plan
 
-    plan-domain +       \ Add offset.
+    plan-domain-disp +  \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
 \ Set the domain of a plan instance, use only in this file.
 : _plan-set-domain ( u1 addr -- )
-    plan-domain +       \ Add offset.
+    plan-domain-disp +  \ Add offset.
     !                   \ Set field.
 ;
 
-\ Return the plan step-list. 
+\ Return the plan step-list.
 : plan-get-step-list ( addr -- act )
     \ Check arg.
     assert-tos-is-plan
 
-    plan-step-list +       \ Add offset.
-    @                   \ Fetch the field.
+    plan-step-list-disp +   \ Add offset.
+    @                       \ Fetch the field.
 ;
- 
+
 \ Set the step-list of a plan instance, use only in this file.
 : _plan-set-step-list ( u1 addr -- )
-    plan-step-list +       \ Add offset.
-    !                   \ Set field.
+    plan-step-list-disp +   \ Add offset.
+    !                       \ Set field.
 ;
 
 \ End accessors.
@@ -118,7 +118,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     \ Store id.
     plan-id over                    \  d0 addr id addr
     struct-set-id                   \  d0 addr
-        
+
     \ Init use count.
     0 over struct-set-use-count     \  d0 addr
 
@@ -449,7 +449,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
             swap                            \ pln reg1 link reg1 stpx
             step-restrict-initial-region    \ pln reg1 link stpx'
         then
-        
+
         \ Set new reg1.
         rot drop                    \ pln link stpx
         dup step-get-result-region  \ pln link stpx s-rslt
@@ -487,7 +487,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
     step-list-reverse               \ pln reg1 stp-list'
     -rot                            \ stp-lst' pln reg1
     #2 pick                         \ stp-lst' pln reg1 stp-list'
-    
+
     list-get-links                  \ stp-lst' pln reg1 link
 
     begin
@@ -513,7 +513,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
             swap                            \ stp-lst' pln reg1 link reg1 stpx
             step-restrict-result-region     \ stp-lst' pln reg1 link stpx'
         then
-        
+
         \ Set new reg1.             \ stp-lst' pln reg1 link stpx
         rot drop                    \ stp-lst' pln link stpx'
         dup step-get-initial-region \ stp-lst' pln link stpx' s-rslt
@@ -556,7 +556,7 @@ plan-domain   cell+ constant plan-step-list     \ A step-list.
             exit
         then
     else
-        over plan-get-initial-region    
+        over plan-get-initial-region
         over plan-get-result-region
         cr ." plan-link: no intersection, plan from result-region " .region space ." to plan-to initial region " .region cr
         2drop

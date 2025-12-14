@@ -4,10 +4,10 @@
     #4 constant need-struct-number-cells
 
 \ Struct fields
-0 constant need-header                      \ struct id (16), use count (16), Type (8).
-need-header  cell+ constant need-domain     \ A Domain addr.
-need-domain  cell+ constant need-action     \ An Action addr.
-need-action  cell+ constant need-target     \ A state.
+0                           constant need-header-disp   \ 16 bits' [0] struct id, [1] use count, [2] Type (8 bits).
+need-header-disp    cell+   constant need-domain-disp   \ A Domain addr.
+need-domain-disp    cell+   constant need-action-disp   \ An Action addr.
+need-action-disp    cell+   constant need-target-disp   \ A state.
 
 0 value need-mma \ Storage for need mma instance.
 
@@ -35,10 +35,10 @@ need-action  cell+ constant need-target     \ A state.
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    need-id =     
+    need-id =
 ;
 
-\ Check TOS for need, unconventional, leaves stack unchanged. 
+\ Check TOS for need, unconventional, leaves stack unchanged.
 : assert-tos-is-need ( arg0 -- arg0 )
     dup is-allocated-need
     is-false if
@@ -47,7 +47,7 @@ need-action  cell+ constant need-target     \ A state.
     then
 ;
 
-\ Check NOS for need, unconventional, leaves stack unchanged. 
+\ Check NOS for need, unconventional, leaves stack unchanged.
 : assert-nos-is-need ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-need
     is-false if
@@ -96,36 +96,36 @@ need-action  cell+ constant need-target     \ A state.
     \ Check arg.
     assert-tos-is-need
 
-    need-domain +       \ Add offset.
+    need-domain-disp +  \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
 \ Set the domain field from a need instance, use only in this file.
 : _need-set-domain ( dom1 ned0 -- )
     \ Check args.
     assert-tos-is-need
     assert-nos-is-domain-xt execute
 
-    need-domain +       \ Add offset.
+    need-domain-disp +  \ Add offset.
     !                   \ Set first field.
 ;
- 
+
 \ Return the action field from a need instance.
 : need-get-action ( ned0 -- act )
     \ Check arg.
     assert-tos-is-need
 
-    need-action +       \ Add offset.
+    need-action-disp +  \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
 \ Set the action field from a need instance, use only in this file.
 : _need-set-action ( act1 ned0 -- )
     \ Check args.
     assert-tos-is-need
     assert-nos-is-action-xt execute
 
-    need-action +       \ Add offset.
+    need-action-disp +  \ Add offset.
     !                   \ Set first field.
 ;
 
@@ -134,16 +134,16 @@ need-action  cell+ constant need-target     \ A state.
     \ Check arg.
     assert-tos-is-need
 
-    need-target +       \ Add offset.
+    need-target-disp +  \ Add offset.
     @                   \ Fetch the field.
 ;
- 
+
 \ Set the target field from a need instance, use only in this file.
 : _need-set-target ( ned0 -- )
     \ Check arg.
     assert-tos-is-need
 
-    need-target +       \ Add offset.
+    need-target-disp +  \ Add offset.
     !                   \ Set first field.
 ;
 
@@ -169,7 +169,7 @@ need-action  cell+ constant need-target     \ A state.
     assert-tos-is-domain-xt execute
     assert-nos-is-action-xt execute
     assert-3os-is-value
-    
+
     \ Allocate space.
     need-mma mma-allocate           \ typ3 u2 act1 dom0 ned
 
@@ -184,7 +184,7 @@ need-action  cell+ constant need-target     \ A state.
 
     \ Store action
     tuck _need-set-action           \ typ3 u2 ned
-    
+
     \ Store target
     tuck _need-set-target           \ typ3 ned
 

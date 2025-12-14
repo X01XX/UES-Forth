@@ -1,6 +1,6 @@
 \ Functions for step lists.
 
-\ Deallocate a step list.                                                                                                             
+\ Deallocate a step list.
 : step-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -208,4 +208,3 @@
     2drop
     false
 ;
- 

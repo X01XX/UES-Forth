@@ -242,7 +242,7 @@
         else                \ cur0
             dup 1 xor       \ cur0 rslt
         then
-    else                    \ res1 cur0, there is no previous result for this state. 
+    else                    \ res1 cur0, there is no previous result for this state.
         nip                 \ cur0
         #2 random           \ cur0 0|1
         1+ over xor         \ cur0 rslt
@@ -290,7 +290,7 @@
                 dup 1 xor
             endof
         endcase
-    else                    \ res1 cur0, there is no previous result for this state. 
+    else                    \ res1 cur0, there is no previous result for this state.
         nip                 \ cur0
         #2 random           \ cur0 0|1
         1+ over xor         \ cur0 rslt

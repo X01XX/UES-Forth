@@ -3,12 +3,12 @@
 : rule-test-restrict-initial-region
     \ Test 1.
     s" 0011" region-from-string-a   \ reg1
-    s" 00/01/11/10/" rule-from-string  \ reg1 rul1 
+    s" 00/01/11/10/" rule-from-string  \ reg1 rul1
     2dup                            \ reg1 rul1 reg1 rul1
     rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
     if
-        s" 00/01/11/10/" rule-from-string 
-    
+        s" 00/01/11/10/" rule-from-string
+
         2dup rule-eq
         0= abort" rule-test-restrict-initial-region 1: rules ne?"
 
@@ -23,12 +23,12 @@
 
     \ Test 2.
     s" 1010" region-from-string-a   \ reg1
-    s" X1/X1/X0/X0/" rule-from-string  \ reg1 rul1 
+    s" X1/X1/X0/X0/" rule-from-string  \ reg1 rul1
     2dup                            \ reg1 rul1 reg1 rul1
     rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
     if
-        s" 11/01/10/00/" rule-from-string 
-    
+        s" 11/01/10/00/" rule-from-string
+
         2dup rule-eq
         0= abort" rule-test-restrict-initial-region 2: rules ne?"
 
@@ -43,12 +43,12 @@
 
     \ Test 3.
     s" 1010" region-from-string-a   \ reg1
-    s" XX/XX/Xx/Xx/" rule-from-string  \ reg1 rul1 
+    s" XX/XX/Xx/Xx/" rule-from-string  \ reg1 rul1
     2dup                            \ reg1 rul1 reg1 rul1
     rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
     if
-        s" 11/00/10/01/" rule-from-string 
-    
+        s" 11/00/10/01/" rule-from-string
+
         2dup rule-eq
         0= abort" rule-test-restrict-initial-region 3: rules ne?"
 
@@ -409,8 +409,7 @@
     rule-deallocate
     region-deallocate
     region-deallocate
-    
-    
+
     \ Test 2.
     s" XXX1" region-from-string-a   \ reg-from
     s" 01XX" region-from-string-a   \ reg-from reg-to

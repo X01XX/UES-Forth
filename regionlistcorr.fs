@@ -1,4 +1,4 @@
-\ Functions for region list corresponding (to domains) (RLC) lists. 
+\ Functions for region list corresponding (to domains) (RLC) lists.
 
 \ Print a region-list corresponding to the session domain list.
 : .region-list-corr ( reg-lst0 )
@@ -251,7 +251,7 @@
             \ cr dup .region space ." - " over .region
             region-subtract             \ lst0 ret-lst link1 link0 d-link reg-lst
             \ space ." = " dup .region-list cr
-        
+
             dup list-get-length 0= abort" region subtraction failed?"
 
             \ Generate result region-list-corrs

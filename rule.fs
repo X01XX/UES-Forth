@@ -3,17 +3,17 @@
     #5 constant rule-struct-number-cells
 
 \ Struct fields.
-0 constant rule-header      \ 16-bits [0] struct id [1] use count.
-rule-header cell+ constant rule-m00
-rule-m00    cell+ constant rule-m01
-rule-m01    cell+ constant rule-m11
-rule-m11    cell+ constant rule-m10
+0                       constant rule-header-disp   \ 16-bits, [0] struct id, [1] use count.
+rule-header-disp cell+  constant rule-m00-disp      \ 0->0 mask.
+rule-m00-disp    cell+  constant rule-m01-disp      \ 0->1 mask.
+rule-m01-disp    cell+  constant rule-m11-disp      \ 1->1 mask.
+rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 0 value rule-mma    \ Storage for rule mma instance.
 
 \ Init rule mma, return the addr of allocated memory.
 : rule-mma-init ( num-items -- ) \ sets rule-mma.
-    dup 1 < 
+    dup 1 <
     abort" rule-mma-init: Invalid number of items."
 
     cr ." Initializing Rule store."
@@ -36,10 +36,10 @@ rule-m11    cell+ constant rule-m10
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    rule-id =     
+    rule-id =
 ;
 
-\ Check TOS for rule, unconventional, leaves stack unchanged. 
+\ Check TOS for rule, unconventional, leaves stack unchanged.
 : assert-tos-is-rule ( rul0 -- )
     dup is-allocated-rule
     is-false if
@@ -48,7 +48,7 @@ rule-m11    cell+ constant rule-m10
     then
 ;
 
-\ Check NOS for rule, unconventional, leaves stack unchanged. 
+\ Check NOS for rule, unconventional, leaves stack unchanged.
 : assert-nos-is-rule ( rul1 arg0 -- )
     over is-allocated-rule
     is-false if
@@ -57,7 +57,7 @@ rule-m11    cell+ constant rule-m10
     then
 ;
 
-\ Check 3OS for rule, unconventional, leaves stack unchanged. 
+\ Check 3OS for rule, unconventional, leaves stack unchanged.
 : assert-3os-is-rule ( rul2 arg1 arg0 -- )
     #2 pick is-allocated-rule
     is-false if
@@ -73,13 +73,13 @@ rule-m11    cell+ constant rule-m10
     \ Check arg.
     assert-tos-is-rule
 
-    rule-m00 +      \ Add offset.
+    rule-m00-disp + \ Add offset.
     @               \ Fetch the field.
 ;
 
 \ Set the m00 field of a rule instance, use only in this file.
 : _rule-set-m00 ( u1 rul0 -- )
-    rule-m00 +      \ Add offset.
+    rule-m00-disp + \ Add offset.
     !               \ Set the field.
 ;
 
@@ -88,13 +88,13 @@ rule-m11    cell+ constant rule-m10
     \ Check arg.
     assert-tos-is-rule
 
-    rule-m01 +      \ Add offset.
+    rule-m01-disp + \ Add offset.
     @               \ Fetch the field.
 ;
 
-\ Set the m01 field of a rule instance, use only in this file. 
+\ Set the m01 field of a rule instance, use only in this file.
 : _rule-set-m01 ( u1 rul0 -- )
-    rule-m01 +      \ Add offset.
+    rule-m01-disp + \ Add offset.
     !               \ Set the field.
 ;
 
@@ -103,13 +103,13 @@ rule-m11    cell+ constant rule-m10
     \ Check arg.
     assert-tos-is-rule
 
-    rule-m11 +      \ Add offset.
+    rule-m11-disp + \ Add offset.
     @               \ Fetch the field.
 ;
 
-\ Set the m11 field of a rule instance, use only in this file. 
+\ Set the m11 field of a rule instance, use only in this file.
 : _rule-set-m11 ( u1 rul0 -- )
-    rule-m11 +      \ Add offset.
+    rule-m11-disp + \ Add offset.
     !               \ Set the field.
 ;
 
@@ -118,19 +118,19 @@ rule-m11    cell+ constant rule-m10
     \ Check arg.
     assert-tos-is-rule
 
-    rule-m10 +      \ Add offset.
+    rule-m10-disp + \ Add offset.
     @               \ Fetch the field.
 ;
 
-\ Set the m10 field of a rule instance, use only in this file. 
+\ Set the m10 field of a rule instance, use only in this file.
 : _rule-set-m10 ( u1 rul0 -- )
-    rule-m10 +      \ Add offset.
+    rule-m10-disp + \ Add offset.
     !               \ Set the field.
 ;
 
 \ End accessors.
 
-\ Allocate a rule, setting id and use count only, use only in this file. 
+\ Allocate a rule, setting id and use count only, use only in this file.
 : _rule-allocate ( -- rul0 )
     \ Allocate space.
     rule-mma mma-allocate   \ addr
@@ -254,7 +254,7 @@ rule-m11    cell+ constant rule-m10
         if
             1+          \ m00 m01 m11 m10 ms | sum
         then
- 
+
         \ Check m01
         #4 pick         \ m00 m01 m11 m10 ms | sum m01
         #2 pick         \ m00 m01 m11 m10 ms | sum m01 ms
@@ -262,7 +262,7 @@ rule-m11    cell+ constant rule-m10
         if
             #2 +        \ m00 m01 m11 m10 ms | sum
         then
- 
+
         \ Check m11
         #3 pick         \ m00 m01 m11 m10 ms | sum m11
         #2 pick         \ m00 m01 m11 m10 ms | sum m11 ms
@@ -270,7 +270,7 @@ rule-m11    cell+ constant rule-m10
         if
             #4 +        \ m00 m01 m11 m10 ms | sum
         then
- 
+
         \ Check m10
         #2 pick         \ m00 m01 m11 m10 ms | sum m10
         #2 pick         \ m00 m01 m11 m10 ms | sum m10 ms
@@ -278,7 +278,7 @@ rule-m11    cell+ constant rule-m10
         if
             #8 +        \ m00 m01 m11 m10 ms | sum
         then
- 
+
         \ Print rule position.
         \ Of 4 masks, one or two can have a bit set and be valid.
         \ Not zero, three or four.
@@ -439,25 +439,25 @@ rule-m11    cell+ constant rule-m10
 
     \ Intersect m00         \ rul1 rul0
     dup rule-get-m00        \ rul1 rul0 | 0m00
-    #2 pick rule-get-m00    \ rul1 rul0 | 0m00 1m00 
+    #2 pick rule-get-m00    \ rul1 rul0 | 0m00 1m00
     and                     \ rul1 rul0 | m00
     -rot                    \ m00 | rul1 rul0
 
     \ Intersect m01         \ m00 | rul1 rul0
     dup rule-get-m01        \ m00 | rul1 rul0 | 0m01
-    #2 pick rule-get-m01    \ m00 | rul1 rul0 | 0m01 1m01 
+    #2 pick rule-get-m01    \ m00 | rul1 rul0 | 0m01 1m01
     and                     \ m00 | rul1 rul0 | m01
     -rot                    \ m00 m01 | rul1 rul0
 
     \ Intersect m11         \ m00 m01 | rul1 rul0
     dup rule-get-m11        \ m00 m01 | rul1 rul0 | 0m11
-    #2 pick rule-get-m11    \ m00 m01 | rul1 rul0 | 0m11 1m11 
+    #2 pick rule-get-m11    \ m00 m01 | rul1 rul0 | 0m11 1m11
     and                     \ m00 m01 | rul1 rul0 | m11
     -rot                    \ m00 m01 m11 | rul1 rul0
 
     \ Intersect m01         \ m00 m01 m11 | rul1 rul0
     rule-get-m01            \ m00 m01 m11 | rul1 0m01
-    swap rule-get-m01       \ m00 m01 m11 | 0m11 1m01 
+    swap rule-get-m01       \ m00 m01 m11 | 0m11 1m01
     and                     \ m00 m01 m11 m10
 
     \ Start new rule.
@@ -509,7 +509,7 @@ rule-m11    cell+ constant rule-m10
 \        over and                \ rul0 m1x n0x new-m00
 \        3 pick                  \ rul0 m1x n0x new-m00 rul0
 \        _rule-set-m00           \ rul0 m1x n0x
-\         
+\
 \        \ Adjust m01.
 \        2 pick                  \ rul0 m1x n0x rul0
 \        rule-get-m01            \ rul0 m1x n0x m01
@@ -520,7 +520,7 @@ rule-m11    cell+ constant rule-m10
 \    else                        \ rul0 m1x 0
 \        drop                    \ rul0 m1x
 \    then
-\    
+\
 \    dup if                      \ rul0 m1X
 \        \ m1x is not zero.
 \
@@ -532,8 +532,8 @@ rule-m11    cell+ constant rule-m10
 \        rule-get-m11            \ rul0 n1x m11
 \        over and                \ rul0 n1x new-m11
 \        2 pick                  \ rul0 n1x new-m11 rul0
-\        _rule-set-m11           \ rul0 n1x 
-\         
+\        _rule-set-m11           \ rul0 n1x
+\
 \        \ Adjust m10.
 \        over                    \ rul0 n1x rul0
 \        rule-get-m10            \ rul0 n1x m10
@@ -554,25 +554,25 @@ rule-m11    cell+ constant rule-m10
 
     \ Combine m00           \ rul1 rul0
     over rule-get-m00       \ rul1 rul0 | 1m00
-    over rule-get-m00       \ rul1 rul0 | 1m00 0m00 
+    over rule-get-m00       \ rul1 rul0 | 1m00 0m00
     or                      \ rul1 rul0 | m00
     -rot                    \ m00 | rul1 rul0
 
     \ Combine m01           \ m00 | rul1 rul0
     over rule-get-m01       \ m00 | rul1 rul0 | 1m01
-    over rule-get-m01       \ m00 | rul1 rul0 | 1m01 0m01 
+    over rule-get-m01       \ m00 | rul1 rul0 | 1m01 0m01
     or                      \ m00 | rul1 rul0 | m01
     -rot                    \ m00 m01 | rul1 rul0
 
     \ Combine m11           \ m00 m01 | rul1 rul0
     over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11
-    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11 0m11 
+    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11 0m11
     or                      \ m00 m01 | rul1 rul0 | m11
     -rot                    \ m00 m01 m11 | rul1 rul0
 
     \ Combine m10           \ m00 m01 m11 | rul1 rul0
     rule-get-m10            \ m00 m01 m11 | rul1 0m10
-    swap rule-get-m10       \ m00 m01 m11 | 0m10 1m10 
+    swap rule-get-m10       \ m00 m01 m11 | 0m10 1m10
     or                      \ m00 m01 m11 m10
 
     \ Start new rule.
@@ -626,25 +626,25 @@ rule-m11    cell+ constant rule-m10
 
     \ Combine m00           \ rul1 rul0
     over rule-get-m00       \ rul1 rul0 | 1m00
-    over rule-get-m00       \ rul1 rul0 | 1m00 0m00 
+    over rule-get-m00       \ rul1 rul0 | 1m00 0m00
     or                      \ rul1 rul0 | m00
     -rot                    \ m00 | rul1 rul0
 
     \ Combine m01           \ m00 | rul1 rul0
     over rule-get-m01       \ m00 | rul1 rul0 | 1m01
-    over rule-get-m01       \ m00 | rul1 rul0 | 1m01 0m01 
+    over rule-get-m01       \ m00 | rul1 rul0 | 1m01 0m01
     or                      \ m00 | rul1 rul0 | m01
     -rot                    \ m00 m01 | rul1 rul0
 
     \ Combine m11           \ m00 m01 | rul1 rul0
     over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11
-    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11 0m11 
+    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11 0m11
     or                      \ m00 m01 | rul1 rul0 | m11
     -rot                    \ m00 m01 m11 | rul1 rul0
 
     \ Combine m10           \ m00 m01 m11 | rul1 rul0
     rule-get-m10            \ m00 m01 m11 | rul1 0m10
-    swap rule-get-m10       \ m00 m01 m11 | 0m10 1m10 
+    swap rule-get-m10       \ m00 m01 m11 | 0m10 1m10
     or                      \ m00 m01 m11 m10
 
     \ Start new rule.
@@ -707,7 +707,7 @@ rule-m11    cell+ constant rule-m10
     dup region-x-mask -rot              \ r10 r01 fx reg-to reg-from
     dup region-0-mask -rot              \ r10 r01 fx f0 reg-to reg-from
     region-1-mask swap                  \ r10 r01 fx f0 f1 reg-to
-    
+
     \ Get reg-to masks.
     dup region-x-mask swap              \ r10 r01 fx f0 f1 tx reg-to
     dup region-0-mask swap              \ r10 r01 fx f0 f1 tx t0 reg-to
@@ -774,7 +774,7 @@ rule-m11    cell+ constant rule-m10
     #3 pick rule-get-m01        \ rul0 ones zeros | n00 m01
     rot and                     \ rul0 ones n00 n01
     2swap                       \ n00 n01 rul0 ones
-    
+
     over rule-get-m11           \ n00 n01 rul0 ones m11
     over and                    \ n00 n01 rul0 ones n11
     -rot                        \ n00 n01 n11 rul0 ones
@@ -805,8 +805,8 @@ rule-m11    cell+ constant rule-m10
 
     tuck                        \ rul0 reg1 rul0
     rule-calc-result-region     \ rul0 reg1 reg-result'
-    2dup                        \ rul0 reg1 reg-result reg1 reg-result' 
-    
+    2dup                        \ rul0 reg1 reg-result reg1 reg-result'
+
     region-intersects           \ rul0 reg1 reg-result' flag
     swap region-deallocate      \ rul0 reg1 flag
     is-false if
@@ -825,7 +825,7 @@ rule-m11    cell+ constant rule-m10
     #3 pick rule-get-m10        \ rul0 ones zeros | n00 m10
     rot and                     \ rul0 ones n00 n10
     2swap                       \ n00 n10 rul0 ones
-    
+
     over rule-get-m11           \ n00 n10 rul0 ones m11
     over and                    \ n00 n10 rul0 ones n11
     -rot                        \ n00 n10 n11 rul0 ones
@@ -898,7 +898,7 @@ rule-m11    cell+ constant rule-m10
     dup rule-lshift
     -rot                \ rul0 ci cr
     swap                \ rul0 cr ci
-    
+
     \ Process two chars
     case
         [char] 0 of
@@ -1213,7 +1213,7 @@ rule-m11    cell+ constant rule-m10
     #2 pick #2 pick region-intersects abort" from\to regions intersect?"
 
     \ Restrict the result region of the rule.
-    #2 pick over                    \ reg-to reg-from rul0 | reg-to rul0 
+    #2 pick over                    \ reg-to reg-from rul0 | reg-to rul0
     rule-restrict-result-region     \ reg-to reg-from rul0 | rul0' t | f
     if
     else
@@ -1470,7 +1470,7 @@ rule-m11    cell+ constant rule-m10
                                                 \ reg-to reg-from rul0 | ned-cngs'
 
     \ Check if reg-from intersects rule initial-region.
-    
+
     #2 pick #2 pick                             \ | ned-cngs' reg-from rul0
     rule-restrict-initial-region                \ | ned-cngs', rul0' t | f
     if                                          \ | ned-cngs' rul0'
@@ -1582,7 +1582,7 @@ rule-m11    cell+ constant rule-m10
     abort" rule-calc-step-bc: region subset?"   \ | reg-to reg-from
 
     \ Check for needed changes.
-    
+
     \ Get needed changes.
     changes-new-region-to-region                \ | ned-cngs'
 
@@ -1614,7 +1614,7 @@ rule-m11    cell+ constant rule-m10
         \ Set number unwanted changes.
         tuck                                    \ | stpx u-unw stpx
         step-set-number-unwanted-changes-xt     \ | stpx u-unw stpx xt
-        execute                                 \ | stpx 
+        execute                                 \ | stpx
 
         \ Clean up.                             \ | stpx
         2nip nip                                \ stpx
@@ -1675,7 +1675,7 @@ rule-m11    cell+ constant rule-m10
     rot changes-deallocate                      \ | rul0' u-unw
     swap                                        \ | u-unw rul0'
 
-    \ Make step.                                                                                                                                             
+    \ Make step.
     cur-action-xt execute                       \ | u-unw rul0' act
     step-new-xt execute                         \ | u-unw stp
 

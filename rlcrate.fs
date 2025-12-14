@@ -9,9 +9,9 @@
     #3 constant rlcrate-struct-number-cells
 
 \ Struct fields
-0 constant rlcrate-header        \ 16-bits [0] struct id, [1] use count.
-rlcrate-header      cell+ constant rlcrate-rate-disp
-rlcrate-rate-disp   cell+ constant rlcrate-rlc-disp
+0                           constant rlcrate-header-disp    \ 16-bits [0] struct id, [1] use count.
+rlcrate-header-disp cell+   constant rlcrate-rate-disp      \ A rate, given by the user, or calculated by adding the rates of superset rlcrates given by the user.
+rlcrate-rate-disp   cell+   constant rlcrate-rlc-disp       \ Region-List-Corresponding.
 
 0 value rlcrate-mma \ Storage for rlcrate mma instance.
 
@@ -39,10 +39,10 @@ rlcrate-rate-disp   cell+ constant rlcrate-rlc-disp
     then
 
     struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    rlcrate-id =     
+    rlcrate-id =
 ;
 
-\ Check TOS for rlcrate, unconventional, leaves stack unchanged. 
+\ Check TOS for rlcrate, unconventional, leaves stack unchanged.
 : assert-tos-is-rlcrate ( arg0 -- arg0 )
     dup is-allocated-rlcrate
     is-false if
@@ -51,7 +51,7 @@ rlcrate-rate-disp   cell+ constant rlcrate-rlc-disp
     then
 ;
 
-\ Check NOS for rlcrate, unconventional, leaves stack unchanged. 
+\ Check NOS for rlcrate, unconventional, leaves stack unchanged.
 : assert-nos-is-rlcrate ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-rlcrate
     is-false if
@@ -60,7 +60,7 @@ rlcrate-rate-disp   cell+ constant rlcrate-rlc-disp
     then
 ;
 
-\ Check 3OS for rlcrate, unconventional, leaves stack unchanged. 
+\ Check 3OS for rlcrate, unconventional, leaves stack unchanged.
 : assert-3os-is-rlcrate ( arg2 arg1 arg0 -- arg1 arg0 )
     #2 pick is-allocated-rlcrate
     is-false if
@@ -99,7 +99,7 @@ rlcrate-rate-disp   cell+ constant rlcrate-rlc-disp
     rlcrate-rate-disp + \ Add offset.
     !                   \ Set first field.
 ;
- 
+
 \ Set the second field from a rlcrate instance, use only in this file.
 : _rlcrate-set-rlc ( rlc1 rlcrate0 -- )
     \ Check args.
@@ -172,7 +172,7 @@ rlcrate-rate-disp   cell+ constant rlcrate-rlc-disp
         \ Deallocate rlc
         dup rlcrate-get-rlc         \ rlcrt rlc
         region-list-deallocate      \ rlcrt
-        
+
         \ Deallocate instance.
         rlcrate-mma mma-deallocate
     else
