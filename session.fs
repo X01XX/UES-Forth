@@ -5,7 +5,7 @@
 
 \ Struct fields
 0                                       constant session-header-disp                \ 16-bits [0] struct id [1] use count
-session-header-disp             cell+   constant session-domains-disp               \ A domain-list
+session-header-disp             cell+   constant session-domains-disp               \ A domain-list, kind of like senses.
 session-domains-disp            cell+   constant session-current-domain-disp        \ A domain, or zero before first domain is added.
 session-current-domain-disp     cell+   constant session-needs-disp                 \ A need-list.
 session-needs-disp              cell+   constant session-rlcrate-list-disp          \ Base region-list-corr + rate, list.
