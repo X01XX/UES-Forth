@@ -15,8 +15,7 @@ session-rlcrate-le0-rates-disp  cell+   constant session-rlclist-by-rate-disp   
                                                                                     \ encountering a lower rated rlc.
                                                                                     \ Within an rlclist, GT one rlc, there are intersections, so there is a path
                                                                                     \ from one rlc to another through an intersection.
-session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp         \ List of rule-list-corr, representing an rlc translating to a smaller, imbedded, intersection
-                                                                                    \ with another rlc.
+session-rlclist-by-rate-disp    cell+   constant session-rulelistcorr-list-by-rate-disp \ list of rule-list-corr lists, corresponding to le0-rates. 
 
 0 value session-mma     \ Storage for session mma instance.
 
@@ -53,7 +52,7 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 \ Start accessors.
 
 \ Return the domain-list from an session instance.
-: session-get-domains ( ses0 -- lst )
+: session-get-domains ( sess0 -- lst )
     \ Check arg.
     assert-tos-is-session
 
@@ -62,7 +61,7 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 ;
 
 \ Set the domain-list for an session instance.
-: _session-set-domains ( lst ses0 -- )
+: _session-set-domains ( lst sess0 -- )
     \ Check arg.
     assert-tos-is-session
     assert-nos-is-list
@@ -72,7 +71,7 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 ;
 
 \ Return the current domain from an session instance.
-: session-get-current-domain ( ses0 -- dom )
+: session-get-current-domain ( sess0 -- dom )
     \ Check arg.
     assert-tos-is-session
 
@@ -81,7 +80,7 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 ;
 
 \ Set the current domain for an session instance.
-: session-set-current-domain ( dom ses0 -- )
+: session-set-current-domain ( dom sess0 -- )
     \ Check arg.
     assert-tos-is-session
     over 0<> if
@@ -104,14 +103,12 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 ;
 
 \ Set the need-list for an session instance.
-: _session-set-needs ( ned-lst ses0 -- )
+: _session-set-needs ( ned-lst sess0 -- )
     \ Check args.
     assert-tos-is-session
-    over 0<> if
-        assert-nos-is-list
-        over struct-inc-use-count
-    then
+    assert-nos-is-list
 
+    over struct-inc-use-count
     session-needs-disp +        \ Add offset.
     !                           \ Set the field.
 ;
@@ -125,12 +122,7 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
     dup session-get-needs       \ ned-lst sess0 prev-lst
     -rot                        \ prev-lst ned-lst sess0
     _session-set-needs          \ prev-lst
-    dup 0=
-    if
-        drop
-    else
-        need-list-deallocate
-    then
+    need-list-deallocate
 ;
 
 \ Return the session need-list
@@ -143,13 +135,12 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 ;
 
 \ Set the need-list for an session instance.
-: _session-set-rlcrate-list ( rlcrt-lst1 ses0 -- )
+: _session-set-rlcrate-list ( rlcrt-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
-    over 0<> if
-        assert-nos-is-list
-        over struct-inc-use-count
-    then
+    assert-nos-is-list
+
+    over struct-inc-use-count
 
     session-rlcrate-list-disp + \ Add offset.
     !                           \ Set the field.
@@ -165,14 +156,12 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 ;
 
 \ Set the need-list for an session instance.
-: _session-set-rlcrate-fragments ( rlcrt-lst1 ses0 -- )
+: _session-set-rlcrate-fragments ( rlcrt-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
-    over 0<> if
-        assert-nos-is-list
-        over struct-inc-use-count
-    then
+    assert-nos-is-list
 
+    over struct-inc-use-count
     session-rlcrate-fragments-disp +    \ Add offset.
     !                                   \ Set the field.
 ;
@@ -187,32 +176,33 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 ;
 
 \ Set the session rlcrate-le0-rates for an session instance.
-: _session-set-rlcrate-le0-rates ( rlcrt-lst1 ses0 -- )
+: _session-set-rlcrate-le0-rates ( rlcrt-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
 
     over struct-inc-use-count
-
     session-rlcrate-le0-rates-disp +    \ Add offset.
     !                                   \ Set the field.
 ;
 
-: _session-update-rlcrate-le0-rates ( rlcrt-lst1 ses0 -- )
+: _session-update-rlcrate-le0-rates ( rlcrt-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
 
-    dup session-get-rlcrate-le0-rates
+    dup session-get-rlcrate-le0-rates -rot  \ prev-list rlcrt-lst1 sess0
+
+    \ Set the field.
+    over struct-inc-use-count               \ prev-list rlcrt-lst1 sess0
+    session-rlcrate-le0-rates-disp +        \ prev-list rlcrt-lst1 sess0+
+    !                                       \ prev-list
+
+    \ Deallocate previous list.
     list-deallocate
-
-    over struct-inc-use-count
-
-    session-rlcrate-le0-rates-disp +    \ Add offset.
-    !                                   \ Set the field.
 ;
 
-\ Return the session rlclist-by-rates list.
+\ Return the session rlclist-by-rate list.
 : session-get-rlclist-by-rate ( sess0 -- rlcrt-lst )
     \ Check arg.
     assert-tos-is-session
@@ -221,57 +211,70 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
     @                               \ Fetch the field.
 ;
 
-\ Set the session-rlclist-by-rates for an session instance.
-: _session-set-rlclist-by-rate ( rlcrt-lst1 ses0 -- )
+\ Set the session-rlclist-by-rate list.
+: _session-set-rlclist-by-rate ( rlcrt-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
 
     over struct-inc-use-count
-
     session-rlclist-by-rate-disp +  \ Add offset.
     !                               \ Set the field.
 ;
 
-\ Update the session-rlclist-by-rates for an session instance.
-: _session-update-rlclist-by-rate ( rlcrt-lst1 ses0 -- )
+\ Update the session-rlclist-by-rate list.
+: _session-update-rlclist-by-rate ( rlcrt-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
 
-    dup session-get-rlclist-by-rate
-    dup
-    [ ' rlc-list-deallocate ] literal swap list-apply
+    dup session-get-rlclist-by-rate -rot    \ prev-list rlcrt-lst1 sess0
+
+    \ Set the field.
+    over struct-inc-use-count
+    session-rlclist-by-rate-disp +
+    !                                       \ prev-list
+
+    [ ' rlc-list-deallocate ] literal over list-apply
     list-deallocate
-
-    over struct-inc-use-count
-
-    session-rlclist-by-rate-disp +  \ Add offset.
-    !                               \ Set the field.
 ;
 
-\ Return the session rules-by-rates list.
-: session-get-rules-by-rate ( sess0 -- rlcrt-lst )
+\ Return session-rulelistcorr-list-by-rate list.
+: session-get-rulelistcorr-list-by-rate ( sess0 -- rlciplist-lst )
     \ Check arg.
     assert-tos-is-session
 
-    session-rules-by-rate-disp +    \ Add offset.
-    @                               \ Fetch the field.
+    session-rulelistcorr-list-by-rate-disp +   \ Add offset.
+    @                                               \ Fetch the field.
 ;
 
-\ Set the session rules-by-rates list.
-: _session-set-rules-by-rate ( rlcrt-lst1 ses0 -- )
+\ Set session-rulelistcorr-list-by-rate list.
+: _session-set-rulelistcorr-list-by-rate ( rlciplist-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
-    over 0<> if
-        assert-nos-is-list
-        over struct-inc-use-count
-    then
+    assert-nos-is-list
 
-    session-rules-by-rate-disp +    \ Add offset.
-    !                               \ Set the fiel105612940047944d.
+    over struct-inc-use-count
+    session-rulelistcorr-list-by-rate-disp +    \ Add offset.
+    !                                           \ Set the field.
 ;
 
+\ Update the session-rulelistcorr-list-by-rate list.
+: _session-update-rulelistcorr-list-by-rate ( rlciplist-lst1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
+
+    dup session-get-rulelistcorr-list-by-rate -rot  \ prev-lst rlciplist-lst1 sess0
+
+    \ Set the field.
+    over struct-inc-use-count
+    session-rulelistcorr-list-by-rate-disp +
+    !                                       \ prev-lst
+
+    [ ' rule-list-deallocate ] literal over list-apply
+    list-deallocate
+;
 \ End accessors.
 
 : session-stack-tos ( -- sess )
@@ -316,7 +319,7 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 
 \ Create an session, given an instance ID.
 : current-session-new ( -- ) \ new session pushed onto session stack.
-
+    \ cr ." current-session-new: start " .s cr
     \ Allocate space.
     session-mma mma-allocate        \ ses
 
@@ -352,10 +355,11 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
     list-new
     over _session-set-rlclist-by-rate               \ sess
 
-    \ Init list of rule-list-corrs, by rate.
-    list-new over _session-set-rules-by-rate
+    \ Init rulelistcorr list, by rate.
+    list-new over _session-set-rulelistcorr-list-by-rate   \ sess
 
     session-stack stack-push
+    \ cr ." current-session-new: end " .s cr
 ;
 
 \ Print a session.
@@ -396,21 +400,32 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
     cr
 
     cr ." rlclists, excluding lower value rlcrates: "
-    dup session-get-rlclist-by-rate     \ sess0 rcllist-lst
-    list-get-links                      \ sess0 rcllist-link
-    over session-get-rlcrate-le0-rates  \ sess0 rcllist-link rates-le0
-    list-get-links                      \ sess0 rcllist-link rates-links
+
+    \ Prep for loop.
+\    dup session-get-rulelistcorr-list-by-rate   \ sess0 rlciplist-lst
+\    list-get-links                          \ sess0 rlciplist-lst-link
+
+    dup session-get-rlclist-by-rate        \ sess0 rlciplist-lst-link rcllist-lst
+    list-get-links                          \ sess0 rlciplist-lst-link rcllist-link
+
+    over session-get-rlcrate-le0-rates   \ sess0 rlciplist-lst-link rcllist-link rates-le0
+    list-get-links                          \ sess0 rlciplist-lst-link rcllist-link rates-link
+    
+
     begin
+        cr ." .session at 1: " .stack-structs-xt execute cr
         ?dup
     while
-        cr  ."    rate: " dup link-get-data #3 dec.r
-        space ." rlclist: " over link-get-data .rlc-list
+        cr  ."    rate:      " dup link-get-data #3 dec.r
+        space ." rlclist:    " over link-get-data .rlc-list
+\        space ." rulcorrlol: " #2 pick link-get-data list-get-length dec.
 
         link-get-next swap
         link-get-next swap
+\        link-get-next rot
     repeat
     cr
-                                        \ sess0 rcllist-link
+                                        \ sess0 rcllist-link rcllist-link
     2drop                               \
 ;
 
@@ -437,9 +452,9 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
         list-deallocate
     then
 
-    \ Deallocate a list of rule-list-corr lists.
-    dup session-get-rules-by-rate       \ ses0 ruls-lst
-    dup                                 \ sess0 ruls-lst ruls-lst
+    \ Deallocate a list of rulcorrlst list.
+    dup session-get-rulelistcorr-list-by-rate   \ sess0 ruls-lst
+    dup                                         \ sess0 ruls-lst ruls-lst
     [ ' rule-list-deallocate ] literal swap list-apply
     list-deallocate
 
@@ -768,6 +783,78 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
     2drop
 ;
 
+\ Calculate rlcintpairs for session-rlclist-by-rate.
+: session-calc-rlcintpairs ( sess0 -- rlcintpair-lst-lst )
+    \ Check arg.
+    assert-tos-is-session
+
+    \ Init return list.
+    list-new swap                                   \ ret-lst sess
+
+    \ Prep for loop.
+    dup session-get-rlclist-by-rate                 \ ret-lst sess0 rcllist-lst
+    list-get-links                                  \ ret-lst sess0 rcllist-link
+    over session-get-rlcrate-le0-rates              \ ret-lst sess0 rcllist-link rates-le0
+    list-get-links                                  \ ret-lst sess0 rcllist-link rates-links
+    cr
+
+    begin
+        ?dup
+    while
+        cr  ." rate: " dup link-get-data #3 dec.r
+        space ." rlclist: " over link-get-data .rlc-list cr
+
+        list-new                                    \ ret-lst sess0 rcllist-link rates-links rip-lst
+        #2 pick link-get-data                       \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx
+        list-get-links                              \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link
+        begin
+            ?dup
+        while
+            dup link-get-data                       \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx
+
+            over link-get-next                      \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt
+            begin
+                ?dup
+            while                                   \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt
+                cr over ."     rlcx: " dup .region-list-corr
+                over link-get-data                  \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcx rlcx-nxt
+                space dup .region-list-corr         \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-l:sink rlcx rlcx-link-nxt rlcx rlc-nxt
+                region-list-corr-intersects         \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt, t | f
+                if                                  \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt
+                    \ Add rulcorr for one direction.
+                    over over link-get-data         \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcx rlcx-nxt
+\                    rlcintpair-new                  \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcip
+\                    dup space .rlcintpair
+\                    #4 pick rlcintpair-list-push
+
+                    \ Add rulcorr for other direction.
+                    over over link-get-data swap    \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcx rlcx-nxt
+\                    rlcintpair-new                  \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcip
+\                    dup space .rlcintpair
+\                    #4 pick rlcintpair-list-push
+                then
+                cr
+                link-get-next
+            repeat
+                                                    \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx
+            drop                                    \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link
+            cr
+            link-get-next
+        repeat
+                                                    \ ret-lst sess0 rcllist-link rates-links rip-lst
+\        dup .rlcintpair-list space ." len: " dup list-get-length dec. cr
+        dup struct-inc-use-count
+        #4 pick                                     \ ret-lst sess0 rcllist-link rates-links rip-lst ret-lst
+        list-push-end                               \ ret-lst sess0 rcllist-link rates-links
+
+        link-get-next swap
+        link-get-next swap
+    repeat
+    cr
+    \ Clean up.                                     \ ret-lst sess0 rcllist-link
+    2drop                                           \ ret-lst
+;
+
 \ Process the given rlcrates.
 : session-process-rlcrates ( sess0 -- )
     \ Check arg.
@@ -916,7 +1003,7 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 
     \ cr ." values: " [ ' . ] literal  over .list cr
 
-    \ Calculate rlc lists for change navigation.
+    \ Calculate rlc lists for change navigation.regionlist.fs
 
     \ Init running subtraction list.
     over session-calc-max-regions               \ sess0 val-lst max-rlc
@@ -971,16 +1058,20 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
 
     over _session-update-rlcrate-le0-rates      \ sess0
 
-    \ dup .session-rlclist-by-rate                \ sess0
+    dup .session-rlclist-by-rate                \ sess0
 
     drop
+
+\    dup session-calc-rlcintpairs                \ sess0 rlciplist-lst
+
+\    swap _session-update-rlciplist-by-rate      \
 ;
 
 : session-add-domain ( dom1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-domain
-    \ cr ." session-add-domain: " over . cr
+    cr ." session-add-domain: start " .stack-structs-xt execute cr
 
     \ Add domain
     2dup                    \ dom1 sess0 dom1 sess0
@@ -1168,4 +1259,143 @@ session-rlclist-by-rate-disp    cell+   constant session-rules-by-rate-disp     
                                     \ plc1 sess0 plc1-link
     3drop
     true
+;
+
+
+\ Return highest rate (number, le 0) with rlc-list having interserctions with an rlc.
+: session-find-rate ( rlc1 sess0 -- rate )
+    assert-tos-is-session
+    assert-nos-is-list
+
+    \ Find highest rate.
+    dup session-get-rlclist-by-rate         \ | rlclist-lst
+    list-get-links                          \ | rlclist-link
+
+    over session-get-rlcrate-le0-rates      \ | rlclist-link rates-lst
+    list-get-links                          \ | rlclist-link rates-link
+
+    \ Check each rate and list.
+    begin
+        ?dup
+    while
+        #3 pick                             \ | rlclist-link rates-link rlc1
+        #2 pick link-get-data               \ | rlclist-link rates-link rlc-to rlc-from rlclist
+        rlc-list-intersects                 \ | rlclist-link rates-link bool
+        if
+            link-get-data                   \ | rlclist-link rate
+            2nip nip                        \ rate
+            exit
+        then
+
+        link-get-next swap
+        link-get-next swap
+    repeat
+    cr ." session-find-rate: Drop through?"
+    abort
+;
+
+\ Return a rcl-list for a given rate (number, le 0).
+: session-find-rlclist-by-rate ( rate1 rlclst0 -- rlc-list )
+    \ Check args.
+    assert-tos-is-session
+
+    \ Find highest rate.
+    dup session-get-rlclist-by-rate         \ | rlclist-lst
+    list-get-links                          \ | rlclist-link
+
+    over session-get-rlcrate-le0-rates      \ | rlclist-link rates-lst
+    list-get-links                          \ | rlclist-link rates-link
+
+    \ Check each rate and list.
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ | rlclist-link rates-link ratex
+        #4 pick                             \ | rlclist-link rates-link ratex rate1
+        =                                   \ | rlclist-link rates-link bool
+        if
+            drop                            \ | rlclist-link
+            link-get-data                   \ | rlc-list
+            nip nip                         \ rlc-list
+            exit
+        then
+
+        link-get-next swap
+        link-get-next swap
+    repeat
+    cr ." session-find-rlclist-by-rate: Drop through?"
+    abort
+;
+
+\ Return a rulcorr list for a given rate (number, le 0).
+: session-find-rulelistcorr-list-by-rate ( rate1 rlclst0 -- rlcip-list )
+    \ Check args.
+    assert-tos-is-session
+
+    \ Find highest rate.
+    dup session-get-rulelistcorr-list-by-rate       \ | rlclist-lst
+    list-get-links                          \ | rlclist-link
+
+    over session-get-rlcrate-le0-rates      \ | rlclist-link rates-lst
+    list-get-links                          \ | rlclist-link rates-link
+
+    \ Check each rate and list.
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ | rlclist-link rates-link ratex
+        #4 pick                             \ | rlclist-link rates-link ratex rate1
+        =                                   \ | rlclist-link rates-link bool
+        if
+            drop                            \ | rlclist-link
+            link-get-data                   \ | rlcip-list
+            nip nip                         \ rlcip-list
+            exit
+        then
+
+        link-get-next swap
+        link-get-next swap
+    repeat
+    cr ." session-find-rulelistcorr-list-by-rate-disp: Drop through?"
+    abort
+;
+
+\ Return a plan-list-corr for changing state.
+: session-calc-plan ( rlc-to rlc-from sess0 -- pln-corr t | f )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-list
+    assert-3os-is-list
+    cr ." session-calc-plan: start: rlc-from: " over .region-list-corr #2 pick .region-list-corr cr
+
+    #2 pick #2 pick region-list-corr-intersects
+    abort" session-calc-plan: from/to intersect?"
+
+    #2 pick over                        \ rlc-to rlc-from sess0 | rlc-to sess0
+    session-find-rate                   \ rlc-to rlc-from sess0 | rate-to
+    #2 pick #2 pick                     \ rlc-to rlc-from sess0 | rate-to rlc-from sess0
+    session-find-rate                   \ rlc-to rlc-from sess0 | rate-to rate-from
+    min                                 \ rlc-to rlc-from sess0 | rate-min
+    cr ." rate: " dup dec. cr
+
+    dup                                 \ rlc-to rlc-from sess0 | rate-min rate-min
+    #2 pick                             \ rlc-to rlc-from sess0 | rate-min rate-min sess0
+    session-find-rlclist-by-rate        \ rlc-to rlc-from sess0 | rate-min rlclist
+    cr ." rlclist: " dup .rlc-list cr
+
+    dup                                 \ rlc-to rlc-from sess0 | rate-min rlclist rlclist
+    #5 pick swap #5 pick swap           \ rlc-to rlc-from sess0 | rate-min rlclist rlc-to rlc-from rlclist
+    rlc-list-intersects-both            \ rlc-to rlc-from sess0 | rate-min rlclist, rlcx t | f
+    if                                  \ rlc-to rlc-from sess0 | rate-min rlclist rlcx
+        cr ." both intersect at: " dup .region-list-corr cr
+        \ TODO find path, within rlcx.
+        \ exit
+        2drop                           \ rlc-to rlc-from sess0 | rate-min
+    else                                \ rlc-to rlc-from sess0 | rate-min rlclist
+        \ TODO rules
+        drop                            \ rlc-to rlc-from sess0 | rate-min
+    then
+                                    \ rlc-to rlc-from sess0 | rate-min
+    2drop 2drop
+    false
 ;

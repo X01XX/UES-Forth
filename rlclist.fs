@@ -677,3 +677,64 @@
                                 \ rlc2 rlc1 dist
     nip nip                     \ dist
 ;
+
+\ Return true if a rlc intersects at least one rlc in an rlc-list.
+: rlc-list-intersects ( rlc1 lst0 -- bool )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+
+    list-get-links                      \ rlc1 link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ rlc1 link rlcx
+        #2 pick                         \ rlc1 link rlcx rlc1
+        region-list-corr-intersects     \ rlc1 link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                        \ rlc1
+    drop
+    false
+;
+
+\ Return rlc that intersects both rlc-to and rlc-from.
+: rlc-list-intersects-both ( rlc-to rlc-from lst0 -- rlc t | f )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-list
+    assert-3os-is-list
+
+    list-get-links                      \ rlc-to rlc-from link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ rlc-to rlc-from link rlcx
+        #3 pick over                    \ rlc-to rlc-from link rlcx rlc-to rlcx
+        region-list-corr-intersects     \ rlc-to rlc-from link rlcx bool
+        if
+            #2 pick over                \ rlc-to rlc-from link rlcx rlc-from rlcx
+            region-list-corr-intersects \ rlc-to rlc-from link rlcx bool
+            if                          \ rlc-to rlc-from link rlcx
+                2nip nip                \ rlcx
+                true
+                exit
+            then
+        then
+                                        \ rlc-to rlc-from link rlcx
+        drop                            \ rlc-to rlc-from link
+
+        link-get-next
+    repeat
+                                        \ rlc-to rlc-from
+    2drop
+    false
+;

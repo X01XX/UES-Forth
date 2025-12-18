@@ -1,5 +1,5 @@
 
-\ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs tools.fs stackprint.fs,
+\ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs tools.fs stackprint.fs, struct.fs, structlist.fs
 \ contact the Wisconsin Alumni Research Foundation (WARF).
 
 \ Struct IDs.
@@ -19,11 +19,9 @@
 \ Step   Plan   Group  Rate   RlcRate
 \ 37171, 37379, 43717, 41719, 41737
 \
-\ RlcIntPair
-\ 47317
 \
 \ Struct ids not yet used:
-\ 53171, 53173, 53197, 53717, 53719,
+\ 47317, 53171, 53173, 53197, 53717, 53719,
 \ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
@@ -39,9 +37,12 @@ include xtindirect.fs
 include bool.fs
 
 include tools.fs
+include struct.fs
+
 include mm_array.fs     \ includes stack.fs
 include link.fs
 include list.fs
+include structlist.fs
 
 \ Application.
 include globals.fs
@@ -98,9 +99,6 @@ include actionxts.fs
 
 include domain.fs
 include domainlist.fs
-
-include rlcintpair.fs
-include rlcintpairlist.fs
 
 include session.fs
 
@@ -175,8 +173,8 @@ cr ." main.fs"
 
 \ Init array-stacks.
 #2000 link-mma-init
-#202 list-mma-init
-#403 region-mma-init
+#502 list-mma-init
+#803 region-mma-init
 #404 rule-mma-init
 #405 rulestore-mma-init
 #306 square-mma-init
@@ -335,6 +333,7 @@ cr
     \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
     #4 domain-new                       \ dom
     current-session                     \ dom sess
+
     session-add-domain                  \ dom
 
     #5 domain-new                       \ dom

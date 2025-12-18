@@ -205,35 +205,59 @@
     current-session-new
 
     \ Init domain 0.
-    #4 domain-new dup                               \ dom0 dom0
-    current-session                                 \ dom0 dom0 sess
-    session-add-domain                              \ dom0
+    #4 domain-new                                   \ dom0
+    current-session                                 \ dom0 sess
+    session-add-domain                              \
 
     \ Init domain 1.
-    #5 domain-new dup                               \ dom0 dom1 dom1
-    current-session                                 \ dom0 dom1 dom1 sess
-    session-add-domain                              \ dom0 dom1
+    #5 domain-new                                   \ dom1
+    current-session                                 \ dom1 sess
+    session-add-domain                              \
 
-    current-session                                 \ dom0 dom1 sess
-    s" (X1X1 01X1X)" region-list-corr-from-string-a \ dom0 dom1 sess rlc
-    -1 #2 rate-new                                  \ dom0 dom1 sess rlc rt
-    rlcrate-new                                     \ dom0 dom1 sess rlc-rt
+    current-session                                 \ sess
+    s" (X1X1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    -1 #2 rate-new                                  \ sess rlc rt
+    rlcrate-new                                     \ sess rlc-rt
     \ cr ." rlcrate: " dup .rlcrate cr
-    over session-add-rlcrate                        \ dom0 dom1 sess
+    over session-add-rlcrate                        \ sess
 
-    s" (1XX1 01X1X)" region-list-corr-from-string-a \ dom0 dom1 sess rlc
-    #-2 0 rate-new                                  \ dom0 dom1 sess
-    rlcrate-new                                     \ dom0 dom1 sess rlc-rt
+    s" (1XX1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    #-2 0 rate-new                                  \ sess
+    rlcrate-new                                     \ sess rlc-rt
     \ cr ." rlcrate: " dup .rlcrate cr
-    over session-add-rlcrate                        \ dom0 dom1 sess
+    over session-add-rlcrate                        \ sess
 
-    current-session .session
+    0 over session-find-domain                      \ sess, dom t | f
+    is-false abort" domain 0 not found?"
+    over session-set-current-domain                 \ sess
 
+    \ 0
+\    s" (0011 01111)" region-list-corr-from-string-a \ sess rlc-to
+\    s" (0000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
 
+    \ -1
+    s" (0111 01111)" region-list-corr-from-string-a \ sess rlc-to
+    s" (1000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
 
+    \ -2
+\    s" (1001 01111)" region-list-corr-from-string-a \ sess rlc-to
+\    s" (0000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
 
-    \ Clean up.
-    3drop
+    \ -3
+\    s" (1101 01111)" region-list-corr-from-string-a \ sess rlc-to
+\    s" (0000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
+
+    2dup                                            \ sess rlc-to rlc-from rlc-to rlc-from
+    #4 pick                                         \ sess rlc-to rlc-from rlc-to rlc-from sess
+    session-calc-plan                               \ sess rlc-to rlc-from, plnlc t | f
+    if
+        drop \ plan-list-corr-deallocate
+    then
+
+    region-list-deallocate
+    region-list-deallocate
+    drop
+    
     current-session-deallocate
 
     cr ." session-test-rlc - Ok" cr
@@ -243,4 +267,5 @@
     session-test-domain-get-plan-fc
     session-test-domain-get-plan-bc
     session-test-domain-asymmetric-chaining
+    session-test-rlc
 ;

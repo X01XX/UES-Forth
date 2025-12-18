@@ -396,6 +396,7 @@
 ;
 
 : rule-test-new-region-to-region
+cr .s cr
     \ Test 1.
     s" 0011" region-from-string-a   \ reg-from
     s" 0110" region-from-string-a   \ reg-from reg-to
@@ -409,7 +410,7 @@
     rule-deallocate
     region-deallocate
     region-deallocate
-
+ cr .s cr
     \ Test 2.
     s" XXX1" region-from-string-a   \ reg-from
     s" 01XX" region-from-string-a   \ reg-from reg-to
@@ -423,7 +424,7 @@
     rule-deallocate
     region-deallocate
     region-deallocate
-
+ cr .s cr
     \ test 3.
     s" 0101" region-from-string-a   \ reg-from
     s" XXXX" region-from-string-a   \ reg-from reg-to
@@ -437,7 +438,21 @@
     rule-deallocate
     region-deallocate
     region-deallocate
+ cr .s cr
+    \ Test 4.
+    s" 0XXX" region-from-string-a   \ reg-from
+    s" 0X10" region-from-string-a   \ reg-from reg-to
+    swap                            \ reg-to reg-from
+    2dup rule-new-region-to-region  \ reg1 reg2 rul1
 
+    \ cr ." rul1 " dup .rule cr
+    s" 00/XX/X1/X0/" rule-from-string   \ reg1 reg2 rul1 rul2
+    2dup rule-eq is-false abort" rule-test-new-region-to-region test4 region-eq failed?"
+    rule-deallocate
+    rule-deallocate
+    region-deallocate
+    region-deallocate
+ cr .s cr
     cr ." rule-test-new-region-to-region - Ok" cr
 ;
 

@@ -1,5 +1,19 @@
 \ Functions for region lists.
 
+: assert-tos-list-is-not-empty ( tos -- )
+    assert-tos-is-list
+    dup list-get-length
+    0<>
+;
+
+\ Check if tos is a list, with the first item being a region.
+: assert-tos-is-region-list ( tos -- )
+    assert-tos-list-is-not-empty
+    dup list-get-links link-get-data
+    assert-tos-is-region
+    drop
+;
+
 \ Deallocate a region list.
 : region-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.
