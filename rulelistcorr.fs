@@ -1,37 +1,36 @@
 \ Functions for rule list corresponding (to domains) lists.
 
-\ Return a rule-list-corr for translating from one region-list-corr (rlc0) to another (rlc1).
-: rule-list-corr-new-rlc-to-rlc ( rlc2 rlc1 -- rule-lc t | f )
+\ Return a rule-list-corr for translating from one region-list-corr (rlc-from) to another (rlc-to).
+: rule-list-corr-new-rlc-to-rlc ( rlc-to rlc-from -- rule-list-corr )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-list
 
     \ Init return list.
-    list-new -rot                   \ ret-lst rlc2 rlc1
+    list-new -rot                   \ ret-lst rlc-to rlc-from
 
     \ Prep for loop.
     list-get-links swap
-    list-get-links swap             \ ret-lst link2 link1
+    list-get-links swap             \ ret-lst link-to link-from
 
     begin
         ?dup
     while
-        over link-get-data          \ ret-lst link2 link1 reg2
-        over link-get-data          \ ret-lst link2 link1 reg2 reg1
-        rule-new-region-to-region   \ ret-lst link2 link1 rulx ( rule may have no changes )
-        #3 pick                     \ ret-lst link2 link1 rulx ret-lst
-        rule-list-push-end          \ ret-lst link2 link1
+        over link-get-data          \ ret-lst link-to link-from reg-to
+        over link-get-data          \ ret-lst link-to link-from reg2 reg-from
+        rule-new-region-to-region   \ ret-lst link-to link-from rulx ( rule may have no changes )
+        #3 pick                     \ ret-lst link-to link-from rulx ret-lst
+        rule-list-push-end          \ ret-lst link-to link-from
 
         link-get-next swap
         link-get-next swap
     repeat
-                                    \ ret-lst link2
+                                    \ ret-lst link-to
     drop                            \ ret-lst
-    true
 ;
 
 \ Print a rule-list corresponding to the session domain list.
-: .rule-list-corr ( reg-lst0 )
+: .rule-list-corr ( rullstcorr0 )
     \ Check arg.
     assert-tos-is-list
     dup list-get-length
@@ -63,4 +62,39 @@
     ." )"
 ;
 
+: rule-list-corr-list-deallocate ( rul-lst-corr-lst0 -- )
+    \ Check arg.
+    assert-tos-is-list
 
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    #2 < if
+        \ Deallocate region instances in the list.
+        [ ' rule-list-deallocate ] literal over     \ lst0 xt lst0
+        list-apply                                  \ lst0
+
+        \ Deallocate the list. 
+        list-deallocate                            \
+    else
+        struct-dec-use-count
+    then
+;
+
+\ Deallocate a list of lists of rule-list-corr.
+: rule-list-corr-lol-deallocate ( rul-lst-corr-lst-lol0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    #2 < if
+        \ Deallocate region instances in the list.
+        [ ' rule-list-corr-list-deallocate ] literal over   \ lst0 xt lst0
+        list-apply                                          \ lst0
+
+        \ Deallocate the list. 
+        list-deallocate                            \
+    else
+        struct-dec-use-count
+    then
+;

@@ -56,8 +56,9 @@
 
 \ Print a region-list
 : .region-list ( list0 -- )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-list
+
     [ ' .region ] literal swap .list
 ;
 

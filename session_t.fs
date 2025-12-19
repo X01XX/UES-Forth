@@ -247,6 +247,8 @@
 \    s" (1101 01111)" region-list-corr-from-string-a \ sess rlc-to
 \    s" (0000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
 
+\    #2 pick .session
+
     2dup                                            \ sess rlc-to rlc-from rlc-to rlc-from
     #4 pick                                         \ sess rlc-to rlc-from rlc-to rlc-from sess
     session-calc-plan                               \ sess rlc-to rlc-from, plnlc t | f
@@ -267,5 +269,5 @@
     session-test-domain-get-plan-fc
     session-test-domain-get-plan-bc
     session-test-domain-asymmetric-chaining
-    session-test-rlc
+\    session-test-rlc
 ;

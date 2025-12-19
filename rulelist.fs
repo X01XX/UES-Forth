@@ -33,3 +33,11 @@
     over struct-inc-use-count
     list-push
 ;
+
+\ Print a rule-list
+: .rule-list ( list0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
+    [ ' .rule ] literal swap .list
+;

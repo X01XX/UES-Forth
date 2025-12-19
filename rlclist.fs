@@ -6,13 +6,31 @@
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
         \ Deallocate rlc instances in the list.
-        [ ' region-list-deallocate ] literal over           \ lst0 xt lst0
+        [ ' region-list-deallocate ] literal over   \ lst0 xt lst0
         list-apply                                  \ lst0
-    then
 
-    \ Deallocate the list.
-    list-deallocate                                 \
+        \ Deallocate the list.
+        list-deallocate                             \
+    else
+        struct-dec-use-count
+    then
 ;
+
+: rlc-list-lol-deallocate ( lst0 -- )
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    #2 < if
+        \ Deallocate rlc instances in the list.
+        [ ' rlc-list-deallocate ] literal over      \ lst0 xt lst0
+        list-apply                                  \ lst0
+
+        \ Deallocate the list.
+        list-deallocate                             \
+    else
+        struct-dec-use-count
+    then
+;
+
 
 : .rlc-list ( rlc-lst -- )
     \ Check arg.
