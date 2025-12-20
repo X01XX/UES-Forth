@@ -69,7 +69,7 @@
 
     \ Check if the current states are already at the goal.
     2dup swap                                   \ rlc-to rls-from rlc-from rlc-to
-    region-list-corr-superset                   \ rlc-to rlc-from bool
+    regioncorr-superset                   \ rlc-to rlc-from bool
     if
         cr ." The current states are already at goal." cr
         region-list-deallocate
@@ -550,7 +550,7 @@
 
         \ Get goal rlc.
         #2                                          \ add new length, 2.
-        region-list-corr-from-parsed-string         \ rlc t | f
+        regioncorr-from-parsed-string         \ rlc t | f
 
         if
             dup do-to-command

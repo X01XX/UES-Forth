@@ -1049,11 +1049,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ Check if reg1 intersects the rule initial region.
     2dup                            \ reg1 rul0 reg1 rul0
-    rule-calc-initial-region        \ reg1 rul0 reg1 reg-i
-    tuck                            \ reg1 rul0 reg-i reg1 reg-i
-    region-intersects               \ reg1 rul0 reg-i flag
+    rule-calc-initial-region        \ reg1 rul0 reg1 reg-i'
+    tuck                            \ reg1 rul0 reg-i' reg1 reg-i'
+    region-intersects               \ reg1 rul0 reg-i' flag
     swap region-deallocate          \ reg1 rul0 flag
-    0= if
+    is-false if
         2drop
         false
         exit
@@ -1061,7 +1061,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ Restrict the rule's initial region.
     2dup                            \ reg1 rul0 reg1 rul0
-    rule-restrict-initial-region    \ reg1 rul0, rul' t | f
+    rule-restrict-initial-region    \ reg1 rul0, rul1' t | f
     is-false if
         2drop
         false
@@ -1069,10 +1069,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 
     \ Check if the restricted rule's result region intersects reg1.
-    dup rule-calc-result-region     \ reg1 rul0 rul' reg-r
-    dup #4 pick                     \ reg1 rul0 rul' reg-r reg-r reg1
-    region-intersects               \ reg1 rul0 rul' reg-r flag
-    swap region-deallocate          \ reg1 rul0 rul' flag
+    dup rule-calc-result-region     \ reg1 rul0 rul1' reg-r'
+    dup #4 pick                     \ reg1 rul0 rul1' reg-r' reg-r' reg1
+    region-intersects               \ reg1 rul0 rul1' reg-r' flag
+    swap region-deallocate          \ reg1 rul0 rul1' flag
     0= if
         rule-deallocate
         2drop
@@ -1081,27 +1081,21 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 
     \ Check if reg1 is a superset of the restricted rule's result region.
-    dup rule-calc-result-region     \ reg1 rul0 rul' reg-r
-    dup #4 pick                     \ reg1 rul0 rul' reg-r reg-r reg1
-    region-superset-of              \ reg1 rul0 rul' reg-r flag
-    swap region-deallocate          \ reg1 rul0 rul' flag
+    dup rule-calc-result-region     \ reg1 rul0 rul1' reg-r'
+    dup #4 pick                     \ reg1 rul0 rul1' reg-r' reg-r' reg1
+    region-superset-of              \ reg1 rul0 rul1' reg-r' flag
+    swap region-deallocate          \ reg1 rul0 rul1' flag
     0= if
         nip nip                     \ rul'
-        dup rule-makes-change       \ rul' flag
-        if
-            true
-        else
-            rule-deallocate
-            false
-        then
+        true
         exit
     then
 
     \ Restrict the restricted rule's result region to reg1.
-                                    \ reg1 rul0 rul'
-    nip                             \ reg1 rul'
-    tuck                            \ rul' reg1 rul'
-    rule-restrict-result-region     \ rul', rul'' t | f
+                                    \ reg1 rul0 rul1'
+    nip                             \ reg1 rul1'
+    tuck                            \ rul1' reg1 rul1'
+    rule-restrict-result-region     \ rul', rul2' t | f
     is-false if
         rule-deallocate
         false
@@ -1109,16 +1103,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 
     \ Clean up.
-    swap rule-deallocate            \ rul''
+    swap rule-deallocate            \ rul2'
 
     \ Return.
-    dup rule-makes-change           \ rul'' flag
-    if
-        true
-    else
-        rule-deallocate
-        false
-    then
+    true
 ;
 
 \ Return true if rule has at least one needed change.

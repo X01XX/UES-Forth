@@ -3,11 +3,12 @@
 : assert-tos-list-is-not-empty ( tos -- )
     assert-tos-is-list
     dup list-get-length
-    0<>
+    0= abort" list is empty"
 ;
 
 \ Check if tos is a list, with the first item being a region.
 : assert-tos-is-region-list ( tos -- )
+    assert-tos-is-list
     assert-tos-list-is-not-empty
     dup list-get-links link-get-data
     assert-tos-is-region
@@ -859,7 +860,7 @@
 ;
 
 \ Return a copy of a region-list, except for a given region ia a given index.
-\ Used by region-list-corr subtraction.
+\ Used by regioncorr subtraction.
 : region-list-copy-except ( reg2 inx1 lst0 -- lst )
     \ Check args.
     assert-tos-is-list

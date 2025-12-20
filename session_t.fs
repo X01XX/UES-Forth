@@ -215,37 +215,37 @@
     session-add-domain                              \
 
     current-session                                 \ sess
-    s" (X1X1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    s" (X1X1 01X1X)" regioncorr-from-string-a \ sess rlc
     -1 #2 rate-new                                  \ sess rlc rt
-    rlcrate-new                                     \ sess rlc-rt
-    \ cr ." rlcrate: " dup .rlcrate cr
-    over session-add-rlcrate                        \ sess
+    regioncorrrate-new                                     \ sess rlc-rt
+    \ cr ." regioncorrrate: " dup .regioncorrrate cr
+    over session-add-regioncorrrate                        \ sess
 
-    s" (1XX1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    s" (1XX1 01X1X)" regioncorr-from-string-a \ sess rlc
     #-2 0 rate-new                                  \ sess
-    rlcrate-new                                     \ sess rlc-rt
-    \ cr ." rlcrate: " dup .rlcrate cr
-    over session-add-rlcrate                        \ sess
+    regioncorrrate-new                                     \ sess rlc-rt
+    \ cr ." regioncorrrate: " dup .regioncorrrate cr
+    over session-add-regioncorrrate                        \ sess
 
     0 over session-find-domain                      \ sess, dom t | f
     is-false abort" domain 0 not found?"
     over session-set-current-domain                 \ sess
 
     \ 0
-\    s" (0011 01111)" region-list-corr-from-string-a \ sess rlc-to
-\    s" (0000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
+\    s" (0011 01111)" regioncorr-from-string-a \ sess rlc-to
+\    s" (0000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
 
     \ -1
-    s" (0111 01111)" region-list-corr-from-string-a \ sess rlc-to
-    s" (1000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
+    s" (0111 01111)" regioncorr-from-string-a \ sess rlc-to
+    s" (1000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
 
     \ -2
-\    s" (1001 01111)" region-list-corr-from-string-a \ sess rlc-to
-\    s" (0000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
+\    s" (1001 01111)" regioncorr-from-string-a \ sess rlc-to
+\    s" (0000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
 
     \ -3
-\    s" (1101 01111)" region-list-corr-from-string-a \ sess rlc-to
-\    s" (0000 01111)" region-list-corr-from-string-a \ sess rlc-to rlc-from
+\    s" (1101 01111)" regioncorr-from-string-a \ sess rlc-to
+\    s" (0000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
 
 \    #2 pick .session
 

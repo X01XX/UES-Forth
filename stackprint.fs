@@ -159,13 +159,13 @@
         exit
     then
 
-    dup rlcrate-mma mma-within-array
+    dup regioncorrrate-mma mma-within-array
     if
         dup struct-get-id
         0= if
-            ." rlcrate-u "
+            ." regioncorrrate-u "
         else
-            ." rlcrate "
+            ." regioncorrrate "
         then
         drop
         exit
@@ -195,6 +195,30 @@
         exit
     then
 
+    dup regioncorr-mma mma-within-array
+    if
+        dup struct-get-id
+        0= if
+            ." reg-c-u "
+        else
+            ." reg-c "
+        then
+        drop
+        exit
+    then
+
+    dup rulecorr-mma mma-within-array
+    if
+        dup struct-get-id
+        0= if
+            ." rul-c-u "
+        else
+            ." rul-c "
+        then
+        drop
+        exit
+    then
+
     dup current-session =
     if
         ." sess "
@@ -214,7 +238,28 @@
     then
     depth 0 do
         depth 1- i - pick
-        .stack-structs2
+
+        dup list-mma mma-within-array
+        if
+            dup struct-get-id
+            0= if
+                ." list-u "
+            else
+                ." list-"
+                dup list-get-length dup abs 0 <# #S rot sign #> type
+                dup list-get-length
+                0<> if
+                        ." -"
+                        dup list-get-links link-get-data
+                        .stack-structs2
+                    else
+                        space
+                    then
+            then
+            drop
+        else
+            .stack-structs2
+        then
     loop
 ;
 

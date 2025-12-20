@@ -81,10 +81,15 @@
 ' xtabort value region-list-push-xt
 
 
-' xtabort value .rlcrate-xt
+' xtabort value .regioncorrrate-xt
 
 ' xtabort value .abort-xt
 
 ' xtabort value .stack-structs-xt
+
+' xtabort value regioncorr-list-copy-except-xt
+
+' xtabort value regioncorr-list-deallocate-xt
+
 
 

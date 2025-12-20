@@ -16,12 +16,14 @@
 \ Sample Action Session Domain Need   Changes
 \ 23719, 29717, 31319,  31379, 19717, 31973
 \
-\ Step   Plan   Group  Rate   RlcRate
-\ 37171, 37379, 43717, 41719, 41737
+\ Step   Plan   Group  Rate   RegionCorrRate  RegionCorr
+\ 37171, 37379, 43717, 41719, 41737,          47317
 \
+\ RuleCorr
+\ 53171
 \
 \ Struct ids not yet used:
-\ 47317, 53171, 53173, 53197, 53717, 53719,
+\ 53173, 53197, 53717, 53719,
 \ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
@@ -66,7 +68,6 @@ include sample.fs
 include rule.fs
 include rulestore.fs
 include rulelist.fs
-include rulelistcorr.fs
 
 include square.fs
 
@@ -79,11 +80,12 @@ include needlist.fs
 include step.fs
 include steplist.fs
 
-include regionlistcorr.fs
-include rlclist.fs
+include regioncorr.fs
+include regioncorrlist.fs
 include rate.fs
-include rlcrate.fs
-include rlcratelist.fs
+include regioncorrrate.fs
+include regioncorrratelist.fs
+include rulecorr.fs
 
 include plan.fs
 include planlist.fs
@@ -110,23 +112,25 @@ cs
 
 : memory-use
     cr ." Memory use:"
-    cr #4 spaces ." Link mma:         " link-mma .mma-usage
-    cr #4 spaces ." List mma:         " list-mma .mma-usage
-    cr #4 spaces ." Region mma:       " region-mma .mma-usage
-    cr #4 spaces ." Rule mma:         " rule-mma .mma-usage
-    cr #4 spaces ." RuleStore mma:    " rulestore-mma .mma-usage
-    cr #4 spaces ." Square mma:       " square-mma .mma-usage
-    cr #4 spaces ." Sample mma:       " sample-mma .mma-usage
-    cr #4 spaces ." Changes mma:      " changes-mma .mma-usage
-    cr #4 spaces ." Group mma:        " group-mma .mma-usage
-    cr #4 spaces ." Need mma:         " need-mma .mma-usage
-    cr #4 spaces ." Step mma:         " step-mma .mma-usage
-    cr #4 spaces ." Plan mma:         " plan-mma .mma-usage
-    cr #4 spaces ." Rate mma:         " rate-mma .mma-usage
-    cr #4 spaces ." RlcRate mma:      " rlcrate-mma .mma-usage
-    cr #4 spaces ." Action mma:       " action-mma .mma-usage
-    cr #4 spaces ." Domain mma:       " domain-mma .mma-usage
-    cr #4 spaces ." Session mma:      " session-mma .mma-usage
+    cr #4 spaces ." Link mma:           " link-mma .mma-usage
+    cr #4 spaces ." List mma:           " list-mma .mma-usage
+    cr #4 spaces ." Region mma:         " region-mma .mma-usage
+    cr #4 spaces ." RegionCorr mma:     " regioncorr-mma .mma-usage
+    cr #4 spaces ." Rule mma:           " rule-mma .mma-usage
+    cr #4 spaces ." RuleStore mma:      " rulestore-mma .mma-usage
+    cr #4 spaces ." RuleCorr mma:       " rulecorr-mma .mma-usage
+    cr #4 spaces ." Square mma:         " square-mma .mma-usage
+    cr #4 spaces ." Sample mma:         " sample-mma .mma-usage
+    cr #4 spaces ." Changes mma:        " changes-mma .mma-usage
+    cr #4 spaces ." Group mma:          " group-mma .mma-usage
+    cr #4 spaces ." Need mma:           " need-mma .mma-usage
+    cr #4 spaces ." Step mma:           " step-mma .mma-usage
+    cr #4 spaces ." Plan mma:           " plan-mma .mma-usage
+    cr #4 spaces ." Rate mma:           " rate-mma .mma-usage
+    cr #4 spaces ." RegionCorrRate mma: " regioncorrrate-mma .mma-usage
+    cr #4 spaces ." Action mma:         " action-mma .mma-usage
+    cr #4 spaces ." Domain mma:         " domain-mma .mma-usage
+    cr #4 spaces ." Session mma:        " session-mma .mma-usage
     cr #4 spaces ." dstack: " .s
 ;
 
@@ -137,8 +141,10 @@ cs
     assert-link-mma-none-in-use
     assert-list-mma-none-in-use
     assert-region-mma-none-in-use
+    assert-regioncorr-mma-none-in-use
     assert-rule-mma-none-in-use
     assert-rulestore-mma-none-in-use
+    assert-rulecorr-mma-none-in-use
     assert-square-mma-none-in-use
     assert-group-mma-none-in-use
     assert-sample-mma-none-in-use
@@ -148,7 +154,7 @@ cs
     assert-action-mma-none-in-use
     assert-changes-mma-none-in-use
     assert-rate-mma-none-in-use
-    assert-rlcrate-mma-none-in-use
+    assert-regioncorrrate-mma-none-in-use
 
     depth 0<>
     if
@@ -165,8 +171,8 @@ include action_t.fs
 include rulestore_t.fs
 include state_t.fs
 include input_t.fs
-include regionlistcorr_t.fs
-include rlclist_t.fs
+include regioncorr_t.fs
+include regioncorrlist_t.fs
 include session_t.fs
 
 cr ." main.fs"
@@ -175,8 +181,10 @@ cr ." main.fs"
 #2000 link-mma-init
 #502 list-mma-init
 #803 region-mma-init
+#200 regioncorr-mma-init
 #404 rule-mma-init
 #405 rulestore-mma-init
+#404 rulecorr-mma-init
 #306 square-mma-init
 #250 sample-mma-init
 #150 changes-mma-init
@@ -187,7 +195,7 @@ cr ." main.fs"
  #50 action-mma-init
  #25 domain-mma-init
 #100 rate-mma-init
-#100 rlcrate-mma-init
+#100 regioncorrrate-mma-init
 #005 session-mma-init
 cr
 
@@ -197,8 +205,10 @@ cr
     list-mma mma-free
     link-mma mma-free
     region-mma mma-free
+    regioncorr-mma mma-free
     rule-mma mma-free
     rulestore-mma mma-free
+    rulecorr-mma mma-free
     square-mma mma-free
     sample-mma mma-free
     changes-mma mma-free
@@ -209,7 +219,7 @@ cr
     action-mma mma-free
     domain-mma mma-free
     rate-mma mma-free
-    rlcrate-mma mma-free
+    regioncorrrate-mma mma-free
     session-mma mma-free
 ;
 
@@ -268,17 +278,17 @@ cr
     \ Add last domain
     over session-add-domain                     \ sess dom1
 
-    s" (X1X1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    s" (X1X1 01X1X)" regioncorr-from-string-a \ sess rlc
     -1 #2 rate-new                              \ sess rlc rt
-    rlcrate-new                                 \ sess rlc-rt
-    \ cr ." rlcrate: " dup .rlcrate cr
-    over session-add-rlcrate                    \ sess
+    regioncorrrate-new                                 \ sess rlc-rt
+    \ cr ." regioncorrrate: " dup .regioncorrrate cr
+    over session-add-regioncorrrate                    \ sess
 
-    s" (1XX1 01X1X)" region-list-corr-from-string-a \ sess rlc
+    s" (1XX1 01X1X)" regioncorr-from-string-a \ sess rlc
     #-2 0 rate-new                               \ sess
-    rlcrate-new                                 \ sess rlc-rt
-    \ cr ." rlcrate: " dup .rlcrate cr
-    over session-add-rlcrate                    \ sess
+    regioncorrrate-new                                 \ sess rlc-rt
+    \ cr ." regioncorrrate: " dup .regioncorrrate cr
+    over session-add-regioncorrrate                    \ sess
 
     .session
 ;
@@ -392,11 +402,11 @@ cr
 
     \ Tests that assume a 4-bit domain-0 and a 5-bit domain-1 should be last,
     \ as they may change the current domain.
-    region-list-corr-tests
-    depth 0<> abort" region-list-corr tests stack not empty"
+    regioncorr-tests
+    depth 0<> abort" regioncorr tests stack not empty"
 
-    rlc-list-tests
-    depth 0<> abort" rlc-list tests stack not empty"
+    regioncorr-list-tests
+    depth 0<> abort" regioncorr-list tests stack not empty"
 
     session-tests
     depth 0<> abort" Session tests stack not empty"
