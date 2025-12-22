@@ -6,9 +6,9 @@
     if
         dup struct-get-id
         0= if
-            ." link-u "
+            ." lnk-u "
         else
-            ." link "
+            ." lnk "
         then
         drop
         exit
@@ -18,9 +18,9 @@
     if
         dup struct-get-id
         0= if
-            ." list-u "
+            ." lst-u "
         else
-            ." list-"
+            ." lst-"
             dup list-get-length dec.
         then
         drop
@@ -31,9 +31,9 @@
     if
         dup struct-get-id
         0= if
-            ." region-u "
+            ." reg-u "
         else
-            ." region "
+            ." reg "
         then
         drop
         exit
@@ -43,9 +43,9 @@
     if
         dup struct-get-id
         0= if
-            ." rule-u "
+            ." rul-u "
         else
-            ." rule "
+            ." rul "
         then
         drop
         exit
@@ -55,9 +55,9 @@
     if
         dup struct-get-id
         0= if
-            ." rulestore-u "
+            ." rulstr-u "
         else
-            ." rulestore "
+            ." rulstr "
         then
         drop
         exit
@@ -67,9 +67,9 @@
     if
         dup struct-get-id
         0= if
-            ." square-u "
+            ." sqr-u "
         else
-            ." square "
+            ." sqr "
         then
         drop
         exit
@@ -79,9 +79,9 @@
     if
         dup struct-get-id
         0= if
-            ." sample-u "
+            ." smpl-u "
         else
-            ." sample "
+            ." smpl "
         then
         drop
         exit
@@ -91,9 +91,9 @@
     if
         dup struct-get-id
         0= if
-            ." changes-u "
+            ." cngs-u "
         else
-            ." changes "
+            ." cngs "
         then
         drop
         exit
@@ -103,9 +103,9 @@
     if
         dup struct-get-id
         0= if
-            ." group-u "
+            ." grp-u "
         else
-            ." group "
+            ." grp "
         then
         drop
         exit
@@ -115,21 +115,21 @@
     if
         dup struct-get-id
         0= if
-            ." need-u "
+            ." ned-u "
         else
-            ." need "
+            ." ned "
         then
         drop
         exit
     then
 
-    dup step-mma mma-within-array
+    dup planstep-mma mma-within-array
     if
         dup struct-get-id
         0= if
-            ." step-u "
+            ." plnstp-u "
         else
-            ." step "
+            ." plnstp "
         then
         drop
         exit
@@ -139,9 +139,9 @@
     if
         dup struct-get-id
         0= if
-            ." plan-u "
+            ." pln-u "
         else
-            ." plan "
+            ." pln "
         then
         drop
         exit
@@ -163,9 +163,9 @@
     if
         dup struct-get-id
         0= if
-            ." regioncorrrate-u "
+            ." regcrate-u "
         else
-            ." regioncorrrate "
+            ." regcrate "
         then
         drop
         exit
@@ -175,9 +175,9 @@
     if
         dup struct-get-id
         0= if
-            ." action-u "
+            ." act-u "
         else
-            ." action "
+            ." act "
         then
         drop
         exit
@@ -187,9 +187,9 @@
     if
         dup struct-get-id
         0= if
-            ." domain-u "
+            ." dom-u "
         else
-            ." domain "
+            ." dom "
         then
         drop
         exit
@@ -199,9 +199,9 @@
     if
         dup struct-get-id
         0= if
-            ." reg-c-u "
+            ." regc-u "
         else
-            ." reg-c "
+            ." regc "
         then
         drop
         exit
@@ -211,9 +211,33 @@
     if
         dup struct-get-id
         0= if
-            ." rul-c-u "
+            ." rulc-u "
         else
-            ." rul-c "
+            ." rulc "
+        then
+        drop
+        exit
+    then
+
+    dup pathstep-mma mma-within-array
+    if
+        dup struct-get-id
+        0= if
+            ." pthstp-u "
+        else
+            ." pthstp "
+        then
+        drop
+        exit
+    then
+
+    dup changescorr-mma mma-within-array
+    if
+        dup struct-get-id
+        0= if
+            ." csgsc-u "
+        else
+            ." cngsc "
         then
         drop
         exit

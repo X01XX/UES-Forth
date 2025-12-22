@@ -1,10 +1,10 @@
-\ Implement a struct and functions for a rule list corresponding to domains.
+\ Implement a struct and functions for a list of rules, corresponding to domains.
 
 #53171 constant rulecorr-id
     #2 constant rulecorr-struct-number-cells
 
 \ Struct fields
-0                               constant rulecorr-header-disp   \ 16-bits [0] struct id [1] use count.
+0                              constant rulecorr-header-disp    \ 16-bits [0] struct id [1] use count.
 rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corresponding, in bits used, to the session domain list.
 
 
@@ -66,17 +66,17 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 
 \ Start accessors.
 
-\ Return the first field from a rule instance.
-: rulecorr-get-list ( rulecorr0 -- lst )
+\ Return the rulecorr list field from a rule instance.
+: rulecorr-get-list ( rulc0 -- rul-lst )
     \ Check arg.
     assert-tos-is-rulecorr
 
     rulecorr-list-disp +    \ Add offset.
-    @                               \ Fetch the field.
+    @                       \ Fetch the field.
 ;
 
-\ Set the first field from a rule instance, use only in this file.
-: _rulecorr-set-list ( lst1 rulecorr0 -- )
+\ Set the rulecorr list field of a rule instance, use only in this file.
+: _rulecorr-set-list ( lst1 rulc0 -- )
     \ Check args.
     assert-tos-is-rulecorr
 
@@ -84,75 +84,76 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
     over struct-inc-use-count
 
     rulecorr-list-disp +    \ Add offset.
-    !                               \ Set first field.
+    !                       \ Set first field.
 ;
 
 \ End accessors.
 
 \ Create a rulecorr-list-corr from a rulecorr-list-corr-list on the stack.
-: rulecorr-new ( lst0 -- addr)
+: rulecorr-new ( rul-lst0 -- rulc )
     \ check arg.
-    assert-tos-is-list
+    assert-tos-is-rule-list
+    dup list-get-length number-domains <> abort" rulecorr-new: invalid list length?"
 
     \ Allocate space.
-    rulecorr-mma mma-allocate   \ lst0 rulecorr
+    rulecorr-mma mma-allocate   \ rul-lst0 rulc
 
     \ Store id.
-    rulecorr-id over            \ lst0 rulecorr id rulecorr
-    struct-set-id                       \ lst0 rulecorr
+    rulecorr-id over            \ rul-lst0 rulc id rulc
+    struct-set-id               \ rul-lst0 rulc
 
     \ Init use count.
-    0 over struct-set-use-count         \ lst0 rulecorr
+    0 over struct-set-use-count \ rul-lst0 rulc
 
-    tuck                                \ rulecorr lst0 rulecorr
-    _rulecorr-set-list          \ rulecorr
+    tuck                        \ rulc rul-lst0 rulc
+    _rulecorr-set-list          \ rulc
 ;
 
 \ Print a rule-list corresponding to the session domain list.
-: .rulecorr ( rulecorr0 -- )
+: .rulecorr ( rulc0 -- )
     \ Check arg.
     assert-tos-is-rulecorr
 
-    rulecorr-get-list       \ lst
-    list-get-links                  \ link0
-    session-get-domain-list-xt      \ link0 xt
-    execute                         \ link0 dom-lst 
-    list-get-links                  \ link0 d-link
+    rulecorr-get-list               \ rul-lst
+    list-get-links                  \ rc-link
+    session-get-domain-list-xt      \ rc-link xt
+    execute                         \ rc-link dom-lst 
+    list-get-links                  \ rc-link d-link
     ." ("
     begin
         ?dup
     while
         \ Set current domain.
-        dup link-get-data           \ link0 d-link domx
+        dup link-get-data           \ rc-link d-link domx
         domain-set-current-xt
-        execute                     \ link0 d-link
+        execute                     \ rc-link d-link
 
-        over link-get-data          \ link0 d-link reg0
-        .rule                       \ link0 d-link
+        over link-get-data          \ rc-link d-link reg0
+        .rule                       \ rc-link d-link
 
-        swap link-get-next          \ d-link link0
-        swap link-get-next          \ link0 d-link
+        swap link-get-next          \ d-link rc-link
+        swap link-get-next          \ rc-link d-link
         dup if
             space
         then
     repeat
-                                    \ link0
+                                    \ rc-link
     drop
     ." )"
 ;
 
 \ Deallocate the given rulecorr, if its use count is 1 or 0.
-: rulecorr-deallocate ( rulecorr0 -- )
+: rulecorr-deallocate ( rulc0 -- )
     \ Check arg.
     assert-tos-is-rulecorr
 
-    dup struct-get-use-count            \ rulecorr0 count
+    dup struct-get-use-count        \ rulc0 count
 
     #2 <
     if
         \ Deallocate fields.
-        dup rulecorr-get-list   \ rulecorr0 rulecorr-lst
-        rule-list-deallocate
+        dup rulecorr-get-list       \ rulc0 rul-lst
+        rule-list-deallocate        \ rulc0
 
         \ Deallocate instance.
         rulecorr-mma mma-deallocate
@@ -162,67 +163,172 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 ;
 
 \ Return a rulecorr for translating from one rule-list-corr (rulecorr-from) to another (rulecorr-to).
-: rulecorr-new-regioncorr-to-regioncorr ( regioncorr-to regioncorr-from -- rulecorr )
+: rulecorr-new-regioncorr-to-regioncorr ( regc-to regc-from -- rulecorr )
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
 
     \ Init return list.
-    list-new -rot                           \ ret-lst regioncorr-to regioncorr-from
+    list-new -rot                           \ rul-lst regc-to regc-from
 
     \ Prep for loop.
-    regioncorr-get-list list-get-links swap \ ret-lst link-from regioncorr-to
-    regioncorr-get-list list-get-links swap \ ret-lst link-to link-from
+    regioncorr-get-list list-get-links swap \ rul-lst link-from regc-to
+    regioncorr-get-list list-get-links swap \ rul-lst link-to link-from
 
     begin
         ?dup
     while
-        over link-get-data          \ ret-lst link-to link-from reg-to
-        over link-get-data          \ ret-lst link-to link-from reg-to reg-from
-        rule-new-region-to-region   \ ret-lst link-to link-from rulx ( rule may have no changes )
-        #3 pick                     \ ret-lst link-to link-from rulx ret-lst
-        rule-list-push-end          \ ret-lst link-to link-from
+        over link-get-data          \ rul-lst link-to link-from reg-to
+        over link-get-data          \ rul-lst link-to link-from reg-to reg-from
+        rule-new-region-to-region   \ rul-lst link-to link-from rulx ( rule may have no changes )
+        #3 pick                     \ rul-lst link-to link-from rulx rul-lst
+        rule-list-push-end          \ rul-lst link-to link-from
 
         link-get-next swap
         link-get-next swap
     repeat
-                                    \ ret-lst link-to
-    drop                            \ ret-lst
-    rulecorr-new                    \ rulecorr
+                                    \ rul-lst link-to
+    drop                            \ rul-lst
+    rulecorr-new                    \ rulc
 ;
 
-: rulecorr-list-deallocate ( rulecorr-lst0 -- )
+: rulecorr-calc-initial-regions ( rulc -- regc )
+    \ Check arg.
+    assert-tos-is-rulecorr
+
+    \ Init region list.
+    list-new swap                   \ reg-lst rulc
+
+    \ Prep for loop.
+    rulecorr-get-list               \ reg-lst rul-lst
+    list-get-links                  \ reg-lst rc-link
+    session-get-domain-list-xt      \ reg-lst rc-link xt
+    execute                         \ reg-lst rc-link dom-lst 
+    list-get-links                  \ reg-lst rc-link d-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ reg-lst rc-link d-link domx
+        domain-set-current-xt
+        execute                     \ reg-lst rc-link d-link
+
+        \ Calc initial region.
+        over link-get-data          \ reg-lst rc-link d-link rulx
+        rule-calc-initial-region    \ reg-lst rc-link d-link reg-i'
+
+        \ Store initial region.
+        #3 pick                     \ reg-lst rc-link d-link reg-i' reg-lst
+        list-push-end-struct        \ reg-lst rc-link d-link
+
+        swap link-get-next          \ reg-lst d-link rc-link
+        swap link-get-next          \ reg-lst rc-link d-link
+    repeat
+                                    \ reg-lst rc-link
+    drop                            \ reg-lst
+    regioncorr-new                  \ regc
+;
+
+: rulecorr-calc-result-regions ( rulc -- regc )
+    \ Check arg.
+    assert-tos-is-rulecorr
+
+    \ Init region list.
+    list-new swap                   \ reg-lst rulc
+
+    \ Prep for loop.
+    rulecorr-get-list               \ reg-lst rul-lst
+    list-get-links                  \ reg-lst rc-link
+    session-get-domain-list-xt      \ reg-lst rc-link xt
+    execute                         \ reg-lst rc-link dom-lst 
+    list-get-links                  \ reg-lst rc-link d-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ reg-lst rc-link d-link domx
+        domain-set-current-xt
+        execute                     \ reg-lst rc-link d-link
+
+        \ Calc initial region.
+        over link-get-data          \ reg-lst rc-link d-link rulx
+        rule-calc-initial-region    \ reg-lst rc-link d-link reg-i'
+
+        \ Store initial region.
+        #3 pick                     \ reg-lst rc-link d-link reg-i' reg-lst
+        list-push-end-struct        \ reg-lst rc-link d-link
+
+        swap link-get-next          \ reg-lst d-link rc-link
+        swap link-get-next          \ reg-lst rc-link d-link
+    repeat
+                                    \ reg-lst rc-link
+    drop                            \ reg-lst
+    regioncorr-new                  \ regc
+;
+
+\ Return changescorr from a rulecorr.
+: rulecorr-get-changes ( rulc -- cngsc )
+    \ Check arg.
+    assert-tos-is-rulecorr
+
+    \ Init region list.
+    list-new swap                   \ cngs-lst rulc
+
+    \ Prep for loop.
+    rulecorr-get-list               \ cngs-lst rul-lst
+    list-get-links                  \ cngs-lst rc-link
+
+    begin
+        ?dup
+    while
+        \ Get changes.
+        dup link-get-data           \ cngs-lst rc-link rulx
+        rule-get-changes            \ cngs-lst rc-link cngs'
+
+        \ Store changes.
+        #2 pick                     \ cngs-lst rc-link cngs' cngs-lst
+        list-push-end-struct        \ cngs-lst rc-link
+
+        link-get-next               \ cngs-lst rc-link
+    repeat
+                                    \ cngs-lst
+    changescorr-new                 \ regc
+;
+
+: rulecorr-list-deallocate ( rulc-lst0 -- )
     \ Check arg.
     assert-tos-is-list
 
     \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                        \ lst0 uc
+    dup struct-get-use-count                        \ rulc-lst0 uc
     #2 < if
-        \ Deallocate rule instances in the list.
-        [ ' rulecorr-deallocate ] literal over     \ lst0 xt lst0
-        list-apply                                  \ lst0
+        \ Deallocate rulecorrs in the list.
+        [ ' rulecorr-deallocate ] literal over      \ rulc-lst0 xt rulc-lst0
+        list-apply                                  \ rulc-lst0
 
-        \ Deallocate the list. 
-        list-deallocate                            \
+        \ Deallocate the list.
+        list-deallocate
     else
         struct-dec-use-count
     then
 ;
 
 \ Deallocate a list of lists of rulecorr.
-: rulecorr-lol-deallocate ( rulecorr-lst-lol0 -- )
+: rulecorr-lol-deallocate ( rulc-lol0 -- )
     \ Check arg.
     assert-tos-is-list
 
     \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                        \ lst0 uc
+    dup struct-get-use-count                        \ rulc-lol0 uc
     #2 < if
         \ Deallocate rulecorr instances in the list.
-        [ ' rulecorr-list-deallocate ] literal over   \ lst0 xt lst0
-        list-apply                                          \ lst0
+        [ ' rulecorr-list-deallocate ] literal over \ rulc-lol0 xt rulc-lol0
+        list-apply                                  \ rulc-lol0
 
         \ Deallocate the list. 
-        list-deallocate                            \
+        list-deallocate                             \
     else
         struct-dec-use-count
     then

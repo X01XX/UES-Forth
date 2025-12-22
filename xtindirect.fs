@@ -68,15 +68,15 @@
 
 ' xtabort value memory-use-xt
 
-' xtabort value step-list-push-xt
+' xtabort value planstep-list-push-xt
 
-' xtabort value step-new-xt
+' xtabort value planstep-new-xt
 
-' xtabort value step-set-forward-xt
+' xtabort value planstep-set-forward-xt
 
-' xtabort value step-set-number-unwanted-changes-xt
+' xtabort value planstep-set-number-unwanted-changes-xt
 
-' xtabort value .step-xt
+' xtabort value .planstep-xt
 
 ' xtabort value region-list-push-xt
 

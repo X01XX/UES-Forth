@@ -14,13 +14,13 @@
     \ Add first step.
     s" 00/XX/01/11/" rule-from-string   \ reg pln rul
     cur-action-xt execute               \ reg pln rul act
-    step-new                            \ reg pln stp
+    planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     \ Add second step.
     s" 01/XX/11/11/" rule-from-string   \ reg pln rul
     cur-action-xt execute               \ reg pln rul act
-    step-new                            \ reg pln stp
+    planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     cr ." plan1: " dup .plan
@@ -62,13 +62,13 @@
     \ Add first step.
     s" 00/XX/01/X1/" rule-from-string   \ reg pln rul
     cur-action-xt execute               \ reg pln rul act
-    step-new                            \ reg pln stp
+    planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     \ Add second step.
     s" 01/XX/11/11/" rule-from-string   \ reg pln rul
     cur-action-xt execute               \ reg pln rul act
-    step-new                            \ reg pln stp
+    planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     cr ." plan1: " dup .plan
@@ -122,13 +122,13 @@
     \ Add first step.
     s" 00/XX/01/Xx/" rule-from-string   \ reg pln rul
     cur-action-xt execute               \ reg pln rul act
-    step-new                            \ reg pln stp
+    planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     \ Add second step.
     s" 01/XX/11/X1/" rule-from-string   \ reg pln rul
     cur-action-xt execute               \ reg pln rul act
-    step-new                            \ reg pln stp
+    planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     cr ." plan1: " dup .plan
@@ -169,13 +169,13 @@
     \ Add step to plan.
     s" 00/11/01/XX/" rule-from-string   \ pln rul
     cur-action-xt execute               \ pln rul act
-    step-new                            \ pln stp
+    planstep-new                        \ pln stp
     over plan-push                      \ pln
 
     \ create step to link.
     s" 10/XX/00/00/" rule-from-string       \ pln rul
     cur-action-xt execute                   \ pln rul act
-    step-new                                \ pln stp
+    planstep-new                            \ pln stp
 
     swap                                    \ stp pln
     2dup plan-link-step-to-initial-region   \ stp pln, pln-l t | f
@@ -210,13 +210,13 @@
     \ Add step to plan.
     s" 00/11/01/XX/" rule-from-string   \ pln rul
     cur-action-xt execute               \ pln rul act
-    step-new                            \ pln stp
+    planstep-new                        \ pln stp
     over plan-push                      \ pln
 
     \ create step to link.
     s" 01/XX/11/00/" rule-from-string       \ pln rul
     cur-action-xt execute                   \ pln rul act
-    step-new                                \ pln stp
+    planstep-new                            \ pln stp
 
     swap                                    \ stp pln
     2dup plan-link-step-to-result-region    \ stp pln, pln-l t | f

@@ -1,5 +1,14 @@
 \ Functions for rule lists.
 
+\ Check if tos is a non-empty list, with the first item being a rule.
+: assert-tos-is-rule-list ( tos -- )
+    assert-tos-is-list
+    assert-tos-list-is-not-empty
+    dup list-get-links link-get-data
+    assert-tos-is-rule
+    drop
+;
+
 \ Deallocate a rule list.
 : rule-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.

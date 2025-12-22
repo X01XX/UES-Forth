@@ -73,7 +73,7 @@
         dup link-get-data               \ ret-lst link regcrtx
         regioncorrrate-get-regioncorr   \ ret-lst link regc
         #2 pick                         \ ret-lst link regc ret-lst
-        regioncorr-list-push            \ ret-lst link
+        list-push-struct                \ ret-lst link
 
         link-get-next
     repeat
@@ -103,7 +103,7 @@
             dup link-get-data               \ ret-lst n link rlcrtx
             regioncorrrate-get-regioncorr   \ ret-lst n link regc
             #3 pick                         \ ret-lst n link regc ret-lst
-            regioncorr-list-push            \ ret-lst n link
+            list-push-struct                \ ret-lst n link
         then
 
         link-get-next

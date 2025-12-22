@@ -1,12 +1,6 @@
 \ Functions for region lists.
 
-: assert-tos-list-is-not-empty ( tos -- )
-    assert-tos-is-list
-    dup list-get-length
-    0= abort" list is empty"
-;
-
-\ Check if tos is a list, with the first item being a region.
+\ Check if tos is a non-empty list, with the first item being a region.
 : assert-tos-is-region-list ( tos -- )
     assert-tos-is-list
     assert-tos-list-is-not-empty

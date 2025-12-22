@@ -92,8 +92,10 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Create a regioncorr-list-corr from a regioncorr-list-corr-list on the stack.
 : regioncorr-new ( lst0 -- addr)
     \ check arg.
-    assert-tos-is-list
     assert-tos-is-region-list
+
+    dup list-get-length number-domains <> abort" regioncorr-new: invalid list length?"
+
 
     \ Allocate space.
     regioncorr-mma mma-allocate   \ lst0 rlc

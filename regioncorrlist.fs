@@ -1,4 +1,4 @@
-\ Functions for Region List Corresponding (to domains) (RLC) lists.
+\ Functions for a list of RegionCorrs.
 
 \ Deallocate an rlc list.
 : regioncorr-list-deallocate ( lst0 -- )
@@ -47,7 +47,7 @@
 
     s" (" type
     [ ' .regioncorr ] literal swap    \ xt regioncorr-list
-    list-apply                              \
+    list-apply                        \
     s" )" type
 ;
 

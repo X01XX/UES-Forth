@@ -106,6 +106,20 @@ list-header-disp    cell+   constant list-links-disp
     2w@
 ;
 
+\ Check TOS for non-empty list, unconventional, leaves stack unchanged.
+: assert-tos-list-is-not-empty ( tos -- )
+    assert-tos-is-list
+    dup list-get-length
+    0= abort" tos list is empty"
+;
+
+\ Check NOS for non-empty list, unconventional, leaves stack unchanged.
+: assert-nos-list-is-not-empty ( tos -- )
+    assert-nos-is-list
+    over list-get-length
+    0= abort" nos list is empty"
+;
+
 \ Set list length, use only in this file.
 : _list-set-length ( length-value list-addr -- )
     2w!

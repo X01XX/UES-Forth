@@ -1418,9 +1418,9 @@ action-groups-disp               cell+  constant action-function-disp           
             else
                 dup                     \ ret-lst cngs1 link stp-lst stp-lst
                 #4 pick                 \ ret-lst cngs1 link stp-lst stp-lst ret-lst
-                step-list-append        \ ret-lst cngs1 link stp-lst
+                planstep-list-append    \ ret-lst cngs1 link stp-lst
             then
-            step-list-deallocate        \ ret-lst cngs1 link
+            planstep-list-deallocate    \ ret-lst cngs1 link
         then
 
         link-get-next                   \ ret-lst cngs1 link
@@ -1470,9 +1470,9 @@ action-groups-disp               cell+  constant action-function-disp           
             is-false if                 \ ret-lst reg-to reg-from link stp-lst
                 dup                     \ ret-lst reg-to reg-from link stp-lst stp-lst
                 #5 pick                 \ ret-lst reg-to reg-from link stp-lst stp-lst ret-lst
-                step-list-append        \ ret-lst reg-to reg-from link stp-lst
+                planstep-list-append    \ ret-lst reg-to reg-from link stp-lst
             then
-            step-list-deallocate        \ ret-lst reg-to reg-from link
+            planstep-list-deallocate    \ ret-lst reg-to reg-from link
         then
 
         link-get-next                   \ ret-lst reg-to reg-from link
@@ -1522,11 +1522,11 @@ action-groups-disp               cell+  constant action-function-disp           
             group-calc-steps-bc     \ ret-lst reg-to reg-from link stp-lst
             dup list-is-empty       \ ret-lst reg-to reg-from link stp-lst bool
             is-false if
-                dup                 \ ret-lst reg-to reg-from link stp-lst stp-lst
-                #5 pick             \ ret-lst reg-to reg-from link stp-lst stp-lst ret-lst
-                step-list-append    \ ret-lst reg-to reg-from link stp-lst
+                dup                     \ ret-lst reg-to reg-from link stp-lst stp-lst
+                #5 pick                 \ ret-lst reg-to reg-from link stp-lst stp-lst ret-lst
+                planstep-list-append    \ ret-lst reg-to reg-from link stp-lst
             then
-            step-list-deallocate    \ ret-lst reg-to reg-from link
+            planstep-list-deallocate    \ ret-lst reg-to reg-from link
         then
 
         link-get-next               \ ret-lst reg-to reg-from link

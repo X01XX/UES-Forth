@@ -16,14 +16,14 @@
 \ Sample Action Session Domain Need   Changes
 \ 23719, 29717, 31319,  31379, 19717, 31973
 \
-\ Step   Plan   Group  Rate   RegionCorrRate  RegionCorr
-\ 37171, 37379, 43717, 41719, 41737,          47317
+\ PlanStep   Plan   Group  Rate   RegionCorrRate  RegionCorr
+\ 37171,     37379, 43717, 41719, 41737,          47317
 \
-\ RuleCorr
-\ 53171
+\ RuleCorr  Changescorr PathStep
+\ 53171     53173       53197
 \
 \ Struct ids not yet used:
-\ 53173, 53197, 53717, 53719,
+\ 53717, 53719,
 \ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
@@ -62,6 +62,7 @@ include statelistcorr.fs
 include changes.fs
 include changeslist.fs
 include changes2.fs
+include changescorr.fs
 
 include sample.fs
 
@@ -77,8 +78,8 @@ include squarelist.fs
 include need.fs
 include needlist.fs
 
-include step.fs
-include steplist.fs
+include planstep.fs
+include plansteplist.fs
 
 include regioncorr.fs
 include regioncorrlist.fs
@@ -91,6 +92,9 @@ include plan.fs
 include planlist.fs
 include plan_t.fs
 include planlistcorr.fs
+
+include pathstep.fs
+include pathsteplist.fs
 
 include group.fs
 include grouplist.fs
@@ -122,9 +126,11 @@ cs
     cr #4 spaces ." Square mma:         " square-mma .mma-usage
     cr #4 spaces ." Sample mma:         " sample-mma .mma-usage
     cr #4 spaces ." Changes mma:        " changes-mma .mma-usage
+    cr #4 spaces ." ChangesCorr mma:    " changescorr-mma .mma-usage
     cr #4 spaces ." Group mma:          " group-mma .mma-usage
     cr #4 spaces ." Need mma:           " need-mma .mma-usage
-    cr #4 spaces ." Step mma:           " step-mma .mma-usage
+    cr #4 spaces ." PlanStep mma:       " planstep-mma .mma-usage
+    cr #4 spaces ." PathStep mma:       " planstep-mma .mma-usage
     cr #4 spaces ." Plan mma:           " plan-mma .mma-usage
     cr #4 spaces ." Rate mma:           " rate-mma .mma-usage
     cr #4 spaces ." RegionCorrRate mma: " regioncorrrate-mma .mma-usage
@@ -149,10 +155,12 @@ cs
     assert-group-mma-none-in-use
     assert-sample-mma-none-in-use
     assert-need-mma-none-in-use
-    assert-step-mma-none-in-use
+    assert-planstep-mma-none-in-use
+    assert-pathstep-mma-none-in-use
     assert-plan-mma-none-in-use
     assert-action-mma-none-in-use
     assert-changes-mma-none-in-use
+    assert-changescorr-mma-none-in-use
     assert-rate-mma-none-in-use
     assert-regioncorrrate-mma-none-in-use
 
@@ -181,16 +189,18 @@ cr ." main.fs"
 #2000 link-mma-init
 #502 list-mma-init
 #803 region-mma-init
-#200 regioncorr-mma-init
+#500 regioncorr-mma-init
 #404 rule-mma-init
 #405 rulestore-mma-init
 #404 rulecorr-mma-init
 #306 square-mma-init
 #250 sample-mma-init
-#150 changes-mma-init
+#550 changes-mma-init
+#250 changescorr-mma-init
 #100 group-mma-init
 #200 need-mma-init
-#150 step-mma-init
+#150 planstep-mma-init
+#150 pathstep-mma-init
 #150 plan-mma-init
  #50 action-mma-init
  #25 domain-mma-init
@@ -212,9 +222,11 @@ cr
     square-mma mma-free
     sample-mma mma-free
     changes-mma mma-free
+    changescorr-mma mma-free
     group-mma mma-free
     need-mma mma-free
-    step-mma mma-free
+    planstep-mma mma-free
+    pathstep-mma mma-free
     plan-mma mma-free
     action-mma mma-free
     domain-mma mma-free

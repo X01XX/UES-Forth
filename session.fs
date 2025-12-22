@@ -15,7 +15,7 @@ session-regioncorrrate-nq-disp  cell+   constant session-regioncorr-lol-by-rate-
                                                                                     \ can move within without encountering a lower rated fragment.
                                                                                     \ Within an regioncorr list, GT one item, there are intersections, so there is a path
                                                                                     \ from one rcl, to another, through an intersection.
-session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rate-disp  \ A list of rulecorr lists, corresponding to session-regioncorrrate-nq items. 
+session-regioncorr-lol-by-rate-disp cell+   constant session-pathstep-lol-by-rate-disp  \ A list of pathstep lists, corresponding to session-regioncorrrate-nq items. 
 
 0 value session-mma     \ Storage for session mma instance.
 
@@ -239,41 +239,41 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     regioncorr-lol-deallocate
 ;
 
-\ Return session-rulecorr-lol-by-rate list.
-: session-get-rulecorr-lol-by-rate ( sess0 -- rlciplist-lst )
+\ Return session-pathstep-lol-by-rate list.
+: session-get-pathstep-lol-by-rate ( sess0 -- pthstp-lst )
     \ Check arg.
     assert-tos-is-session
 
-    session-rulecorr-lol-by-rate-disp +   \ Add offset.
-    @                                               \ Fetch the field.
+    session-pathstep-lol-by-rate-disp + \ Add offset.
+    @                                   \ Fetch the field.
 ;
 
-\ Set session-rulecorr-lol-by-rate list.
-: _session-set-rulecorr-lol-by-rate ( rlciplist-lst1 sess0 -- )
+\ Set session-pathstep-lol-by-rate list.
+: _session-set-pathstep-lol-by-rate ( pthstp-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
 
     over struct-inc-use-count
-    session-rulecorr-lol-by-rate-disp +    \ Add offset.
+    session-pathstep-lol-by-rate-disp +    \ Add offset.
     !                                           \ Set the field.
 ;
 
-\ Update the session-rulecorr-lol-by-rate list.
-: _session-update-rulecorr-lol-by-rate ( rlciplist-lst1 sess0 -- )
+\ Update the session-pathstep-lol-by-rate list.
+: _session-update-pathstep-lol-by-rate ( pthstp-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
 
-    dup session-get-rulecorr-lol-by-rate -rot  \ prev-lst rlciplist-lst1 sess0
+    dup session-get-pathstep-lol-by-rate -rot  \ prev-lst pthstp-lst1 sess0
 
     \ Set the field.
     over struct-inc-use-count
-    session-rulecorr-lol-by-rate-disp +
+    session-pathstep-lol-by-rate-disp +
     !                                       \ prev-lst
 
     dup struct-dec-use-count
-    rulecorr-lol-deallocate
+    pathstep-lol-deallocate
 ;
 \ End accessors.
 
@@ -340,24 +340,25 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     0 over session-set-current-domain
 
     \ Init need-list.
-    list-new over _session-set-needs                \ sess
+    list-new over _session-set-needs                    \ sess
 
     \ Init regioncorrrate-list.
-    list-new over _session-set-regioncorrrate-list         \ sess
+    list-new over _session-set-regioncorrrate-list      \ sess
 
     \ Init regioncorrrate-fragments.
-    list-new over _session-set-regioncorrrate-fragments    \ sess
+    list-new over _session-set-regioncorrrate-fragments \ sess
 
     \ Init session-regioncorrrate-nq.
-    list-new                                        \ sess lst
-    over _session-set-regioncorrrate-nq             \ sess
+    list-new                                            \ sess lst
+    over _session-set-regioncorrrate-nq                 \ sess
 
     \ Init session regioncorr-lol-by-rate.
     list-new
-    over _session-set-regioncorr-lol-by-rate               \ sess
+    over _session-set-regioncorr-lol-by-rate            \ sess
 
     \ Init rulecorr list, by rate.
-    list-new over _session-set-rulecorr-lol-by-rate   \ sess
+    list-new
+    over _session-set-pathstep-lol-by-rate              \ sess
 
     session-stack stack-push
     \ cr ." current-session-new: end " .s cr
@@ -403,7 +404,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     cr ." regioncorr-lists, excluding lower value regioncorr fragments: "
 
     \ Prep for loop.
-    dup session-get-rulecorr-lol-by-rate   \ sess0 rlciplist-lst
+    dup session-get-pathstep-lol-by-rate   \ sess0 rlciplist-lst
     list-get-links                              \ sess0 rlciplist-lst-link
 
     over session-get-regioncorr-lol-by-rate            \ sess0 rlciplist-lst-link rcllist-lst
@@ -416,9 +417,9 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
         ?dup
     while
         cr  ."    rate:      " dup link-get-data #3 dec.r
-        space ." regclst:    " over link-get-data .regioncorr-list
-        cr cr 15 spaces ." rullstcorrlol: " #2 pick link-get-data
-        [ ' .rulecorr ] literal over list-apply
+        space ." regc list:    " over link-get-data .regioncorr-list
+        cr cr 15 spaces ." pathstep list: " #2 pick link-get-data
+        [ ' .pathstep ] literal over list-apply
         space list-get-length dec. cr
 
         link-get-next rot
@@ -450,8 +451,8 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     regioncorr-lol-deallocate
 
     \ Deallocate a list of rulcorrlst list.
-    session-get-rulecorr-lol-by-rate   \ ruls-lst
-    rulecorr-lol-deallocate           \
+    session-get-pathstep-lol-by-rate   \ ruls-lst
+    pathstep-lol-deallocate           \
 
     \ Deallocate session.
     session-stack stack-pop
@@ -753,7 +754,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     abort
 ;
 
-: .session-regioncorr-lol-by-rate ( sess0 -- )
+: .session-pathstep-lol-by-rate ( sess0 -- )
     \ Check arg.
     assert-tos-is-session
 
@@ -779,8 +780,8 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     2drop
 ;
 
-\ Calculate rulecorr lists for session-regioncorr-lol-by-rate.
-: session-calc-rulecorr-lists ( sess0 -- rullstcorr-lst )
+\ Calculate pathstep lists for session-pathstep-lol-by-rate.
+: session-calc-pathstep-lol ( sess0 -- rullstcorr-lst )
     \ Check arg.
     assert-tos-is-session
 
@@ -822,6 +823,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
                     tuck                                    \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcx-nxt rlc-int' rlcx rlc-int'
                     swap                                    \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcx-nxt rlc-int' rlc-int' rlcx-nxt
                     rulecorr-new-regioncorr-to-regioncorr   \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcx-nxt rlc-int' rul-lc'
+                    pathstep-new
 
                     \ dup space .rulecorr
                      #6 pick                                \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlcx-nxt rlc-int' rul-lc' rip-lst
@@ -831,6 +833,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
                     tuck                                    \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlc-int' rlcx-nxt rlc-int'
                     swap                                    \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlc-int' rlc-int' rlcx-nxt
                     rulecorr-new-regioncorr-to-regioncorr   \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlc-int' rul-lc'
+                    pathstep-new
                     \ dup space .rulecorr
                     #5 pick                                 \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlc-int' rul-lc' rip-lst
                     list-push-struct                        \ ret-lst sess0 rcllist-link rates-links rip-lst rlcx-link rlcx rlcx-link-nxt rlc-int'
@@ -860,7 +863,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     \ cr
     \ Clean up.                                     \ ret-lst sess0 rcllist-link
     2drop                                           \ ret-lst
-   \  cr ." session-calc-rulecorr-lists: end: " .stack-structs-xt execute cr
+   \  cr ." session-calc-pathstep-lol: end: " .stack-structs-xt execute cr
 ;
 
 \ Process the given regioncorrrates.
@@ -1066,11 +1069,11 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
 
     over _session-update-regioncorrrate-nq      \ sess0
 
-\    dup .session-regioncorr-lol-by-rate                \ sess0
+\    dup .session-pathstep-lol-by-rate                \ sess0
 
-    dup session-calc-rulecorr-lists         \ sess0 rulecorr-list lists
+    dup session-calc-pathstep-lol         \ sess0 rulecorr-list lists
 
-    swap _session-update-rulecorr-lol-by-rate
+    swap _session-update-pathstep-lol-by-rate
 ;
 
 : session-add-domain ( dom1 sess0 -- )
@@ -1080,14 +1083,14 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     \ cr ." session-add-domain: start " .stack-structs-xt execute cr
 
     \ Add domain
-    2dup                    \ dom1 sess0 dom1 sess0
-    session-get-domains     \ dom1 sess0 dom1 dom-lst
-    domain-list-push-end    \ dom1 sess0
+    2dup                                \ dom1 sess0 dom1 sess0
+    session-get-domains                 \ dom1 sess0 dom1 dom-lst
+    domain-list-push-end                \ dom1 sess0
 
     \ Set current-domain, if it is zero/invalid.
-    tuck session-set-current-domain
+    tuck session-set-current-domain     \ sess0
 
-    session-process-regioncorrrates        \ To get rate 0, max region rlc.
+    session-process-regioncorrrates     \ To get rate 0, max region rlc.
 ;
 
 \ Add a regioncorrrate, to give a value to some arbitrary configuration of domain regions.
@@ -1199,7 +1202,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
             is-false abort" action zero not found?"
 
                                     \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx rul' act
-            step-new                \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx stp
+            planstep-new            \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx stp
             over plan-push          \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx
             #4 pick                 \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link plnx ret-plc
             plan-list-push-end      \ rlc-to rlc-from sess0 ret-plc to-link from-link dom-link
@@ -1339,7 +1342,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-rulecorr-lol-by-rat
     assert-tos-is-session
 
     \ Find highest rate.
-    dup session-get-rulecorr-lol-by-rate       \ | regclst-lst
+    dup session-get-pathstep-lol-by-rate       \ | regclst-lst
     list-get-links                          \ | regclst-link
 
     over session-get-regioncorrrate-nq      \ | regclst-link rates-lst

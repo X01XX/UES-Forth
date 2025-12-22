@@ -542,7 +542,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         rule-calc-step-by-changes           \ stp-lst ruls0 cngs1, stp t | f
         if                                  \ stp-lst ruls0 cngs1 stp
             #3 pick                         \ stp-lst ruls0 cngs1 stp stp-lst
-            step-list-push-xt execute       \ stp-lst ruls0 cngs1
+            planstep-list-push-xt execute   \ stp-lst ruls0 cngs1
         then
     else                                    \ stp-lst ruls0 cngs1
         2drop                               \ stp-lst
@@ -556,7 +556,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         rule-calc-step-by-changes           \ stp-lst, stp t | f
         if                                  \ stp-lst stp
             over                            \ stp-lst stpx stp-lst
-            step-list-push-xt execute       \ stp-lst
+            planstep-list-push-xt execute   \ stp-lst
         then
     else
         drop                                \ stp-lst
@@ -592,7 +592,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         rule-calc-step-fc                   \ stp-lst ruls0 reg-to reg-from, stp t | f
         if                                  \ stp-lst ruls0 reg-to reg-from stp
             #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
-            step-list-push-xt execute       \ stp-lst ruls0 reg-to reg-from
+            planstep-list-push-xt execute   \ stp-lst ruls0 reg-to reg-from
         then
     else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
         3drop                               \ stp-lst
@@ -606,7 +606,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         rule-calc-step-fc                   \ stp-lst, stp t | f
         if                                  \ stp-lst stp
             over                            \ stp-lst stpx stp-lst
-            step-list-push-xt execute       \ stp-lst
+            planstep-list-push-xt execute   \ stp-lst
         then
     else
         2drop                               \ stp-lst
@@ -637,7 +637,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         rule-calc-step-bc                   \ stp-lst ruls0 reg-to reg-from, stp t | f
         if                                  \ stp-lst ruls0 reg-to reg-from stp
             #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
-            step-list-push-xt execute       \ stp-lst ruls0 reg-to reg-from
+            planstep-list-push-xt execute   \ stp-lst ruls0 reg-to reg-from
         then
     else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
         3drop                               \ stp-lst
@@ -651,7 +651,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         rule-calc-step-bc                   \ stp-lst, stp t | f
         if                                  \ stp-lst stp
             over                            \ stp-lst stpx stp-lst
-            step-list-push-xt execute       \ stp-lst
+            planstep-list-push-xt execute   \ stp-lst
         then
     else
         2drop                               \ stp-lst

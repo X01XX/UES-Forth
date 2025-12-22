@@ -1273,7 +1273,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     if
         nip                         \ rul0
         cur-action-xt execute       \ rul0 act
-        step-new-xt execute         \ stp
+        planstep-new-xt execute     \ stp
         true
     else
         2drop
@@ -1470,12 +1470,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
         \ Make step.
         cur-action-xt execute                   \ | u-unw ned-cngs' rul0' act
-        step-new-xt execute                     \ | u-unw ned-cngs' stpx
+        planstep-new-xt execute                 \ | u-unw ned-cngs' stpx
         swap changes-deallocate                 \ | u-unw stpx
 
         \ Set number unwanted changes.
         tuck                                    \ | stpx u-unw stpx
-        step-set-number-unwanted-changes-xt     \ | stpx u-unw stpx xt
+        planstep-set-number-unwanted-changes-xt \ | stpx u-unw stpx xt
         execute                                 \ | stpx
 
         \ Clean up.                             \ | stpx
@@ -1537,11 +1537,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ Make step.
     cur-action-xt execute                       \ | u-unw rul0' act
-    step-new-xt execute                         \ | u-unw stp
+    planstep-new-xt execute                     \ | u-unw stp
 
     \ Update unwanted number of changes.
     tuck                                        \ | stp u-unw stp
-    step-set-number-unwanted-changes-xt         \ | stp u-unw stp xt
+    planstep-set-number-unwanted-changes-xt     \ | stp u-unw stp xt
     execute                                     \ | stp
     \ cr ." indirect step: " dup .step-xt execute cr
 
@@ -1596,12 +1596,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
         \ Make step.
         cur-action-xt execute                   \ | u-unw ned-cngs' rul0' act
-        step-new-xt execute                     \ | u-unw ned-cngs' stpx
+        planstep-new-xt execute                 \ | u-unw ned-cngs' stpx
         swap changes-deallocate                 \ | u-unw stpx
 
         \ Set number unwanted changes.
         tuck                                    \ | stpx u-unw stpx
-        step-set-number-unwanted-changes-xt     \ | stpx u-unw stpx xt
+        planstep-set-number-unwanted-changes-xt \ | stpx u-unw stpx xt
         execute                                 \ | stpx
 
         \ Clean up.                             \ | stpx
@@ -1665,11 +1665,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ Make step.
     cur-action-xt execute                       \ | u-unw rul0' act
-    step-new-xt execute                         \ | u-unw stp
+    planstep-new-xt execute                     \ | u-unw stp
 
     \ Update unwanted number of changes.
     tuck                                        \ | stp u-unw stp
-    step-set-number-unwanted-changes-xt         \ | stp u-unw stp xt
+    planstep-set-number-unwanted-changes-xt     \ | stp u-unw stp xt
     execute                                     \ | stp
 
     \ Clean up.

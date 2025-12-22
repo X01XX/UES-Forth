@@ -484,16 +484,16 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     begin
         ?dup
     while
-        dup link-get-data           \ | stp-lst link actx
-        dup                         \ | stp-lst link actx actx
-        #4 pick                     \ | stp-lst link actx actx dom
-        domain-set-current-action   \ | stp-lst link actx
-        #5 pick swap                \ | stp-lst link reg-to actx
-        #5 pick swap                \ | stp-lst link reg-to reg-from actx
-        action-calc-steps-fc        \ | stp-lst link act-stps
-        dup                         \ | stp-lst link act-stps act-stps
-        #3 pick step-list-append    \ | stp-lst link act-stps
-        step-list-deallocate        \ | stp-lst link
+        dup link-get-data               \ | stp-lst link actx
+        dup                             \ | stp-lst link actx actx
+        #4 pick                         \ | stp-lst link actx actx dom
+        domain-set-current-action       \ | stp-lst link actx
+        #5 pick swap                    \ | stp-lst link reg-to actx
+        #5 pick swap                    \ | stp-lst link reg-to reg-from actx
+        action-calc-steps-fc            \ | stp-lst link act-stps
+        dup                             \ | stp-lst link act-stps act-stps
+        #3 pick planstep-list-append    \ | stp-lst link act-stps
+        planstep-list-deallocate        \ | stp-lst link
 
         link-get-next
     repeat
@@ -509,7 +509,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     \ Check for no steps.
     dup list-is-empty               \ stp-lst flag
     if
-        step-list-deallocate
+        planstep-list-deallocate
         false
         \ cr ." domain-calc-step-fc: returning: false"
         exit
@@ -521,8 +521,8 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     begin
         ?dup
     while
-        dup link-get-data                   \ stp-lst lst-unw link stpx
-        step-get-number-unwanted-changes    \ stp-lst lst-unw link u-unw
+        dup link-get-data                       \ stp-lst lst-unw link stpx
+        planstep-get-number-unwanted-changes    \ stp-lst lst-unw link u-unw
 
         \ Check if the number is already in the list.
         [ ' = ] literal                     \ stp-lst lst-unw link u-uw xt
@@ -547,8 +547,8 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     swap list-deallocate                    \ stp-lst u-unw
 
     \ Get steps with lowest number unwanted changes.
-    over step-list-match-number-unwanted-changes    \ stp-lst stp-lst2
-    swap step-list-deallocate                       \ stp-lst2
+    over planstep-list-match-number-unwanted-changes    \ stp-lst stp-lst2
+    swap planstep-list-deallocate                       \ stp-lst2
 
     \ Pick a step.
     dup list-get-length             \ stp-lst2 len
@@ -556,11 +556,11 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     over                            \ stp-lst2 inx stp-lst
 
     \ Extract step.
-    step-list-remove-item           \ stp-lst2, stpx true | false
+    planstep-list-remove-item       \ stp-lst2, stpx true | false
     0= abort" Step not found?"      \ stp-lst2 stpx
 
     \ Clean up.                     \ stp-lst2 stpx
-    swap step-list-deallocate       \ stpx
+    swap planstep-list-deallocate   \ stpx
     \ cr ." domain-calc-step-fc: returning: " dup .step cr
 
     \ Return.
@@ -611,7 +611,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         plan-check-step-result                  \ depth reg-to dom0 | pln reg-from | stpx bool
         if
             \ cr ." returning from domain-get-plan-fc 2: f depth: " #5 pick . cr
-            step-deallocate
+            planstep-deallocate
             drop
             plan-deallocate
             3drop
@@ -622,7 +622,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         \ Check if step intersects reg-from.
                                                 \ depth reg-to dom0 | pln reg-from | stpx
         over                                    \ depth reg-to dom0 | pln reg-from | stpx reg-from
-        over step-get-initial-region            \ depth reg-to dom0 | pln reg-from | stpx reg-from stp-i
+        over planstep-get-initial-region        \ depth reg-to dom0 | pln reg-from | stpx reg-from stp-i
         region-intersects                       \ depth reg-to dom0 | pln reg-from | stpx bool
         if
             \ cr ." plan: " #2 pick .plan space ." add intersecting step fc: " dup .step cr
@@ -651,7 +651,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
                     \ cr ." returning from domain-get-plan-fc 3: f depth: " #6 pick . cr
                     \ plan link failed, done.
                     drop                        \ depth reg-to dom0 | pln reg-from | stpx
-                    step-deallocate
+                    planstep-deallocate
                     drop
                     plan-deallocate
                     3drop
@@ -665,14 +665,14 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
             \ cr ." plan: " #2 pick .plan space ." add extending step fc: " dup .step cr
             \ Set up for recursion.
             #5 pick 1-                          \ depth reg-to dom0 | pln reg-from | stpx | depth   ( -1 to prevent infinite recursion )
-            over step-get-initial-region        \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i
+            over planstep-get-initial-region    \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i
             #3 pick                             \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i reg-from
             #6 pick                             \ depth reg-to dom0 | pln reg-from | stpx | depth stp-i reg-from dom
             \ cr ." calling domain-get-plan-fc depth " #3 pick . cr
             domain-get-plan-fc-xt execute       \ depth reg-to dom0 | pln reg-from | stpx | pln2 t | f
             if                                  \ depth reg-to dom0 | pln reg-from | stpx | pln2
                 \ cr ." returned from domain-get-plan-fc: t " dup .plan space ." depth: " #6 pick . space ." continuing" cr
-                swap step-deallocate            \ depth reg-to dom0 | pln reg-from | pln2
+                swap planstep-deallocate        \ depth reg-to dom0 | pln reg-from | pln2
                 #2 pick                         \ depth reg-to dom0 | pln reg-from | pln2 pln
                 dup plan-is-empty               \ depth reg-to dom0 | pln reg-from | pln2 pln bool
                 if                              \ depth reg-to dom0 | pln reg-from | pln2 pln
@@ -704,7 +704,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
                 then
             else                                \ depth reg-to dom0 | pln reg-from | stpx
                 \ cr ." returning from domain-get-plan-fc 5: f depth: " #5 pick . cr
-                step-deallocate
+                planstep-deallocate
                 drop
                 plan-deallocate
                 3drop
@@ -794,17 +794,17 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     list-get-links                  \ | stp-lst link
     begin
         ?dup
-    while                           \ | stp-lst link
-        dup link-get-data           \ | stp-lst link actx
-        dup                         \ | stp-lst link actx actx
-        #4 pick                     \ | stp-lst link actx actx dom
-        domain-set-current-action   \ | stp-lst link actx
-        #5 pick swap                \ | stp-lst link reg-to actx
-        #5 pick swap                \ | stp-lst link reg-to reg-from actx
-        action-calc-steps-bc        \ | stp-lst link act-stps
-        dup                         \ | stp-lst link act-stps act-stps
-        #3 pick step-list-append    \ | stp-lst link act-stps
-        step-list-deallocate        \ | stp-lst link
+    while                               \ | stp-lst link
+        dup link-get-data               \ | stp-lst link actx
+        dup                             \ | stp-lst link actx actx
+        #4 pick                         \ | stp-lst link actx actx dom
+        domain-set-current-action       \ | stp-lst link actx
+        #5 pick swap                    \ | stp-lst link reg-to actx
+        #5 pick swap                    \ | stp-lst link reg-to reg-from actx
+        action-calc-steps-bc            \ | stp-lst link act-stps
+        dup                             \ | stp-lst link act-stps act-stps
+        #3 pick planstep-list-append    \ | stp-lst link act-stps
+        planstep-list-deallocate        \ | stp-lst link
 
         link-get-next
     repeat
@@ -819,7 +819,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     \ Check for no steps.
     dup list-is-empty               \ stp-lst flag
     if
-        step-list-deallocate
+        planstep-list-deallocate
         false
         exit
     then
@@ -830,8 +830,8 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     begin
         ?dup
     while
-        dup link-get-data                   \ stp-lst lst-unw link stpx
-        step-get-number-unwanted-changes    \ stp-lst lst-unw link u-unw
+        dup link-get-data                       \ stp-lst lst-unw link stpx
+        planstep-get-number-unwanted-changes    \ stp-lst lst-unw link u-unw
 
         \ Check if the number is already in the list.
         [ ' = ] literal                     \ stp-lst lst-unw link u-uw xt
@@ -857,8 +857,8 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     swap list-deallocate                    \ stp-lst u-unw
 
     \ Get steps with lowest number unwanted changes.
-    over step-list-match-number-unwanted-changes    \ stp-lst stp-lst2
-    swap step-list-deallocate                       \ stp-lst2
+    over planstep-list-match-number-unwanted-changes    \ stp-lst stp-lst2
+    swap planstep-list-deallocate                       \ stp-lst2
 
     \ Pick a step.
     dup list-get-length             \ stp-lst2 len
@@ -866,11 +866,11 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     over                            \ stp-lst2 inx stp-lst
 
     \ Extract step.
-    step-list-remove-item           \ stp-lst2, stpx true | false
+    planstep-list-remove-item           \ stp-lst2, stpx true | false
     0= abort" domain-calc-step-bc: Step not found?"      \ stp-lst2 stpx
 
     \ Clean up.                     \ stp-lst2 stpx
-    swap step-list-deallocate       \ stpx
+    swap planstep-list-deallocate   \ stpx
     \ cr ." domain-calc-step-bc: returning: " dup .step cr
 
     \ Return.
@@ -920,7 +920,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         plan-check-step-initial                 \ depth reg-from dom0 | pln reg-to | stpx bool
         if
             \ cr ." returning from domain-get-plan-bc 2: f depth: " #5 pick . cr
-            step-deallocate
+            planstep-deallocate
             drop
             plan-deallocate
             3drop
@@ -931,7 +931,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         \ Check if step intersects reg-to.
                                                 \ depth reg-from dom0 | pln reg-to | stpx
         over                                    \ depth reg-from dom0 | pln reg-to | stpx reg-to
-        over step-get-result-region             \ depth reg-from dom0 | pln reg-to | stpx reg-from stp-r
+        over planstep-get-result-region         \ depth reg-from dom0 | pln reg-to | stpx reg-from stp-r
         region-intersects                       \ depth reg-from dom0 | pln reg-to | stpx bool
         if
             \ cr ." plan: " #2 pick .plan space ." add intersecting step bc: " dup .step cr
@@ -960,7 +960,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
                     \ cr ." returning from domain-get-plan-bc 3: f depth: " #6 pick . cr
                     \ plan link failed, done.
                     drop                        \ depth reg-from dom0 | pln reg-to | stpx
-                    step-deallocate
+                    planstep-deallocate
                     drop
                     plan-deallocate
                     3drop
@@ -974,7 +974,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
             \ cr ." plan: " #2 pick .plan space ." add extending step bc: " dup .step cr
             \ Set up for recursion.
             #5 pick 1-                              \ depth reg-from dom0 | pln reg-to | stpx | depth   ( -1 to prevent infinite recursion )
-            over step-get-result-region             \ depth reg-from dom0 | pln reg-to | stpx | depth stp-r
+            over planstep-get-result-region         \ depth reg-from dom0 | pln reg-to | stpx | depth stp-r
             #3 pick                                 \ depth reg-from dom0 | pln reg-to | stpx | depth stp-r reg-to
             swap                                    \ depth reg-from dom0 | pln reg-to | stpx | depth reg-to stp-r
             #6 pick                                 \ depth reg-from dom0 | pln reg-to | stpx | depth reg-to stp-r dom
@@ -982,7 +982,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
             domain-get-plan-bc-xt execute           \ depth reg-from dom0 | pln reg-to | stpx | pln2 t | f
             if                                      \ depth reg-from dom0 | pln reg-to | stpx | pln2
                 \ cr ." returned from domain-get-plan-bc: t " dup .plan space ." depth: " #6 pick . space ." continuing" cr
-                swap step-deallocate                \ depth reg-from dom0 | pln reg-to | pln2
+                swap planstep-deallocate            \ depth reg-from dom0 | pln reg-to | pln2
                 #2 pick                             \ depth reg-from dom0 | pln reg-to | pln2 pln
                 dup plan-is-empty                   \ depth reg-from dom0 | pln reg-to | pln2 pln bool
                 if                                  \ depth reg-from dom0 | pln reg-to | pln2 pln
@@ -1015,7 +1015,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
                 then
             else                                \ depth reg-from dom0 | pln reg-to | stpx
                 \ cr ." returning from domain-get-plan-bc 5: f depth: " #5 pick . cr
-                step-deallocate
+                planstep-deallocate
                 drop
                 plan-deallocate
                 3drop
@@ -1168,8 +1168,8 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         #3 pick swap                    \ | cngs1 actx
         action-calc-steps-by-changes    \ | act-stps
         dup                             \ | act-stps act-stps
-        #5 pick step-list-append        \ | act-stps
-        step-list-deallocate            \ |
+        #5 pick planstep-list-append    \ | act-stps
+        planstep-list-deallocate        \ |
 
         link-get-next
     repeat
@@ -1218,33 +1218,33 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         \ Find steps that provide the one-bit change, but possibly others.
         dup link-get-data                   \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link cng1
         #4 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link cng1 stp-lst
-        step-list-intersects-changes        \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link stp-cng-lst'
+        planstep-list-intersects-changes    \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link stp-cng-lst'
 
         \ Check if the one-bit change is possible, else done.
         dup list-get-length                 \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link stp-cng-lst' len
         0= if                               \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link stp-cng-lst'
-            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link
+            planstep-list-deallocate        \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst' link
             drop                            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst'
             changes-list-deallocate         \ reg-to reg-from dom0 | stp-lst asym-lst
-            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst
-            step-list-deallocate            \ reg-to reg-from dom0 |
+            planstep-list-deallocate        \ reg-to reg-from dom0 | stp-lst
+            planstep-list-deallocate        \ reg-to reg-from dom0 |
             3drop
             false
             exit
         then
 
         \ Check if there are only steps that do not match the reg-to reg-from initial state.
-        #7 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to
-        #7 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to reg-from
-        #2 pick                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to reg-from sc-list
-        step-list-any-from-to-intersections \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst bool
+        #7 pick                                 \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to
+        #7 pick                                 \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to reg-from
+        #2 pick                                 \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst reg-to reg-from sc-list
+        planstep-list-any-from-to-intersections \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst bool
         if
-            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
+            planstep-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
         else
             \ Save the steps.
-            dup #4 pick                     \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst asym-lst
-            step-list-append                \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst
-            step-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
+            dup #4 pick                         \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst sc-lst asym-lst
+            planstep-list-append                \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link sc-lst
+            planstep-list-deallocate            \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
         then
 
         link-get-next                       \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst link
@@ -1252,12 +1252,12 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 
     \ Clean up.                             \ reg-to reg-from dom0 | stp-lst asym-lst cng-lst
     changes-list-deallocate                 \ reg-to reg-from dom0 | stp-lst asym-lst
-    swap step-list-deallocate               \ reg-to reg-from dom0 | asym-lst
+    swap planstep-list-deallocate           \ reg-to reg-from dom0 | asym-lst
 
     \ Check list len.
     dup list-get-length                     \ reg-to reg-from dom0 | asym-lst len
     0= if
-        step-list-deallocate                \ reg-to reg-from dom0 |
+        planstep-list-deallocate            \ reg-to reg-from dom0 |
         3drop
         false
         exit
@@ -1266,18 +1266,18 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     \ Randomly choose a step.
     dup list-get-length                     \ reg-to reg-from dom0 | asym-lst len
     random                                  \ reg-to reg-from dom0 | asym-lst inx
-    over step-list-remove-item              \ reg-to reg-from dom0 | asym-lst, stpx t | f
+    over planstep-list-remove-item          \ reg-to reg-from dom0 | asym-lst, stpx t | f
     is-false abort" time not found?"
 
-    swap step-list-deallocate               \ reg-to reg-from dom0 | stpx
+    swap planstep-list-deallocate           \ reg-to reg-from dom0 | stpx
 
     \ Get plan1 reg-from to step initial region.
-    dup step-get-initial-region             \ reg-to reg-from dom0 | stpx stp-i
+    dup planstep-get-initial-region         \ reg-to reg-from dom0 | stpx stp-i
     #3 pick                                 \ reg-to reg-from dom0 | stpx stp-i reg-from
     #3 pick                                 \ reg-to reg-from dom0 | stpx stp-i reg-from dom0
     domain-get-plan-fb                      \ reg-to reg-from dom0 | stpx, plan1' t | f
     is-false if                             \ reg-to reg-from dom0 | stpx
-        step-deallocate
+        planstep-deallocate
         3drop
         false
         exit
@@ -1288,7 +1288,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     plan-link-step-to-result-region     \ reg-to reg-from dom0 | stpx plan1', plan2' t | f
     is-false if                         \ reg-to reg-from dom0 | stpx plan1'
         plan-deallocate
-        step-deallocate
+        planstep-deallocate
         3drop
         false
         exit
@@ -1296,7 +1296,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 
     \ Clean up.                         \ reg-to reg-from dom0 | stpx plan1' plan2'
     swap plan-deallocate
-    swap step-deallocate                \ reg-to reg-from dom0 | plan2'
+    swap planstep-deallocate            \ reg-to reg-from dom0 | plan2'
 
     \ Get plan part 2.
     #3 pick                             \ reg-to reg-from dom0 | plan2' reg-to
