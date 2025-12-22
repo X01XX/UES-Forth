@@ -394,8 +394,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
                 link-get-next
             repeat
-                                                    \ regc0 ret-lst link1 link0 d-link reg-lst
-            region-list-deallocate   \ regc0 ret-lst link1 link0 d-link
+                                        \ regc0 ret-lst link1 link0 d-link reg-lst
+            region-list-deallocate      \ regc0 ret-lst link1 link0 d-link
         then
 
         \ Prep for next cycle.

@@ -200,7 +200,7 @@
     cr ." session-test-domain-asymmetric-chaining - Ok" cr
 ;
 
-: session-test-rlc
+: session-test-path
     \ Init session.
     current-session-new
 
@@ -256,8 +256,8 @@
         drop \ plan-list-corr-deallocate
     then
 
-    region-list-deallocate
-    region-list-deallocate
+    regioncorr-deallocate
+    regioncorr-deallocate
     drop
     
     current-session-deallocate
@@ -269,5 +269,5 @@
     session-test-domain-get-plan-fc
     session-test-domain-get-plan-bc
     session-test-domain-asymmetric-chaining
-\    session-test-rlc
+\    session-test-path
 ;

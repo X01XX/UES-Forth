@@ -4,18 +4,19 @@
     #9 constant session-struct-number-cells
 
 \ Struct fields
-0                                       constant session-header-disp                \ 16-bits [0] struct id [1] use count
-session-header-disp             cell+   constant session-domains-disp               \ A domain-list, kind of like senses.
-session-domains-disp            cell+   constant session-current-domain-disp        \ A domain, or zero before first domain is added.
-session-current-domain-disp     cell+   constant session-needs-disp                 \ A need-list.
-session-needs-disp              cell+   constant session-regioncorrrate-list-disp          \ Base regioncorr + rate, list.
-session-regioncorrrate-list-disp       cell+   constant session-regioncorrrate-fragments-disp     \ Fragments of regioncorrrate-list.
-session-regioncorrrate-fragments-disp  cell+   constant session-regioncorrrate-nq-disp            \ A list of of numbers, starting at zero, then rate Negative Qualities, in descending order.
-session-regioncorrrate-nq-disp  cell+   constant session-regioncorr-lol-by-rate-disp   \ A list of regioncorr lists, corresponding to session-regioncorrrate-nq items, where a plan
-                                                                                    \ can move within without encountering a lower rated fragment.
-                                                                                    \ Within an regioncorr list, GT one item, there are intersections, so there is a path
-                                                                                    \ from one rcl, to another, through an intersection.
-session-regioncorr-lol-by-rate-disp cell+   constant session-pathstep-lol-by-rate-disp  \ A list of pathstep lists, corresponding to session-regioncorrrate-nq items. 
+0                                               constant session-header-disp                        \ 16-bits [0] struct id [1] use count
+session-header-disp                     cell+   constant session-domains-disp                       \ A domain-list, kind of like senses.
+session-domains-disp                    cell+   constant session-current-domain-disp                \ A domain, or zero before first domain is added.
+session-current-domain-disp             cell+   constant session-needs-disp                         \ A need-list.
+session-needs-disp                      cell+   constant session-regioncorrrate-list-disp           \ Base regioncorr + rate, list.
+session-regioncorrrate-list-disp        cell+   constant session-regioncorrrate-fragments-disp      \ Fragments of regioncorrrate-list.
+session-regioncorrrate-fragments-disp   cell+   constant session-regioncorrrate-nq-disp             \ A list of of numbers, starting at zero, then rate Negative Qualities,
+                                                                                                    \ in descending order.
+session-regioncorrrate-nq-disp          cell+   constant session-regioncorr-lol-by-rate-disp        \ A list of regioncorr lists, corresponding to session-regioncorrrate-nq items,
+                                                                                                    \ where a plan can move within without encountering a lower rated fragment.
+                                                                                                    \ Within an regioncorr list, GT one item, there are intersections,
+                                                                                                    \ so there is a path from one rcl, to another, through an intersection.
+session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by-rate-disp          \ A list of pathstep lists, corresponding to session-regioncorrrate-nq items. 
 
 0 value session-mma     \ Storage for session mma instance.
 
@@ -1271,27 +1272,27 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-pathstep-lol-by-rat
 ;
 
 
-\ Return highest rate (number, le 0) with regioncorr-list having interserctions with an rlc.
-: session-find-rate ( rlc1 sess0 -- rate )
+\ Return highest rate (number, le 0) with regc-list having interserctions with a given regc.
+: session-find-rate ( regc1 sess0 -- rate )
     assert-tos-is-session
-    assert-nos-is-list
+    assert-nos-is-regioncorr
 
     \ Find highest rate.
-    dup session-get-regioncorr-lol-by-rate         \ | regclst-lst
-    list-get-links                          \ | regclst-link
+    dup session-get-regioncorr-lol-by-rate  \ | regc-lol
+    list-get-links                          \ | regc-lol-link
 
-    over session-get-regioncorrrate-nq      \ | regclst-link rates-lst
-    list-get-links                          \ | regclst-link rates-link
+    over session-get-regioncorrrate-nq      \ | regc-lol-link rates-lst
+    list-get-links                          \ | regc-lol-link rates-link
 
     \ Check each rate and list.
     begin
         ?dup
     while
-        #3 pick                             \ | regclst-link rates-link rlc1
-        #2 pick link-get-data               \ | regclst-link rates-link rlc-to rlc-from regclst
-        regioncorr-list-intersects                 \ | regclst-link rates-link bool
+        #3 pick                             \ | regc-lol-link rates-link rlc1
+        #2 pick link-get-data               \ | regc-lol-link rates-link regc-to regc-from regclst
+        regioncorr-list-intersects          \ | regc-lol-link rates-link bool
         if
-            link-get-data                   \ | regclst-link rate
+            link-get-data                   \ | regc-lol-link rate
             2nip nip                        \ rate
             exit
         then
@@ -1303,13 +1304,13 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-pathstep-lol-by-rat
     abort
 ;
 
-\ Return a rcl-list for a given rate (number, le 0).
-: session-find-regioncorr-lol-by-rate ( rate1 rlclst0 -- regioncorr-list )
+\ Return a regc-list for a given rate (number, le 0).
+: session-find-regioncorr-list-by-rate ( rate1 rlclst0 -- regioncorr-list )
     \ Check args.
     assert-tos-is-session
 
     \ Find highest rate.
-    dup session-get-regioncorr-lol-by-rate         \ | regclst-lst
+    dup session-get-regioncorr-lol-by-rate  \ | regclst-lst
     list-get-links                          \ | regclst-link
 
     over session-get-regioncorrrate-nq      \ | regclst-link rates-lst
@@ -1337,7 +1338,7 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-pathstep-lol-by-rat
 ;
 
 \ Return a rulcorr list for a given rate (number, le 0).
-: session-find-rulecorr-lol-by-rate ( rate1 rlclst0 -- rlcip-list )
+: session-find-rulecorr-list-by-rate ( rate1 rlc-lol0 -- regc-list )
     \ Check args.
     assert-tos-is-session
 
@@ -1374,52 +1375,52 @@ session-regioncorr-lol-by-rate-disp cell+   constant session-pathstep-lol-by-rat
 ;
 
 \ Return a plan-list-corr for changing state.
-: session-calc-plan ( rlc-to rlc-from sess0 -- pln-corr t | f )
+: session-calc-plan ( regc-to regc-from sess0 -- pln-corr t | f )
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-list
-    assert-3os-is-list
-    cr ." session-calc-plan: start: rlc-from: " over .regioncorr #2 pick .regioncorr cr
+    assert-nos-is-regioncorr
+    assert-3os-is-regioncorr
+    cr ." session-calc-plan: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     #2 pick #2 pick regioncorr-intersects
     abort" session-calc-plan: from/to intersect?"
 
-    #2 pick over                                \ rlc-to rlc-from sess0 | rlc-to sess0
-    session-find-rate                           \ rlc-to rlc-from sess0 | rate-to
-    #2 pick #2 pick                             \ rlc-to rlc-from sess0 | rate-to rlc-from sess0
-    session-find-rate                           \ rlc-to rlc-from sess0 | rate-to rate-from
-    min                                         \ rlc-to rlc-from sess0 | rate-min
+    #2 pick over                                \ regc-to regc-from sess0 | regc-to sess0
+    session-find-rate                           \ regc-to regc-from sess0 | rate-to
+    #2 pick #2 pick                             \ regc-to regc-from sess0 | rate-to regc-from sess0
+    session-find-rate                           \ regc-to regc-from sess0 | rate-to rate-from
+    min                                         \ regc-to regc-from sess0 | rate-min
     cr ." rate: " dup dec. cr
 
-    dup                                         \ rlc-to rlc-from sess0 | rate-min rate-min
-    #2 pick                                     \ rlc-to rlc-from sess0 | rate-min rate-min sess0
-    session-find-regioncorr-lol-by-rate        \ rlc-to rlc-from sess0 | rate-min regclst
-    cr ." regclst: " dup .regioncorr-list cr
+    dup                                         \ regc-to regc-from sess0 | rate-min rate-min
+    #2 pick                                     \ regc-to regc-from sess0 | rate-min rate-min sess0
+    session-find-regioncorr-list-by-rate        \ regc-to regc-from sess0 | rate-min regclst
+    cr ." regc-lst: " dup .regioncorr-list cr
 
-    dup                                         \ rlc-to rlc-from sess0 | rate-min regclst regclst
-    #5 pick swap #5 pick swap                   \ rlc-to rlc-from sess0 | rate-min regclst rlc-to rlc-from regclst
-    regioncorr-list-intersects-both                    \ rlc-to rlc-from sess0 | rate-min regclst, rlcx t | f
-    if                                          \ rlc-to rlc-from sess0 | rate-min regclst rlcx
+    dup                                         \ regc-to regc-from sess0 | rate-min regclst regclst
+    #5 pick swap #5 pick swap                   \ regc-to regc-from sess0 | rate-min regclst regc-to regc-from regclst
+    regioncorr-list-intersects-both             \ regc-to regc-from sess0 | rate-min regclst, rlcx t | f
+    if                                          \ regc-to regc-from sess0 | rate-min regclst rlcx
         cr ." both intersect at: " dup .regioncorr cr
         \ TODO find path, within rlcx.
         \ exit
-        2drop                                   \ rlc-to rlc-from sess0 | rate-min
-    else                                        \ rlc-to rlc-from sess0 | rate-min regclst
+        2drop                                   \ regc-to regc-from sess0 | rate-min
+    else                                        \ regc-to regc-from sess0 | rate-min regclst
         \ TODO rules
-        over                                    \ rlc-to rlc-from sess0 | rate-min regclst rate-min
-        #3 pick                                 \ rlc-to rlc-from sess0 | rate-min regclst rate-min sess0
-        session-find-rulecorr-lol-by-rate      \ rlc-to rlc-from sess0 | rate-min regclst rullstcor-lst
-        #3 pick                                 \ rlc-to rlc-from sess0 | rate-min regclst rullstcor-lst sess
-        session-calc-plan-within-regclst        \ rlc-to rlc-from sess0 | rate-min, plan-corr t | f
+        over                                    \ regc-to regc-from sess0 | rate-min regclst rate-min
+        #3 pick                                 \ regc-to regc-from sess0 | rate-min regclst rate-min sess0
+        session-find-rulecorr-list-by-rate      \ regc-to regc-from sess0 | rate-min regclst rullstcor-lst
+        #3 pick                                 \ regc-to regc-from sess0 | rate-min regclst rullstcor-lst sess
+        session-calc-plan-within-regclst        \ regc-to regc-from sess0 | rate-min, plan-corr t | f
         if
             2nip nip nip                        \ plan-corr
             true
             exit
         then
         
-        drop                                    \ rlc-to rlc-from sess0 | rate-min
+        drop                                    \ regc-to regc-from sess0 | rate-min
     then
-                                                \ rlc-to rlc-from sess0 | rate-min
+                                                \ regc-to regc-from sess0 | rate-min
     2drop 2drop
     false
 ;

@@ -187,7 +187,7 @@ cr ." main.fs"
 
 \ Init array-stacks.
 #2000 link-mma-init
-#502 list-mma-init
+#902 list-mma-init
 #803 region-mma-init
 #500 regioncorr-mma-init
 #404 rule-mma-init
