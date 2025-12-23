@@ -37,8 +37,14 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
 \ Check instance type.
 : is-allocated-session ( addr -- flag )
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    session-id =
+    \ Insure the given addr cannot be an invalid addr.
+    dup session-mma mma-within-array
+    if
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        session-id =
+    else
+        drop false
+    then
 ;
 
 \ Check TOS for session, unconventional, leaves stack unchanged.
@@ -562,9 +568,33 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Check args.
     assert-tos-is-session
 
-    session-get-current-states      \ sta-lst
-    dup .state-list-corr            \ sta-lst
-    list-deallocate
+    dup session-get-domains         \ sess0 dom-lst
+    list-get-links                  \ sess0 d-link
+    ." ("
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ sess0 d-link domx
+        #2 pick                     \ sess0 d-link domx sess0
+        session-set-current-domain  \ sess0 d-link
+
+        dup link-get-data           \ sess0 d-link domx
+        domain-get-current-state    \ sess0 d-link d-sta
+        .value                      \ sess0 d-link
+
+        link-get-next               \ sess0 d-link-nxt
+        dup 0<> if
+            space
+        then
+    repeat
+                                    \ sess0
+    drop
+    ." )"
+
+\    session-get-current-states      \ sta-lst
+\    dup .state-list-corr            \ sta-lst
+\    list-deallocate
 ;
 
 \ Print a list of reachable regions.
@@ -1124,12 +1154,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 \ Return the session domain list.
-: session-get-domain-list ( -- link )
+: cur-session-get-domain-list ( -- link )
     current-session     \ sess
     session-get-domains \ dom-lst
 ;
 
-' session-get-domain-list to session-get-domain-list-xt
+' cur-session-get-domain-list to cur-session-get-domain-list-xt
 
 \ Return the rate and rlc list for a path to satisfy a desired regioncorr.
 : session-rlc-rate ( rlc1 sess0 -- rlc rate )
@@ -1337,8 +1367,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     abort
 ;
 
-\ Return a rulcorr list for a given rate (number, le 0).
-: session-find-rulecorr-list-by-rate ( rate1 rlc-lol0 -- regc-list )
+\ Return a pathstep list for a given rate (number, le 0).
+: session-find-pathstep-list-by-rate ( rate1 rlc-lol0 -- regc-list )
     \ Check args.
     assert-tos-is-session
 
@@ -1370,17 +1400,34 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     abort
 ;
 
-: session-calc-plan-within-regclst  ( regclst2 rullstcor-lst1 sess0 -- plan t | f )
+\ Calculate a path, given a rate's pathstep list.
+: session-calc-path-using-pathsteps-fc ( regc-to regc-from pthstp-lst1 sess0 -- pthstp-lst t | f )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-pathstep-list
+    assert-3os-is-regioncorr
+    assert-4os-is-regioncorr
 
+    \ Get changes-needed.
+    #3 pick                         \ regc-to regc-from pthstp-lst1 sess0 regc-to
+    #3 pick                         \ regc-to regc-from pthstp-lst1 sess0 regc-to regc-from
+    changescorr-new-regc-to-regc    \ regc-to regc-from pthstp-lst1 sess0 cngsc-needed
+    cr ." changes needed: " dup .changescorr cr
+
+    changescorr-deallocate
+
+    2drop 2drop
+    false
 ;
 
 \ Return a plan-list-corr for changing state.
-: session-calc-plan ( regc-to regc-from sess0 -- pln-corr t | f )
+: session-calc-path ( regc-to regc-from sess0 -- pln-corr t | f )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-regioncorr
     assert-3os-is-regioncorr
     cr ." session-calc-plan: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
+\    cr ." at 3: " .stack-structs-xt execute cr
 
     #2 pick #2 pick regioncorr-intersects
     abort" session-calc-plan: from/to intersect?"
@@ -1391,35 +1438,43 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     session-find-rate                           \ regc-to regc-from sess0 | rate-to rate-from
     min                                         \ regc-to regc-from sess0 | rate-min
     cr ." rate: " dup dec. cr
-
+    cr ." at 4: " .stack-structs-xt execute cr
     dup                                         \ regc-to regc-from sess0 | rate-min rate-min
     #2 pick                                     \ regc-to regc-from sess0 | rate-min rate-min sess0
-    session-find-regioncorr-list-by-rate        \ regc-to regc-from sess0 | rate-min regclst
+    session-find-regioncorr-list-by-rate        \ regc-to regc-from sess0 | rate-min regc-lst
     cr ." regc-lst: " dup .regioncorr-list cr
-
-    dup                                         \ regc-to regc-from sess0 | rate-min regclst regclst
-    #5 pick swap #5 pick swap                   \ regc-to regc-from sess0 | rate-min regclst regc-to regc-from regclst
-    regioncorr-list-intersects-both             \ regc-to regc-from sess0 | rate-min regclst, rlcx t | f
-    if                                          \ regc-to regc-from sess0 | rate-min regclst rlcx
+\   cr ." at 5: " .stack-structs-xt execute cr
+    dup                                         \ regc-to regc-from sess0 | rate-min regc-lst regc-lst
+    #5 pick swap #5 pick swap                   \ regc-to regc-from sess0 | rate-min regc-lst regc-to regc-from regclst
+    regioncorr-list-intersects-both             \ regc-to regc-from sess0 | rate-min regc-lst, rlcx t | f
+    if                                          \ regc-to regc-from sess0 | rate-min regc-lst rlcx
         cr ." both intersect at: " dup .regioncorr cr
-        \ TODO find path, within rlcx.
+        \ TODO make pathstep list, with single pathstep, regc-from to regc-to.
+        \ true
         \ exit
         2drop                                   \ regc-to regc-from sess0 | rate-min
-    else                                        \ regc-to regc-from sess0 | rate-min regclst
+\        cr ." at 5.4: " .stack-structs-xt execute cr
+    else                                        \ regc-to regc-from sess0 | rate-min regc-lst
         \ TODO rules
-        over                                    \ regc-to regc-from sess0 | rate-min regclst rate-min
-        #3 pick                                 \ regc-to regc-from sess0 | rate-min regclst rate-min sess0
-        session-find-rulecorr-list-by-rate      \ regc-to regc-from sess0 | rate-min regclst rullstcor-lst
-        #3 pick                                 \ regc-to regc-from sess0 | rate-min regclst rullstcor-lst sess
-        session-calc-plan-within-regclst        \ regc-to regc-from sess0 | rate-min, plan-corr t | f
+        over                                    \ regc-to regc-from sess0 | rate-min regc-lst rate-min
+
+        #3 pick                                 \ regc-to regc-from sess0 | rate-min regc-lst rate-min sess0
+        session-find-pathstep-list-by-rate      \ regc-to regc-from sess0 | rate-min regc-lst pthstp-lst
+        
+        #5 pick swap                            \ regc-to regc-from sess0 | rate-min regc-lst regc-to pthstp-lst
+        #5 pick swap                            \ regc-to regc-from sess0 | rate-min regc-lst regc-to regc-from pthstp-lst
+        #5 pick                                 \ regc-to regc-from sess0 | rate-min regc-lst regc-to regc-from pthstp-lst sess
+        session-calc-path-using-pathsteps-fc    \ regc-to regc-from sess0 | rate-min regc-lst, pthstp-lst t | f
         if
-            2nip nip nip                        \ plan-corr
+            2nip 2nip nip                       \ plan-corr
             true
+\            cr ." at 5.8: " .stack-structs-xt execute cr
             exit
         then
-        
         drop                                    \ regc-to regc-from sess0 | rate-min
+        
     then
+\    cr ." at 6: " .stack-structs-xt execute cr
                                                 \ regc-to regc-from sess0 | rate-min
     2drop 2drop
     false

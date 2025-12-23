@@ -31,6 +31,16 @@
     list-push
 ;
 
+\ Push a changes instance into a changes-list.
+: changes-list-push-end ( cngs1 list0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-changes
+
+    over struct-inc-use-count
+    list-push-end
+;
+
 \ Check if tos is a non-empty list, with the first item being a changes struct.
 : assert-tos-is-changes-list ( tos -- )
     assert-tos-is-list

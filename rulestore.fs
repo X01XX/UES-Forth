@@ -27,13 +27,13 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Check instance type.
 : is-allocated-rulestore ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup rulestore-mma mma-within-array 0=
+    dup rulestore-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        rulestore-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    rulestore-id =
 ;
 
 \ Check TOS for rulestore, unconventional, leaves stack unchanged.

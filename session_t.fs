@@ -217,43 +217,45 @@
     current-session                                 \ sess
     s" (X1X1 01X1X)" regioncorr-from-string-a \ sess rlc
     -1 #2 rate-new                                  \ sess rlc rt
-    regioncorrrate-new                                     \ sess rlc-rt
+    regioncorrrate-new                              \ sess rlc-rt
     \ cr ." regioncorrrate: " dup .regioncorrrate cr
-    over session-add-regioncorrrate                        \ sess
+    over session-add-regioncorrrate                  \ sess
 
-    s" (1XX1 01X1X)" regioncorr-from-string-a \ sess rlc
+    s" (1XX1 01X1X)" regioncorr-from-string-a       \ sess rlc
     #-2 0 rate-new                                  \ sess
-    regioncorrrate-new                                     \ sess rlc-rt
+    regioncorrrate-new                              \ sess rlc-rt
     \ cr ." regioncorrrate: " dup .regioncorrrate cr
-    over session-add-regioncorrrate                        \ sess
+    over session-add-regioncorrrate                 \ sess
 
     0 over session-find-domain                      \ sess, dom t | f
     is-false abort" domain 0 not found?"
     over session-set-current-domain                 \ sess
 
     \ 0
-\    s" (0011 01111)" regioncorr-from-string-a \ sess rlc-to
-\    s" (0000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
+\    s" (0011 01111)" regioncorr-from-string-a       \ sess rlc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
 
     \ -1
-    s" (0111 01111)" regioncorr-from-string-a \ sess rlc-to
-    s" (1000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
+    s" (0111 01111)" regioncorr-from-string-a       \ sess rlc-to
+    s" (1000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
 
     \ -2
-\    s" (1001 01111)" regioncorr-from-string-a \ sess rlc-to
-\    s" (0000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
+\    s" (1001 01111)" regioncorr-from-string-a       \ sess rlc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
 
     \ -3
-\    s" (1101 01111)" regioncorr-from-string-a \ sess rlc-to
-\    s" (0000 01111)" regioncorr-from-string-a \ sess rlc-to rlc-from
+\    s" (1101 01111)" regioncorr-from-string-a       \ sess rlc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
 
 \    #2 pick .session
 
     2dup                                            \ sess rlc-to rlc-from rlc-to rlc-from
     #4 pick                                         \ sess rlc-to rlc-from rlc-to rlc-from sess
-    session-calc-plan                               \ sess rlc-to rlc-from, plnlc t | f
+    cr ." at 1: " .stack-structs-xt execute cr
+    session-calc-path                               \ sess rlc-to rlc-from, plnlc t | f
+    cr ." at 2: " .stack-structs-xt execute cr
     if
-        drop \ plan-list-corr-deallocate
+        pathstep-list-deallocate
     then
 
     regioncorr-deallocate
@@ -262,7 +264,7 @@
     
     current-session-deallocate
 
-    cr ." session-test-rlc - Ok" cr
+    cr ." session-test-path - Ok" cr
 ;
 
 : session-tests

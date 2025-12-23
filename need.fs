@@ -29,13 +29,13 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Check instance type.
 : is-allocated-need ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup need-mma mma-within-array 0=
+    dup need-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        need-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    need-id =
 ;
 
 \ Check TOS for need, unconventional, leaves stack unchanged.

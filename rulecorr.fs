@@ -28,13 +28,13 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 \ Check instance type.
 : is-allocated-rulecorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup rulecorr-mma mma-within-array 0=
+    dup rulecorr-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        rulecorr-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    rulecorr-id =
 ;
 
 \ Check TOS for rulecorr, unconventional, leaves stack unchanged.
@@ -116,7 +116,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 
     rulecorr-get-list               \ rul-lst
     list-get-links                  \ rc-link
-    session-get-domain-list-xt      \ rc-link xt
+    cur-session-get-domain-list-xt      \ rc-link xt
     execute                         \ rc-link dom-lst 
     list-get-links                  \ rc-link d-link
     ." ("
@@ -202,7 +202,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
     \ Prep for loop.
     rulecorr-get-list               \ reg-lst rul-lst
     list-get-links                  \ reg-lst rc-link
-    session-get-domain-list-xt      \ reg-lst rc-link xt
+    cur-session-get-domain-list-xt      \ reg-lst rc-link xt
     execute                         \ reg-lst rc-link dom-lst 
     list-get-links                  \ reg-lst rc-link d-link
 
@@ -240,7 +240,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
     \ Prep for loop.
     rulecorr-get-list               \ reg-lst rul-lst
     list-get-links                  \ reg-lst rc-link
-    session-get-domain-list-xt      \ reg-lst rc-link xt
+    cur-session-get-domain-list-xt      \ reg-lst rc-link xt
     execute                         \ reg-lst rc-link dom-lst 
     list-get-links                  \ reg-lst rc-link d-link
 

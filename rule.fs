@@ -30,13 +30,13 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : is-allocated-rule ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup rule-mma mma-within-array 0=
+    dup rule-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        rule-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    rule-id =
 ;
 
 \ Check TOS for rule, unconventional, leaves stack unchanged.

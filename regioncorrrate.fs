@@ -33,13 +33,13 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Check instance type.
 : is-allocated-regioncorrrate ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup regioncorrrate-mma mma-within-array 0=
+    dup regioncorrrate-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        regioncorrrate-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    regioncorrrate-id =
 ;
 
 \ Check TOS for regioncorrrate, unconventional, leaves stack unchanged.

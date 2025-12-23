@@ -19,7 +19,7 @@
 
 ' xtabort value session-get-number-domains-xt
 
-' xtabort value session-get-domain-list-xt
+' xtabort value cur-session-get-domain-list-xt
 
 ' xtabort value session-calc-max-regions-xt
 
@@ -90,6 +90,12 @@
 ' xtabort value regioncorr-list-copy-except-xt
 
 ' xtabort value regioncorr-list-deallocate-xt
+
+' xtabort value assert-tos-is-regioncorr-xt
+
+' xtabort value assert-nos-is-regioncorr-xt
+
+' xtabort value regioncorr-get-list-xt
 
 
 

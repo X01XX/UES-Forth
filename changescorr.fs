@@ -28,13 +28,13 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Check instance type.
 : is-allocated-changescorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup changescorr-mma mma-within-array 0=
+    dup changescorr-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        changescorr-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    changescorr-id =
 ;
 
 \ Check TOS for changescorr, unconventional, leaves stack unchanged.
@@ -117,7 +117,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
     changescorr-get-list            \ lst
     list-get-links                  \ link0
-    session-get-domain-list-xt      \ link0 xt
+    cur-session-get-domain-list-xt      \ link0 xt
     execute                         \ link0 dom-lst 
     list-get-links                  \ link0 d-link
     ." ("
@@ -227,4 +227,46 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
                                                 \ link
     drop
     false
+;
+
+\ Return changes needed to traverse from one regioncorr to another.
+: changescorr-new-regc-to-regc ( regc-to regc-from -- cngsc )
+    \ Check args.
+    assert-tos-is-regioncorr-xt execute
+    assert-nos-is-regioncorr-xt execute
+
+    \ Init changesscorr list.
+    list-new -rot                   \ cngsc-lst regc-to regc-from
+
+    \ Prep for loop.
+    regioncorr-get-list-xt execute list-get-links swap      \ cngs-lst link-from regc-to
+    regioncorr-get-list-xt execute list-get-links swap      \ cngs-lst link-to link-from
+    cur-session-get-domain-list-xt execute list-get-links   \ cngs-lst link-to link-from dom-link
+
+    begin
+        ?dup
+    while
+
+        \ Prep for current list items.
+        #2 pick link-get-data           \ cngs-lst link-to link-from dom-link reg-to
+        #2 pick link-get-data           \ cngs-lst link-to link-from dom-link reg-to reg-from
+        #2 pick link-get-data           \ cngs-lst link-to link-from dom-link reg-to reg-from domx
+        current-session                 \ cngs-lst link-to link-from dom-link reg-to reg-from domx sess
+        session-set-current-domain-xt   \ cngs-lst link-to link-from dom-link reg-to reg-from domx sess xt
+        execute                         \ cngs-lst link-to link-from dom-link reg-to reg-from
+
+        \ Get changes needed for item, store same.
+        changes-new-region-to-region    \ cngs-lst link-to link-from dom-link cngs
+        #4 pick                         \ cngs-lst link-to link-from dom-link cngs cngs-lst
+        changes-list-push-end           \ cngs-lst link-to link-from dom-link
+
+        \ Inc links.
+        link-get-next rot
+        link-get-next rot
+        link-get-next rot
+    repeat
+                                        \ cngs-lst link-to link-from
+    2drop                               \ cngs-lst
+
+    changescorr-new
 ;

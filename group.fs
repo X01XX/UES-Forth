@@ -36,13 +36,13 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Check instance type.
 : is-allocated-group ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup group-mma mma-within-array 0=
+    dup group-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        group-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    group-id =
 ;
 
 \ Check TOS for group, unconventional, leaves stack unchanged.

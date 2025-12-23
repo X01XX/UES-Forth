@@ -33,13 +33,13 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Check instance type.
 : is-allocated-sample ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup sample-mma mma-within-array 0=
+    dup sample-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        sample-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    sample-id =
 ;
 
 \ Check TOS for sample, unconventional, leaves stack unchanged.

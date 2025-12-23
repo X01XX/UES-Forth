@@ -34,13 +34,13 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Check instance type.
 : is-allocated-planstep ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup planstep-mma mma-within-array 0=
+    dup planstep-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        planstep-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    planstep-id =
 ;
 
 \ Check TOS for planstep, unconventional, leaves stack unchanged.

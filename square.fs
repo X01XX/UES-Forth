@@ -33,13 +33,13 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Check instance type.
 : is-allocated-square ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup square-mma mma-within-array 0=
+    dup square-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        square-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    square-id =
 ;
 
 \ Check TOS for square, unconventional, leaves stack unchanged.

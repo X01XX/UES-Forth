@@ -28,13 +28,13 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Check instance type.
 : is-allocated-plan ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup plan-mma mma-within-array 0=
+    dup plan-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        plan-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    plan-id =
 ;
 
 \ Check TOS for plan, unconventional, leaves stack unchanged.

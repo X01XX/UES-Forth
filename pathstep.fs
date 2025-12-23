@@ -1,6 +1,6 @@
 \ Implement a pathstep struct and functions.
 \
-\ A pathstep may be added to a pathstep list in a plan.
+\ A pathstep may be added to a pathstep list to make a path-plan.
 
 #53197 constant pathstep-id
     #5 constant pathstep-struct-number-cells
@@ -33,13 +33,13 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Check instance type.
 : is-allocated-pathstep ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup pathstep-mma mma-within-array 0=
+    dup pathstep-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        pathstep-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    pathstep-id =
 ;
 
 \ Check TOS for pathstep, unconventional, leaves stack unchanged.

@@ -28,13 +28,13 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Check instance type.
 : is-allocated-regioncorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup regioncorr-mma mma-within-array 0=
+    dup regioncorr-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        regioncorr-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    regioncorr-id =
 ;
 
 \ Check TOS for regioncorr, unconventional, leaves stack unchanged.
@@ -46,6 +46,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     then
 ;
 
+' assert-tos-is-regioncorr to assert-tos-is-regioncorr-xt
+
 \ Check NOS for regioncorr, unconventional, leaves stack unchanged.
 : assert-nos-is-regioncorr ( arg1 arg0 -- arg1 arg0 )
     over is-allocated-regioncorr
@@ -55,8 +57,19 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     then
 ;
 
+' assert-nos-is-regioncorr to assert-nos-is-regioncorr-xt
+
 \ Check 3OS for regioncorr, unconventional, leaves stack unchanged.
 : assert-3os-is-regioncorr ( arg2 arg1 arg0 -- arg1 arg0 )
+    #2 pick is-allocated-regioncorr
+    is-false if
+        s" 3OS is not an allocated regioncorr"
+        .abort-xt execute
+    then
+;
+
+\ Check 4OS for regioncorr, unconventional, leaves stack unchanged.
+: assert-4os-is-regioncorr ( 4os 3os  arg0 -- arg1 arg0 )
     #2 pick is-allocated-regioncorr
     is-false if
         s" 3OS is not an allocated regioncorr"
@@ -74,6 +87,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     regioncorr-list-disp +    \ Add offset.
     @                         \ Fetch the field.
 ;
+
+' regioncorr-get-list to regioncorr-get-list-xt
 
 \ Set the first field from a region instance, use only in this file.
 : _regioncorr-set-list ( lst1 regc0 -- )
@@ -118,7 +133,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     regioncorr-get-list       \ lst
     list-get-links                  \ link0
-    session-get-domain-list-xt      \ link0 xt
+    cur-session-get-domain-list-xt      \ link0 xt
     execute                         \ link0 dom-lst 
     list-get-links                  \ link0 d-link
     ." ("
@@ -174,7 +189,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap \ link0 regc1
     regioncorr-get-list list-get-links swap \ link1 link0
-    session-get-domain-list-xt execute
+    cur-session-get-domain-list-xt execute
     list-get-links                          \ link1 link0 d-link
 
     begin
@@ -222,7 +237,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ link0 regc1
     regioncorr-get-list list-get-links swap   \ link1 link0
-    session-get-domain-list-xt execute
+    cur-session-get-domain-list-xt execute
     list-get-links                          \ link1 link0 d-link
 
     begin
@@ -271,7 +286,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ link0 regc1
     regioncorr-get-list list-get-links swap   \ link1 link0
-    session-get-domain-list-xt execute
+    cur-session-get-domain-list-xt execute
     list-get-links                          \ link1 link0 d-link
 
     begin
@@ -345,7 +360,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ regc0 ret-lst link0 regc1
     regioncorr-get-list list-get-links swap   \ regc0 ret-lst link1 link0
-    session-get-domain-list-xt execute
+    cur-session-get-domain-list-xt execute
     list-get-links                          \ regc0 ret-lst link1 link0 d-link
 
     begin
@@ -430,7 +445,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Process each region, skip invalid regions.
                                             \ addr0 cnt0
     list-new                                \ addr0 cnt0 ret-lst
-    session-get-domain-list-xt execute
+    cur-session-get-domain-list-xt execute
     list-get-links                          \ addr0 cnt0 ret-lst d-link
     begin
         ?dup
@@ -575,7 +590,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ ret-lst link0 regc1
     regioncorr-get-list list-get-links swap   \ ret-lst link1 link0
-    session-get-domain-list-xt execute
+    cur-session-get-domain-list-xt execute
     list-get-links                          \ ret-lst link1 link0 d-link
 
     begin
@@ -629,7 +644,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     regioncorr-get-list list-get-links swap   \ ret-lst link0 sta-regc1
     list-get-links swap                             \ ret-lst link1 link0
     swap list-get-links                             \ ret-lst link1 link0
-    session-get-domain-list-xt
+    cur-session-get-domain-list-xt
     execute                         \ ret-lst link1 link0 dom-lst
     list-get-links                  \ ret-lst link1 link0 d-link
 

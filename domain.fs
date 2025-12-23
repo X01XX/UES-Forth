@@ -23,13 +23,13 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 \ Check instance type.
 : is-allocated-domain ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup domain-mma mma-within-array 0=
+    dup domain-mma mma-within-array
     if
-        drop false exit
+        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        domain-id =
+    else
+        drop false
     then
-
-    struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-    domain-id =
 ;
 
 \ Check TOS for domain, unconventional, leaves stack unchanged.
@@ -1385,4 +1385,3 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 ;
 
 ' domain-set-current to domain-set-current-xt
-
