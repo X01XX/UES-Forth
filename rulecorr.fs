@@ -38,7 +38,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 ;
 
 \ Check TOS for rulecorr, unconventional, leaves stack unchanged.
-: assert-tos-is-rulecorr ( arg0 -- arg0 )
+: assert-tos-is-rulecorr ( tos -- tos )
     dup is-allocated-rulecorr
     is-false if
         s" TOS is not an allocated rulecorr"
@@ -47,7 +47,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 ;
 
 \ Check NOS for rulecorr, unconventional, leaves stack unchanged.
-: assert-nos-is-rulecorr ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-rulecorr ( nos tos -- nos tos )
     over is-allocated-rulecorr
     is-false if
         s" NOS is not an allocated rulecorr"
@@ -56,7 +56,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 ;
 
 \ Check 3OS for rulecorr, unconventional, leaves stack unchanged.
-: assert-3os-is-rulecorr ( arg2 arg1 arg0 -- arg1 arg0 )
+: assert-3os-is-rulecorr ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-rulecorr
     is-false if
         s" 3OS is not an allocated rulecorr"

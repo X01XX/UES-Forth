@@ -6,7 +6,7 @@
     #5 constant pathstep-struct-number-cells
 
 \ Struct fields.
-0                                       constant pathstep-header-disp           \ id (16) use count (16) number unwanted changes (8)
+0                                       constant pathstep-header-disp           \ id (16) use count (16) number unwanted changes (8) will change frequently.
 pathstep-header-disp            cell+   constant pathstep-rules-disp            \ A ruleicorr instance addr.
 \ Store frequently used calculated fields, to decrease cycles and memory allocation/deallocation.
 pathstep-rules-disp             cell+   constant pathstep-initial-regions-disp  \ A regioncorr instance addr.
@@ -43,7 +43,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 ;
 
 \ Check TOS for pathstep, unconventional, leaves stack unchanged.
-: assert-tos-is-pathstep ( arg0 -- arg0 )
+: assert-tos-is-pathstep ( tos -- tos )
     dup is-allocated-pathstep
     is-false if
         s" TOS is not an allocated pathstep"
@@ -52,7 +52,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 ;
 
 \ Check NOS for pathstep, unconventional, leaves stack unchanged.
-: assert-nos-is-pathstep ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-pathstep ( nos tos -- nos tos )
     over is-allocated-pathstep
     is-false if
         s" NOS is not an allocated pathstep"
@@ -242,3 +242,21 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     swap pathstep-get-initial-regions   \ regc-r regc-i
     regioncorr-intersects               \ bool
 ;
+
+\ Calc, and set' the number unwanted changes, given the needed changes.
+: pathstep-calc-number-unwanted-changes ( cngsc-needed1 pthstp0 -- )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-changescorr
+
+    swap                                    \ pthstp0 cngsc-needed1
+    changescorr-invert dup                  \ pthstp0 cngsc-invert cngsc-invert
+    #2 pick pathstep-get-changes            \ pthstp0 cngsc-invert cngsc-invert pthstp0-cngsc
+    changescorr-intersection                \ pthstp0 cngsc-invert cngsc-int
+    swap changescorr-deallocate             \ pthstp0 cngsc-int
+    dup changescorr-number-changes          \ pthstp0 cngsc-int num
+    swap changescorr-deallocate             \ pthstp0 num
+    swap                                    \ num pthstp0
+    pathstep-set-number-unwanted-changes    \
+;
+

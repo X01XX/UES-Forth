@@ -43,7 +43,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 ;
 
 \ Check TOS for square, unconventional, leaves stack unchanged.
-: assert-tos-is-square ( arg0 -- arg0 )
+: assert-tos-is-square ( tos -- tos )
     dup is-allocated-square
     is-false if
         s" TOS is not an allocated square"
@@ -52,7 +52,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 ;
 
 \ Check NOS for square, unconventional, leaves stack unchanged.
-: assert-nos-is-square ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-square ( nos tos -- nos tos )
     over is-allocated-square
     is-false if
         s" NOS is not an allocated square"
@@ -61,7 +61,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 ;
 
 \ Check nos is a valid pn value.
-: assert-nos-is-pn ( pn1 arg0 -- )
+: assert-nos-is-pn ( nos tos -- nos tos )
     over dup 1 < swap
     #3 > or
     if

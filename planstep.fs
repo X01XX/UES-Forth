@@ -44,7 +44,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 ;
 
 \ Check TOS for planstep, unconventional, leaves stack unchanged.
-: assert-tos-is-planstep ( arg0 -- arg0 )
+: assert-tos-is-planstep ( tos -- tos )
     dup is-allocated-planstep
     is-false if
         s" TOS is not an allocated planstep"
@@ -53,7 +53,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 ;
 
 \ Check NOS for planstep, unconventional, leaves stack unchanged.
-: assert-nos-is-planstep ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-planstep ( nos tos -- nos tos )
     over is-allocated-planstep
     is-false if
         s" NOS is not an allocated planstep"

@@ -67,7 +67,7 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Check TOS for list, unconventional, leaves stack unchanged.
-: assert-tos-is-list ( lst0 -- lst0 )
+: assert-tos-is-list ( tos -- tos )
     dup is-allocated-list
     if
     else
@@ -77,7 +77,7 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Check NOS for list, unconventional, leaves stack unchanged.
-: assert-nos-is-list ( lst1 arg0 -- lst1 arg0 )
+: assert-nos-is-list ( nos tos -- nos tos )
     over is-allocated-list
     if
     else
@@ -87,7 +87,7 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Check 3OS for list, unconventional, leaves stack unchanged.
-: assert-3os-is-list ( lst2 arg1 arg0 -- lst2 arg1 arg0 )
+: assert-3os-is-list ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-list
     if
     else
@@ -175,6 +175,15 @@ list-header-disp    cell+   constant list-links-disp
 
     list-get-length
     0=
+;
+
+\ Return true if a list is not empty.
+: list-is-not-empty ( list0 -- flag )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-get-length
+    0<>
 ;
 
 \ Add data to the end of a list.
@@ -843,6 +852,8 @@ list-header-disp    cell+   constant list-links-disp
 \ e.g. TOS is a-list, with link-data = number.
 \ [ ' < ] literal over list-sort    \ Descending result.
 \ [ ' > ] literal over list-sort    \ Ascending result.
+\
+\ xt signature is ( link-data link-data -- flag )
 : list-sort ( xt list -- )
     \ Check args.
     assert-tos-is-list

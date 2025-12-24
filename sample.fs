@@ -43,7 +43,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 ;
 
 \ Check TOS for sample, unconventional, leaves stack unchanged.
-: assert-tos-is-sample ( smpl0 -- smpl0 )
+: assert-tos-is-sample ( tos -- tos )
     dup is-allocated-sample
     is-false if
         s" TOS is not an allocated sample"
@@ -52,7 +52,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 ;
 
 \ Check NOS for sample, unconventional, leaves stack unchanged.
-: assert-nos-is-sample ( smpl1 arg0 -- smpl1 arg0 )
+: assert-nos-is-sample ( nos tos -- nos tos )
     over is-allocated-sample
     is-false if
         s" NOS is not an allocated sample"
@@ -61,7 +61,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 ;
 
 \ Check 3OS for sample, unconventional, leaves stack unchanged.
-: assert-3os-is-sample ( smpl2 arg1 arg0 -- smpl2 arg1 arg0 )
+: assert-3os-is-sample ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-sample
     is-false if
         s" 3OS is not an allocated sample"

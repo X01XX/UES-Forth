@@ -36,7 +36,7 @@ link-next-disp      cell+   constant link-data-disp
 ;
 
 \ Check TOS for link, unconventional, leaves stack unchanged.
-: assert-tos-is-link ( arg0 -- arg0 )
+: assert-tos-is-link ( tos -- tos )
     dup is-allocated-link
     0= if
         s" TOS is not an allocated link."

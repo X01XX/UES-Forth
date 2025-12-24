@@ -41,7 +41,7 @@ action-groups-disp               cell+  constant action-function-disp           
 ;
 
 \ Check TOS for action, unconventional, leaves stack unchanged.
-: assert-tos-is-action ( arg0 -- arg0 )
+: assert-tos-is-action ( tos -- tos )
     dup is-allocated-action
     is-false if
         s" TOS is not an allocated action"
@@ -52,7 +52,7 @@ action-groups-disp               cell+  constant action-function-disp           
 ' assert-tos-is-action to assert-tos-is-action-xt
 
 \ Check NOS for action, unconventional, leaves stack unchanged.
-: assert-nos-is-action ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-action ( nos tos -- nos tos )
     over is-allocated-action
     is-false if
         s" NOS is not an allocated action"
@@ -63,7 +63,7 @@ action-groups-disp               cell+  constant action-function-disp           
 ' assert-nos-is-action to assert-nos-is-action-xt
 
 \ Check 3OS for action, unconventional, leaves stack unchanged.
-: assert-3os-is-action ( arg2 arg1 arg0 -- arg2 arg1 arg0 )
+: assert-3os-is-action ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-action
     is-false if
         s" 3OS is not an allocated action"

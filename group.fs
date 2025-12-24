@@ -46,7 +46,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 ;
 
 \ Check TOS for group, unconventional, leaves stack unchanged.
-: assert-tos-is-group ( arg0 -- arg0 )
+: assert-tos-is-group ( tos -- tos )
     dup is-allocated-group
     is-false if
         s" TOS is not an allocated group"
@@ -55,7 +55,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 ;
 
 \ Check NOS for group, unconventional, leaves stack unchanged.
-: assert-nos-is-group ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-group ( nos tos -- nos tos )
     over is-allocated-group
     is-false if
         s" NOS is not an allocated group"

@@ -38,7 +38,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 ;
 
 \ Check TOS for changescorr, unconventional, leaves stack unchanged.
-: assert-tos-is-changescorr ( arg0 -- arg0 )
+: assert-tos-is-changescorr ( tos -- tos )
     dup is-allocated-changescorr
     is-false if
         s" TOS is not an allocated changescorr"
@@ -47,7 +47,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 ;
 
 \ Check NOS for changescorr, unconventional, leaves stack unchanged.
-: assert-nos-is-changescorr ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-changescorr ( nos tos -- nos tos )
     over is-allocated-changescorr
     is-false if
         s" NOS is not an allocated changescorr"
@@ -56,7 +56,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 ;
 
 \ Check 3OS for changescorr, unconventional, leaves stack unchanged.
-: assert-3os-is-changescorr ( arg2 arg1 arg0 -- arg1 arg0 )
+: assert-3os-is-changescorr ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-changescorr
     is-false if
         s" 3OS is not an allocated changescorr"
@@ -268,5 +268,107 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
                                         \ cngs-lst link-to link-from
     2drop                               \ cngs-lst
 
+    changescorr-new
+;
+
+\ Return the number of changes in a changescorr.
+: changescorr-number-changes ( cngsc0 -- u )
+    \ Check arg.
+    assert-tos-is-changescorr
+
+    \ Init counter.
+    0 swap                      \ cnt cngsc
+
+    \ Prep for loop.
+    changescorr-get-list        \ cnt cng-lst
+    list-get-links              \ cnt link
+
+    begin
+        ?dup
+    while
+        \ Get the number of changes in one item.
+        dup link-get-data       \ cnt link cngs
+        changes-number-changes  \ cnt link num
+
+        \ Add to change counter.
+        rot                     \ link num cnt
+        +                       \ link cnt+
+        swap                    \ cnt+ link
+
+        link-get-next
+    repeat
+;
+
+\ Return the inversion of a changescorr.
+: changescorr-invert ( cngsc0 -- cngsc )
+    \ Check arg.
+    assert-tos-is-changescorr
+
+    \ Init changes list.
+    list-new swap           \ cngs-lst cngsc0
+
+    \ Prep for loop.
+    changescorr-get-list list-get-links \ cngs-lst cngs-link
+    cur-session-get-domain-list-xt      \ cngs-lst cngs-link xt
+    execute list-get-links              \ cngs-lst cngs-link d-link
+
+    begin
+        ?dup
+    while
+
+        \ Set current domain.
+        dup link-get-data               \ cngs-lst cngs-link d-link domx
+        current-session                 \ cngs-lst cngs-link d-link domx sess
+        session-set-current-domain-xt   \ cngs-lst cngs-link d-link domx sess xt
+        execute                         \ cngs-lst cngs-link d-link
+
+        \ Get changes item.
+        over link-get-data              \ cngs-lst cngs-link d-link cngsx
+
+        \ Invert changes item.
+        changes-invert                  \ cngs-lst cngs-link d-link cngs-inv
+
+        \ Add to list.
+        #3 pick                         \ cngs-lst cngs-link d-link cngs-inv cngs-lst
+        changes-list-push-end           \ cngs-lst cngs-link d-link
+
+        link-get-next swap
+        link-get-next swap
+    repeat
+                                        \ cngs-lst cngs-link
+    drop                                \ cngs-lst
+    changescorr-new
+;
+
+\ Return the intersection of two changescorr.
+: changescorr-intersection ( cngsc1 cngsc0 -- cngsc )
+    \ Check args.
+    assert-tos-is-changescorr
+    assert-nos-is-changescorr
+
+    \ Init changes list.
+    list-new -rot                               \ cngs-lst cngsc1 cngsc0
+    changescorr-get-list list-get-links swap
+    changescorr-get-list list-get-links         \ cngs-lst link0 link1 ( order of links does not matter )
+
+    begin
+        ?dup
+    while
+        \ Get changes items.
+        over link-get-data                      \ cngs-lst link0 link1 cngsc0
+        over link-get-data                      \ cngs-lst link0 link1 cngsc0 cngsc1
+
+        \ Intersect changes items.
+        changes-intersection                    \ cngs-lst link0 link1 cngs-int
+
+        \ Store intersection.
+        #3 pick                                 \ cngs-lst link0 link1 cngs-int cngs-lst
+        changes-list-push-end                   \ cngs-lst link0 link1
+
+        link-get-next swap
+        link-get-next
+    repeat
+                                                \ cngs-lst link0
+    drop                                        \ cngs-lst
     changescorr-new
 ;

@@ -43,7 +43,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 ;
 
 \ Check TOS for regioncorrrate, unconventional, leaves stack unchanged.
-: assert-tos-is-regioncorrrate ( arg0 -- arg0 )
+: assert-tos-is-regioncorrrate ( tos -- tos )
     dup is-allocated-regioncorrrate
     is-false if
         s" TOS is not an allocated regioncorrrate"
@@ -52,7 +52,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 ;
 
 \ Check NOS for regioncorrrate, unconventional, leaves stack unchanged.
-: assert-nos-is-regioncorrrate ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-regioncorrrate ( nos tos -- nos tos )
     over is-allocated-regioncorrrate
     is-false if
         s" NOS is not an allocated regioncorrrate"
@@ -61,7 +61,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 ;
 
 \ Check 3OS for regioncorrrate, unconventional, leaves stack unchanged.
-: assert-3os-is-regioncorrrate ( arg2 arg1 arg0 -- arg1 arg0 )
+: assert-3os-is-regioncorrrate ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-regioncorrrate
     is-false if
         s" NOS is not an allocated regioncorrrate"

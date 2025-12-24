@@ -48,7 +48,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 \ Check TOS for session, unconventional, leaves stack unchanged.
-: assert-tos-is-session ( arg0 -- arg0 )
+: assert-tos-is-session ( tos -- tos )
     dup is-allocated-session
     is-false if
         s" TOS is not an allocated session"
@@ -1402,21 +1402,66 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
 \ Calculate a path, given a rate's pathstep list.
 : session-calc-path-using-pathsteps-fc ( regc-to regc-from pthstp-lst1 sess0 -- pthstp-lst t | f )
+    cr ." session-calc-path-using-pathsteps-fc: start: from " #2 pick .regioncorr space ." to " #3 pick .regioncorr cr
     \ Check args.
     assert-tos-is-session
     assert-nos-is-pathstep-list
     assert-3os-is-regioncorr
     assert-4os-is-regioncorr
 
+    \ Init return list.             \ regc-to regc-from pthstp-lst1 sess0
+    2>r                             \ regc-to regc-from, r: pthstp-lst1 sess0
+    list-new                        \ regc-to regc-from ret-lst, r: pthstp-lst1 sess0
+    -rot                            \ ret-lst regc-to regc-from, r: pthstp-lst1 sess0
+    2r>                             \ ret-lst regc-to regc-from pthstp-lst1 sess0
+
     \ Get changes-needed.
-    #3 pick                         \ regc-to regc-from pthstp-lst1 sess0 regc-to
-    #3 pick                         \ regc-to regc-from pthstp-lst1 sess0 regc-to regc-from
-    changescorr-new-regc-to-regc    \ regc-to regc-from pthstp-lst1 sess0 cngsc-needed
+    #3 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 regc-to
+    #3 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 regc-to regc-from
+    changescorr-new-regc-to-regc    \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed
     cr ." changes needed: " dup .changescorr cr
+    dup                             \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed cngsc-needed
+    #4 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed cngsc-neededregc-from
+    #4 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed cngsc-needed regc-from pthstp-lst1
+    pathstep-list-get-steps-fc      \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst2
+    cr ." pathsteps: " dup .pathstep-list cr
 
+    \ Check for empty list.
+    dup list-is-empty
+    if
+        pathstep-list-deallocate
+        changescorr-deallocate
+        2drop 2drop
+        false
+        exit
+    then
+                                    \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst2
+
+    \ Select pathsteps with the least number-unwanted-changes.
+    dup pathstep-list-filter-min-number-unwanted-changes    \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst2 pthstp-lst3
+    swap pathstep-list-deallocate                           \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst3
+    cr ." pathsteps filtered: " dup .pathstep-list cr
+
+    \ Choose a pathstep with the least number-unwanted-changes.
+    dup list-get-length random          \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst3 num
+    over pathstep-list-remove-item      \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst3, pthstpx t | f
+    is-false abort" pathstep-list item not removed?"
+    swap pathstep-list-deallocate       \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstpx
+    cr ." pathstep chosen: " dup .pathstep cr
+
+    \ Add pathstep to return pathstep-list.
+    
+    \ Check if regc-to intersects pathstep rule result region.
+
+    \ Apply pathstep rule to regc-from to get next regc-from.
+
+
+    \ Clean up.
+    drop
     changescorr-deallocate
-
     2drop 2drop
+    pathstep-list-deallocate
+
     false
 ;
 
@@ -1438,7 +1483,6 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     session-find-rate                           \ regc-to regc-from sess0 | rate-to rate-from
     min                                         \ regc-to regc-from sess0 | rate-min
     cr ." rate: " dup dec. cr
-    cr ." at 4: " .stack-structs-xt execute cr
     dup                                         \ regc-to regc-from sess0 | rate-min rate-min
     #2 pick                                     \ regc-to regc-from sess0 | rate-min rate-min sess0
     session-find-regioncorr-list-by-rate        \ regc-to regc-from sess0 | rate-min regc-lst
@@ -1453,7 +1497,6 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         \ true
         \ exit
         2drop                                   \ regc-to regc-from sess0 | rate-min
-\        cr ." at 5.4: " .stack-structs-xt execute cr
     else                                        \ regc-to regc-from sess0 | rate-min regc-lst
         \ TODO rules
         over                                    \ regc-to regc-from sess0 | rate-min regc-lst rate-min
@@ -1466,15 +1509,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         #5 pick                                 \ regc-to regc-from sess0 | rate-min regc-lst regc-to regc-from pthstp-lst sess
         session-calc-path-using-pathsteps-fc    \ regc-to regc-from sess0 | rate-min regc-lst, pthstp-lst t | f
         if
-            2nip 2nip nip                       \ plan-corr
+            2nip 2nip nip                       \ pthstp-lst
             true
-\            cr ." at 5.8: " .stack-structs-xt execute cr
             exit
         then
         drop                                    \ regc-to regc-from sess0 | rate-min
-        
     then
-\    cr ." at 6: " .stack-structs-xt execute cr
                                                 \ regc-to regc-from sess0 | rate-min
     2drop 2drop
     false

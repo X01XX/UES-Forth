@@ -51,7 +51,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 ;
 
 \ Check TOS for changes, unconventional, leaves stack unchanged.
-: assert-tos-is-changes ( cngs0 -- )
+: assert-tos-is-changes ( tos -- tos )
     dup is-allocated-changes
     is-false if
         s" TOS is not an allocated changes."
@@ -60,7 +60,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 ;
 
 \ Check NOS for changes, unconventional, leaves stack unchanged.
-: assert-nos-is-changes ( rul1 ??? -- )
+: assert-nos-is-changes ( nos tos -- nos tos )
     over is-allocated-changes
     is-false if
         s" NOS is not an allocated changes."

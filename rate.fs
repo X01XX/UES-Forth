@@ -38,7 +38,7 @@
 ;
 
 \ Check TOS for rate, unconventional, leaves stack unchanged.
-: assert-tos-is-rate ( arg0 -- arg0 )
+: assert-tos-is-rate ( tos -- tos )
     dup is-allocated-rate
     is-false if
         s" TOS is not an allocated rate"
@@ -47,7 +47,7 @@
 ;
 
 \ Check NOS for rate, unconventional, leaves stack unchanged.
-: assert-nos-is-rate ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-rate ( nos tos -- nos tos )
     over is-allocated-rate
     is-false if
         s" NOS is not an allocated rate"
@@ -56,7 +56,7 @@
 ;
 
 \ Check 3OS for rate, unconventional, leaves stack unchanged.
-: assert-3os-is-rate ( arg2 arg1 arg0 -- arg1 arg0 )
+: assert-3os-is-rate ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-rate
     is-false if
         s" NOS is not an allocated rate"

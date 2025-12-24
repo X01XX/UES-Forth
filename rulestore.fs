@@ -37,7 +37,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 ;
 
 \ Check TOS for rulestore, unconventional, leaves stack unchanged.
-: assert-tos-is-rulestore ( arg0 -- arg0 )
+: assert-tos-is-rulestore ( tos -- tos )
     dup is-allocated-rulestore
     is-false if
         s" TOS is not an allocated rulestore."
@@ -46,7 +46,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 ;
 
 \ Check NOS for rulestore, unconventional, leaves stack unchanged.
-: assert-nos-is-rulestore ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-rulestore ( nos tos -- nos tos )
     over is-allocated-rulestore
     is-false if
         s" NOS is not an allocated rulestore."

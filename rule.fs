@@ -40,7 +40,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 ;
 
 \ Check TOS for rule, unconventional, leaves stack unchanged.
-: assert-tos-is-rule ( rul0 -- )
+: assert-tos-is-rule ( tos -- tos )
     dup is-allocated-rule
     is-false if
         s" TOS is not an allocated rule."
@@ -49,7 +49,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 ;
 
 \ Check NOS for rule, unconventional, leaves stack unchanged.
-: assert-nos-is-rule ( rul1 arg0 -- )
+: assert-nos-is-rule ( nos tos -- nos tos )
     over is-allocated-rule
     is-false if
         s" NOS is not an allocated rule."
@@ -58,7 +58,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 ;
 
 \ Check 3OS for rule, unconventional, leaves stack unchanged.
-: assert-3os-is-rule ( rul2 arg1 arg0 -- )
+: assert-3os-is-rule ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-rule
     is-false if
         s" 3OS is not an allocated rule."

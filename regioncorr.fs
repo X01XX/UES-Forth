@@ -38,7 +38,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Check TOS for regioncorr, unconventional, leaves stack unchanged.
-: assert-tos-is-regioncorr ( arg0 -- arg0 )
+: assert-tos-is-regioncorr ( tos -- tos )
     dup is-allocated-regioncorr
     is-false if
         s" TOS is not an allocated regioncorr"
@@ -49,7 +49,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ' assert-tos-is-regioncorr to assert-tos-is-regioncorr-xt
 
 \ Check NOS for regioncorr, unconventional, leaves stack unchanged.
-: assert-nos-is-regioncorr ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-regioncorr ( nos tos -- nos tos )
     over is-allocated-regioncorr
     is-false if
         s" NOS is not an allocated regioncorr"
@@ -60,7 +60,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ' assert-nos-is-regioncorr to assert-nos-is-regioncorr-xt
 
 \ Check 3OS for regioncorr, unconventional, leaves stack unchanged.
-: assert-3os-is-regioncorr ( arg2 arg1 arg0 -- arg1 arg0 )
+: assert-3os-is-regioncorr ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-regioncorr
     is-false if
         s" 3OS is not an allocated regioncorr"
@@ -69,7 +69,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Check 4OS for regioncorr, unconventional, leaves stack unchanged.
-: assert-4os-is-regioncorr ( 4os 3os  arg0 -- arg1 arg0 )
+: assert-4os-is-regioncorr ( 4os 3os nos tos -- 4os 3os nos tos )
     #2 pick is-allocated-regioncorr
     is-false if
         s" 3OS is not an allocated regioncorr"

@@ -48,7 +48,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 ;
 
 \ Check TOS for region, unconventional, leaves stack unchanged.
-: assert-tos-is-region ( arg0 -- arg0 )
+: assert-tos-is-region ( tos -- tos )
     dup is-allocated-region
     is-false if
         s" TOS is not an allocated region"
@@ -57,7 +57,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 ;
 
 \ Check NOS for region, unconventional, leaves stack unchanged.
-: assert-nos-is-region ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-region ( nos tos -- nos tos )
     over is-allocated-region
     is-false if
         s" NOS is not an allocated region"
@@ -66,7 +66,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 ;
 
 \ Check 3OS for region, unconventional, leaves stack unchanged.
-: assert-3os-is-region ( arg2 arg1 arg0 -- arg1 arg0 )
+: assert-3os-is-region ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-region
     is-false if
         s" 3OS is not an allocated region"

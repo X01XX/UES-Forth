@@ -38,7 +38,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 ;
 
 \ Check TOS for plan, unconventional, leaves stack unchanged.
-: assert-tos-is-plan ( arg0 -- arg0 )
+: assert-tos-is-plan ( tos -- tos )
     dup is-allocated-plan
     is-false if
         s" TOS is not an allocated plan"
@@ -47,7 +47,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 ;
 
 \ Check NOS for plan, unconventional, leaves stack unchanged.
-: assert-nos-is-plan ( arg1 arg0 -- arg1 arg0 )
+: assert-nos-is-plan ( nos tos -- nos tos )
     over is-allocated-plan
     is-false if
         s" NOS is not an allocated plan"
@@ -56,7 +56,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 ;
 
 \ Check 3OS for plan, unconventional, leaves stack unchanged.
-: assert-3os-is-plan ( pln2 arg1 arg0 -- arg1 arg0 )
+: assert-3os-is-plan ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-plan
     is-false if
         s" 3OS is not an allocated plan"
@@ -65,7 +65,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 ;
 
 \ Check 4OS for plan, unconventional, leaves stack unchanged.
-: assert-4os-is-plan ( pln3 arg2 arg1 arg0 -- arg1 arg0 )
+: assert-4os-is-plan ( 4os 3os nos tos -- 4os 3os nos tos )
     #3 pick is-allocated-plan
     is-false if
         s" 4OS is not an allocated plan"

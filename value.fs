@@ -18,7 +18,7 @@
 ;
 
 \ Check TOS for value, unconventional, leaves stack unchanged.
-: assert-tos-is-value ( u -- u )
+: assert-tos-is-value ( tos -- tos )
     dup is-not-value
     if
         s" TOS is not a valid value."
@@ -27,7 +27,7 @@
 ;
 
 \ Check NOS for value, unconventional, leaves stack unchanged.
-: assert-nos-is-value ( u ?? -- u ??)
+: assert-nos-is-value ( nos tos -- nos tos )
     over is-not-value
     if
         s" NOS is not a valid value."
@@ -36,7 +36,7 @@
 ;
 
 \ Check 3OS for value, unconventional, leaves stack unchanged.
-: assert-3OS-is-value ( u ?? ?? -- u ?? ??)
+: assert-3os-is-value ( 3os nos tos -- 3os nos tos )
     #2 pick is-not-value
     if
         s" 3OS is not a valid value."

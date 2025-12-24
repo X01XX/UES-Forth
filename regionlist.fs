@@ -1,12 +1,14 @@
 \ Functions for region lists.
 
-\ Check if tos is a non-empty list, with the first item being a region.
+\ Check if tos is a list, if non-empty, with the first item being a region.
 : assert-tos-is-region-list ( tos -- )
     assert-tos-is-list
-    assert-tos-list-is-not-empty
-    dup list-get-links link-get-data
-    assert-tos-is-region
-    drop
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-region
+        drop
+    then
 ;
 
 \ Deallocate a region list.

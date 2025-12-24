@@ -33,7 +33,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 ;
 
 \ Check TOS for domain, unconventional, leaves stack unchanged.
-: assert-tos-is-domain ( arg0 -- arg0 )
+: assert-tos-is-domain ( tos -- tos )
     dup is-allocated-domain
     is-false if
         s" TOS is not an allocated domain"
@@ -44,7 +44,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 ' assert-tos-is-domain to assert-tos-is-domain-xt
 
 \ Check NOS for domain, unconventional, leaves stack unchanged.
-: assert-nos-is-domain ( arg1 arg0 -- arg0 )
+: assert-nos-is-domain ( nos tos -- nos tos )
     over is-allocated-domain
     is-false if
         s" NOS is not an allocated domain"
