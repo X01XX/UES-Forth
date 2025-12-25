@@ -1415,51 +1415,87 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     -rot                            \ ret-lst regc-to regc-from, r: pthstp-lst1 sess0
     2r>                             \ ret-lst regc-to regc-from pthstp-lst1 sess0
 
+    \ regc-from will change and be deallocated, move it to front and inc its use count to survive one deallocate.
+    rot                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from
+    dup struct-one-free-deallocate  \ ret-lst regc-to pthstp-lst1 sess0 | regc-from
+
     \ Get changes-needed.
-    #3 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 regc-to
-    #3 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 regc-to regc-from
-    changescorr-new-regc-to-regc    \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed
+    #3 pick                         \ ret-lst regc-to pthstp-lst1 sess0 | regc-from regc-to
+    over                            \ ret-lst regc-to pthstp-lst1 sess0 | regc-from regc-to regc-from
+    changescorr-new-regc-to-regc    \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed
     cr ." changes needed: " dup .changescorr cr
-    dup                             \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed cngsc-needed
-    #4 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed cngsc-neededregc-from
-    #4 pick                         \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed cngsc-needed regc-from pthstp-lst1
-    pathstep-list-get-steps-fc      \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst2
-    cr ." pathsteps: " dup .pathstep-list cr
+    dup                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed cngsc-needed
+    #2 pick                         \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed cngsc-needed regc-from
+    #5 pick                         \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed cngsc-needed regc-from pthstp-lst1
+    pathstep-list-get-steps-fc      \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstp-lst2
+    cr ." pathsteps applying to regc-from: " dup .pathstep-list cr
 
     \ Check for empty list.
     dup list-is-empty
     if
         pathstep-list-deallocate
         changescorr-deallocate
+        regioncorr-deallocate
         2drop 2drop
         false
         exit
     then
-                                    \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst2
+                                                            \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstp-lst2
 
     \ Select pathsteps with the least number-unwanted-changes.
-    dup pathstep-list-filter-min-number-unwanted-changes    \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst2 pthstp-lst3
-    swap pathstep-list-deallocate                           \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst3
+    dup pathstep-list-filter-min-number-unwanted-changes    \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstp-lst2 pthstp-lst3
+    swap pathstep-list-deallocate                           \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstp-lst3
     cr ." pathsteps filtered: " dup .pathstep-list cr
 
     \ Choose a pathstep with the least number-unwanted-changes.
-    dup list-get-length random          \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst3 num
-    over pathstep-list-remove-item      \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstp-lst3, pthstpx t | f
+    dup list-get-length random          \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstp-lst3 num
+    over pathstep-list-remove-item      \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstp-lst3, pthstpx t | f
     is-false abort" pathstep-list item not removed?"
-    swap pathstep-list-deallocate       \ ret-lst regc-to regc-from pthstp-lst1 sess0 cngsc-needed pthstpx
+    swap pathstep-list-deallocate       \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx
     cr ." pathstep chosen: " dup .pathstep cr
 
+    \ Save pathstep addr.
+    dup                                 \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx pthstpx
+
     \ Add pathstep to return pathstep-list.
-    
-    \ Check if regc-to intersects pathstep rule result region.
+    #7 pick                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx pthstpx ret-lst
+    pathstep-list-push-end              \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx
+
+    \ Check if regc-to intersects pathstep rule result regions.
+    dup pathstep-get-result-regions     \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx pthstpx-r
+    #6 pick                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthsptx pthstpx-r regc-to
+    regioncorr-intersects               \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthsptx bool
+    if
+        \ Clean up.                     \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthsptx
+        drop
+        changescorr-deallocate
+        regioncorr-deallocate
+        3drop
+        cr ." session-calc-path-using-pathsteps-fc: found end: " dup .pathstep-list cr
+
+        \ Return
+        true
+        exit
+    then
 
     \ Apply pathstep rule to regc-from to get next regc-from.
+                                        \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthsptx
+    swap changescorr-deallocate         \ ret-lst regc-to pthstp-lst1 sess0 | regc-from pthsptx
+    pathstep-get-rules                  \ ret-lst regc-to pthstp-lst1 sess0 | regc-from pthstp-rulc
+    rulecorr-apply-to-regioncorr-fc     \ ret-lst regc-to pthstp-lst1 sess0 | regc-from' t | f
+    is-false abort" false returned?"
+    cr ." new regc-from: " dup .regioncorr cr
 
+    \ Calc next changes needed.
+    #3 pick                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from' regc-to
+    over                                \ ret-lst regc-to pthstp-lst1 sess0 | regc-from' regc-to regc-from'
+    changescorr-new-regc-to-regc        \ ret-lst regc-to pthstp-lst1 sess0 | regc-from' cngsc-needed'
+    cr ." new changes-needed: " dup .changescorr cr
 
     \ Clean up.
-    drop
     changescorr-deallocate
-    2drop 2drop
+    regioncorr-deallocate
+    3drop
     pathstep-list-deallocate
 
     false

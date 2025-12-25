@@ -82,7 +82,6 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 
     \ Store list
     over struct-inc-use-count
-
     rulecorr-list-disp +    \ Add offset.
     !                       \ Set first field.
 ;
@@ -239,31 +238,31 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
 
     \ Prep for loop.
     rulecorr-get-list               \ reg-lst rul-lst
-    list-get-links                  \ reg-lst rc-link
-    cur-session-get-domain-list-xt      \ reg-lst rc-link xt
-    execute                         \ reg-lst rc-link dom-lst 
-    list-get-links                  \ reg-lst rc-link d-link
+    list-get-links                  \ reg-lst rul-link
+    cur-session-get-domain-list-xt  \ reg-lst rul-link xt
+    execute                         \ reg-lst rul-link dom-lst 
+    list-get-links                  \ reg-lst rul-link d-link
 
     begin
         ?dup
     while
         \ Set current domain.
-        dup link-get-data           \ reg-lst rc-link d-link domx
+        dup link-get-data           \ reg-lst rul-link d-link domx
         domain-set-current-xt
-        execute                     \ reg-lst rc-link d-link
+        execute                     \ reg-lst rul-link d-link
 
         \ Calc initial region.
-        over link-get-data          \ reg-lst rc-link d-link rulx
-        rule-calc-initial-region    \ reg-lst rc-link d-link reg-i'
+        over link-get-data          \ reg-lst rul-link d-link rulx
+        rule-calc-initial-region    \ reg-lst rul-link d-link reg-i'
 
         \ Store initial region.
-        #3 pick                     \ reg-lst rc-link d-link reg-i' reg-lst
-        list-push-end-struct        \ reg-lst rc-link d-link
+        #3 pick                     \ reg-lst rul-link d-link reg-i' reg-lst
+        list-push-end-struct        \ reg-lst rul-link d-link
 
-        swap link-get-next          \ reg-lst d-link rc-link
-        swap link-get-next          \ reg-lst rc-link d-link
+        swap link-get-next          \ reg-lst d-link rul-link
+        swap link-get-next          \ reg-lst rul-link d-link
     repeat
-                                    \ reg-lst rc-link
+                                    \ reg-lst rul-link
     drop                            \ reg-lst
     regioncorr-new                  \ regc
 ;
@@ -332,4 +331,59 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
     else
         struct-dec-use-count
     then
+;
+
+\ Apply a rulecorr to a regioncorr, forward-chaining.
+: rulecorr-apply-to-regioncorr-fc ( regc1 rulc0 -- regc t | f )
+    \ Check args.
+    assert-tos-is-rulecorr
+    assert-nos-is-regioncorr
+
+    \ Init region list.
+    list-new -rot                   \ reg-lst regc1 rulc0
+
+    \ Prep for loop.
+    rulecorr-get-list               \ reg-lst regc1 rul-lst
+    list-get-links                  \ reg-lst regc1 rul-link
+
+    swap                            \ reg-lst rul-link regc1
+    regioncorr-get-list             \ reg-lst rul-link reg-lst
+    list-get-links                  \ reg-lst rul-link reg-link
+    swap                            \ reg-lst reg-link rul-link
+
+    cur-session-get-domain-list-xt  \ reg-lst reg-link rul-link xt
+    execute                         \ reg-lst reg-link rul-link dom-lst 
+    list-get-links                  \ reg-lst reg-link rul-link d-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ reg-lst reg-link rul-link d-link domx
+        domain-set-current-xt
+        execute                     \ reg-lst reg-link rul-link d-link
+
+        \ Calc result of applying rule.
+        #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx
+        #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx rulx
+        rule-apply-to-region-fc     \ reg-lst reg-link rul-link d-link, reg-r' t | f
+        is-false if
+            3drop
+            region-list-deallocate
+            false
+            exit
+        then
+
+        \ Store result region.
+        #4 pick                     \ reg-lst reg-link rul-link d-link reg-r' reg-lst
+        list-push-end-struct        \ reg-lst reg-link rul-link d-link
+
+        rot link-get-next           \ reg-lst rul-link d-link reg-link+
+        rot link-get-next           \ reg-lst d-link reg-link+ rul-link+
+        rot link-get-next           \ reg-lst reg-link+ rul-link+ d-link+
+    repeat
+                                    \ reg-lst reg-link rul-link
+    2drop                           \ reg-lst
+    regioncorr-new                  \ regc
+    true
 ;

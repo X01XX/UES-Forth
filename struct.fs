@@ -35,3 +35,15 @@
     swap struct-set-use-count
 ;
 
+\ If a struct should survive at least one deallocation, but may
+\ have a use count of zero since it has not been stored in a list, or struct,
+\ increment the use count as needed.
+: struct-one-free-deallocate ( struct-addr -- )
+    dup struct-inc-use-count        \ sa
+    dup struct-get-use-count        \ sa uc
+    1 = if
+        struct-inc-use-count
+    else
+        drop
+    then
+;

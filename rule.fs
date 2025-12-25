@@ -1753,3 +1753,25 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     =                           \ bool
 ;
+
+\ Return the result of applying a rule to an initial-region intersecting region.
+: rule-apply-to-region-fc ( reg1 rul0 -- reg t | f )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-region
+
+    \ Restrict rule initial region.
+    rule-restrict-initial-region    \ rul0' t | f
+    if
+
+        \ Get result region.
+        dup rule-calc-result-region     \ rul0' reg
+
+        \ Clean up.
+        swap rule-deallocate            \ reg
+
+        true
+    else
+        false
+    then
+;

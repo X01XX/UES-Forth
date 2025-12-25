@@ -75,8 +75,16 @@
     assert-tos-is-pathstep-list
     assert-nos-is-pathstep
 
-    over struct-inc-use-count
-    list-push
+    list-push-struct
+;
+
+\ Push a pathstep to end of list.
+: pathstep-list-push-end ( pthstp1 pthstp-lst0 -- )
+   \ Check arg.
+    assert-tos-is-pathstep-list
+    assert-nos-is-pathstep
+
+    list-push-end-struct
 ;
 
 : pathstep-list-get-steps-fc ( cngsc-needed regc-from pthstp-lst1 -- pthstp-lst )
