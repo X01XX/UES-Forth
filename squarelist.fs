@@ -1,5 +1,16 @@
 \ Functions for square lists.
 
+\ Check if tos is a list, if non-empty, with the first item being a square.
+: assert-tos-is-square-list ( tos -- )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-square
+        drop
+    then
+;
+
 \ Deallocate a square list.
 : square-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.

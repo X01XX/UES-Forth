@@ -5,8 +5,7 @@
 
 \ Struct fields
 0                              constant rulecorr-header-disp    \ 16-bits [0] struct id [1] use count.
-rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corresponding, in bits used, to the session domain list.
-
+rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corresponding, in bits used, to the session domain list.
 
 0 value rulecorr-mma \ Storage for rule mma instance.
 
@@ -15,7 +14,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp     \ Rule list corre
     dup 1 < 
     abort" rulecorr-mma-init: Invalid number of items."
 
-    cr ." Initializing rulecorr store."
+    cr ." Initializing RuleCorr store."
     rulecorr-struct-number-cells swap mma-new to rulecorr-mma
 ;
 

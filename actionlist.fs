@@ -1,5 +1,16 @@
 \ Functions for action lists.
 
+\ Check if tos is a list, if non-empty, with the first item being a action.
+: assert-tos-is-action-list ( tos -- )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-action
+        drop
+    then
+;
+
 : .action-list ( actlst0 -- )
     \ Check args.
     assert-tos-is-list

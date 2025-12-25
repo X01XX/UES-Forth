@@ -19,11 +19,11 @@
 \ PlanStep   Plan   Group  Rate   RegionCorrRate  RegionCorr
 \ 37171,     37379, 43717, 41719, 41737,          47317
 \
-\ RuleCorr  Changescorr PathStep
-\ 53171     53173       53197
+\ RuleCorr  Changescorr PathStep Plancorr
+\ 53171     53173       53197    53717
 \
 \ Struct ids not yet used:
-\ 53717, 53719,
+\ 53719,
 \ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
@@ -90,7 +90,7 @@ include rulecorr.fs
 include plan.fs
 include planlist.fs
 include plan_t.fs
-include planlistcorr.fs
+include plancorr.fs
 
 include pathstep.fs
 include pathsteplist.fs
@@ -129,7 +129,8 @@ cs
     cr #4 spaces ." Group mma:          " group-mma .mma-usage
     cr #4 spaces ." Need mma:           " need-mma .mma-usage
     cr #4 spaces ." PlanStep mma:       " planstep-mma .mma-usage
-    cr #4 spaces ." PathStep mma:       " planstep-mma .mma-usage
+    cr #4 spaces ." PlanCorr mma:       " plancorr-mma .mma-usage
+    cr #4 spaces ." PathStep mma:       " pathstep-mma .mma-usage
     cr #4 spaces ." Plan mma:           " plan-mma .mma-usage
     cr #4 spaces ." Rate mma:           " rate-mma .mma-usage
     cr #4 spaces ." RegionCorrRate mma: " regioncorrrate-mma .mma-usage
@@ -157,6 +158,7 @@ cs
     assert-planstep-mma-none-in-use
     assert-pathstep-mma-none-in-use
     assert-plan-mma-none-in-use
+    assert-plancorr-mma-none-in-use
     assert-action-mma-none-in-use
     assert-changes-mma-none-in-use
     assert-changescorr-mma-none-in-use
@@ -201,6 +203,7 @@ cr ." main.fs"
 #150 planstep-mma-init
 #150 pathstep-mma-init
 #150 plan-mma-init
+#040 plancorr-mma-init
  #50 action-mma-init
  #25 domain-mma-init
 #100 rate-mma-init
@@ -227,6 +230,7 @@ cr
     planstep-mma mma-free
     pathstep-mma mma-free
     plan-mma mma-free
+    plancorr-mma mma-free
     action-mma mma-free
     domain-mma mma-free
     rate-mma mma-free

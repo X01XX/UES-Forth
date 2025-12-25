@@ -1,5 +1,16 @@
 \ Functions for domain lists.
 
+\ Check if tos is a list, if non-empty, with the first item being a domain.
+: assert-tos-is-domain-list ( tos -- )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-domain
+        drop
+    then
+;
+
 \ Deallocate a domain list.
 : domain-list-deallocate ( lst0 -- )
     \ Check if the list will be deallocated for the last time.

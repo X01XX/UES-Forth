@@ -1454,10 +1454,23 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     swap pathstep-list-deallocate       \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx
     cr ." pathstep chosen: " dup .pathstep cr
 
-    \ Save pathstep addr.
-    dup                                 \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx pthstpx
+    \ Check if step is already in the return list.
+    [ ' = ] literal                     \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx xt
+    over                                \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx xt pthstpx
+    #8 pick                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx pthstpx ret-lst
+    list-member                         \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx bool
+    if
+        drop
+        changescorr-deallocate
+        regioncorr-deallocate
+        3drop
+        pathstep-list-deallocate
+        false
+        exit
+    then
 
     \ Add pathstep to return pathstep-list.
+    dup                                 \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx pthstpx
     #7 pick                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx pthstpx ret-lst
     pathstep-list-push-end              \ ret-lst regc-to pthstp-lst1 sess0 | regc-from cngsc-needed pthstpx
 
