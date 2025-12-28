@@ -299,3 +299,29 @@
 
     sample-new
 ;
+
+\ For testing.
+: xor-1 ( res1 flag1 cur0 -- sample )
+    nip nip
+    dup 1 xor swap sample-new
+;
+
+: xor-2 ( res1 flag1 cur0 -- sample )
+    nip nip
+    dup #2 xor swap sample-new
+;
+
+: xor-4 ( res1 flag1 cur0 -- sample )
+    nip nip
+    dup #4 xor swap sample-new
+;
+
+: xor-8 ( res1 flag1 cur0 -- sample )
+    nip nip
+    dup #8 xor swap sample-new
+;
+
+: xor-16 ( res1 flag1 cur0 -- sample )
+    nip nip
+    dup #16 xor swap sample-new
+;
