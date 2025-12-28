@@ -49,9 +49,35 @@
 \ Push a plancorr to the end of a plancorr-list.
 : plancorr-list-push-end ( reg1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-plancorr-list
     assert-nos-is-plancorr
 
     over struct-inc-use-count
     list-push-end
+;
+
+\ Run a plancorr list plan.
+: plancorr-list-run-plan ( plnc-lst -- bool )
+    \ Check arg.
+    assert-tos-is-plancorr-list
+
+    \ Prep for loop.
+    list-get-links              \ link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ link plnc
+        plancorr-run            \ link, t | f
+        is-false if
+            drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+
+    \ Return
+    true
 ;

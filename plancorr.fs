@@ -198,3 +198,42 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     drop                            \ reg-lst
     regioncorr-new
 ;
+
+\ Run a platcorr.
+: plancorr-run ( plnc -- bool )
+    \ Check arg.
+    assert-tos-is-plancorr
+
+    \ Prep for loop.
+    plancorr-get-list               \  pln-lst
+    list-get-links                  \  plnc-link
+    cur-session-get-domain-list-xt  \  plnc-link xt
+    execute                         \  plnc-link dom-lst
+    list-get-links                  \  plnc-link d-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \  plnc-link d-link domx
+        domain-set-current-xt
+        execute                     \  plnc-link d-link
+
+        \ Get planx result.
+        over link-get-data          \  plnc-link d-link plnx
+
+        \ Run plan.
+        plan-run                    \ plnc-link d-link, t | f
+        is-false if
+            2drop
+            false
+            exit
+        then
+
+        swap link-get-next
+        swap link-get-next
+    repeat
+                                    \  plnc-link
+    drop                            \
+    true
+;

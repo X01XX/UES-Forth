@@ -315,6 +315,8 @@
     is-false abort" domain1 not found?"
     %01111 swap domain-set-current-state             \ sess
 
+    dup .session
+
     \ Create from/to regioncorr instances.
     s" (0111 01111)" regioncorr-from-string-a       \ sess regc-to
     s" (1000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
@@ -344,8 +346,13 @@
         if
             cr ." plan found: " dup .plancorr-list  \ sess regc-to regc-from pthstp-lst plnc-lst
 
-            cr ." TODO: run plan" cr
+            dup plancorr-list-run-plan               \ sess regc-to regc-from pthstp-lst plnc-lst, t | f
+            is-false abort" plan failed?"
+
             plancorr-list-deallocate                \ sess regc-to regc-from pthstp-lst
+
+            #3 pick                                 \ sess regc-to regc-from pthstp-lst sess
+            .session-current-states                 \ sess regc-to regc-from pthstp-lst
         then
         pathstep-list-deallocate
     then
