@@ -1,7 +1,7 @@
 \ Functions for region lists.
 
 \ Check if tos is a list, if non-empty, with the first item being a region.
-: assert-tos-is-region-list ( tos -- )
+: assert-tos-is-region-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
     if

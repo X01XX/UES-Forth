@@ -61,7 +61,7 @@
     rule-deallocate
     region-deallocate
 
-    cr ." rule-test-restrict-initial-region - Ok" cr
+    cr ." rule-test-restrict-initial-region: Ok" cr
 ;
 
 : rule-test-restrict-result-region
@@ -106,7 +106,7 @@
         abort
     then
 
-    cr ." rule-test-restrict-result-region - Ok" cr
+    cr ." rule-test-restrict-result-region: Ok" cr
 ;
 
 : rule-test-apply-to-state-f
@@ -155,7 +155,7 @@
     then
     rule-deallocate
 
-    cr ." rule-test-apply-to-state-f - Ok" cr
+    cr ." rule-test-apply-to-state-f: Ok" cr
 ;
 
 : rule-test-restrict-to-region
@@ -178,7 +178,7 @@
     rule-deallocate
     region-deallocate
 
-    cr ." rule-test-restrict-to-region - Ok" cr
+    cr ." rule-test-restrict-to-region: Ok" cr
 ;
 
 : rule-test-combine2
@@ -392,7 +392,7 @@
     rule-deallocate
     rule-deallocate
 
-    cr ." rule-test-combine2 - Ok" cr
+    cr ." rule-test-combine2: Ok" cr
 ;
 
 : rule-test-new-region-to-region
@@ -453,7 +453,7 @@ cr .s cr
     region-deallocate
     region-deallocate
  cr .s cr
-    cr ." rule-test-new-region-to-region - Ok" cr
+    cr ." rule-test-new-region-to-region: Ok" cr
 ;
 
 : rule-test-isolate-changes
@@ -473,7 +473,7 @@ cr .s cr
     rule-deallocate                     \ cngs
     changes-deallocate
 
-    cr ." rule-test-isolate-changes - Ok" cr
+    cr ." rule-test-isolate-changes: Ok" cr
 ;
 
 : rule-test-calc-step-fc
@@ -536,7 +536,7 @@ cr .s cr
         abort
     then
 
-    cr ." rule-test-calc-step-fc - Ok" cr
+    cr ." rule-test-calc-step-fc: Ok" cr
 ;
 
 : rule-test-calc-step-bc
@@ -591,7 +591,7 @@ cr .s cr
     then
 
 
-    cr ." rule-test-calc-step-bc - Ok" cr
+    cr ." rule-test-calc-step-bc: Ok" cr
 ;
 
 : rule-tests

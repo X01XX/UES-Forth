@@ -91,6 +91,7 @@ include plan.fs
 include planlist.fs
 include plan_t.fs
 include plancorr.fs
+include plancorrlist.fs
 
 include pathstep.fs
 include pathsteplist.fs
@@ -187,28 +188,28 @@ include session_t.fs
 cr ." main.fs"
 
 \ Init array-stacks.
-#2000 link-mma-init
-#902 list-mma-init
-#803 region-mma-init
-#500 regioncorr-mma-init
-#404 rule-mma-init
-#405 rulestore-mma-init
-#404 rulecorr-mma-init
-#306 square-mma-init
-#250 sample-mma-init
-#550 changes-mma-init
-#250 changescorr-mma-init
-#100 group-mma-init
-#200 need-mma-init
-#150 planstep-mma-init
-#150 pathstep-mma-init
-#150 plan-mma-init
-#040 plancorr-mma-init
- #50 action-mma-init
- #25 domain-mma-init
-#100 rate-mma-init
-#100 regioncorrrate-mma-init
-#005 session-mma-init
+#2500 link-mma-init
+#0902 list-mma-init
+#1003 region-mma-init
+#0500 regioncorr-mma-init
+#0804 rule-mma-init
+#0405 rulestore-mma-init
+#0404 rulecorr-mma-init
+#0306 square-mma-init
+#0250 sample-mma-init
+#0550 changes-mma-init
+#0250 changescorr-mma-init
+#0100 group-mma-init
+#0200 need-mma-init
+#0150 planstep-mma-init
+#0170 pathstep-mma-init
+#0150 plan-mma-init
+#0040 plancorr-mma-init
+#0050 action-mma-init
+#0025 domain-mma-init
+#0100 rate-mma-init
+#0100 regioncorrrate-mma-init
+#0005 session-mma-init
 cr
 
 \ Free heap memory before exiting.

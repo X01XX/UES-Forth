@@ -281,7 +281,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     \ Calc new rule.
     planstep-get-rule               \ u-unw act reg1 rul
     rule-restrict-initial-region    \ u-unw act, rul' t | f
-    is-false abort" rule-restrict-initial-region failed?"
+    is-false abort" restrict-initial-region failed?"
 
     \ Make new planstep.
     swap                            \ u-unw rul' act
@@ -312,7 +312,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     \ Calc new rule.
     planstep-get-rule                   \ u-unw act reg1 rul
     rule-restrict-result-region         \ u-unw act, rul' t | f
-    is-false abort" rule-restrict-result-region failed?"
+    is-false abort" restrict-result-region failed?"
 
     \ Make new planstep.
     swap                        \ u-unw rul' act
@@ -384,4 +384,24 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     planstep-get-number-unwanted-changes    \ plnstp u-unw
     over                                    \ plnstp u-unw plnstp
     planstep-set-number-unwanted-changes    \ plnstp
+;
+
+\ Ruturn a planstep restricted, initial and result regions, to a given
+\ region.
+: planstep-restrict-to-region ( reg1 plnstp0 -- plnstp t | f )
+    \ Check args.
+    assert-tos-is-planstep
+    assert-nos-is-region
+
+    2dup                    \ reg1 plnstp0 reg1 plnstp0
+    planstep-get-rule       \ reg1 plnstp0 reg1 plnstp-rul
+    rule-restrict-to-region \ reg1 plnstp0, rul' t | f
+    if
+        planstep-new        \ reg1 plnstp0 plnstp'
+        nip nip             \ plnstp'
+        true
+    else
+        2drop
+        false
+    then 
 ;

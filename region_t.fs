@@ -36,7 +36,7 @@
 
     region-list-deallocate
 
-    cr ." region-test-region-subtract - Ok" cr
+    cr ." region-test-region-subtract: Ok" cr
 ;
 
 : region-test-states-in
@@ -75,7 +75,7 @@
     region-deallocate
     list-deallocate
 
-    cr ." region-test-states-in - Ok" cr
+    cr ." region-test-states-in: Ok" cr
 ;
 
 : region-test-translate-to-region
@@ -105,7 +105,7 @@
     region-deallocate
     region-deallocate
 
-    cr ." region-test-translate-to-region - Ok" cr
+    cr ." region-test-translate-to-region: Ok" cr
 ;
 
 : region-tests

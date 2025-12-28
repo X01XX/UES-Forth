@@ -94,7 +94,7 @@
     rulestore-deallocate                \ rs1
     rulestore-deallocate
 
-    cr ." rulestore-test-union - Ok" cr
+    cr ." rulestore-test-union: Ok" cr
 ;
 
 : rulestore-tests

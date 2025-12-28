@@ -64,7 +64,7 @@
 
     current-session-deallocate
 
-    cr ." session-test-domain-get-plan-fc - Ok" cr
+    cr ." session-test-domain-get-plan-fc: Ok" cr
 ;
 
 : session-test-domain-get-plan-bc
@@ -131,7 +131,7 @@
 
     current-session-deallocate
 
-    cr ." session-test-domain-get-plan-bc - Ok" cr
+    cr ." session-test-domain-get-plan-bc: Ok" cr
 ;
 
 : session-test-domain-asymmetric-chaining
@@ -197,7 +197,7 @@
 
     current-session-deallocate
 
-    cr ." session-test-domain-asymmetric-chaining - Ok" cr
+    cr ." session-test-domain-asymmetric-chaining: Ok" cr
 ;
 
 : session-test-path
@@ -205,25 +205,91 @@
     current-session-new
 
     \ Init domain 0.
-    #4 domain-new                                   \ dom0
-    current-session                                 \ dom0 sess
-    session-add-domain                              \
+    #4 domain-new dup                               \ dom0 dom0
+    current-session                                 \ dom0 dom0 sess
+    session-add-domain                              \ dom0
+
+    \ Add act1, act2 and act3.
+    [ ' noop ] literal over domain-add-action       \ dom0
+    [ ' noop ] literal over domain-add-action       \ dom0
+    [ ' noop ] literal over domain-add-action       \ dom0
+
+    \ Set up group for act0.
+    0 over domain-find-action                       \ dom0, act0 t | f
+    0= abort" can't find act0?"
+    %0001 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom0 act0
+    %1110 %1111 sample-new dup rot action-add-sample sample-deallocate      \ dom0
+
+    \ Set up group for act1.
+    1 over domain-find-action                       \ dom0, act1 t | f
+    0= abort" can't find act1?"
+    %0010 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom0 act1
+    %1101 %1111 sample-new dup rot action-add-sample sample-deallocate      \ dom0
+
+    \ Set up group for act2.
+    2 over domain-find-action                       \ dom0, act1 t | f
+    0= abort" can't find act2?"
+    %0100 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom0 act2
+    %1011 %1111 sample-new dup rot action-add-sample sample-deallocate      \ dom0
+
+    \ Set up group for act3.
+    3 over domain-find-action                       \ dom0, act3 t | f
+    0= abort" can't find act3?"
+    %1000 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom0 act3
+    %0111 %1111 sample-new dup rot action-add-sample sample-deallocate      \ dom0
+    drop
 
     \ Init domain 1.
-    #5 domain-new                                   \ dom1
-    current-session                                 \ dom1 sess
-    session-add-domain                              \
+    #5 domain-new dup                               \ dom1 dom1
+    current-session                                 \ dom1 dom1 sess
+    session-add-domain                              \ dom1
+        \ Add act1, act2 and act3, act4.
+    [ ' noop ] literal over domain-add-action       \ dom1
+    [ ' noop ] literal over domain-add-action       \ dom1
+    [ ' noop ] literal over domain-add-action       \ dom1
+    [ ' noop ] literal over domain-add-action       \ dom1
 
+    \ Set up group for act0.
+    0 over domain-find-action                   \ dom1, act0 t | f
+    0= abort" can't find act0?"
+    %00001 %00000 sample-new dup #2 pick action-add-sample sample-deallocate    \ dom1 act0
+    %11110 %11111 sample-new dup rot action-add-sample sample-deallocate        \ dom1
+
+    \ Set up group for act1.
+    1 over domain-find-action                   \ dom1, act1 t | f
+    0= abort" can't find act1?"
+    %00010 %00000 sample-new dup #2 pick action-add-sample sample-deallocate    \ dom1 act1
+    %11101 %11111 sample-new dup rot action-add-sample sample-deallocate        \ dom1
+
+    \ Set up group for act2.
+    2 over domain-find-action                   \ dom1, act2 t | f
+    0= abort" can't find act2?"
+    %00100 %00000 sample-new dup #2 pick action-add-sample sample-deallocate    \ dom1 act2
+    %11011 %11111 sample-new dup rot action-add-sample sample-deallocate        \ dom1
+
+    \ Set up group for act3.
+    3 over domain-find-action                   \ dom1, act3 t | f
+    0= abort" can't find act3?"
+    %01000 %00000 sample-new dup #2 pick action-add-sample sample-deallocate    \ dom1 act3
+    %10111 %11111 sample-new dup rot action-add-sample sample-deallocate        \ dom1
+
+    \ Set up group for act4.
+    4 over domain-find-action                   \ dom1, act4 t | f
+    0= abort" can't find act4?"
+    %10000 %00000 sample-new dup #2 pick action-add-sample sample-deallocate    \ dom1 act4
+    %01111 %11111 sample-new dup rot action-add-sample sample-deallocate        \ dom1
+    drop                                                                        \
+    
     current-session                                 \ sess
-    s" (X1X1 01X1X)" regioncorr-from-string-a \ sess rlc
-    -1 #2 rate-new                                  \ sess rlc rt
-    regioncorrrate-new                              \ sess rlc-rt
+    s" (X1X1 01X1X)" regioncorr-from-string-a       \ sess regc
+    -1 #2 rate-new                                  \ sess regc rt
+    regioncorrrate-new                              \ sess regc-rt
     \ cr ." regioncorrrate: " dup .regioncorrrate cr
     over session-add-regioncorrrate                  \ sess
 
-    s" (1XX1 01X1X)" regioncorr-from-string-a       \ sess rlc
+    s" (1XX1 01X1X)" regioncorr-from-string-a       \ sess regc
     #-2 0 rate-new                                  \ sess
-    regioncorrrate-new                              \ sess rlc-rt
+    regioncorrrate-new                              \ sess regc-rt
     \ cr ." regioncorrrate: " dup .regioncorrrate cr
     over session-add-regioncorrrate                 \ sess
 
@@ -232,39 +298,49 @@
     over session-set-current-domain                 \ sess
 
     \ 0
-\    s" (0011 01111)" regioncorr-from-string-a       \ sess rlc-to
-\    s" (0000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
+\    s" (0011 01111)" regioncorr-from-string-a       \ sess regc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
 
     \ -1
-    s" (0111 01111)" regioncorr-from-string-a       \ sess rlc-to
-    s" (1000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
+    s" (0111 01111)" regioncorr-from-string-a       \ sess regc-to
+    s" (1000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
 
     \ -2
-\    s" (1001 01111)" regioncorr-from-string-a       \ sess rlc-to
-\    s" (0000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
+\    s" (1001 01111)" regioncorr-from-string-a       \ sess regc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
 
     \ -3
-\    s" (1101 01111)" regioncorr-from-string-a       \ sess rlc-to
-\    s" (0000 01111)" regioncorr-from-string-a       \ sess rlc-to rlc-from
+\    s" (1101 01111)" regioncorr-from-string-a       \ sess regc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
 
 \    #2 pick .session
 
-    2dup                                            \ sess rlc-to rlc-from rlc-to rlc-from
-    #4 pick                                         \ sess rlc-to rlc-from rlc-to rlc-from sess
-    cr ." at 1: " .stack-structs-xt execute cr
-    session-calc-path                               \ sess rlc-to rlc-from, plnlc t | f
-    cr ." at 2: " .stack-structs-xt execute cr
+    2dup                                            \ sess regc-to regc-from regc-to regc-from
+    #4 pick                                         \ sess regc-to regc-from regc-to regc-from sess
+    \ cr ." at 1: " .stack-structs-xt execute cr
+    session-calc-path                               \ sess regc-to regc-from, pthstp-lst t | f
+   \  cr ." at 2: " .stack-structs-xt execute cr
     if
+        cr ." path found: " dup .pathstep-list cr
+        dup                                             \ sess regc-to regc-from pthstp-lst pthstp-lst
+        #3 pick                                         \ sess regc-to regc-from pthstp-lst pthstp-lst regc-to
+        #3 pick                                         \ sess regc-to regc-from pthstp-lst pthstp-lst regc-to regc-from 
+        #6 pick                                         \ sess regc-to regc-from pthstp-lst pthstp-lst regc-to regc-from sess
+        session-calc-plnclst-from-pthstplst             \ sess regc-to regc-from pthstp-lst, plnc-lst t | f
+        if
+            cr ." plan found: " dup .plancorr-list  \ sess regc-to regc-from pthstp-lst plnc-lst
+            plancorr-list-deallocate                \ sess regc-to regc-from pthstp-lst
+        then
         pathstep-list-deallocate
     then
 
     regioncorr-deallocate
     regioncorr-deallocate
     drop
-    
+
     current-session-deallocate
 
-    cr ." session-test-path - Ok" cr
+    cr ." session-test-path: Ok" cr
 ;
 
 : session-tests

@@ -404,7 +404,7 @@ action-groups-disp               cell+  constant action-function-disp           
     region-list-deallocate              \ act0
 
     drop                                \
-    \ cr ."  _action-update-logical-structure - end" cr
+    \ cr ."  _action-update-logical-structure: end" cr
 ;
 
 \ End accessors.
@@ -569,7 +569,7 @@ action-groups-disp               cell+  constant action-function-disp           
 \ Check a new, or changed square.
 \ Could affect action-incompatible-pairs and action-logical-structure.
 : _action-check-square ( sqr1 act0 -- )
-    \ cr ." _action-check-square - start" cr
+    \ cr ." _action-check-square: start" cr
     \ Check args.
     dup is-allocated-action 0= if cr .s cr then
     assert-tos-is-action
@@ -644,7 +644,7 @@ action-groups-disp               cell+  constant action-function-disp           
 
     region-list-deallocate
     drop
-    \ cr ." _action-check-square - end" cr
+    \ cr ." _action-check-square: end" cr
 ;
 
 \ Return a square given a state.
@@ -660,7 +660,7 @@ action-groups-disp               cell+  constant action-function-disp           
 \ Check a given region-list, where the region states represent incompatible pairs,
 \ returning regions where the represented squares are no longer incompatible.
 : _action-not-incompatible-pairs ( reg-lst1 act0 -- reg-lst2 )
-    \ cr ." _action-not-incompatible-pairs - start" cr
+    \ cr ." _action-not-incompatible-pairs: start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
@@ -713,12 +713,12 @@ action-groups-disp               cell+  constant action-function-disp           
     repeat
                                 \ ret-lst act0
     drop                        \ ret-lst
-    \ cr ." _action-not-incompatible-pairs - end" cr
+    \ cr ." _action-not-incompatible-pairs: end" cr
 ;
 
 \ Recalc action-logical-structure from action-incompatible-pairs.
 :  _action-recalc-logical-structure ( act0 -- )
-   \  cr ." _action-recalc-logical-structure - start" cr
+   \  cr ." _action-recalc-logical-structure: start" cr
     \ Check args.
     assert-tos-is-action
 
@@ -761,7 +761,7 @@ action-groups-disp               cell+  constant action-function-disp           
     \ Store new LS.
     swap                                    \ ls-new act0
     _action-update-logical-structure        \
-    \ cr ." _action-recalc-logical-structure - end" cr
+    \ cr ." _action-recalc-logical-structure: end" cr
 ;
 
 \ Check if a changed square is between two incompatible square pairs,
@@ -869,7 +869,7 @@ action-groups-disp               cell+  constant action-function-disp           
     if
         list-deallocate                 \ sqr1 act0
         _action-check-incompatible-pairs2
-       \  cr ." _action-check-incompatible-pairs - end 1" cr
+       \  cr ." _action-check-incompatible-pairs: end 1" cr
         exit
     else                                \ sqr1 act0 reg-lst-in
         rot drop                        \ act0 reg-lst-in
@@ -884,7 +884,7 @@ action-groups-disp               cell+  constant action-function-disp           
         list-deallocate
         region-list-deallocate
         drop
-       \  cr ." _action-check-incompatible-pairs - end 2" cr
+       \  cr ." _action-check-incompatible-pairs: end 2" cr
         exit
     then
 
@@ -916,7 +916,7 @@ action-groups-disp               cell+  constant action-function-disp           
 
     \ Recalc logical-structure
     _action-recalc-logical-structure
-    \ cr ." _action-check-incompatible-pairs - end 3" cr
+    \ cr ." _action-check-incompatible-pairs: end 3" cr
 ;
 
 \ Add a sample.
@@ -930,7 +930,7 @@ action-groups-disp               cell+  constant action-function-disp           
 \ its ~A + ~B can be calculated and intersected with action-logical-structure.
 \
 : action-add-sample ( smpl1 act0 -- )
-    \ cr ." action-add-sample - start" cr
+    \ cr ." action-add-sample: start" cr
     \ Check args.
     assert-tos-is-action
     assert-nos-is-sample
@@ -1002,7 +1002,7 @@ action-groups-disp               cell+  constant action-function-disp           
             2drop
         then
     then
-    \ cr ." action-add-sample - end" cr
+    \ cr ." action-add-sample: end" cr
 ;
 
 \ Return true if a state is confirmed with a pnc square.
@@ -1053,12 +1053,12 @@ action-groups-disp               cell+  constant action-function-disp           
 \ Call only from session-get-sample to domain-get-sample
 \ since current-domain and current-action need to be set first.
 : action-get-sample ( sta1 act0 -- smpl )
-    \ cr ." action-get-sample - start" cr
+    \ cr ." action-get-sample: start" cr
      \ Check args.
     assert-tos-is-action
     assert-nos-is-value
 
-    \ cr ." Act: " dup action-get-inst-id . ." action-get-sample" cr
+    \ cr ."action-get-sample: Act: " dup action-get-inst-id . cr
 
     tuck                        \ act0 sta1 act0
 
@@ -1084,7 +1084,7 @@ action-groups-disp               cell+  constant action-function-disp           
         tuck swap               \ smpl smpl act0
         action-add-sample       \ smpl
     then
-    \ cr ." action-get-sample - end" cr
+    \ cr ." action-get-sample: end" cr
 ;
 
 \ Return true if a action id matches a number.

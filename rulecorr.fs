@@ -11,7 +11,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 \ Init rule mma, return the addr of allocated memory.
 : rulecorr-mma-init ( num-items -- ) \ sets rulecorr-mma.
-    dup 1 < 
+    dup 1 <
     abort" rulecorr-mma-init: Invalid number of items."
 
     cr ." Initializing RuleCorr store."
@@ -20,7 +20,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 \ Check rule mma usage.
 : assert-rulecorr-mma-none-in-use ( -- )
-    rulecorr-mma mma-in-use 0<> 
+    rulecorr-mma mma-in-use 0<>
     abort" rulecorr-mma use GT 0"
 ;
 
@@ -114,8 +114,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
     rulecorr-get-list               \ rul-lst
     list-get-links                  \ rc-link
-    cur-session-get-domain-list-xt      \ rc-link xt
-    execute                         \ rc-link dom-lst 
+    cur-session-get-domain-list-xt  \ rc-link xt
+    execute                         \ rc-link dom-lst
     list-get-links                  \ rc-link d-link
     ." ("
     begin
@@ -200,8 +200,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     \ Prep for loop.
     rulecorr-get-list               \ reg-lst rul-lst
     list-get-links                  \ reg-lst rc-link
-    cur-session-get-domain-list-xt      \ reg-lst rc-link xt
-    execute                         \ reg-lst rc-link dom-lst 
+    cur-session-get-domain-list-xt  \ reg-lst rc-link xt
+    execute                         \ reg-lst rc-link dom-lst
     list-get-links                  \ reg-lst rc-link d-link
 
     begin
@@ -239,7 +239,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     rulecorr-get-list               \ reg-lst rul-lst
     list-get-links                  \ reg-lst rul-link
     cur-session-get-domain-list-xt  \ reg-lst rul-link xt
-    execute                         \ reg-lst rul-link dom-lst 
+    execute                         \ reg-lst rul-link dom-lst
     list-get-links                  \ reg-lst rul-link d-link
 
     begin
@@ -250,11 +250,11 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         domain-set-current-xt
         execute                     \ reg-lst rul-link d-link
 
-        \ Calc initial region.
+        \ Calc result region.
         over link-get-data          \ reg-lst rul-link d-link rulx
-        rule-calc-initial-region    \ reg-lst rul-link d-link reg-i'
+        rule-calc-result-region    \ reg-lst rul-link d-link reg-i'
 
-        \ Store initial region.
+        \ Store result region.
         #3 pick                     \ reg-lst rul-link d-link reg-i' reg-lst
         list-push-end-struct        \ reg-lst rul-link d-link
 
@@ -325,7 +325,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         [ ' rulecorr-list-deallocate ] literal over \ rulc-lol0 xt rulc-lol0
         list-apply                                  \ rulc-lol0
 
-        \ Deallocate the list. 
+        \ Deallocate the list.
         list-deallocate                             \
     else
         struct-dec-use-count
@@ -351,7 +351,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     swap                            \ reg-lst reg-link rul-link
 
     cur-session-get-domain-list-xt  \ reg-lst reg-link rul-link xt
-    execute                         \ reg-lst reg-link rul-link dom-lst 
+    execute                         \ reg-lst reg-link rul-link dom-lst
     list-get-links                  \ reg-lst reg-link rul-link d-link
 
     begin

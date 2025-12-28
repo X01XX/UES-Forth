@@ -42,7 +42,7 @@
 ;
 
 \ Check if tos is a non-empty list, with the first item being a changes struct.
-: assert-tos-is-changes-list ( tos -- )
+: assert-tos-is-changes-list ( tos -- tos )
     assert-tos-is-list
     assert-tos-list-is-not-empty
     dup list-get-links link-get-data

@@ -1,7 +1,7 @@
 \ Functions for planstep lists.
 
 \ Check if tos is a non-empty list, if non-empty, with the first item being a planstep.
-: assert-tos-is-planstep-list ( tos -- )
+: assert-tos-is-planstep-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
     if
@@ -12,7 +12,7 @@
 ;
 
 \ Check if nos is a non-empty list, if non-empty, with the first item being a planstep.
-: assert-nos-is-planstep-list ( nos tos -- )
+: assert-nos-is-planstep-list ( nos tos -- nos tos )
     assert-tos-is-list
     over list-is-not-empty
     if
@@ -23,13 +23,13 @@
 ;
 
 \ Deallocate a planstep list.
-: planstep-list-deallocate ( lst0 -- )
+: planstep-list-deallocate ( plnstp-lst0 -- )
     \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                        \ lst0 uc
+    dup struct-get-use-count                        \ plnstp-lst0 uc
     #2 < if
         \ Deallocate planstep instances in the list.
-        [ ' planstep-deallocate ] literal over      \ lst0 xt lst0
-        list-apply                                  \ lst0
+        [ ' planstep-deallocate ] literal over      \ plnstp-lst0 xt plnstp-lst0
+        list-apply                                  \ plnstp-lst0
     then
 
     \ Deallocate the list.
@@ -67,23 +67,23 @@
 ' planstep-list-push to planstep-list-push-xt
 
 \ Append nos planstep-list to the tos planstep-list.
-: planstep-list-append ( lst1 lst0 -- )
+: planstep-list-append ( plnstp-lst1 plnstp-lst0 -- )
     \ Check args.
     assert-tos-is-planstep-list
     assert-nos-is-planstep-list
 
-    swap                    \ lst0 lst1
-    list-get-links          \ lst0 link
+    swap                    \ plnstp-lst0 plnstp-lst1
+    list-get-links          \ plnstp-lst0 link
     begin
         ?dup
     while
-        dup link-get-data   \ lst0 link nedx
-        #2 pick             \ lst0 link nedx lst0
-        planstep-list-push  \ lst0 link
+        dup link-get-data   \ plnstp-lst0 link nedx
+        #2 pick             \ plnstp-lst0 link nedx plnstp-lst0
+        planstep-list-push  \ plnstp-lst0 link
 
         link-get-next
     repeat
-                            \ lst0
+                            \ plnstp-lst0
     drop
 ;
 
@@ -108,7 +108,7 @@
     assert-nos-is-changes
 
     \ Prep for loop.
-    list-new -rot                   \ ret cngs1 lst0
+    list-new -rot                   \ ret cngs1 plnstp-lst0
     list-get-links                  \ ret cngs1 link
 
     begin

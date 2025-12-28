@@ -1,7 +1,7 @@
 \ Functions for plan lists.
 
 \ Check if tos is a list, if non-empty, with the first item being a plan.
-: assert-tos-is-plan-list ( tos -- )
+: assert-tos-is-plan-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
     if
@@ -57,7 +57,7 @@
 \ Push a plan to the end of a plan-list.
 : plan-list-push-end ( stp1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-plan-list
     assert-nos-is-plan
 
     over struct-inc-use-count

@@ -21,7 +21,7 @@
     regioncorr-list-deallocate          \ regc
     regioncorr-deallocate               \
 
-    cr ." regioncorr-list-test-any-superset - Ok" cr
+    cr ." regioncorr-list-test-any-superset: Ok" cr
 ;
 
 : regioncorr-list-test-remove-subsets
@@ -56,7 +56,7 @@
     regioncorr-list-deallocate                  \ regc
     regioncorr-deallocate                       \
 
-    cr ." regioncorr-list-test-remove-subsets - Ok" cr
+    cr ." regioncorr-list-test-remove-subsets: Ok" cr
 ;
 
 : regioncorr-list-test-push-nosubs
@@ -98,7 +98,7 @@
                                                 \ regc-lst
     regioncorr-list-deallocate                  \
 
-    cr ." regioncorr-list-test-push-nosubs - Ok" cr
+    cr ." regioncorr-list-test-push-nosubs: Ok" cr
 ;
 
 : regioncorr-list-test-copy-nosubs
@@ -139,7 +139,7 @@
     regioncorr-list-deallocate                  \ regc-lst
     regioncorr-list-deallocate                  \
 
-    cr ." regioncorr-list-test-copy-nosubs - Ok" cr
+    cr ." regioncorr-list-test-copy-nosubs: Ok" cr
 ;
 
 : regioncorr-list-test-subtract-regc
@@ -292,7 +292,7 @@
     regioncorr-list-deallocate                  \ regc
     regioncorr-deallocate                       \
 
-    cr ." regioncorr-list-test-subtract-regc - Ok" cr
+    cr ." regioncorr-list-test-subtract-regc: Ok" cr
 ;
 
 : regioncorr-list-test-complement
@@ -328,7 +328,7 @@
     regioncorr-list-deallocate                  \ regc-lst
     regioncorr-list-deallocate                  \
 
-    cr ." regioncorr-list-test-complement - Ok" cr
+    cr ." regioncorr-list-test-complement: Ok" cr
 ;
 
 : regioncorr-list-test-normalize
@@ -361,7 +361,7 @@
     regioncorr-list-deallocate                  \ regc-lst
     regioncorr-list-deallocate                  \
 
-    cr ." regioncorr-list-test-normalize - Ok" cr
+    cr ." regioncorr-list-test-normalize: Ok" cr
 ;
 
 : regioncorr-list-test-intersection-fragments
@@ -395,7 +395,7 @@
     regioncorr-list-deallocate                  \ regc-lst
     regioncorr-list-deallocate                  \
 
-    cr ." regioncorr-list-test-intersection-fragments - Ok" cr
+    cr ." regioncorr-list-test-intersection-fragments: Ok" cr
 ;
 
 : regioncorr-list-tests
@@ -408,5 +408,5 @@
     regioncorr-list-test-normalize
     regioncorr-list-test-intersection-fragments
 
-    cr ." regioncorr-list tests - Ok" cr
+    cr ." regioncorr-list tests: Ok" cr
 ;

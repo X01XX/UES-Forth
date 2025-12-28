@@ -30,7 +30,7 @@
     region-list-deallocate
     region-list-deallocate
 
-    cr ." region-test-region-intersections-n - Ok"
+    cr ." region-test-region-intersections-n: Ok"
 ;
 
 : region-list-test-subtract-n
@@ -82,7 +82,7 @@
     region-list-deallocate
     region-list-deallocate
 
-    cr ." region-list-test-subtract-n - Ok"
+    cr ." region-list-test-subtract-n: Ok"
 ;
 
 : region-list-test-states
@@ -110,7 +110,7 @@
     list-deallocate
     region-list-deallocate
 
-    cr ." region-list-test-states - Ok"
+    cr ." region-list-test-states: Ok"
 ;
 
 : region-list-test-state-in-one-region
@@ -156,7 +156,7 @@
 
     region-list-deallocate
 
-    cr ." region-list-test-state-in-one-region - Ok"
+    cr ." region-list-test-state-in-one-region: Ok"
 ;
 
 : region-list-test-states-in-one-region
@@ -203,7 +203,7 @@
     region-list-deallocate
     list-deallocate
 
-    cr ." region-list-test-states-in-one-region - Ok"
+    cr ." region-list-test-states-in-one-region: Ok"
 ;
 
 : region-list-test-intersection-fragments
@@ -366,7 +366,7 @@
     region-list-deallocate
     region-list-deallocate
 
-    cr ." region-list-test-intersection-fragments - Ok"
+    cr ." region-list-test-intersection-fragments: Ok"
 ;
 
 : region-list-test-normalize
@@ -411,7 +411,7 @@
     region-list-deallocate                  \ lst1
     region-list-deallocate                  \
 
-    cr ." region-list-test-normalize - Ok"
+    cr ." region-list-test-normalize: Ok"
 ;
 
 : region-list-test-copy-except
@@ -456,7 +456,7 @@
     region-list-deallocate
     region-list-deallocate
 
-    cr ." region-list-test-copy-except - Ok"
+    cr ." region-list-test-copy-except: Ok"
 ;
 
 : region-list-tests

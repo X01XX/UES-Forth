@@ -12,7 +12,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
 \ Init changencorr mma, return the addr of allocated memory.
 : changescorr-mma-init ( num-items -- ) \ sets changescorr-mma.
-    dup 1 < 
+    dup 1 <
     abort" changescorr-mma-init: Invalid number of items."
 
     cr ." Initializing ChangesCorr store."
@@ -21,7 +21,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
 \ Check changescorr mma usage.
 : assert-changescorr-mma-none-in-use ( -- )
-    changescorr-mma mma-in-use 0<> 
+    changescorr-mma mma-in-use 0<>
     abort" changescorr-mma use GT 0"
 ;
 
@@ -117,8 +117,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
     changescorr-get-list            \ lst
     list-get-links                  \ link0
-    cur-session-get-domain-list-xt      \ link0 xt
-    execute                         \ link0 dom-lst 
+    cur-session-get-domain-list-xt  \ link0 xt
+    execute                         \ link0 dom-lst
     list-get-links                  \ link0 d-link
     ." ("
     begin
@@ -171,11 +171,11 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
         \ Deallocate changes instances in the list.
-        [ ' changescorr-deallocate ] literal over     \ lst0 xt lst0
+        [ ' changescorr-deallocate ] literal over   \ lst0 xt lst0
         list-apply                                  \ lst0
 
-        \ Deallocate the list. 
-        list-deallocate                            \
+        \ Deallocate the list.
+        list-deallocate                             \
     else
         struct-dec-use-count
     then
@@ -193,7 +193,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
         [ ' changescorr-list-deallocate ] literal over  \ lst0 xt lst0
         list-apply                                      \ lst0
 
-        \ Deallocate the list. 
+        \ Deallocate the list.
         list-deallocate                                 \
     else
         struct-dec-use-count

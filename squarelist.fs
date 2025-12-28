@@ -1,7 +1,7 @@
 \ Functions for square lists.
 
 \ Check if tos is a list, if non-empty, with the first item being a square.
-: assert-tos-is-square-list ( tos -- )
+: assert-tos-is-square-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
     if

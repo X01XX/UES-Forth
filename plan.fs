@@ -530,7 +530,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-plan
-    \ cr ." plan-link start: from " dup .plan space ." to " over .plan cr
+    \ cr ." plan-link: start from " dup .plan space ." to " over .plan cr
 
     \ Check intersection.
     over plan-get-initial-region
@@ -588,7 +588,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
                                     \ pln-to' pln-from'
     swap plan-deallocate            \ pln-from'
     true
-    \ cr ." plan link end: " .s cr
+    \ cr ." plan link: end " .s cr
 ;
 
 : plan-get-length ( pln0 -- u )
@@ -613,7 +613,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-planstep
-    \ cr ." plan-link-step-to-result-region start: from " dup .plan space ." to " over .step cr
+    \ cr ." plan-link-step-to-result-region: start from " dup .plan space ." to " over .step cr
 
     \ Check step for plan.
     2dup plan-check-step-result     \ stp-to pln-from bool
@@ -651,7 +651,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     \ Check args.
     assert-tos-is-plan
     assert-nos-is-planstep
-    \ cr ." plan-link-step-to-initial-region: start: " .s cr
+    \ cr ." plan-link-step-to-initial-region: start " .s cr
 
     \ Check step for plan.
     2dup plan-check-step-initial    \ stp-from pln-to bool
@@ -680,7 +680,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         drop
         false
     then
-    \ cr ." plan-link-step-to-initial-region: end: " .s cr
+    \ cr ." plan-link-step-to-initial-region: end " .s cr
 ;
 
 \ Return true if a plan is empty.

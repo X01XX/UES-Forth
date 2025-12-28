@@ -12,7 +12,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Init region mma, return the addr of allocated memory.
 : regioncorr-mma-init ( num-items -- ) \ sets regioncorr-mma.
-    dup 1 < 
+    dup 1 <
     abort" regioncorr-mma-init: Invalid number of items."
 
     cr ." Initializing RegionCorr store."
@@ -21,7 +21,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Check region mma usage.
 : assert-regioncorr-mma-none-in-use ( -- )
-    regioncorr-mma mma-in-use 0<> 
+    regioncorr-mma mma-in-use 0<>
     abort" regioncorr-mma use GT 0"
 ;
 
@@ -70,9 +70,9 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Check 4OS for regioncorr, unconventional, leaves stack unchanged.
 : assert-4os-is-regioncorr ( 4os 3os nos tos -- 4os 3os nos tos )
-    #2 pick is-allocated-regioncorr
+    #3 pick is-allocated-regioncorr
     is-false if
-        s" 3OS is not an allocated regioncorr"
+        s" 4OS is not an allocated regioncorr"
         .abort-xt execute
     then
 ;
@@ -131,10 +131,10 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Check arg.
     assert-tos-is-regioncorr
 
-    regioncorr-get-list       \ lst
+    regioncorr-get-list             \ lst
     list-get-links                  \ link0
-    cur-session-get-domain-list-xt      \ link0 xt
-    execute                         \ link0 dom-lst 
+    cur-session-get-domain-list-xt  \ link0 xt
+    execute                         \ link0 dom-lst
     list-get-links                  \ link0 d-link
     ." ("
     begin

@@ -147,6 +147,18 @@
         exit
     then
 
+    dup plancorr-mma mma-within-array
+    if
+        dup struct-get-id
+        0= if
+            ." plnc-u "
+        else
+            ." plnc "
+        then
+        drop
+        exit
+    then
+
     dup rate-mma mma-within-array
     if
         dup struct-get-id

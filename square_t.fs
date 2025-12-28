@@ -44,7 +44,7 @@
 ;
 
 : square-test-add-result
-    cr ." square-test-add-result - start"
+    cr ." square-test-add-result: start"
 
     cr ."    pn 1 to pnc = t"
 
@@ -153,7 +153,7 @@
     square-deallocate
     square-deallocate
 
-    cr ." square-test-add-result - Ok" cr
+    cr ." square-test-add-result: Ok" cr
 ;
 
 : assert-char-C ( char -- )
@@ -172,7 +172,7 @@
 ;
 
 : square-test-compare
-    cr ." square-test-compare - start"
+    cr ." square-test-compare: start"
 
     cr ."    pn 1 to 1 compatible:"
     #4 #5 square-new
@@ -393,7 +393,7 @@
     square-deallocate
     square-deallocate
 
-    cr ." square-test-compare - Ok" cr
+    cr ." square-test-compare: Ok" cr
 ;
 
 : square-tests

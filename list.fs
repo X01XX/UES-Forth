@@ -107,14 +107,14 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Check TOS for non-empty list, unconventional, leaves stack unchanged.
-: assert-tos-list-is-not-empty ( tos -- )
+: assert-tos-list-is-not-empty ( tos -- tos )
     assert-tos-is-list
     dup list-get-length
     0= abort" tos list is empty"
 ;
 
 \ Check NOS for non-empty list, unconventional, leaves stack unchanged.
-: assert-nos-list-is-not-empty ( tos -- )
+: assert-nos-list-is-not-empty ( tos -- tos )
     assert-nos-is-list
     over list-get-length
     0= abort" nos list is empty"
@@ -905,7 +905,7 @@ list-header-disp    cell+   constant list-links-disp
     over over list-get-length < 0= abort" list-copy-except: index out of range?"
 
     list-get-links                  \ new-item2 index1 link
-    list-new -rot                   \ new-item2 lst-new index1 link 
+    list-new -rot                   \ new-item2 lst-new index1 link
     begin
         ?dup
     while

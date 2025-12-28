@@ -29,7 +29,7 @@
     square-list-deallocate
     region-deallocate
 
-    cr ." square-list-test-in-region - Ok"
+    cr ." square-list-test-in-region: Ok"
 ;
 
 : square-list-test-states-in-region
@@ -60,7 +60,7 @@
     square-list-deallocate
     region-deallocate
 
-    cr ." square-list-test-states-in-region - Ok"
+    cr ." square-list-test-states-in-region: Ok"
 ;
 
 : square-list-tests

@@ -29,7 +29,7 @@ then
 fi
 
 # Parse out function names.
-functions=`/usr/bin/sed -e 's/\\.*//g' $wrkdir/source.fs | egrep '^\s*:\s+' | /usr/bin/sed -e 's/\s*\:\s*//g' | /usr/bin/sed -e 's/\s*(.*//' > $wrkdir/functions.txt`
+functions=`/usr/bin/egrep -h '^\s*\:\s+' $wrkdir/source.fs | /usr/bin/sed -e 's/\s*\:\s*//g' | /usr/bin/sed -e 's/\s.*//' > $wrkdir/functions.txt`
 
 # Preamble.
 echo "Unused functions:"
@@ -40,7 +40,7 @@ functions=`/usr/bin/cat $wrkdir/functions.txt`
 # Check the number of references for each function name.
 for line in $functions
 do
- 	count=`/usr/bin/grep -c -- $line $wrkdir/source.fs`
+ 	count=`/usr/bin/grep -- $line $wrkdir/source.fs | grep -cv -- "$line:"`  # remove references to the function name in prints and aborts.
  	if [ $count -lt 2 ]
    	then
         echo "    " $line

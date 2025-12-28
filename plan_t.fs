@@ -107,7 +107,7 @@
     region-deallocate
     plan-deallocate
 
-    cr ." plan-test-restrict-initial-region - Ok" cr
+    cr ." plan-test-restrict-initial-region: Ok" cr
 ;
 
 : plan-test-restrict-result-region
@@ -159,7 +159,7 @@
     plan-deallocate
     region-deallocate
 
-    cr ." plan-test-restrict-result-region - Ok" cr
+    cr ." plan-test-restrict-result-region: Ok" cr
 ;
 
 : plan-test-link-step-to-initial-region
@@ -200,7 +200,7 @@
     plan-deallocate
     drop
 
-    cr ." plan-test-link-step-to-initial-region - Ok" cr
+    cr ." plan-test-link-step-to-initial-region: Ok" cr
 ;
 
 : plan-test-link-step-to-result-region
@@ -242,7 +242,7 @@
     plan-deallocate
     drop
 
-    cr ." plan-test-link-step-to-result-region - Ok" cr
+    cr ." plan-test-link-step-to-result-region: Ok" cr
 ;
 
 : plan-tests

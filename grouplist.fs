@@ -112,7 +112,7 @@
 
 \  Have appropriate groups check a changed square.
 : group-list-check-square ( sqr1 grp-lst0 -- )
-    \ cr ." group-list-check-square - start" cr
+    \ cr ." group-list-check-square: start" cr
     \ Check args.
     assert-tos-is-list
     assert-nos-is-square
@@ -137,7 +137,7 @@
     repeat
                                     \ sqr1
     drop
-    \ cr ." group-list-check-square - end" cr
+    \ cr ." group-list-check-square:  end" cr
 ;
 
 \ Return true, if a state is in at least one group region.

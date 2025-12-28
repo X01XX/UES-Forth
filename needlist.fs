@@ -1,7 +1,7 @@
 \ Functions for need lists.
 
 \ Check if tos is a list, if non-empty, with the first item being a need.
-: assert-tos-is-need-list ( tos -- )
+: assert-tos-is-need-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
     if

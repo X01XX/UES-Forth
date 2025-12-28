@@ -13,7 +13,7 @@
     region-list-deallocate
     region-list-deallocate
 
-    cr ." state-test-not-a-or-not-b - Ok" cr
+    cr ." state-test-not-a-or-not-b: Ok" cr
 ;
 
 : state-tests

@@ -83,7 +83,7 @@
     over over list-get-length < 0= abort" list-copy-except-struct: index out of range?"
 
     list-get-links                  \ new-item2 index1 link
-    list-new -rot                   \ new-item2 lst-new index1 link 
+    list-new -rot                   \ new-item2 lst-new index1 link
     begin
         ?dup
     while

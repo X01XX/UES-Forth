@@ -18,7 +18,7 @@
     regioncorr-deallocate              \ rlc2
     regioncorr-deallocate              \
 
-    cr ." regioncorr-test-superset - Ok" cr
+    cr ." regioncorr-test-superset: Ok" cr
 ;
 
 : regioncorr-test-intersects
@@ -45,7 +45,7 @@
     regioncorr-deallocate              \ rlc1
     regioncorr-deallocate              \
 
-    cr ." regioncorr-test-intersects - Ok" cr
+    cr ." regioncorr-test-intersects: Ok" cr
 ;
 
 : regioncorr-test-subtract
@@ -101,7 +101,7 @@
     regioncorr-deallocate          \ rlc1
     regioncorr-deallocate          \
 
-    cr ." regioncorr-test-subtract - Ok" cr
+    cr ." regioncorr-test-subtract: Ok" cr
 ;
 
 : regioncorr-test-complement
@@ -153,7 +153,7 @@
 
     regioncorr-deallocate                          \
 
-    cr ." regioncorr-test-complement - Ok" cr
+    cr ." regioncorr-test-complement: Ok" cr
 ;
 
 : regioncorr-test-distance
@@ -167,7 +167,7 @@
     regioncorr-deallocate              \ rlc1
     regioncorr-deallocate              \
 
-    cr ." regioncorr-test-distance - Ok" cr
+    cr ." regioncorr-test-distance: Ok" cr
 ;
 
 \ Assume domain0 is 4-bit, Domain 1 is 5-bit.
