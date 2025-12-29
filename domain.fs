@@ -967,6 +967,8 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 
     begin
         \ cr ." top begin: " .stack-structs-xt execute cr
+        \ cr ." top begin: to " dup .region space ." from: " #3 pick .region cr
+
         dup                         \ depth reg-from dom0 | pln reg-to | reg-to
         #4 pick                     \ depth reg-from dom0 | pln reg-to | reg-to reg-from
         #4 pick                     \ depth reg-from dom0 | pln reg-to | reg-to reg-from dom0
@@ -1095,7 +1097,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 
         \ Check if the plan result, the current reg-from, is a subset of the from region.
                                             \ depth reg-from dom0 | pln' reg-to |
-        \ cr ." Checking end of plan: " over .plan space ." cur reg-from: " dup .region space ." reg-to: " #3 pick .region space ." depth: " #4 pick . cr
+       \  cr ." Checking end of plan: " over .plan space ." cur reg-to: " dup .region space ." reg-from: " #3 pick .region space ." depth: " #4 pick . cr
 
         #3 pick                             \ depth reg-from dom0 | pln' reg-to | reg-from
         over                                \ depth reg-from dom0 | pln' reg-to | reg-from reg-to
@@ -1123,7 +1125,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     assert-3os-is-region
     #3 pick 0 #5 within is-false abort" invalid depth?"
 
-    #2 pick #2 pick swap
+    #2 pick #2 pick swap                        \ | reg-from reg-to
     region-superset-of
     if
         over dup rule-new-region-to-region      \ | rul

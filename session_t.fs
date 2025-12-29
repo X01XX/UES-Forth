@@ -200,7 +200,7 @@
     cr ." session-test-domain-asymmetric-chaining: Ok" cr
 ;
 
-: session-test-path
+: session-test-change-to
     \ Init session.
     current-session-new
 
@@ -329,46 +329,28 @@
 \    s" (1101 01111)" regioncorr-from-string-a       \ sess regc-to
 \    s" (0000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
 
-\    #2 pick .session
-
-    2dup                                            \ sess regc-to regc-from regc-to regc-from
-    #4 pick                                         \ sess regc-to regc-from regc-to regc-from sess
-    \ cr ." at 1: " .stack-structs-xt execute cr
-    session-calc-path                               \ sess regc-to regc-from, pthstp-lst t | f
-   \  cr ." at 2: " .stack-structs-xt execute cr
+    over                                            \ sess regc-to regc-from regc-to
+    #3 pick                                         \ sess regc-to regc-from regc-to sess
+    session-change-to                               \ sess regc-to regc-from bool
     if
-        cr ." path found: " dup .pathstep-list cr
-        dup                                             \ sess regc-to regc-from pthstp-lst pthstp-lst
-        #3 pick                                         \ sess regc-to regc-from pthstp-lst pthstp-lst regc-to
-        #3 pick                                         \ sess regc-to regc-from pthstp-lst pthstp-lst regc-to regc-from 
-        #6 pick                                         \ sess regc-to regc-from pthstp-lst pthstp-lst regc-to regc-from sess
-        session-calc-plnclst-from-pthstplst             \ sess regc-to regc-from pthstp-lst, plnc-lst t | f
-        if
-            cr ." plan found: " dup .plancorr-list  \ sess regc-to regc-from pthstp-lst plnc-lst
-
-            dup plancorr-list-run-plan               \ sess regc-to regc-from pthstp-lst plnc-lst, t | f
-            is-false abort" plan failed?"
-
-            plancorr-list-deallocate                \ sess regc-to regc-from pthstp-lst
-
-            #3 pick                                 \ sess regc-to regc-from pthstp-lst sess
-            .session-current-states                 \ sess regc-to regc-from pthstp-lst
-        then
-        pathstep-list-deallocate
+        cr ." change succeeded" cr
+    else
+        cr ." change failed?" cr
+        abort
     then
-
+                                                    \ sess regc-to regc-from
     regioncorr-deallocate
     regioncorr-deallocate
     drop
 
     current-session-deallocate
 
-    cr ." session-test-path: Ok" cr
+    cr ." session-test-change-to: Ok" cr
 ;
 
 : session-tests
     session-test-domain-get-plan-fc
     session-test-domain-get-plan-bc
     session-test-domain-asymmetric-chaining
-\    session-test-path
+    session-test-change-to
 ;

@@ -536,7 +536,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 \ Return a list of regions, one for each domain, in domain list order.
-: session-get-current-regions ( sess0 -- reg-corr-lst )
+: session-get-current-regions ( sess0 -- regcorr )
     \ Check args.
     assert-tos-is-session
 
@@ -561,6 +561,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     repeat
                                     \ sess0 reg-lst
     nip
+    regioncorr-new
 ;
 
 \ Print a list of current states.
@@ -1523,17 +1524,23 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     dup                                         \ regc-to regc-from sess0 | rate-min rate-min
     #2 pick                                     \ regc-to regc-from sess0 | rate-min rate-min sess0
     session-find-regioncorr-list-by-rate        \ regc-to regc-from sess0 | rate-min regc-lst
-    cr ." regc-lst: " dup .regioncorr-list cr
+    \ cr ." regc-lst: " dup .regioncorr-list cr
 
     dup                                         \ regc-to regc-from sess0 | rate-min regc-lst regc-lst
     #5 pick swap #5 pick swap                   \ regc-to regc-from sess0 | rate-min regc-lst regc-to regc-from regclst
     regioncorr-list-intersects-both             \ regc-to regc-from sess0 | rate-min regc-lst, rlcx t | f
     if                                          \ regc-to regc-from sess0 | rate-min regc-lst rlcx
-        cr ." both intersect at: " dup .regioncorr cr
-        \ TODO make pathstep list, with single pathstep, regc-from to regc-to.
-        \ true
-        \ exit
-        2drop                                   \ regc-to regc-from sess0 | rate-min
+        \ cr ." both intersect at: " dup .regioncorr cr
+        drop                                    \ regc-to regc-from sess0 | rate-min regc-lst
+        #4 pick #4 pick                         \ regc-to regc-from sess0 | rate-min regc-lst regc-to regc-from
+        rulecorr-new-regioncorr-to-regioncorr   \ regc-to regc-from sess0 | rate-min regc-lst rulc'
+        pathstep-new                            \ regc-to regc-from sess0 | rate-min regc-lst pthstp
+        list-new tuck pathstep-list-push        \ regc-to regc-from sess0 | rate-min regc-lst pthstp-lst
+        2nip                                    \ regc-to regc-from regc-lst pthstp-lst
+        2nip                                    \ regc-lst pthstp-lst
+        nip                                     \ pthstp-lst
+        true
+        exit
     else                                        \ regc-to regc-from sess0 | rate-min regc-lst
         over                                    \ regc-to regc-from sess0 | rate-min regc-lst rate-min
 
@@ -1696,8 +1703,56 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         link-get-next
     repeat
                                 \ plnc-lst pthstp-lst regc-to sess0 regc-from
-    drop                        \ plnc-lst pthstp-lst regc-to regc-from
-    regioncorr-deallocate       \ plnc-lst pthstp-lst regc-to
-    2drop                       \ plnc-lst
+    regioncorr-deallocate       \ plnc-lst pthstp-lst regc-to sess0
+    3drop                       \ plnc-lst
     true
+;
+
+\ Chonge the current states to intersect a given regioncorr.
+: session-change-to ( regc-to sess0 -- bool )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-regioncorr
+    \ cr ." session-change-to: " over .regioncorr cr
+
+    tuck                                            \ sess0 regc-to sses0
+    
+    session-get-current-regions                     \ sess0 regc-to regc-from'
+    \ cr ." after session-get-current-regions: regc-from: " dup .regioncorr space ." to: " over .regioncorr cr
+    \ cr ." current regions: " dup .regioncorr cr
+    2dup                                            \ sess0 regc-to regc-from' regc-to regc-from'
+    #4 pick                                         \ sess0 regc-to regc-from' regc-to regc-from' sess0
+    \ cr .s cr
+    \  cr ." at dd: " .stack-structs-xt execute cr
+    \ cr ." before session-calc-path: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
+    session-calc-path                               \ sess0 regc-to regc-from', pthstp-lst' t | f
+    if
+        cr ." path found: " dup .pathstep-list cr
+        dup                                         \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst'
+        #3 pick                                     \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst' regc-to
+        #3 pick                                     \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst' regc-to regc-from' 
+        #6 pick                                     \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst' regc-to regc-from' sess0
+        session-calc-plnclst-from-pthstplst         \ sess0 regc-to regc-from' pthstp-lst', plnc-lst t | f
+        if
+            cr ." plan found: " dup .plancorr-list  \ sess0 regc-to regc-from' pthstp-lst' plnc-lst
+
+            dup plancorr-list-run-plan              \ sess0 regc-to regc-from' pthstp-lst' plnc-lst, t | f
+            is-false abort" plan failed?"
+            plancorr-list-deallocate                \ sess0 regc-to regc-from' pthstp-lst'
+
+            \ #3 pick                                 \ sess0 regc-to regc-from' pthstp-lst' sess0
+            \ cr ." Current states: " .session-current-states cr  \ sess0 regc-to regc-from' pthstp-lst'
+            pathstep-list-deallocate                            \ sess0 regc-to regc-from'
+            regioncorr-deallocate
+            2drop
+            true
+            exit
+        else
+            pathstep-list-deallocate
+        then
+    then
+                                                    \ sess0 regc-to regc-from'
+    regioncorr-deallocate
+    2drop
+    false
 ;

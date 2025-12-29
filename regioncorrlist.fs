@@ -531,32 +531,6 @@
     list-deallocate                         \ ret-lst
 ;
 
-\ Return true if any rlc, in an rlc list, is a superset of a given state-list-corr.
-: regioncorr-list-any-superset-states ( slc1 rlc0 -- bool )
-    \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
-
-    list-get-links                          \ slc1 link
-    begin
-        ?dup
-    while
-        over                                \ slc1 link slc1
-        over link-get-data                  \ slc1 link slc1 rlcx
-        regioncorr-superset-states    \ slc1 link bool
-        if
-            2drop
-            true
-            exit
-        then
-
-        link-get-next
-    repeat
-                                            \ slc1
-    drop                                    \
-    false                                   \ bool
-;
-
 \ Return true if a regioncorr-list has at least one superset of the initial and result
 \ states of a regioncorr.
 \ : _regioncorr-list-any-superset-regioncorr ( reglstcor1 rlcl0 -- bool )
@@ -610,34 +584,6 @@
 \    drop                                        \
 \    false                                       \ bool
 \ ;
-
-\ Return a list of rlcs superset of a state-list-corr.
-: regioncorr-list-superset-states-regioncorr-list ( slc1 rlc0 -- bool )
-    \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
-
-    \ Init return list.
-    list-new -rot                           \ ret-lst slc1 rlc0
-
-    list-get-links                          \ ret-lst slc1 link
-    begin
-        ?dup
-    while
-        over                                \ ret-lst slc1 link slc1
-        over link-get-data                  \ ret-lst slc1 link slc1 rlcx
-        regioncorr-superset-states    \ ret-lst slc1 link bool
-        if                                  \ ret-lst slc1 link
-            dup link-get-data               \ ret-lst slc1 link rlcx
-            #3 pick                         \ ret-lst slc1 link rlcx ret-lst
-            regioncorr-list-push                   \ ret-lst slc1 link
-        then
-
-        link-get-next
-    repeat
-                                            \ ret-lst slc1
-    drop                                    \ ret-lst
-;
 
 \ Return the least different value to two given rlcs, not counting equal rlcs.
 : regioncorr-list-least-difference ( rlc2 rlc1 rlc-lst0 -- u )

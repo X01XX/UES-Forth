@@ -64,37 +64,31 @@
     then
 ;
 
-: do-to-command ( rlc-to -- )
-    current-session session-get-current-regions \ rlc-to rlc-from
+: do-to-command ( regc-to -- )
+    \ Check arg.
+    assert-tos-is-regioncorr
+
+    cr ." do-to-command: " dup .regioncorr cr
+
+    current-session session-get-current-regions \ regc-to regc-from'
 
     \ Check if the current states are already at the goal.
-    2dup swap                                   \ rlc-to rls-from rlc-from rlc-to
-    regioncorr-superset                   \ rlc-to rlc-from bool
+    2dup swap                                   \ regc-to regc-from' regc-from' regc-to
+    regioncorr-superset                         \ regc-to regc-from' bool
     if
         cr ." The current states are already at goal." cr
-        region-list-deallocate
+        regioncorr-deallocate
         drop
         exit
     then
-
-    tuck                                        \ rlc-from rlc-to rlc-from
-    current-session                             \ rlc-from rlc-to rlc-from sess
-    session-get-plc                             \ rlc-from plc t | f
-    if                                          \ rlc-from plc
-        cr ." plan found: " dup .plan-list cr
-        swap region-list-deallocate             \ plc
-        dup                                     \ plc plc
-        current-session                         \ plc plc sess
-        session-run-plc                         \ plc bool
-        if
-            cr ." plan succeeded" cr
-        else
-            cr ." plan failed"
-        then
-        plan-list-deallocate
+    cr ." from: " dup .regioncorr space ." to: " over .regioncorr cr
+    regioncorr-deallocate                       \ regc-to
+    current-session                             \ regc-to sess
+    session-change-to                           \ bool
+    if
+        cr ." Change succeeded" cr
     else
-        region-list-deallocate
-        cr ." plan not found" cr
+        cr ." Change failed"
     then
 ;
 
@@ -542,21 +536,21 @@
         exit
     then
 
-    \ Change current rlc to another.
+    \ Change current regc to another.
     2dup s" to" str=
     if
         \ Drop command string.
         2drop                                       \ c-addr c-cnt c-addr c-cnt
 
-        \ Get goal rlc.
+        \ Get goal regc.
         #2                                          \ add new length, 2.
-        regioncorr-from-parsed-string         \ rlc t | f
+        regioncorr-from-parsed-string               \ regc t | f
 
         if
             dup do-to-command
-            region-list-deallocate
+            regioncorr-deallocate
         else
-            cr ." to command: Did not understand the given rlc string" cr
+            cr ." to command: Did not understand the given regc string" cr
         then
         true
         exit

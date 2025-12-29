@@ -227,52 +227,6 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ space ." bool: " dup .bool cr
 ;
 
-\ Return true if TOS is a superset of its corresponding region in NOS.
-: regioncorr-superset-states ( regc1 regc0 -- bool )
-    \ cr ." regioncorr-superset: " dup .regioncorr space ." sup " over .regioncorr
-    \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
-
-    \ Init links for loop.
-    regioncorr-get-list list-get-links swap   \ link0 regc1
-    regioncorr-get-list list-get-links swap   \ link1 link0
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ link1 link0 d-link
-
-    begin
-        ?dup
-    while
-                                    \ link1 link0 d-link
-
-        \ Set current domain.
-        dup link-get-data           \ link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ link1 link0 d-link
-
-        \ Compare regions.
-        #2 pick link-get-data       \ link1 link0 d-link sta2
-        #2 pick link-get-data       \ link1 link0 d-link sta2 reg1
-        region-superset-of-state    \ link1 link0 d-link bool
-        if
-        else
-            \ Non-superset found.
-            3drop
-            false
-            exit
-        then
-
-        \ Prep for next cycle.
-                                    \ link1 link0 d-link
-        rot link-get-next           \ link0 d-link link1
-        rot link-get-next           \ d-link link1 link0
-        rot link-get-next           \ link1 link0 d-link
-    repeat
-                                    \ link1 link0
-    2drop                           \
-    true                            \ bool
-;
-
 \ Return true if TOS is a subset of its corresponding region in NOS.
 : regioncorr-subset ( regc1 regc0 -- bool )
     swap regioncorr-superset
@@ -430,7 +384,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return a regioncorr from a parsed string.
-: regioncorr-from-parsed-string ( addr n -- rlc t | f )
+: regioncorr-from-parsed-string ( addr n -- regc t | f )
 
     \ Check number tokens.
     session-get-number-domains-xt execute   \ addr0 cnt0 cnt2 domain-count
