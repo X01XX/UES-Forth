@@ -140,15 +140,6 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
     tuck _sample-set-result    \ addr
 ;
 
-: sample-copy ( smpl0 - smpl )
-    \ Check arg.
-    assert-tos-is-sample
-
-    dup sample-get-result       \ smpl0 s-r
-    swap sample-get-initial     \ s-r s-i
-    sample-new
-;
-
 \ Print a sample.
 : .sample ( smp0 -- )
     \ Check arg.
@@ -232,18 +223,6 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
     sample-get-result           \ smpl1 2-r
     swap sample-get-result      \ 2-r 1-r
     =
-;
-
-\ Return true if a sample's changes intersect a given changes instance.
-: sample-intersects-changes ( cngs1 smpl0 -- flag )
-    \ Check args.
-    assert-tos-is-sample
-    assert-nos-is-changes
-
-    sample-calc-changes     \ cngs1 s-cngs
-    tuck                    \ s-cngs cngs1 s-cngs
-    changes-intersect       \ s-cngs flag
-    swap changes-deallocate \ flag
 ;
 
 \ Return true if a sample contains a given state.

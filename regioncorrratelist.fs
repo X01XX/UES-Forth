@@ -1,7 +1,20 @@
 \ Functions for a list of Region-list-core + rate, regioncorrrate, structures.
 
+\ Check if tos is a list, if non-empty, with the first item being a regioncorrrate.
+: assert-tos-is-regioncorrrate-list ( tos -- tos )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-regioncorrrate
+        drop
+    then
+;
+
 \ Deallocate a regioncorrrate list.
-: regioncorrrate-list-deallocate ( lst0 -- )
+: regioncorrrate-list-deallocate ( regcr-lst0 -- )
+    assert-tos-is-regioncorrrate-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -14,35 +27,22 @@
     list-deallocate                                 \
 ;
 
-: regioncorrrate-regioncorr-eq ( regcrt1 regcrt0 -- bool )
-    \ Check args.
-    assert-tos-is-regioncorrrate
-    assert-nos-is-regioncorrrate
-
-    \ Get regioncorr part of regioncorrrate.
-    regioncorrrate-get-regioncorr   \ regctr1 regc0
-    swap                            \ regc0 regcrt1
-    regioncorrrate-get-regioncorr   \ regc0 regc1
-
-    regioncorr-eq
-;
-
 \ Push a regioncorrrate to a regioncorrrate-list.
-: regioncorrrate-list-push ( regcrt1 regcrt-lst0 -- )
+: regioncorrrate-list-push ( regcr1 regcr-lst0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-regioncorrrate-list
     assert-nos-is-regioncorrrate
 
     \ Check for 0/0 rate.
-    over regioncorrrate-rate-all-zero      \ regc2 regcrt-lst0 bool
+    over regioncorrrate-rate-all-zero      \ regc2 regcr-lst0 bool
     abort" rate is 0/0 ?"
 
     \ Check for dup regc.
-    [ ' regioncorrrate-regioncorr-eq ] literal    \ regc1 regcrt-lst0 xt
-    #2 pick                         \ regc1 regcrt-lst0 xt regc1
-    #2 pick                         \ regc1 regcrt-lst0 xt regc1 regcrt-lst0
+    [ ' regioncorrrate-eq ] literal \ regc1 regcr-lst0 xt
+    #2 pick                         \ regc1 regcr-lst0 xt regc1
+    #2 pick                         \ regc1 regcr-lst0 xt regc1 regcr-lst0
 
-    list-member                     \ regc1 regcrt-lst0 bool
+    list-member                     \ regc1 regcr-lst0 bool
     abort" Duplicate regioncorr in list?"
 
     over struct-inc-use-count
@@ -50,19 +50,19 @@
 ;
 
 \ Print a regioncorrrate-list
-: .regioncorrrate-list ( list0 -- )
+: .regioncorrrate-list ( regcr-lst0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-regioncorrrate-list
 
     .regioncorrrate-xt swap .list
 ;
 
-: regioncorrrate-list-to-regioncorr-list ( regcrt-lst0 -- regc-lst )
+: regioncorrrate-list-to-regioncorr-list ( regcr-lst0 -- regc-lst )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-regioncorrrate-list
 
     \ Init return list.
-    list-new swap                       \ ret-lst lst0
+    list-new swap                       \ ret-lst regcr-lst0
 
     \ Prep for loop.
     list-get-links                      \ ret-lst link
@@ -70,7 +70,7 @@
     begin
         ?dup
     while
-        dup link-get-data               \ ret-lst link regcrtx
+        dup link-get-data               \ ret-lst link regcrx
         regioncorrrate-get-regioncorr   \ ret-lst link regc
         #2 pick                         \ ret-lst link regc ret-lst
         list-push-struct                \ ret-lst link
@@ -80,9 +80,9 @@
                             \ ret-lst
 ;
 
-: regioncorrrate-list-match-rate-negative ( n lst0 -- rlc-lst )
+: regioncorrrate-list-match-rate-negative ( n lst0 -- regc-lst )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-regioncorrrate-list
 
     \ Init return list.
     list-new -rot                           \ ret-lst n lst0
@@ -94,13 +94,13 @@
         ?dup
     while
         \ Compare regioncorrrate negative value with passed value.
-        dup link-get-data                   \ ret-lst n link rlcrtx
+        dup link-get-data                   \ ret-lst n link regcrx
         regioncorrrate-get-rate             \ ret-lst n link rate
         rate-get-negative                   \ ret-lst n link n2
         #2 pick                             \ ret-lst n link n2 n
         =                                   \ ret-lst n link bool
         if
-            dup link-get-data               \ ret-lst n link rlcrtx
+            dup link-get-data               \ ret-lst n link regcrx
             regioncorrrate-get-regioncorr   \ ret-lst n link regc
             #3 pick                         \ ret-lst n link regc ret-lst
             list-push-struct                \ ret-lst n link

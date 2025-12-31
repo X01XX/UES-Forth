@@ -172,6 +172,7 @@ cs
     then
 ;
 
+include state_t.fs
 include square_t.fs
 include squarelist_t.fs
 include region_t.fs
@@ -294,17 +295,17 @@ cr
     \ Add last domain
     over session-add-domain                     \ sess dom1
 
-    s" (X1X1 01X1X)" regioncorr-from-string-a \ sess rlc
-    -1 #2 rate-new                              \ sess rlc rt
-    regioncorrrate-new                                 \ sess rlc-rt
+    s" (X1X1 01X1X)" regioncorr-from-string-a   \ sess regc
+    -1 #2 rate-new                              \ sess regc rt
+    regioncorrrate-new                          \ sess regc-rt
     \ cr ." regioncorrrate: " dup .regioncorrrate cr
-    over session-add-regioncorrrate                    \ sess
+    over session-add-regioncorrrate             \ sess
 
-    s" (1XX1 01X1X)" regioncorr-from-string-a \ sess rlc
-    #-2 0 rate-new                               \ sess
-    regioncorrrate-new                                 \ sess rlc-rt
+    s" (1XX1 01X1X)" regioncorr-from-string-a   \ sess regc
+    #-2 0 rate-new                              \ sess
+    regioncorrrate-new                          \ sess regc-rt
     \ cr ." regioncorrrate: " dup .regioncorrrate cr
-    over session-add-regioncorrrate                    \ sess
+    over session-add-regioncorrrate             \ sess
 
     .session
 ;

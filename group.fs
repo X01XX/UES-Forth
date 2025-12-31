@@ -431,10 +431,11 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick                             \ | reg-to reg-from
-    2dup region-superset-of                     \ | reg-to reg-from bool
-    abort" group-calc-steps-fc: region subset?" \ | reg-to reg-from
+\    2dup
+\    region-superset-of                     \ | reg-to reg-from bool
+\    abort" group-calc-steps-fc 1: region subset?" \ | reg-to reg-from
     swap region-superset-of                     \ | bool
-    abort" group-calc-steps-fc: region subset?" \ |
+    abort" group-calc-steps-fc 2: region subset?" \ |
     \ cr ." group-calc-forward-steps:" cr
 
     group-get-rules         \ reg-to reg-from rul-str

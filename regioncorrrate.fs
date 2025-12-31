@@ -91,7 +91,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 ;
 
 \ Set the first field from a regioncorrrate instance, use only in this file.
-: _regioncorrrate-set-rate ( rate1 regcrt0 -- )
+: _regioncorrrate-set-rate ( rate1 regcr0 -- )
     \ Check args.
     assert-tos-is-regioncorrrate
     assert-nos-is-rate
@@ -101,7 +101,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 ;
 
 \ Set the second field from a regioncorrrate instance, use only in this file.
-: _regioncorrrate-set-regioncorr ( regc1 regcrt0 -- )
+: _regioncorrrate-set-regioncorr ( regc1 regcr0 -- )
     \ Check args.
     assert-tos-is-regioncorrrate
     assert-nos-is-regioncorr
@@ -119,30 +119,30 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     assert-nos-is-regioncorr
 
     \ Allocate space.
-    regioncorrrate-mma mma-allocate     \ regc1 rate regcrt
+    regioncorrrate-mma mma-allocate     \ regc1 rate regcr
 
     \ Store id.
-    regioncorrrate-id over              \ regc1 rate regcrt id regcrt
-    struct-set-id                       \ regc1 rate regcrte
+    regioncorrrate-id over              \ regc1 rate regcr id regcr
+    struct-set-id                       \ regc1 rate regcre
 
     \ Init use count.
-    0 over struct-set-use-count         \ regc1 rate regcrt
+    0 over struct-set-use-count         \ regc1 rate regcr
 
     \ Store rate.
-    swap                                \ regc1 regcrt rate
-    dup struct-inc-use-count            \ regc1 regcrte rate
-    over _regioncorrrate-set-rate       \ regc1 regcrt
+    swap                                \ regc1 regcr rate
+    dup struct-inc-use-count            \ regc1 regcre rate
+    over _regioncorrrate-set-rate       \ regc1 regcr
 
     \ Store regioncorr.
-    swap                                \ regcrt regc1
-    dup struct-inc-use-count            \ regcrt regc1
-    over _regioncorrrate-set-regioncorr \ regcrt
+    swap                                \ regcr regc1
+    dup struct-inc-use-count            \ regcr regc1
+    over _regioncorrrate-set-regioncorr \ regcr
 ;
 
 \ ' regioncorrrate-new to regioncorrrate-new-xt
 
 \ Print a regioncorrrate.
-: .regioncorrrate ( regcrt0 -- )
+: .regioncorrrate ( regcr0 -- )
     \ Check arg.
     assert-tos-is-regioncorrrate
 
@@ -157,21 +157,21 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 ' .regioncorrrate to .regioncorrrate-xt
 
 \ Deallocate a regioncorrrate.
-: regioncorrrate-deallocate ( regcrt0 -- )
+: regioncorrrate-deallocate ( regcr0 -- )
     \ Check arg.
     assert-tos-is-regioncorrrate
 
-    dup struct-get-use-count                \ regcrt0 count
+    dup struct-get-use-count                \ regcr0 count
 
     #2 <
-    if                                      \ regcrt0
+    if                                      \ regcr0
         \ Deallocate rate.
-        dup regioncorrrate-get-rate         \ regcrt0 rt
-        rate-deallocate                     \ regcrt0
+        dup regioncorrrate-get-rate         \ regcr0 rt
+        rate-deallocate                     \ regcr0
 
         \ Deallocate regioncorr
-        dup regioncorrrate-get-regioncorr   \ regcrt0 regc
-        regioncorr-deallocate               \ regcrt0
+        dup regioncorrrate-get-regioncorr   \ regcr0 regc
+        regioncorr-deallocate               \ regcr0
 
         \ Deallocate instance.
         regioncorrrate-mma mma-deallocate
@@ -180,7 +180,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     then
 ;
 
-: regioncorrrate-rate-all-zero ( regcrt0 -- bool )
+: regioncorrrate-rate-all-zero ( regcr0 -- bool )
     \ Check arg.
     assert-tos-is-regioncorrrate
 
@@ -188,3 +188,15 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     rate-all-zero           \ bool
 ;
 
+: regioncorrrate-eq ( regcr1 regcr0 -- bool )
+    \ Check args.
+    assert-tos-is-regioncorrrate
+    assert-nos-is-regioncorrrate
+
+    \ Get regioncorr part of regioncorrrate.
+    regioncorrrate-get-regioncorr   \ regctr1 regc0
+    swap                            \ regc0 regcr1
+    regioncorrrate-get-regioncorr   \ regc0 regc1
+
+    regioncorr-eq
+;

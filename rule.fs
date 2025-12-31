@@ -1212,6 +1212,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes
+    \ cr ." rule-number-unwanted-changes: start: needed changes: " over .changes space ." rule: " dup .rule cr
 
     rule-get-changes            \ cngs1 cngs0'
     swap                        \ cngs0' cngs1
@@ -1221,6 +1222,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap changes-deallocate     \ cngs-un'
     dup changes-number-changes  \ cngs-un' u
     swap changes-deallocate     \ u
+    \ cr ." rule-number-unwanted-changes: returning: " dup dec. cr
 ;
 
 \ Return a step for a rule (tos) and needed changes (nos).
@@ -1292,7 +1294,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ Calc from rule result region to reg-to.
     rule-calc-result-region             \ reg-to reg-from rul-r'
-    #2 pick over                        \ reg-to reg-from rul-r' reg-to rul-r'
+    dup                                 \ reg-to reg-from rul-r' rul-r'
+    #3 pick                             \ reg-to reg-from rul-r' rul-r' reg-to
     changes-new-region-to-region        \ reg-to reg-from rul-r' to-cngs'
     swap region-deallocate              \ reg-to reg-from to-cngs'
 
@@ -1390,16 +1393,17 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ If the rule initial-region intersects reg-from, or
 \ going from reg-from to the rule initial-region does not contain a needed change, a step will be returned.
 : rule-calc-step-fc ( reg-to reg-from rul0 -- step t | f )
-    \ cr ." rule-calc-step-fc: from: " over .region space ." to: " #2 pick .region space ." rule: " dup .rule cr
+   \  cr ." rule-calc-step-fc: from: " over .region space ." to: " #2 pick .region space ." rule: " dup .rule cr
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick                             \ | reg-to reg-from
-    2dup region-superset-of                     \ | reg-to reg-from bool
-    abort" rule-calc-step-fc: region subset?"   \ | reg-to reg-from
-    2dup swap region-superset-of                \ | reg-to reg-from bool
-    abort" rule-calc-step-fc: region subset?"   \ | reg-to reg-from
+\    2dup region-superset-of                     \ | reg-to reg-from bool
+\    abort" rule-calc-step-fc: 1 region subset?"   \ | reg-to reg-from
+    2dup
+     swap region-superset-of                \ | reg-to reg-from bool
+    abort" rule-calc-step-fc: 2 region subset?"   \ | reg-to reg-from
 
     \ Check for needed changes.
 
@@ -1525,10 +1529,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ cr ." rule-calc-step-bc: to: " #2 pick .region space ." from: " over .region space ." rule: " dup .rule cr
 
     #2 pick #2 pick                             \ | reg-to reg-from
-    2dup region-superset-of                     \ | reg-to reg-from bool
-    abort" rule-calc-step-bc: region subset?"   \ | reg-to reg-from
+\    2dup region-superset-of                     \ | reg-to reg-from bool
+\    abort" rule-calc-step-bc: 1 region subset?"   \ | reg-to reg-from
     2dup swap region-superset-of                \ | reg-to reg-from bool
-    abort" rule-calc-step-bc: region subset?"   \ | reg-to reg-from
+    abort" rule-calc-step-bc: 2 region subset?"   \ | reg-to reg-from
 
     \ Check for needed changes.
 
@@ -1542,6 +1546,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         changes-deallocate
         3drop
         false
+        \ cr ." rule-calc-step-bc: 1 false" cr
         exit
     then
 
@@ -1582,6 +1587,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         changes-deallocate
         3drop
         false
+        \ cr ." rule-calc-step-bc: 2 false" cr
         exit
     then
 

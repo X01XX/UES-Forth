@@ -105,7 +105,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ End accessors.
 
 \ Create a regioncorr-list-corr from a regioncorr-list-corr-list on the stack.
-: regioncorr-new ( lst0 -- addr)
+: regioncorr-new ( reg-lst0 -- addr)
     \ check arg.
     assert-tos-is-region-list
 
@@ -113,17 +113,17 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 
     \ Allocate space.
-    regioncorr-mma mma-allocate   \ lst0 rlc
+    regioncorr-mma mma-allocate   \ reg-lst0 regc
 
     \ Store id.
-    regioncorr-id over            \ lst0 rlc id rlc
-    struct-set-id                 \ lst0 rlc
+    regioncorr-id over            \ reg-lst0 regc id regc
+    struct-set-id                 \ reg-lst0 regc
 
     \ Init use count.
-    0 over struct-set-use-count   \ lst0 rlc
+    0 over struct-set-use-count   \ reg-lst0 regc
 
-    tuck                          \ rlc lst0 rlc
-    _regioncorr-set-list          \ rlc
+    tuck                          \ regc reg-lst0 regc
+    _regioncorr-set-list          \ regc
 ;
 
 \ Print a region-list corresponding to the session domain list.
@@ -159,7 +159,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     ." )"
 ;
 
-\ Deallocate the given rlc, if its use count is 1 or 0.
+\ Deallocate the given regc, if its use count is 1 or 0.
 : regioncorr-deallocate ( regc0 -- )
     \ Check arg.
     assert-tos-is-regioncorr
@@ -169,7 +169,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     #2 <
     if
         \ Deallocate fields.
-        dup regioncorr-get-list   \ regc0 rlc-lst
+        dup regioncorr-get-list   \ regc0 reg-lst
         region-list-deallocate
 
         \ Deallocate instance.
@@ -286,7 +286,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \   Return regc0 minus regc1, a list of regioncorr.
-: regioncorr-subtract ( regc1 regc0 -- list-of-rlc t | f )
+: regioncorr-subtract ( regc1 regc0 -- regc-lst t | f )
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
@@ -434,16 +434,16 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return a regioncorr from a string.
-: regioncorr-from-string ( addr n -- rlc t | f )
+: regioncorr-from-string ( str-addr str-n -- regc t | f )
     \ Get tokens.
-    parse-string                \ addr0 cnt0 cnt2
+    parse-string                \ [str-addr str-n ]+ tkn-cnt
 
     regioncorr-from-parsed-string
 ;
 
 \ Return a regioncorr from a string, or abort.
-: regioncorr-from-string-a ( addr n -- rlc )
-    regioncorr-from-string    \ rlcorr t | f
+: regioncorr-from-string-a ( str-addr str-n -- regc )
+    regioncorr-from-string    \ regc t | f
     is-false abort" regioncorr-from-string failed?"
 ;
 
@@ -524,7 +524,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return true if two regioncorr are adjacent.
-: regioncorr-adjacent ( regc1 lst2 -- bool )
+: regioncorr-adjacent ( regc1 regc0 -- bool )
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
@@ -533,101 +533,52 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     1 =
 ;
 
-: regioncorr-intersection ( regc1 regc0 -- rlc t | f )
+: regioncorr-intersection ( regc1 regc0 -- regc t | f )
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
 
     \ Init return list.
-    list-new -rot                   \ ret-lst regc1 regc0
+    list-new -rot                           \ reg-lst regc1 regc0
 
     \ Init links for loop.
-    regioncorr-get-list list-get-links swap   \ ret-lst link0 regc1
-    regioncorr-get-list list-get-links swap   \ ret-lst link1 link0
+    regioncorr-get-list list-get-links swap \ reg-lst link0 regc1
+    regioncorr-get-list list-get-links swap \ reg-lst link1 link0
     cur-session-get-domain-list-xt execute
-    list-get-links                          \ ret-lst link1 link0 d-link
+    list-get-links                          \ reg-lst link1 link0 d-link
 
     begin
         ?dup
     while
-                                    \ ret-lst link1 link0 d-link
+                                    \ reg-lst link1 link0 d-link
 
         \ Set current domain.
-        dup link-get-data           \ ret-lst link1 link0 d-link domx
+        dup link-get-data           \ reg-lst link1 link0 d-link domx
         domain-set-current-xt
-        execute                     \ ret-lst link1 link0 d-link
+        execute                     \ reg-lst link1 link0 d-link
 
         \ Check regions
-        #2 pick link-get-data       \ ret-lst link1 link0 d-link reg1
-        #2 pick link-get-data       \ ret-lst link1 link0 d-link reg1 reg0
-        region-intersection         \ ret-lst link1 link0 d-link, reg-int t | f
-        if                          \ ret-lst link1 link0 d-link reg-int
-            #4 pick                 \ ret-lst link1 link0 d-link reg-int ret-lst
-            region-list-push-end    \ ret-lst link1 link0 d-link
+        #2 pick link-get-data       \ reg-lst link1 link0 d-link reg1
+        #2 pick link-get-data       \ reg-lst link1 link0 d-link reg1 reg0
+        region-intersection         \ reg-lst link1 link0 d-link, reg-int t | f
+        if                          \ reg-lst link1 link0 d-link reg-int
+            #4 pick                 \ reg-lst link1 link0 d-link reg-int reg-lst
+            region-list-push-end    \ reg-lst link1 link0 d-link
         else
-            3drop                   \ ret-lst
+            3drop                   \ reg-lst
             region-list-deallocate  \
             false                   \ bool
             exit
         then
 
         \ Prep for next cycle.
-                                    \ ret-lst link1 link0 d-link
-        rot link-get-next           \ ret-lst link0 d-link link1
-        rot link-get-next           \ ret-lst d-link link1 link0
-        rot link-get-next           \ ret-lst link1 link0 d-link
+                                    \ reg-lst link1 link0 d-link
+        rot link-get-next           \ reg-lst link0 d-link link1
+        rot link-get-next           \ reg-lst d-link link1 link0
+        rot link-get-next           \ reg-lst link1 link0 d-link
     repeat
-                                    \ ret-lst link1 link0
-    2drop                           \ ret-lst
+                                    \ reg-lst link1 link0
+    2drop                           \ reg-lst
     regioncorr-new
     true
-;
-
-: regioncorr-translate-states ( sta-regc1 regc0 -- slc )
-    \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-list
-    over list-get-length
-    session-get-number-domains-xt execute
-    3<> abort" Lists have different length?"
-
-    \ Init return list.
-    list-new -rot                   \ ret-lst sta-regc1 reg-regc1
-
-    \ Init links for loop.
-    regioncorr-get-list list-get-links swap   \ ret-lst link0 sta-regc1
-    list-get-links swap                             \ ret-lst link1 link0
-    swap list-get-links                             \ ret-lst link1 link0
-    cur-session-get-domain-list-xt
-    execute                         \ ret-lst link1 link0 dom-lst
-    list-get-links                  \ ret-lst link1 link0 d-link
-
-    begin
-        ?dup
-    while
-                                    \ ret-lst  link1 link0 d-link
-
-        \ Set current domain.
-        dup link-get-data           \ ret-lst  link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ ret-lst  link1 link0 d-link
-
-        \ Check state/region
-        #2 pick link-get-data       \ ret-lst  link1 link0 d-link sta1
-        #2 pick link-get-data       \ ret-lst  link1 link0 d-link sta1 reg0
-
-        region-translate-state      \ ret-lst  link1 link0 d-link sta0
-
-        #4 pick                     \ ret-lst  link1 link0 d-link sta0 ret-lst
-        list-push-end               \ ret-lst  link1 link0 d-link
-
-        \ Prep for next cycle.
-                                    \ ret-lst link1 link0 d-link
-        link-get-next rot           \ ret-lst  link0 d-link+ link1
-        link-get-next rot           \ ret-lst  d-link+ link1+ link0
-        link-get-next rot           \ ret-lst  link1+ link0+ d-link+
-    repeat
-                                    \ ret-lst link1 link0
-    2drop                           \ ret-lst
-    regioncorr-new
 ;

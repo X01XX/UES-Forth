@@ -36,7 +36,7 @@
     list-deallocate                                 \
 ;
 
-: .plancorr-list ( rlc-lst -- )
+: .plancorr-list ( plnc-lst -- )
     \ Check arg.
     assert-tos-is-plancorr-list
 

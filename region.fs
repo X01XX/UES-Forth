@@ -718,15 +718,6 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     value-1-bit-set         \ flag
 ;
 
-: region-copy ( reg0 - reg )
-    \ Check arg.
-    assert-tos-is-region
-
-    dup region-get-state-1      \ reg0 s-1
-    swap region-get-state-0     \ s-r s-0
-    region-new
-;
-
 \ Translate a region to another, with fewest changes.
 \ From:  0 0 0 | 1 1 1 | X X X
 \ To:    0 1 X | 0 1 X | 0 1 X

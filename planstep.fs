@@ -372,20 +372,6 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     then
 ;
 
-\ Return a copy of a planstep.
-: planstep-copy ( plnstp0 -- plnstp )
-    \ Check arg.
-    assert-tos-is-planstep
-
-    dup planstep-get-rule                   \ plnstp0 rul
-    over planstep-get-action                \ plnstp0 rul act
-    planstep-new                            \ plnstp0 plnstp
-    swap                                    \ plnstp plnstp0
-    planstep-get-number-unwanted-changes    \ plnstp u-unw
-    over                                    \ plnstp u-unw plnstp
-    planstep-set-number-unwanted-changes    \ plnstp
-;
-
 \ Ruturn a planstep restricted, initial and result regions, to a given
 \ region.
 : planstep-restrict-to-region ( reg1 plnstp0 -- plnstp t | f )

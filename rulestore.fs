@@ -572,10 +572,10 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick                                 \ | reg-to reg-from
-    2dup region-superset-of                         \ | reg-to reg-from bool
-    abort" rulestore-calc-steps-fc: region subset?" \ | reg-to reg-from
+\    2dup region-superset-of                         \ | reg-to reg-from bool
+\    abort" rulestore-calc-steps-fc 1: region subset?" \ | reg-to reg-from
     swap region-superset-of                         \ | bool
-    abort" rulestore-calc-steps-fc: region subset?" \ |
+    abort" rulestore-calc-steps-fc 2: region subset?" \ |
 
     \ Init return list.
     list-new                                \ reg-to reg-from ruls0 stp-lst

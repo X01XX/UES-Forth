@@ -72,7 +72,7 @@
     then
 ;
 
-: .pathstep-list ( rlc-lst -- )
+: .pathstep-list ( pthstp-lst -- )
     \ Check arg.
     assert-tos-is-pathstep-list
 

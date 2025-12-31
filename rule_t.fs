@@ -536,6 +536,35 @@ cr .s cr
         abort
     then
 
+    \ Test 3, reg-from is a proper superset of reg-to.
+    %0101 %0101 region-new                  \ reg-to
+    %0111 %0001 region-new                  \ reg-to reg-from
+    s" XX/X1/X0/XX/" rule-from-string       \ reg-to reg-from rulx
+    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
+    rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
+    if                                      \ reg-to reg-from rulx | stp
+    cr ." step: " dup .planstep cr
+        dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
+        s" 00/X1/X0/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        \ cr ." expt: " dup .rule space ." found: " over .rule cr
+        tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
+        rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
+        is-false abort" rule-test-calc-step-fc: 3 unexpected rule?"
+
+        rule-deallocate                         \ reg-to reg-from rulx | stp
+        dup                                     \ reg-to reg-from rulx | stp stp
+        planstep-get-number-unwanted-changes    \ reg-to reg-from rulx | stp u-unw
+        0 = is-false abort" rule-test-calc-step-fc: 3 invalid number of unwanted changes"
+
+        planstep-deallocate
+        rule-deallocate
+        region-deallocate
+        region-deallocate
+    else                                \ reg-to reg-from rulx
+        cr ." rule-calc-step-fc: 3 failed?"
+        abort
+    then
+
     cr ." rule-test-calc-step-fc: Ok" cr
 ;
 
@@ -561,19 +590,20 @@ cr .s cr
         region-deallocate
         region-deallocate
     else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-bc failed?"
+        cr ." rule-calc-step-bc: 1 failed?"
         abort
     then
 
-    \ Test 2, reg-from does not intersect the rule initial-region,
-    \ but the rule initial region is reachable without using another needed change.
+    \ Test 2, reg-to does not intersect the rule result-region,
+    \ but the rule result region is reachable from reg-to without using another needed change.
+    \ Reg-from to the rule initial-region does require a needed change.
     %1101 %1101 region-new                  \ reg-to
     %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/Xx/11/11/" rule-from-string       \ reg-to reg-from rulx
+    s" 01/Xx/11/XX/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-bc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
-        \ cr dup .step cr
+        \ cr dup .planstep cr
         dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
         s" 01/01/11/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
@@ -586,7 +616,7 @@ cr .s cr
         region-deallocate
         region-deallocate
     else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-bc failed?"
+        cr ." rule-calc-step-bc: 2 failed?"
         abort
     then
 

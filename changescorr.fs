@@ -181,25 +181,6 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     then
 ;
 
-\ Deallocate a list of lists of changescorr.
-: changescorr-lol-deallocate ( cngsc-lst-lol0 -- )
-    \ Check arg.
-    assert-tos-is-changescorr
-
-    \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                            \ lst0 uc
-    #2 < if
-        \ Deallocate changescorr instances in the list.
-        [ ' changescorr-list-deallocate ] literal over  \ lst0 xt lst0
-        list-apply                                      \ lst0
-
-        \ Deallocate the list.
-        list-deallocate                                 \
-    else
-        struct-dec-use-count
-    then
-;
-
 \ Return true if at least one bit set-to-1 is the same between two changescorr.
 : changescorr-intersect ( cngsc1 cngsc0 -- bool )
     \ Check args.
