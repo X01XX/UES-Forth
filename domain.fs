@@ -69,10 +69,10 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 : _domain-set-actions ( lst dom0 -- )
     \ Check arg.
     assert-tos-is-domain
-    assert-nos-is-list
+    assert-nos-is-action-list
 
     domain-actions-disp +   \ Add offset.
-    !                       \ Set the field.
+    !struct                 \ Set the field.
 ;
 
 \ Return the instance ID from an domain instance.
@@ -210,7 +210,6 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 
     \ Set actions list.
     list-new                        \ nb0 dom lst
-    dup struct-inc-use-count        \ nb0 dom lst
     2dup swap                       \ nb0 dom lst lst dom
     _domain-set-actions             \ nb0 dom lst
 

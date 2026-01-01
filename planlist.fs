@@ -13,6 +13,9 @@
 
 \ Deallocate a plan list.
 : plan-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-plan-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -28,7 +31,7 @@
 \ Print a plan-list
 : .plan-list ( list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-plan-list
 
     ." ("
     current-session swap                \ sess list0

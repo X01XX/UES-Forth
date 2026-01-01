@@ -58,8 +58,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
 \ Start accessors.
 
-\ Return the domain-list from an session instance.
-: session-get-domains ( sess0 -- lst )
+: session-get-domains ( sess0 -- lst )  \ Return the domain-list from an session instance.
     \ Check arg.
     assert-tos-is-session
 
@@ -67,14 +66,13 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     @                       \ Fetch the field.
 ;
 
-\ Set the domain-list for an session instance.
-: _session-set-domains ( lst sess0 -- )
+: _session-set-domains ( lst sess0 -- ) \ Set the domain-list for an session instance.
     \ Check arg.
     assert-tos-is-session
     assert-nos-is-list
 
     session-domains-disp +  \ Add offset.
-    !                       \ Set the field.
+    !struct                 \ Set the field.
 ;
 
 \ Return the current domain from an session instance.
@@ -113,18 +111,17 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 : _session-set-needs ( ned-lst sess0 -- )
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-list
+    assert-nos-is-need-list
 
-    over struct-inc-use-count
     session-needs-disp +        \ Add offset.
-    !                           \ Set the field.
+    !struct                     \ Set the field.
 ;
 
 \ Update the session needs, deallocating the previous list, if any.
 : _session-update-needs  ( ned-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-list
+    assert-nos-is-need-list
 
     dup session-get-needs       \ ned-lst sess0 prev-lst
     -rot                        \ prev-lst ned-lst sess0
@@ -132,7 +129,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     need-list-deallocate
 ;
 
-\ Return the session need-list
+\ Return the session regioncorrrate list.
 : session-get-regioncorrrate-list ( sess0 -- regcr-lst )
     \ Check arg.
     assert-tos-is-session
@@ -141,16 +138,14 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     @                                   \ Fetch the field.
 ;
 
-\ Set the need-list for an session instance.
+\ Set the regioncorrrate list for an session instance.
 : _session-set-regioncorrrate-list ( regcr-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-list
-
-    over struct-inc-use-count
+    assert-nos-is-regioncorrrate-list
 
     session-regioncorrrate-list-disp +  \ Add offset.
-    !                                   \ Set the field.
+    !struct                             \ Set the field.
 ;
 
 \ Return the session need-list
@@ -166,11 +161,10 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 : _session-set-regioncorrrate-fragments ( regcr-lst1 sess0 -- )
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-list
+    assert-nos-is-regioncorrrate-list
 
-    over struct-inc-use-count
     session-regioncorrrate-fragments-disp +    \ Add offset.
-    !                                   \ Set the field.
+    !struct                                    \ Set the field.
 ;
 
 \ Return the session regioncorrrate-nq list.
@@ -188,9 +182,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     assert-tos-is-session
     assert-nos-is-list
 
-    over struct-inc-use-count
     session-regioncorrrate-nq-disp +    \ Add offset.
-    !                                   \ Set the field.
+    !struct                             \ Set the field.
 ;
 
 : _session-update-regioncorrrate-nq ( regcr-lst1 sess0 -- )
@@ -201,9 +194,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     dup session-get-regioncorrrate-nq -rot  \ prev-list regcr-lst1 sess0
 
     \ Set the field.
-    over struct-inc-use-count               \ prev-list regcr-lst1 sess0
     session-regioncorrrate-nq-disp +        \ prev-list regcr-lst1 sess0+
-    !                                       \ prev-list
+    !struct                                 \ prev-list
 
     \ Deallocate previous list.
     list-deallocate
@@ -224,9 +216,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     assert-tos-is-session
     assert-nos-is-list
 
-    over struct-inc-use-count
     session-regioncorr-lol-by-rate-disp +   \ Add offset.
-    !                                       \ Set the field.
+    !struct                                 \ Set the field.
 ;
 
 \ Update the session-regioncorr-lol-by-rate list.
@@ -238,11 +229,9 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     dup session-get-regioncorr-lol-by-rate -rot    \ prev-list regcr-lst1 sess0
 
     \ Set the field.
-    over struct-inc-use-count
     session-regioncorr-lol-by-rate-disp +
-    !                                       \ prev-list
+    !struct                                     \ prev-list
 
-    dup struct-dec-use-count
     regioncorr-lol-deallocate
 ;
 
@@ -261,9 +250,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     assert-tos-is-session
     assert-nos-is-list
 
-    over struct-inc-use-count
     session-pathstep-lol-by-rate-disp +     \ Add offset.
-    !                                       \ Set the field.
+    !struct                                 \ Set the field.
 ;
 
 \ Update the session-pathstep-lol-by-rate list.
@@ -275,9 +263,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     dup session-get-pathstep-lol-by-rate -rot  \ prev-lst pthstp-lst1 sess0
 
     \ Set the field.
-    over struct-inc-use-count
     session-pathstep-lol-by-rate-disp +
-    !                                       \ prev-lst
+    !struct                                 \ prev-lst
 
     dup struct-dec-use-count
     pathstep-lol-deallocate
@@ -340,7 +327,6 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     \ Set domains list.
     list-new                        \ ses lst
-    dup struct-inc-use-count        \ ses lst
     over _session-set-domains       \ ses
 
     \ Zero-out current domain.
@@ -438,8 +424,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     2drop drop                          \
 ;
 
-\ Deallocate the session.
-: current-session-deallocate ( -- )
+: current-session-deallocate ( -- ) \ Deallocate the session.
     session-stack stack-tos         \ sess
 
     \ Clear fields.
@@ -466,8 +451,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     session-mma mma-deallocate
 ;
 
-\ Get a sample from an action in a domain.
-: session-get-sample ( act2 dom1 sess0 -- sample )
+: session-get-sample ( act2 dom1 sess0 -- sample )  \ Get a sample from an action in a domain.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-domain
@@ -535,7 +519,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     nip
 ;
 
-\ Return a list of regions, one for each domain, in domain list order.
+\ Return a list of regions, one for each domain state, in domain list order.
 : session-get-current-regions ( sess0 -- regcorr )
     \ Check args.
     assert-tos-is-session
@@ -564,8 +548,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     regioncorr-new
 ;
 
-\ Print a list of current states.
-: .session-current-states ( sess0 -- )
+: .session-current-states ( sess0 -- )  \ Print a list of current states.
     \ Check args.
     assert-tos-is-session
 
@@ -789,6 +772,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     dup session-get-regioncorrrate-nq       \ sess0 rate-lst
     list-get-links                          \ sess0 rate-link
     over session-get-regioncorr-lol-by-rate \ sess0 rate-link regclst-lst
+
     list-get-links                          \ sess0 rate-link regclst-link
     cr ." Lowest  Within"
     cr ." Rate    Regions" cr
@@ -821,13 +805,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     list-get-links                                  \ ret-lst sess0 rcllist-link
     over session-get-regioncorrrate-nq              \ ret-lst sess0 rcllist-link rates-le0
     list-get-links                                  \ ret-lst sess0 rcllist-link rates-links
-   \  cr
 
     begin
         ?dup
     while                                           \ ret-lst sess0 rcllist-link rates-links
-        \ cr  ." rate: " dup link-get-data #3 dec.r
-        \ space ." regclst: " over link-get-data .regioncorr-list cr
+       \  cr  ." rate: " dup link-get-data #3 dec.r
+       \ space ." regclst: " over link-get-data .regioncorr-list cr
 
         list-new                                    \ ret-lst sess0 rcllist-link rates-links rip-lst
         #2 pick link-get-data                       \ ret-lst sess0 rcllist-link rates-links rip-lst regcx
@@ -862,7 +845,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
                     swap                                    \ ret-lst sess0 rcllist-link rates-links rip-lst regcx-link regcx regcx-link-nxt regc-int' regc-int' regcx-nxt
                     rulecorr-new-regioncorr-to-regioncorr   \ ret-lst sess0 rcllist-link rates-links rip-lst regcx-link regcx regcx-link-nxt regc-int' rul-lc'
                     pathstep-new
-                    \ dup space .rulecorr
+
                     #5 pick                                 \ ret-lst sess0 rcllist-link rates-links rip-lst regcx-link regcx regcx-link-nxt regc-int' rul-lc' rip-lst
                     list-push-struct                        \ ret-lst sess0 rcllist-link rates-links rip-lst regcx-link regcx regcx-link-nxt regc-int'
 
@@ -880,18 +863,17 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             link-get-next
         repeat
                                                     \ ret-lst sess0 rcllist-link rates-links rip-lst
-        \ [ ' .rulecorr ] literal over list-apply
-        \ space ." len: " dup list-get-length dec. cr
-        dup struct-inc-use-count
+\         [ ' .pathstep ] literal over list-apply
+\         space ." len: " dup list-get-length dec. cr
         #4 pick                                     \ ret-lst sess0 rcllist-link rates-links rip-lst ret-lst
-        list-push-end                               \ ret-lst sess0 rcllist-link rates-links
+        list-push-end-struct                        \ ret-lst sess0 rcllist-link rates-links
         link-get-next swap
         link-get-next swap
     repeat
     \ cr
     \ Clean up.                                     \ ret-lst sess0 rcllist-link
     2drop                                           \ ret-lst
-   \  cr ." session-calc-pathstep-lol: end: " .stack-structs-xt execute cr
+    \ cr ." session-calc-pathstep-lol: end: " .stack-structs-xt execute cr
 ;
 
 \ Process the given regioncorrrates.
@@ -899,7 +881,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Check arg.
     assert-tos-is-session
 
-   \  cr ." session-process-regioncorrrates" cr
+    \ cr ." session-process-regioncorrrates" cr
 
     \ Get given regioncorrrates.
     dup session-get-regioncorrrate-list         \ sess0 regcr-lst
@@ -978,7 +960,14 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         \ Add the loop1 fragment regioncorrrate to the session regioncorrrate-fragments list.
         #4 pick                                 \ sess0 regcr-lst regc-lst2 link | regioncorrrate-new sess0
         session-get-regioncorrrate-fragments    \ sess0 regcr-lst regc-lst2 link | regioncorrrate-new frg-lst
-        regioncorrrate-list-push                \ sess0 regcr-lst regc-lst2 link |
+
+        2dup regioncorrrate-list-member         \ sess0 regcr-lst regc-lst2 link | regioncorrrate-new frg-lst bool
+        if
+            drop
+            regioncorrrate-deallocate
+        else
+            regioncorrrate-list-push            \ sess0 regcr-lst regc-lst2 link |
+        then
 
         \ Prep for next loop1 fragment regc cycle.
         0 0 rate-new                            \ sess0 regcr-lst regc-lst2 link rate-agg
@@ -998,7 +987,11 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Get all rate negative values.
 
     \ Init value list.
-    list-new swap                               \ sess0 val-lst frg-lst
+    list-new                                    \ sess0 frg-lst val-lst
+    0 over list-push                            \ sess0 frg-lst val-lst
+
+    \ Prep for loop.
+    swap                                        \ sess0 val-lst frg-lst
     list-get-links                              \ sess0 val-lst link
 
     begin
@@ -1057,6 +1050,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     swap                                        \ sess0 val-lst rslt-lst sub-lst
                                                 \ sess0 val-lst rslt-lst sub-lst
     #2 pick list-get-links                      \ sess0 val-lst rslt-lst sub-lst link
+    link-get-next                               \ Skip the 0 value.
 
     begin
         ?dup
@@ -1078,10 +1072,9 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
         \ Add regc list result list.
         over                                    \ sess0 val-lst rslt-lst sub-lst2 link sub-lst2
-        dup struct-inc-use-count
         \ cr ." regclst: " dup .regioncorr-list cr
         #3 pick                                 \ sess0 val-lst rslt-lst sub-lst2 link sub-lst2 rslt-lst
-        list-push                               \ sess0 val-lst rslt-lst sub-lst2 link
+        list-push-struct                        \ sess0 val-lst rslt-lst sub-lst2 link
 
         link-get-next
     repeat
@@ -1090,14 +1083,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     \ Process result list.
     #2 pick _session-update-regioncorr-lol-by-rate     \ sess0 val-lst
-
-    0 over list-push
     dup [ ' < ] literal swap list-sort
-\    cr ." Fragment values: " [ ' . ] literal  over .list cr
+    \ cr ." Fragment values: " [ ' . ] literal  over .list cr
 
     over _session-update-regioncorrrate-nq      \ sess0
 
-\    dup .session-pathstep-lol-by-rate          \ sess0
+    dup .session-pathstep-lol-by-rate           \ sess0
 
     dup session-calc-pathstep-lol               \ sess0 rulecorr-list lists
 

@@ -11,8 +11,22 @@
     then
 ;
 
+\ Check if nos is a list, if non-empty, with the first item being a square.
+: assert-nos-is-square-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-square
+        drop
+    then
+;
+
 \ Deallocate a square list.
 : square-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-square-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -27,26 +41,32 @@
 
 \ Return the intersection of two square lists.
 : square-list-set-intersection ( list1 list0 -- list-result )
+    \ Check args.
+    assert-tos-is-square-list
+    assert-nos-is-square-list
+
     [ ' square-eq ] literal -rot        \ xt list1 list0
-    list-intersection                   \ list-result
-    [ ' struct-inc-use-count ] literal  \ list-result xt
-    over list-apply                     \ list-result
+    list-intersection-struct            \ list-result
 ;
 
 \ Return the union of two square lists.
 : square-list-set-union ( list1 list0 -- list-result )
+    \ Check args.
+    assert-tos-is-square-list
+    assert-nos-is-square-list
+
     [ ' square-eq ] literal -rot        \ xt list1 list0
-    list-union                          \ list-result
-    [ ' struct-inc-use-count ] literal  \ list-result xt
-    over list-apply                     \ list-result
+    list-union-struct                   \ list-result
 ;
 
 \ Return the difference of two square lists.
 : square-list-set-difference ( list1 list0 -- list-result )
+    \ Check args.
+    assert-tos-is-square-list
+    assert-nos-is-square-list
+
     [ ' square-eq ] literal -rot        \ xt list1 list0
-    list-difference                     \ list-result
-    [ ' struct-inc-use-count ] literal  \ list-result xt
-    over list-apply                     \ list-result
+    list-difference-struct              \ list-result
 ;
 
 \ Print a square-list
@@ -79,8 +99,7 @@
     if
         2drop
     else
-        over struct-inc-use-count
-        list-push
+        list-push-struct
     then
 ;
 
@@ -90,8 +109,7 @@
     assert-tos-is-list
     assert-nos-is-square
 
-    over struct-inc-use-count
-    list-push
+    list-push-struct
 ;
 
 \ Remove the first square, idetified by xt, from a square-list, and deallocate.
@@ -122,9 +140,7 @@
     assert-nos-is-region
 
     [ ' square-state-in-region ] literal -rot       \ xt reg1 list0
-    list-find-all                                   \ ret-list
-    [ ' struct-inc-use-count ] literal over         \ ret-list xt ret-list
-    list-apply                                      \ ret-list
+    list-find-all-struct                            \ ret-list
 ;
 
 \ Return square states in a region.

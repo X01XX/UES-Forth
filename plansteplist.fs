@@ -24,6 +24,9 @@
 
 \ Deallocate a planstep list.
 : planstep-list-deallocate ( plnstp-lst0 -- )
+    \ Check arg.
+    assert-tos-is-planstep-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ plnstp-lst0 uc
     #2 < if
@@ -130,6 +133,7 @@
 
 \ Return a reversed planstep list.
 : planstep-list-reverse ( plnstp-lst0 -- plnstp-lst )
+    \ Check arg.
     assert-tos-is-planstep-list
 
     \ Init return list.
@@ -150,6 +154,7 @@
 ;
 
 : planstep-list-match-number-unwanted-changes ( u-unw1 plnstp-lst0 -- plnstp-lst )
+    \ Check arg.
     assert-tos-is-planstep-list
 
     \ Init return list.
@@ -182,6 +187,9 @@
 
 \ Pop the first planstep from a planstep-list.
 : planstep-list-pop ( plnstp-lst0 -- plnstp t | f )
+    \ Check arg.
+    assert-tos-is-planstep-list
+
     list-pop        \ plnstp t | f
     if
         dup struct-dec-use-count
@@ -194,7 +202,7 @@
 \ Return tru eif any planstep intersects reg-to or reg-from.
 : planstep-list-any-from-to-intersections ( reg-to reg-from plnstp-lst0 -- bool )
     \ Check arg3.
-    assert-tos-is-list
+    assert-tos-is-planstep-list
     assert-nos-is-region
     assert-3os-is-region
 

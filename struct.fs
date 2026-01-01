@@ -47,3 +47,9 @@
         drop
     then
 ;
+
+\ Store a struct at a given address.
+: !struct ( struct addr -- )
+    over struct-inc-use-count
+    !
+;

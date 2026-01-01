@@ -13,6 +13,9 @@
 
 \ Deallocate a rule list.
 : rule-list-deallocate ( lst0 -- )
+    \ Check args.
+    assert-tos-is-rule-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -28,7 +31,7 @@
 \ Push a rule to the end of a rule-list.
 : rule-list-push-end ( rul1 lst0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-rule-list
     assert-nos-is-rule
 
     over struct-inc-use-count
@@ -38,7 +41,7 @@
 \ Push a rule to a rule-list.
 : rule-list-push ( rul1 lst0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-rule-list
     assert-nos-is-rule
 
     over struct-inc-use-count
@@ -48,7 +51,7 @@
 \ Print a rule-list
 : .rule-list ( list0 -- )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-rule-list
 
     [ ' .rule ] literal swap .list
 ;

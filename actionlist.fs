@@ -11,6 +11,17 @@
     then
 ;
 
+\ Check if tnos is a list, if non-empty, with the first item being a action.
+: assert-nos-is-action-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-action
+        drop
+    then
+;
+
 : .action-list ( actlst0 -- )
     \ Check args.
     assert-tos-is-list

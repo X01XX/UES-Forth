@@ -11,8 +11,22 @@
     then
 ;
 
+\ Check if nos is a list, if non-empty, with the first item being a region.
+: assert-nos-is-region-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-region
+        drop
+    then
+;
+
 \ Deallocate a region list.
 : region-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-region-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -27,34 +41,40 @@
 
 \ Return the intersection of two region lists.
 : region-list-set-intersection ( list1 list0 -- list-result )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region-list
+
     [ ' region-eq ] literal -rot        \ xt list1 list0
-    list-intersection                   \ list-result
-    [ ' struct-inc-use-count ] literal  \ list-result xt
-    over list-apply                     \ list-result
+    list-intersection-struct            \ list-result
 ;
 
 \ Return the union of two region lists.
 : region-list-set-union ( list1 list0 -- list-result )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region-list
+
     [ ' region-eq ] literal -rot        \ xt list1 list0
-    list-union                          \ list-result
-    [ ' struct-inc-use-count ] literal  \ list-result xt
-    over list-apply                     \ list-result
+    list-union-struct                   \ list-result
 ;
 
 \ ' region-list-set-union to region-list-set-union-xt
 
 \ Return the difference of two region lists.
 : region-list-set-difference ( list1 list0 -- list-result )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region-list
+
     [ ' region-eq ] literal -rot        \ xt list1 list0
-    list-difference                     \ list-result
-    [ ' struct-inc-use-count ] literal  \ list-result xt
-    over list-apply                     \ list-result
+    list-difference-struct              \ list-result
 ;
 
 \ Print a region-list
 : .region-list ( list0 -- )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     [ ' .region ] literal swap .list
 ;
@@ -62,7 +82,7 @@
 \ Push a region to a region-list.
 : region-list-push ( reg1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     over struct-inc-use-count
@@ -75,7 +95,7 @@
 \ Return true if the region is added to the list.
 : region-list-push-nodups ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     \ Return if any region in the list is a duplicate of reg1.
@@ -98,7 +118,7 @@
 \ Push a region to the end of a region-list.
 : region-list-push-end ( reg1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     over struct-inc-use-count
@@ -110,7 +130,7 @@
 \ Return true if a region was removed.
 : region-list-remove ( reg list -- bool )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     [ ' region-eq ] literal     \ reg1 list0  xt
@@ -130,7 +150,7 @@
 \ Return true if a region was removed.
 : region-list-remove-subset ( reg list -- bool )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     [ ' region-subset-of ] literal      \ reg1 list0  xt
@@ -150,7 +170,7 @@
 \ Return true if a region was removed.
 : region-list-remove-superset ( reg list -- bool )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     [ ' region-superset-of ] literal    \ reg1 list0  xt
@@ -170,7 +190,7 @@
 \ Return true if the region is added to the list.
 : region-list-push-nosubs ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     \ Return if any region in the list is a superset of reg1.
@@ -201,7 +221,7 @@
 \ Return true if the region is added to the list.
 : region-list-push-nosups ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     \ Return if any region in the list is a superset of reg1.
@@ -230,7 +250,7 @@
 \ Return a copy of a region-list.
 : region-list-copy ( lst0 -- lst-copy )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     list-new swap           \ lst-n lst0
 
@@ -254,7 +274,7 @@
 \ Or do intersections\subtractions, followed by region-list-normalize.
 : region-list-subtract-region ( reg1 lst0 -- lst )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     \ Init return list.
@@ -314,8 +334,8 @@
 \ Or do intersections\subtractions, followed by region-list-normalize.
 : region-list-subtract ( lst1 lst0 -- lst )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-region-list
+    assert-nos-is-region-list
 
     \ Make a list that way be returned empty, or deallocated.
     region-list-copy                \ lst1 lst0
@@ -343,7 +363,7 @@
 \ Return a region-list complement, that is max-region minus region-list.
 : region-list-complement ( lst0 -- lst1 )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     list-new                    \ lst0 lst1
     cur-domain-xt execute       \ lst0 lst1 dom
@@ -360,7 +380,7 @@
 \ That is, combine adjacent regions.
 : region-list-normalize ( lst0 -- lst )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     \ Normalize, by double complement.
     region-list-complement          \ lst
@@ -376,8 +396,8 @@
 \ Or do intersections\subtractions, followed by region-list-normalize.
 : region-list-region-intersections ( list1 list0 -- list-result )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-region-list
+    assert-nos-is-region-list
 
     \ list1 list0
     list-get-links                  \ list1 link0
@@ -420,7 +440,7 @@
 \ Return true if a region is in a region-list.
 : region-list-member ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     [ ' region-eq ] literal -rot list-member
@@ -429,7 +449,7 @@
 \ Return true if a region-list contains a superset, or equal, region.
 : region-list-any-superset-of ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     [ ' region-superset-of ] literal -rot list-member
@@ -438,7 +458,7 @@
 \ Return true if a region-list contains a intersection of a region.
 : region-list-any-intersection-of ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     [ ' region-intersects ] literal -rot list-member
@@ -447,7 +467,7 @@
 \ Return a list of regions that use a given state.
 : region-list-uses-state ( sta1 reg-lst0 -- list )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-value
 
    [ ' region-uses-state ] literal -rot list-find-all       \ lst
@@ -456,8 +476,8 @@
 
 : region-list-region-intersections-n ( lst1 lst0 -- lst )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-region-list
+    assert-nos-is-region-list
 
     region-list-region-intersections    \ ret0
     dup region-list-normalize           \ ret1 ret2
@@ -467,7 +487,7 @@
 \ Subtract NOS region from TOS list.
 : region-list-subtract-region-n ( reg1 lst0 -- lst )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-region
 
     region-list-subtract-region     \ ret0
@@ -479,8 +499,8 @@
 \ Subtract the NOS list from the TOS list, with normalization.
 : region-list-subtract-n ( lst1 lst0 -- lst )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-region-list
+    assert-nos-is-region-list
 
     region-list-subtract            \ ret0
     dup region-list-normalize       \ ret1 ret2
@@ -490,7 +510,7 @@
 \ Return a list of states, no dups, used to form regions in a list.
 : region-list-states ( reg-lst0 -- list )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     \ Init return list
     list-new swap               \ ret-lst reg-lst
@@ -535,7 +555,7 @@
 \ Return true if a square is in exactly one region.
 : region-list-state-in-one-region ( sta1 reg-lst0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-value
 
     \ Get first link of list.
@@ -580,7 +600,7 @@
 \ Return a list of states only in one region of a region-list.
 : region-list-states-in-one-region ( sta-lst1 reg-lst0 -- sta-lst )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-list
 
     \ State list to TOS, to scan through.
@@ -613,8 +633,8 @@
 \ Return true if to region-lists are equal.
 : region-list-eq ( lst1 lst0 -- flag )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-region-list
+    assert-nos-is-region-list
 
     \ Check list lengths.
     over list-get-length
@@ -655,7 +675,7 @@
 \ Return a list of regions a state is in.
 : region-list-regions-state-in ( sta1 lst0 -- reg-lst )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     assert-nos-is-value
 
     \ Init return list.
@@ -688,7 +708,7 @@
 \ Copy a region-list, removing subsets.
 : region-list-copy-nosubs ( lst0 - lst )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     list-new swap               \ ret lst0
     list-get-links              \ ret link
@@ -708,7 +728,7 @@
 \ Copy a region-list, removing duplicates.
 : region-list-copy-nodups ( lst0 - lst )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     list-new swap               \ ret lst0
     list-get-links              \ ret link
@@ -728,8 +748,8 @@
 \ Append nos region-list to the tos region-list.
 : region-list-append ( lst1 lst0 -- )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-region-list
+    assert-nos-is-region-list
 
     swap                    \ lst0 lst1
     list-get-links          \ lst0 link
@@ -749,8 +769,8 @@
 \ Append nos region-list to the tos region-list, no duplicates.
 : region-list-append-nodups ( lst1 lst0 -- )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-region-list
+    assert-nos-is-region-list
 
     swap                        \ lst0 lst1
     list-get-links              \ lst0 link
@@ -772,7 +792,7 @@
 \ Duplicates are avoided, but proper subsets are Ok.
 : region-list-intersections ( reg-lst0 -- reg-lst)
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     \ Init return list.
     list-new swap                       \ ret-lst reg-lst0
@@ -819,7 +839,7 @@
 \ Intermediate regions may be proper subsets, but duplicates will be avoided.
 : region-list-intersection-fragments ( lst0 -- frag-lst )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-region-list
 
     \ Insure-no-duplicates.
     list-new swap                       \ ret-lst lst0'
@@ -859,7 +879,7 @@
 \ Used by regioncorr subtraction.
 : region-list-copy-except ( reg2 inx1 lst0 -- lst )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-region-list
     over 0 < abort" index out of range"
     over over list-get-length < is-false abort" index out of range"
     assert-3os-is-region

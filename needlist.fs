@@ -11,8 +11,22 @@
     then
 ;
 
+\ Check if nos is a list, if non-empty, with the first item being a need.
+: assert-nos-is-need-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-need
+        drop
+    then
+;
+
 \ Deallocate a need list.
 : need-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-need-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -27,17 +41,19 @@
 
 \ Return the union of two need lists.
 : need-list-set-union ( list1 list0 -- list-result )
+    \ Check args.
+    assert-tos-is-need-list
+    assert-nos-is-need-list
+
     [ ' need-eq ] literal -rot        \ xt list1 list0
-    list-union                          \ list-result
-    [ ' struct-inc-use-count ] literal  \ list-result xt
-    over list-apply                     \ list-result
+    list-union-struct                 \ list-result
 ;
 
 
 \ Print a need-list
 : .need-list ( list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-need-list
 
     \ Init counter
     0 swap                  \ cnt link
@@ -68,7 +84,7 @@
 \ Push a need to a need-list, unless it is already in the list.
 : need-list-push ( ned1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-need-list
     assert-nos-is-need
 
     over struct-inc-use-count
@@ -78,8 +94,8 @@
 \ Append nos need-list to the tos need-list.
 : need-list-append ( lst1 lst0 -- )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-need-list
+    assert-nos-is-need-list
 
     swap                    \ lst0 lst1
     list-get-links          \ lst0 link

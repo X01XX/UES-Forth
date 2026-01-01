@@ -96,6 +96,16 @@ list-header-disp    cell+   constant list-links-disp
     then
 ;
 
+\ Check 4OS for list, unconventional, leaves stack unchanged.
+: assert-4os-is-list ( 4os 3os nos tos -- 4os 3os nos tos )
+    #3 pick is-allocated-list
+    if
+    else
+        s" 4OS is not an allocated list."
+       .abort-xt execute
+    then
+;
+
 \ Start accessors.
 
 \ Get list length.
@@ -114,7 +124,7 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Check NOS for non-empty list, unconventional, leaves stack unchanged.
-: assert-nos-list-is-not-empty ( tos -- tos )
+: assert-nos-list-is-not-empty ( nos tos -- nos tos )
     assert-nos-is-list
     over list-get-length
     0= abort" nos list is empty"

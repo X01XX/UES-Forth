@@ -24,6 +24,9 @@
 
 \ Deallocate a plancorr list.
 : plancorr-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-plancorr-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if

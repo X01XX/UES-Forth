@@ -1,7 +1,21 @@
 \ Functions for group lists.
 
+\ Check if tos is a non-empty list, with the first item being a group struct.
+: assert-tos-is-group-list ( tos -- tos )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-group
+        drop
+    then
+;
+
 \ Deallocate a group list.
 : group-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-group-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -17,7 +31,7 @@
 \ Find a group in a list, by state, if any.
 : group-list-find ( reg1 list0 -- grp true | false )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-region
 
     [ ' group-region-eq ] literal -rot list-find
@@ -26,7 +40,7 @@
 \ Return true if a group with a given state is a member.
 : group-list-member ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-region
 
     [ ' group-region-eq ] literal -rot list-member
@@ -35,7 +49,7 @@
 \ Print a group-list
 : .group-list ( grp-list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
 
     [ ' .group ] literal swap .list
 ;
@@ -43,7 +57,7 @@
 \ Print a list of group regions.
 : .group-list-regions ( grp-lst0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
 
     ." ("
     [ ' .group-region ] literal swap list-apply
@@ -53,12 +67,11 @@
 \ Push a group to a group-list, unless it is already in the list.
 : group-list-push ( grp1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-group
 
     cr ." adding group " over .group-region cr
-    over struct-inc-use-count
-    list-push
+    list-push-struct
 ;
 
 \ Remove a group from a group-list, and deallocate.
@@ -66,7 +79,7 @@
 \ Return true if a group was removed.
 : group-list-remove ( reg list -- bool )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-region
 
     cr ." removing group " over .region cr
@@ -85,7 +98,7 @@
 \ Add a new square to appropriate groups.
 : group-list-add-square ( sqr1 grp-lst0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-square
 
     list-get-links              \ sqr1 link
@@ -114,7 +127,7 @@
 : group-list-check-square ( sqr1 grp-lst0 -- )
     \ cr ." group-list-check-square: start" cr
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-square
 
     list-get-links              \ sqr1 link
@@ -143,7 +156,7 @@
 \ Return true, if a state is in at least one group region.
 : group-list-state-in-group ( val1 grp-lst0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-value
 
     list-get-links              \ val0 link
@@ -167,7 +180,7 @@
 \ Return true, if a state is in at least one group r-region.
 : group-list-state-in-group-r ( val1 grp-lst0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-group-list
     assert-nos-is-value
 
     list-get-links              \ val0 link

@@ -452,6 +452,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
+    \ cr ." regioncorr-eq: " over .regioncorr space dup .regioncorr cr
 
     regioncorr-get-list list-get-links swap   \ link0 regc1
     regioncorr-get-list list-get-links swap   \ link1 link0

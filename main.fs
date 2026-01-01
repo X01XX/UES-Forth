@@ -2,6 +2,12 @@
 \ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs tools.fs stackprint.fs, struct.fs, structlist.fs
 \ contact the Wisconsin Alumni Research Foundation (WARF).
 
+\ The Linux command: alias words='grep "^: "'
+\ allows a quick list of functions in a file, like "words session.fs" or more, "words *list.fs"
+\ Words can be filtered, like "words list.fs | grep remove" or "words list.fs | grep -- list-set-"
+\ A brief comment on the same line as the function name can be helpful.
+\ For a bash shell user, the command can be added at the end of ~/.bashrc to make it permanent.
+ 
 \ Struct IDs.
 \
 \ Each number is prime, 5 digits, and fits within 16 bits.
@@ -189,9 +195,9 @@ include session_t.fs
 cr ." main.fs"
 
 \ Init array-stacks.
-#2500 link-mma-init
-#0902 list-mma-init
-#1003 region-mma-init
+#3500 link-mma-init
+#1902 list-mma-init
+#3003 region-mma-init
 #0500 regioncorr-mma-init
 #0804 rule-mma-init
 #0405 rulestore-mma-init
@@ -203,7 +209,7 @@ cr ." main.fs"
 #0100 group-mma-init
 #0200 need-mma-init
 #0150 planstep-mma-init
-#0170 pathstep-mma-init
+#0370 pathstep-mma-init
 #0150 plan-mma-init
 #0040 plancorr-mma-init
 #0050 action-mma-init
@@ -298,13 +304,16 @@ cr
     s" (X1X1 01X1X)" regioncorr-from-string-a   \ sess regc
     -1 #2 rate-new                              \ sess regc rt
     regioncorrrate-new                          \ sess regc-rt
-    \ cr ." regioncorrrate: " dup .regioncorrrate cr
     over session-add-regioncorrrate             \ sess
 
     s" (1XX1 01X1X)" regioncorr-from-string-a   \ sess regc
     #-2 0 rate-new                              \ sess
     regioncorrrate-new                          \ sess regc-rt
-    \ cr ." regioncorrrate: " dup .regioncorrrate cr
+    over session-add-regioncorrrate             \ sess
+
+    s" (00X1 11XXX)" regioncorr-from-string-a   \ sess regc
+    0 #2 rate-new                               \ sess
+    regioncorrrate-new                          \ sess regc-rt
     over session-add-regioncorrrate             \ sess
 
     .session
@@ -325,9 +334,42 @@ cr
         cr ." ***************************"
         cr ." Step: " step-num .
         space ." Current state: "
-        current-session .session-current-states
+        current-session dup .session-current-states     \ sess
         space ." Reachable "
-        current-session .session-reachable-regions
+        dup .session-reachable-regions                  \ sess
+        space
+        dup session-get-current-regions                 \ sess cur-regc
+        dup                                             \ sess cur-regc cur-regc 
+        #2 pick session-get-regioncorrrate-list         \ sess cur-regc cur-regc regcr-lst
+        regioncorrrate-rate-regioncorr                  \ sess regcr-lst rate
+        swap regioncorr-deallocate                      \ sess rate
+        space ." rate: "
+        dup .rate                                       \ sess rate
+        space ." Status: "
+        dup rate-get-positive
+        0= if
+            \ No positive value.
+            dup rate-get-negative
+            0= if
+                \ No negative value.
+                ." Neutral"
+            else
+                 \ Some negative value.
+                ." Negative"
+            then
+        else
+            \ Some positive value.
+            dup rate-get-negative
+            0= if
+                \ No negative value.
+                ." Positive"
+            else
+                \ Some negative value.
+                ." Conflicted"
+            then
+        then
+        rate-deallocate                                 \ sess
+        drop                                            \
         cr
 
         #80 s" Enter command: > " get-user-input

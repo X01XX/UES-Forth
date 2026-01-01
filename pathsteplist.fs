@@ -24,12 +24,10 @@
 
 \ Check if 4os is a list, if non-empty, with the first item being a pathstep.
 : assert-4os-is-pathstep-list ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick assert-tos-is-list
-    dup list-is-empty
+    assert-4os-is-list
+    #3 pick list-is-not-empty
     if
-        drop
-    else
-        list-get-links link-get-data
+        #3 pick list-get-links link-get-data
         assert-tos-is-pathstep
         drop
     then

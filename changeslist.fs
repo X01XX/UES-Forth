@@ -1,7 +1,21 @@
 \ Functions for changes lists.
 
+\ Check if tos is a non-empty list, with the first item being a changes struct.
+: assert-tos-is-changes-list ( tos -- tos )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-changes
+        drop
+    then
+;
+
 \ Deallocate a changes list.
 : changes-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-changes-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -17,35 +31,24 @@
 \ Print a changes-list
 : .changes-list ( list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-changes-list
     [ ' .changes ] literal swap .list
 ;
 
 \ Push a changes instance into a changes-list.
 : changes-list-push ( cngs1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-changes-list
     assert-nos-is-changes
 
-    over struct-inc-use-count
-    list-push
+    list-push-struct
 ;
 
 \ Push a changes instance into a changes-list.
 : changes-list-push-end ( cngs1 list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-changes-list
     assert-nos-is-changes
 
-    over struct-inc-use-count
-    list-push-end
-;
-
-\ Check if tos is a non-empty list, with the first item being a changes struct.
-: assert-tos-is-changes-list ( tos -- tos )
-    assert-tos-is-list
-    assert-tos-list-is-not-empty
-    dup list-get-links link-get-data
-    assert-tos-is-changes
-    drop
+    list-push-end-struct
 ;

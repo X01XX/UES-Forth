@@ -116,7 +116,7 @@ action-groups-disp               cell+  constant action-function-disp           
     assert-nos-is-list
 
     action-squares-disp +   \ Add offset.
-    !                       \ Set the field.
+    !struct                 \ Set the field.
 ;
 
 \ Return the incompatible-pairs region-list from an action instance.
@@ -135,7 +135,7 @@ action-groups-disp               cell+  constant action-function-disp           
     assert-nos-is-list
 
     action-incompatible-pairs-disp +    \ Add offset.
-    !                                   \ Store it.
+    !struct                             \ Store it.
 ;
 
 \ Return the logical-structure region-list from an action instance.
@@ -155,7 +155,7 @@ action-groups-disp               cell+  constant action-function-disp           
 
     \ Set new LS.
     action-logical-structure-disp + \ Add offset.
-    !                               \ Store it.
+    !struct                         \ Store it.
 ;
 
 
@@ -175,7 +175,7 @@ action-groups-disp               cell+  constant action-function-disp           
     assert-nos-is-list
 
     action-groups-disp +    \ Add offset.
-    !                       \ Set the field.
+    !struct                 \ Set the field.
 ;
 
 \ Return the function xt that implements the action.
@@ -434,17 +434,14 @@ action-groups-disp               cell+  constant action-function-disp           
 
     \ Set squares list.
     list-new                        \ nb1 act lst
-    dup struct-inc-use-count        \ nb1 act lst
     over _action-set-squares        \ nb1 act
 
     \ Set incompatible-pairs list.
     list-new                            \ nb1 act lst
-    dup struct-inc-use-count            \ nb1 act lst
     over _action-set-incompatible-pairs \ nb1 act
 
     \ Set logical-structure list.
     list-new                            \ nb1 act lst
-    dup struct-inc-use-count            \ nb1 act lst
     2dup swap                           \ nb1 act lst lst act
     _action-set-logical-structure       \ nb1 act lst
 
@@ -456,7 +453,6 @@ action-groups-disp               cell+  constant action-function-disp           
 
     \ Set group list.
     list-new                            \ act lst
-    dup struct-inc-use-count            \ act lst
     over _action-set-groups             \ act
 ;
 
