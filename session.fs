@@ -1702,7 +1702,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     true
 ;
 
-\ Chonge the current states to intersect a given regioncorr.
+\ Change the current states to intersect a given regioncorr.
 : session-change-to ( regc-to sess0 -- bool )
     \ Check args.
     assert-tos-is-session
@@ -1749,4 +1749,16 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     regioncorr-deallocate
     2drop
     false
+;
+
+: session-get-current-rate ( sess0 -- rate ) \ Return the rate of current domain states.
+    \ Check arg.
+    assert-tos-is-session
+
+    dup session-get-current-regions                 \ sess cur-regc
+    dup                                             \ sess cur-regc cur-regc 
+    #2 pick session-get-regioncorrrate-list         \ sess cur-regc cur-regc regcr-lst
+    regioncorrrate-rate-regioncorr                  \ sess regcr-lst rate
+    swap regioncorr-deallocate                      \ sess rate
+    nip
 ;

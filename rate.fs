@@ -187,3 +187,10 @@
     +                       \ rt0 pos
     swap _rate-set-positive \
 ;
+
+: rate-is-negative ( rate -- bool ) \ Return true if a rate has a non-zero negative quality.
+    \ Check arg.
+    assert-tos-is-rate
+
+    rate-get-negative 0<>
+;

@@ -338,11 +338,9 @@ cr
         space ." Reachable "
         dup .session-reachable-regions                  \ sess
         space
-        dup session-get-current-regions                 \ sess cur-regc
-        dup                                             \ sess cur-regc cur-regc 
-        #2 pick session-get-regioncorrrate-list         \ sess cur-regc cur-regc regcr-lst
-        regioncorrrate-rate-regioncorr                  \ sess regcr-lst rate
-        swap regioncorr-deallocate                      \ sess rate
+
+        dup session-get-current-rate                    \ sess rate
+
         space ." rate: "
         dup .rate                                       \ sess rate
         space ." Status: "

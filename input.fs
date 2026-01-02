@@ -64,7 +64,7 @@
     then
 ;
 
-: do-to-command ( regc-to -- )
+: do-to-command ( regc-to -- )  \ Do the UI "to" command.
     \ Check arg.
     assert-tos-is-regioncorr
 
@@ -92,14 +92,33 @@
     then
 ;
 
-\ Zero-token logic, get/show/act-on needs.
-: do-zero-token-command ( -- true )
+: behavior-exit-negative-regioncorr ( -- )  \ If needed, change to a non-negative regioncorr fragment.
+    current-session                 \ sess
+
+    dup session-get-current-rate    \ sess rate'
+
+    dup rate-is-negative            \ sess rate' bool
+    if
+        cr ." current states ARE negative" cr
+        rate-deallocate
+    else
+        cr ." current states ARE NOT negative" cr
+        rate-deallocate
+        \ TODO Find closest non-negative regioncorr fragment.
+        \ List is the first element in session-regioncorr-lol-by-rate.
+        \ Use session-change-to to make the change.
+    then
+    drop
+;
+
+: do-zero-token-command ( -- true ) \ Zero-token logic, get/show/act-on needs.
     current-session             \ sess
     session-get-needs           \ ned-lst
 
     dup list-get-length         \ ned-lst len
     0=
     if
+        behavior-exit-negative-regioncorr
         \ ." No needs found" cr
         drop
         true
