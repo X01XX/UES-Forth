@@ -13,5 +13,5 @@ To run:
 
 > all-tests | main
 
-A program that can learn (at a low level), avoid negative states, seek positive states (a little more work is needed) and run
+A program that can learn (at a low level), avoid negative states, seek positive states, and run
 on a Raspberry Pi class computer.
