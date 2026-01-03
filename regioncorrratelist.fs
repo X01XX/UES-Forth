@@ -136,12 +136,12 @@
 ;
 
 \ Return a rate for a given regioncorr.
-: regioncorrrate-rate-regioncorr ( regc1 regcr0 -- rate )
+: regioncorrrate-rate-regioncorr ( regc1 regcr-lst0 -- rate )
     \ Check args.
     assert-tos-is-regioncorrrate-list
     assert-nos-is-regioncorr
 
-    0 0 rate-new swap           \ regc1 ret-rate regcr0
+    0 0 rate-new swap           \ regc1 ret-rate regcr-lst0
     list-get-links              \ regc1 ret-rate link
 
     begin
@@ -163,4 +163,16 @@
     repeat
                                             \ regc1 ret-rate
     nip                                     \ ret-rate
+;
+
+: regioncorrrate-list-more-positive-regioncorrs ( rate1 regcr-lst0 -- regcr-lst ) \ Return a list of more-positive regioncorrrates.
+    \ Check args.
+    assert-tos-is-regioncorrrate-list
+    assert-nos-is-rate
+
+    \ Init return list.
+    list-new -rot                           \ ret-lst rate1 regcr-lst0
+
+    cr ." regioncorrrate-list-more-positive-regioncorrs: TODO" cr
+    2drop
 ;

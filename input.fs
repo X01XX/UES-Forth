@@ -92,14 +92,14 @@
     then
 ;
 
-: behavior-exit-negative-regioncorr ( -- )  \ If needed, change to a non-negative regioncorr fragment.
+: behavior ( -- )  \ Change to the closest more-positive regioncorr fragment.
     current-session                 \ sess
 
     dup session-get-current-rate    \ sess rate'
 
     dup rate-is-negative            \ sess rate' bool
     if
-        cr ." current states ARE negative" cr
+        cr ." current states are negative' seek closest non-negative states" cr
         rate-deallocate
 
         \ Get current states as regions.
@@ -132,9 +132,49 @@
         then
 
         regioncorr-list-deallocate                 \ sess
-    else
-        cr ." current states ARE NOT negative" cr
-        rate-deallocate                             \ sess
+    else                                            \ sess rate'
+        cr ." current states are not negative, seek closest more-positive regioncorr fragment" cr
+        \ rate-deallocate                             \ sess 
+
+        \ Find more-positive regioncorr fragments.
+        dup                                             \ sess rate' rate'
+        #2 pick session-get-regioncorrrate-fragments    \ sess rate' rate' frg-lst
+        regioncorrrate-list-more-positive-regioncorrs   \ sess rate' mrp-lst'
+        swap rate-deallocate                            \ sess mrp-lst'
+
+        \ Check for no more-positive items found.
+        dup list-is-empty
+        if
+            cr ." There are no more-positive regioncorr fragments" cr
+            list-deallocate
+            drop
+            exit
+        then
+
+        \ Convert regioncorrrate list to regioncorr-list.
+        dup regioncorrrate-list-to-regioncorr-list      \ sess mrp-lst' mrp-lst''
+        swap regioncorrrate-list-deallocate             \ sess mrp-lst''
+        
+        \ Find closest regioncorr fragments of more positive regioncorr fragments.
+        over session-get-current-regions dup            \ sess mrp-lst'' cur-regc' cur-regc'
+        #2 pick                                         \ sess mrp-lst'' cur-regc' cur-regc' mrp-lst''
+        regioncorr-list-closest-regioncorrs             \ sess mrp-lst'' cur-regc' cls-lst'
+        swap regioncorr-deallocate                      \ sess mrp-lst'' cls-lst'
+        swap regioncorr-list-deallocate                 \ sess cls-lst'
+
+        \ Select one.
+        dup list-get-length random                      \ sess cls-lst' inx
+        over list-get-item                              \ sess cls-lst' regcx
+
+         \ Try to change path.
+        #2 pick                                         \ sess clst-lst' regcx sess
+        session-change-to                               \ sess clst-lst'
+        if
+            cr ." Change to more-positive regioncorr fragment succeeded" cr
+        else
+            cr ." Change to more-positive regioncorr fragment failed" cr
+        then
+        regioncorr-list-deallocate                      \ sess
     then
     drop
 ;
@@ -146,7 +186,7 @@
     dup list-get-length         \ ned-lst len
     0=
     if
-        behavior-exit-negative-regioncorr
+        behavior
         \ ." No needs found" cr
         drop
         true
