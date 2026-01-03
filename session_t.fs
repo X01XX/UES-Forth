@@ -222,19 +222,19 @@
     %1111 swap action-get-sample sample-deallocate  \ dom0
 
     \ Set up group for act2.
-    2 over domain-find-action                       \ dom0, act2 t | f
+    #2 over domain-find-action                      \ dom0, act2 t | f
     0= abort" can't find act2?"
     %0000 over action-get-sample sample-deallocate  \ dom0 act2
     %1111 swap action-get-sample sample-deallocate  \ dom0
 
     \ Set up group for act3.
-    3 over domain-find-action                       \ dom0, act3 t | f
+    #3 over domain-find-action                      \ dom0, act3 t | f
     0= abort" can't find act3?"
     %0000 over action-get-sample sample-deallocate  \ dom0 act3
     %1111 swap action-get-sample sample-deallocate  \ dom0
 
     \ Set up group for act4.
-    4 over domain-find-action                       \ dom0, act4 t | f
+    #4 over domain-find-action                      \ dom0, act4 t | f
     0= abort" can't find act4?"
     %0000 over action-get-sample sample-deallocate  \ dom0 act4
     %1111 swap action-get-sample sample-deallocate  \ dom0
@@ -259,25 +259,25 @@
     %11111 swap action-get-sample sample-deallocate \ dom1
 
     \ Set up group for act2.
-    2 over domain-find-action                       \ dom1, act2 t | f
+    #2 over domain-find-action                      \ dom1, act2 t | f
     0= abort" can't find act2?"
     %00000 over action-get-sample sample-deallocate \ dom1 act2
     %11111 swap action-get-sample sample-deallocate \ dom1
 
     \ Set up group for act3.
-    3 over domain-find-action                       \ dom1, act3 t | f
+    #3 over domain-find-action                      \ dom1, act3 t | f
     0= abort" can't find act3?"
     %00000 over action-get-sample sample-deallocate \ dom1 act3
     %11111 swap action-get-sample sample-deallocate \ dom1
 
     \ Set up group for act4.
-    4 over domain-find-action                       \ dom1, act4 t | f
+    #4 over domain-find-action                      \ dom1, act4 t | f
     0= abort" can't find act3?"
     %00000 over action-get-sample sample-deallocate \ dom1 act4
     %11111 swap action-get-sample sample-deallocate \ dom1
 
     \ Set up group for act5.
-    5 over domain-find-action                       \ dom1, act5 t | f
+    #5 over domain-find-action                      \ dom1, act5 t | f
     0= abort" can't find act5?"
     %00000 over action-get-sample sample-deallocate \ dom1 act5
     %11111 swap action-get-sample sample-deallocate \ dom1

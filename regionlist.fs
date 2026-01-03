@@ -392,9 +392,9 @@
 ;
 
 \ Return a list of region intersections with a region-list, no subsets.
-\ In many cases, you should run region-list-region-intersections-n instead.
+\ In many cases, you should run region-list-intersections-n instead.
 \ Or do intersections\subtractions, followed by region-list-normalize.
-: region-list-region-intersections ( list1 list0 -- list-result )
+: region-list-intersections-nosubs ( list1 list0 -- list-result )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region-list
@@ -416,6 +416,7 @@
             #2 pick                 \ ret-list list1 link0 data0 link1 data1 data0
             region-intersection     \ ret-list list1 link0 data0 link1, reg-int true | false
             if
+                \ cr ." reg int: " dup .region cr
                                         \ ret-list list1 link0 data0 link1 reg-int
                 dup                     \ ret-list list1 link0 data0 link1 reg-int reg-int
                 #6 pick                 \ ret-list list1 link0 data0 link1 reg-int reg-int ret-list
@@ -423,7 +424,7 @@
                 if
                     drop
                 else
-                    dup struct-inc-use-count
+                    \ dup struct-inc-use-count
                     region-deallocate
                 then
             then
@@ -474,12 +475,12 @@
    [ ' struct-inc-use-count ] literal over list-apply       \ lst
 ;
 
-: region-list-region-intersections-n ( lst1 lst0 -- lst )
+: region-list-intersections-n ( lst1 lst0 -- lst )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    region-list-region-intersections    \ ret0
+    region-list-intersections-nosubs    \ ret0
     dup region-list-normalize           \ ret1 ret2
     swap region-list-deallocate         \ ret2
 ;
@@ -788,9 +789,9 @@
     drop
 ;
 
-\ Return a list of region-pair intersectinons.
+\ Return a list of region-pair intersections.
 \ Duplicates are avoided, but proper subsets are Ok.
-: region-list-intersections ( reg-lst0 -- reg-lst)
+: region-list-intersections-nodups ( reg-lst0 -- reg-lst)
     \ Check arg.
     assert-tos-is-region-list
 
@@ -842,8 +843,8 @@
     assert-tos-is-region-list
 
     \ Insure-no-duplicates.
-    list-new swap                       \ ret-lst lst0'
-    region-list-copy-nodups             \ ret-lst lst0'
+    list-new swap                           \ ret-lst lst0'
+    region-list-copy-nodups                 \ ret-lst lst0'
 
     begin
         dup list-is-empty 0=
@@ -851,7 +852,7 @@
         dup                                 \ ret-lst lst0' lst0'
 
         \ Get intersections.
-        region-list-intersections           \ ret-lst lst0' int-lst
+        region-list-intersections-nodups    \ ret-lst lst0' int-lst
 
         \ Get whats left over.
         2dup swap                           \ ret-lst lst0' int-lst int-lst lst0'
@@ -916,4 +917,84 @@
                                     \ reg2 inx1 ret-lst ctr
     drop                            \ reg2 inx1 ret-lst
     nip nip                         \ ret-lst
+;
+
+: region-list-from-parsed-string ( [addr n]+ tkn-cnt -- reg-lst t | f ) \ Return a region-list from a parsed string.
+
+    \ Save number tokens.
+    dup >r
+
+    \ Process each region, skip invalid regions.
+    \ So clear stack of all tokens, valid or not.
+                                            \ addr0 cnt0 tkn-cnt
+    list-new swap                           \ addr0 cnt0 ret-lst tkn-cnt
+    0 do                                    \ addrx cntx ret-lst
+        rot rot                             \ addry cnty ret-lst addrx cntx
+        region-from-string                  \ addry cnty ret-lst, regx t | f
+        if
+            \ Add the region.
+            over list-push-end-struct       \ addry cnty ret-lst
+        then
+    loop
+                                            \ ret-lst
+    \ Test if there were any invalid regions.
+    dup list-get-length                     \ ret-lst len
+    r>                                      \ ret-lst len tkn-cnt
+    =                                       \ ret-lst bool
+    if
+        true
+    else
+        region-list-deallocate
+        false
+    then
+;
+
+: region-list-from-string ( str-addr str-n -- reg-lst t | f )  \ Return a region-list from a string, like (x000 xx10).
+    \ Get tokens.
+    parse-string                \ [str-addr str-n ]+ tkn-cnt
+
+    region-list-from-parsed-string
+;
+
+: region-list-from-string-a ( str-addr str-n -- regc )   \ Return a region-list from a string, or abort.
+    region-list-from-string    \ reg-lst t | f
+    is-false abort" region-list-from-string failed?"
+;
+
+: region-list-union-nosubs ( reg-lst1 reg-lst0 -- reg-lst ) \ Combine two reigion-lists, deleteng subsets.
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region-list
+
+    \ Inti return list.
+    list-new                \ reg-lst1 reg-lst0 ret-lst
+
+    \ Prep for loop 1.
+    swap list-get-links     \ reg-lst1 ret-lst link0
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ reg-lst1 ret-lst link0 reg0x
+        #2 pick                 \ reg-lst1 ret-lst link0 reg0x ret-lst
+        region-list-push-nosubs \ reg-lst1 ret-lst link0 bool
+        drop
+
+        link-get-next
+    repeat
+                                \ reg-lst1 ret-lst
+    \ Prep for loop 2.
+    swap list-get-links         \ ret-lst link1
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret-lst link1 reg1x
+        #2 pick                 \ ret-lst link1 reg1x ret-lst
+        region-list-push-nosubs \ ret-lst link1 bool
+        drop
+
+        link-get-next
+    repeat
+                                \ ret-lst
 ;

@@ -67,7 +67,7 @@
         [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
         over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
         is-false abort" regioncorr not found in list of lists?"
-        regioncorr-deallocate                           \ rlc1 rlc2 rlc-lst
+        regioncorr-deallocate                           \ regc1 regc2 regc-lst
 
         \ Check results 2.
         s" (0x0x 0XX11)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t

@@ -425,7 +425,7 @@
 
 \ Return all two-regc intersections from an regioncorr-list.
 \ Duplicates will be suppresed, but propr subsets are Ok.
-: regioncorr-list-intersections ( regc-lst -- regc-lst )
+: regioncorr-list-intersections-nodups ( regc-lst -- regc-lst )
     \ Check arg.
     assert-tos-is-regioncorr-list
 
@@ -529,7 +529,7 @@
         dup                                 \ ret-lst lst0' lst0'
 
         \ Get intersections.
-        regioncorr-list-intersections              \ ret-lst lst0' int-lst
+        regioncorr-list-intersections-nodups    \ ret-lst lst0' int-lst
 
         \ Get whats left over.
         2dup swap                           \ ret-lst lst0' int-lst int-lst lst0'
@@ -741,4 +741,52 @@
 
         link-get-next
     repeat
+;
+
+: regioncorr-list-closest-regioncorrs ( regc1 regc-lsn0 -- regc-lst ) \ Return a list of regc in list closest to a given regc.
+        \ Check args.
+    assert-tos-is-regioncorr-list
+    assert-nos-is-regioncorr
+
+    \ Get min difference of all items.
+    #9999999                            \ | min
+    over list-get-links                 \ | min link
+    begin
+        ?dup
+    while
+        #3 pick                         \ | min link regc1
+        over link-get-data              \ | min link regc1 regcx
+        regioncorr-distance             \ | min link u
+        rot min swap                    \ | min link
+
+        link-get-next
+    repeat
+                                        \ | min
+    \ cr ." min dist: " dup . cr
+
+    \ Init return list.
+    list-new swap                       \ | ret-lst min
+
+    #2 pick list-get-links              \ | ret-lst min link
+    begin
+        ?dup
+    while
+        \ Check if current item has the minimum distance.
+        #4 pick                         \ | ret-lst min link regc1
+        over link-get-data              \ | ret-lst min link regc1 regcx
+        regioncorr-distance             \ | ret-lst min link u
+        #2 pick                         \ | ret-lst min link u min
+        =                               \ | ret-lst min link bool
+        if
+            \ Save item in return list.
+            dup link-get-data           \ | ret-lst min link regcx
+            #3 pick                     \ | ret-lst min link regcx ret-lst
+            list-push-struct            \ | ret-lst min link
+        then
+
+        link-get-next
+    repeat
+
+                                        \ | ret-lst min
+    2nip drop                           \ ret-lst
 ;

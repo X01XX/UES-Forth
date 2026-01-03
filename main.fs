@@ -40,6 +40,7 @@ vocabulary UES
 UES definitions
 
 decimal
+\ #2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
 
 include xtindirect.fs
 include bool.fs
@@ -178,7 +179,6 @@ cs
     then
 ;
 
-include state_t.fs
 include square_t.fs
 include squarelist_t.fs
 include region_t.fs

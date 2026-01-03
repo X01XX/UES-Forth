@@ -226,7 +226,7 @@
     list-new swap               \ ret-lst pthstp-lst0
 
     \ Init min-num.
-    9999                        \ ret-lst pthstp-lst0 min
+    #9999                       \ ret-lst pthstp-lst0 min
 
     \ Prep for loop.
     over list-get-links         \ ret-lst pthstp-lst0 min link

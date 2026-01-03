@@ -4,7 +4,8 @@
     #9 constant session-struct-number-cells
 
 \ Struct fields
-0                                               constant session-header-disp                        \ 16-bits [0] struct id [1] use count
+0                                               constant session-header-disp                        \ 16-bits [0] struct id [1] use count:w
+
 session-header-disp                     cell+   constant session-domains-disp                       \ A domain-list, kind of like senses.
 session-domains-disp                    cell+   constant session-current-domain-disp                \ A domain, or zero before first domain is added.
 session-current-domain-disp             cell+   constant session-needs-disp                         \ A need-list.
@@ -15,7 +16,7 @@ session-regioncorrrate-fragments-disp   cell+   constant session-regioncorrrate-
 session-regioncorrrate-nq-disp          cell+   constant session-regioncorr-lol-by-rate-disp        \ A list of regioncorr lists, corresponding to session-regioncorrrate-nq items,
                                                                                                     \ where a plan can move within without encountering a lower rated fragment.
                                                                                                     \ Within an regioncorr list, GT one item, there are intersections,
-                                                                                                    \ so there is a path from one rcl, to another, through an intersection.
+                                                                                                    \ so there is a path from one regc, to another, through an intersection.
 session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by-rate-disp          \ A list of pathstep lists, corresponding to session-regioncorrrate-nq items.
 
 0 value session-mma     \ Storage for session mma instance.
@@ -202,7 +203,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 \ Return the session regioncorr-lol-by-rate list.
-: session-get-regioncorr-lol-by-rate ( sess0 -- regcr-lst )
+: session-get-regioncorr-lol-by-rate ( sess0 -- regcr-lol )
     \ Check arg.
     assert-tos-is-session
 
@@ -211,7 +212,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 \ Set the session-regioncorr-lol-by-rate list.
-: _session-set-regioncorr-lol-by-rate ( regcr-lst1 sess0 -- )
+: _session-set-regioncorr-lol-by-rate ( regcr-lol1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
@@ -221,7 +222,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 \ Update the session-regioncorr-lol-by-rate list.
-: _session-update-regioncorr-lol-by-rate ( regcr-lst1 sess0 -- )
+: _session-update-regioncorr-lol-by-rate ( regcr-lol1 sess0 -- )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-list
@@ -411,7 +412,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     while
         cr  ."    rate:      " dup link-get-data #3 dec.r
         space ." regc list:    " over link-get-data .regioncorr-list
-        cr cr 15 spaces ." pathstep list: " #2 pick link-get-data
+        cr cr #15 spaces ." pathstep list: " #2 pick link-get-data
         [ ' .pathstep ] literal over list-apply
         space list-get-length dec. cr
 
@@ -519,8 +520,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     nip
 ;
 
-\ Return a list of regions, one for each domain state, in domain list order.
-: session-get-current-regions ( sess0 -- regcorr )
+: session-get-current-regions ( sess0 -- regcorr )  \ Return a list of regions, one for each domain state, in domain list order.
     \ Check args.
     assert-tos-is-session
 
@@ -1731,16 +1731,16 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             cr ." plan found: " dup .plancorr-list  \ sess0 regc-to regc-from' pthstp-lst' plnc-lst
 
             dup plancorr-list-run-plan              \ sess0 regc-to regc-from' pthstp-lst' plnc-lst, t | f
-            is-false abort" plan failed?"
-            plancorr-list-deallocate                \ sess0 regc-to regc-from' pthstp-lst'
-
-            \ #3 pick                                 \ sess0 regc-to regc-from' pthstp-lst' sess0
-            \ cr ." Current states: " .session-current-states cr  \ sess0 regc-to regc-from' pthstp-lst'
-            pathstep-list-deallocate                            \ sess0 regc-to regc-from'
-            regioncorr-deallocate
-            2drop
-            true
-            exit
+            if
+                plancorr-list-deallocate            \ sess0 regc-to regc-from' pthstp-lst'
+                pathstep-list-deallocate            \ sess0 regc-to regc-from'
+                regioncorr-deallocate
+                2drop
+                true
+                exit
+            else
+                pathstep-list-deallocate
+            then
         else
             pathstep-list-deallocate
         then
@@ -1751,7 +1751,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     false
 ;
 
-: session-get-current-rate ( sess0 -- rate ) \ Return the rate of current domain states.
+: session-get-current-rate ( sess0 -- rate ) \ Return the rate of current domain states, based on being subset of regioncorrrates.
     \ Check arg.
     assert-tos-is-session
 

@@ -622,7 +622,7 @@ action-groups-disp               cell+  constant action-function-disp           
                 \ Calc new action-logical-structure.
                 #3 pick action-get-logical-structure    \ act0 inclst link reg-lst lsl-lst
                 2dup                                \ act0 inclst link reg-lst lsl-lst reg-lst lsl-lsn
-                region-list-region-intersections    \ act0 inclst link reg-lst lsl-lst new-reg-lst
+                region-list-intersections-nosubs    \ act0 inclst link reg-lst lsl-lst new-reg-lst
 
                 \ Set new action-logical-structure.
                 #5 pick                             \ act0 inclst link reg-lst lsl-lst new-reg-lst act0
@@ -739,7 +739,7 @@ action-groups-disp               cell+  constant action-function-disp           
         \ Intersect with most recent logical-structure region list.
         rot                                 \ act0 link nanb-lst ls-new
         2dup                                \ act0 link nanb-lst ls-new nanb-lst ls-new
-        region-list-region-intersections    \ act0 link nanb-lst ls-new ls-new-new
+        region-list-intersections-nosubs    \ act0 link nanb-lst ls-new ls-new-new
 
         \ Deallocate previous region lists.
         swap                                \ act0 link nanb-lst ls-new-new ls-new

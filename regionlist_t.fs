@@ -2,30 +2,17 @@
 
 : region-list-test-region-intersections-n
 
-    list-new                                \ lst1
-     s" X10X" region-from-string-a          \ lst1 regx
-    over region-list-push                   \ lst1
+    s" (X10X)" region-list-from-string-a        \ lst1
 
-    list-new                                \ lst1 lst2
-    s" 0XX1" region-from-string-a           \ lst1 lst2 regx
-    over region-list-push                   \ lst1 lst2
+    s" (1XX1 0XX1)" region-list-from-string-a   \ lst1
 
-    s" 1XX1" region-from-string-a           \ lst1 lst2 regx
-    over region-list-push                   \ lst1 lst2
+    2dup region-list-intersections-n            \ lst1 lst2 lst3
 
-    2dup region-list-region-intersections-n \ lst1 lst2 lst3
+    s" (X101)" region-list-from-string-a        \ lst1 lst2 lst3 lst4
+    2dup region-list-eq                         \ lst1 lst2 lst3 lst4 bool
+    0= abort" X101 not found"
 
-    dup list-get-length 1 <>
-    abort" Result length invalid "
-
-     s" X101" region-from-string-a  \ lst1 lst2 lst3 region
-
-     over                       \ lst1 lst2 lst3 region lst3
-     over swap                  \ lst1 lst2 lst3 region region lst3
-     region-list-member         \ lst1 lst2 lst3 region flag
-     0= abort" X101 not found"
-
-    region-deallocate
+    region-list-deallocate
     region-list-deallocate
     region-list-deallocate
     region-list-deallocate
@@ -36,48 +23,21 @@
 : region-list-test-subtract-n
 
     \ Make subtrahend list.
-    list-new                                \ lst1
-    s" 0XX1" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" 1XX1" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
+    s" (1XX1 0XX1)" region-list-from-string-a   \ lst1 
 
     \ Make minuend list.
-    list-new                                \ lst1 lst2
-    s" X10X" region-from-string-a           \ lst1 lst2 regx
-    over region-list-push                   \ lst1 lst2
-
-    s" 0000" region-from-string-a           \ lst1 lst2 regx
-    over region-list-push                   \ lst1 lst2
+    s" (0000 X10X)" region-list-from-string-a   \ lst1 lst2
 
     \ Subtract regions.
-    2dup region-list-subtract-n               \ lst1 lst2 lst3
+    2dup region-list-subtract-n                 \ lst1 lst2 lst3
 
     \ Check results.
+    s" (X100 0X00)" region-list-from-string-a   \ lst1 lst2 lst3 lst4
 
-    dup list-get-length #2 <>
-    abort" list length invalid"
+    2dup region-list-eq                         \ lst1 lst2 lst3 lst4 bool
+    is-false abort" region-list-test-subtract-n: region-lists invaid?"
 
-    s" 0X00" region-from-string-a   \ lst1 lst2 lst3 reg
-    over                            \ lst1 lst2 lst3 reg lst3
-
-    over swap                       \ lst1 lst2 lst3 reg reg lst3
-    region-list-member              \ lst1 lst2 lst3 reg flag
-    0= abort" 0x00 not found"
-                                    \ lst1 lst2 lst3 reg
-    region-deallocate               \ lst1 lst2 lst3
-
-    s" X100" region-from-string-a   \ lst1 lst2 lst3 reg
-    over                            \ lst1 lst2 lst3 reg lst3
-
-    over swap                       \ lst1 lst2 lst3 reg reg lst3
-    region-list-member              \ lst1 lst2 lst3 reg flag
-    0= abort" x100 not found in "
-                                    \ lst1 lst2 lst3 reg
-    region-deallocate               \ lst1 lst2 lst3
-
-    \ Finish.
+    region-list-deallocate
     region-list-deallocate
     region-list-deallocate
     region-list-deallocate
@@ -116,15 +76,7 @@
 : region-list-test-state-in-one-region
 
     \ Make a region-list.
-    list-new                                \ lst1
-    s" 01XX" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" X10X" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" X1X1" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
+    s" (X1X1 X10X 01XX)" region-list-from-string-a  \ lst1
 
     #2 over                                 \ lst1 2 lst1
     region-list-state-in-one-region         \ lst1 flag
@@ -172,15 +124,7 @@
     #15 over list-push
 
     \ Make a region-list.
-    list-new                                \ sta-lst reg-lst
-    s" 01XX" region-from-string-a           \ sta-lst reg-lst regx
-    over region-list-push                   \ sta-lst reg-lst
-
-    s" X10X" region-from-string-a           \ sta-lst reg-lst regx
-    over region-list-push                   \ sta-lst reg-lst
-
-    s" X1X1" region-from-string-a           \ sta-lst reg-lst regx
-    over region-list-push                   \ sta-lst reg-lst
+    s" (X1X1 X10X 01XX)" region-list-from-string-a  \ sta-lst rge-lst
 
     2dup region-list-states-in-one-region   \ sta-lst reg-lst sta-lst2
 
@@ -208,161 +152,44 @@
 
 : region-list-test-intersection-fragments
     \ Make a region-list.
-    list-new                                \ lst1
-
-    s" X1X1" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" X1X1" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" 1XXX" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" XX1X" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    \ cr ." lst1: " dup .region-list cr
+    s" (XX1X 1XXX X1X1 X1X1)" region-list-from-string-a \ lst1
 
     dup                                     \ lst1 lst1
     region-list-intersection-fragments      \ lst1 lst2
 
-    cr ." fragments 1: " dup .region-list
-
-    \ Check length.
-    dup list-get-length                     \ lst1 lst2 len
-    #10 <> abort" Result length not 10?"
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 1111" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 1111 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 1101" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 1101 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 0111" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 0111 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 1X10" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 1X10 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 101X" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 101X not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 0X10" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 0X10 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 001X" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 001X not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 1X00" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 1X00 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 100X" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 100X not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 0101" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 0101 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
+    \ Check.
+    s" (1111 101x 1x10 0111 1101 0101 100x 1x00 0x10 001x)" region-list-from-string-a   \ lst1 lst2 lst3
+    2dup region-list-eq                     \ lst1 lst2 lst3 bool
+    is-false abort" region-list-test-intersection-fragments: 1 region lists ne?"
+   
+    region-list-deallocate
     region-list-deallocate
     region-list-deallocate
 
     \ Test with subset.
 
     \ Make a region-list.
-    list-new                                \ lst1
-
-    s" XX1X" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" 011X" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
+    s" (011X XX1X)" region-list-from-string-a   \ lst1
 
     \ cr ." lst1: " dup .region-list cr
 
     dup                                     \ lst1 lst1
     region-list-intersection-fragments      \ lst1 lst2
 
-    cr ." fragments 2: " dup .region-list     \ lst1 lst2
+    \ cr ." fragments 2: " dup .region-list     \ lst1 lst2
 
     \ Check length.
     dup list-get-length                     \ lst1 lst2 len
     #3 <> abort" Result length not 3?"
 
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 011X" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 011X not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
+    \ Check list.
+    s" (011X 1X1X X01X)" region-list-from-string-a  \ lst1 lst2 lst3
 
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 1X1X" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 1X1X not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" X01X" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" X01X not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
+    2dup region-list-eq                             \ lst1 lst2 lst3
+    is-false abort" region-list-test-intersection-fragments: 2 region lists ne?"
 
     \ Clean up.
+    region-list-deallocate
     region-list-deallocate
     region-list-deallocate
 
@@ -370,44 +197,18 @@
 ;
 
 : region-list-test-normalize
-    list-new                                \ lst1
-
-    s" 00X1" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" 0111" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" X100" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" X101" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
+    s" (X101 X100 0111 00X1)" region-list-from-string-a \ lst1
 
     dup region-list-normalize               \ lst1 lst2
     \ cr ." rslt: " dup .region-list cr
 
     \ Check results.
-    dup list-get-length #2 <>               \ lst1 lst2 flag
-    abort" result length not 2?"
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" 0XX1" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" 0XX1 not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
-
-    \ Check member.
-    dup                                     \ lst1 lst2 lst2
-    s" X10X" region-from-string-a tuck      \ lst1 lst2 regx lst2 regx
-    swap                                    \ lst1 lst2 regx regx lst2
-    region-list-member 0=                   \ lst1 lst2 regx flag
-    abort" X10X not a list member?"         \ lst1 lst2 regx
-    region-deallocate                       \ lst1 lst2
+    s" (X10X 0XX1)" region-list-from-string-a   \ lst1 lst2 lst3
+    2dup region-list-eq                         \ lst1 lst2 lst3 bool
+    is-false abort" region-list-test-normalize: 1 region lists ne?"
 
     \ Clean up.
+    region-list-deallocate                  \ lst1 lst2
     region-list-deallocate                  \ lst1
     region-list-deallocate                  \
 
@@ -415,16 +216,7 @@
 ;
 
 : region-list-test-copy-except
-    list-new                                \ lst1
-
-    s" 00X1" region-from-string-a           \ lst1 regx
-    over region-list-push                   \ lst1
-
-    s" 0111" region-from-string-a           \ lst1 regx
-    over region-list-push-end               \ lst1
-
-    s" X100" region-from-string-a           \ lst1 regx
-    over region-list-push-end               \ lst1
+    s" (X100 0111 00X1)" region-list-from-string-a \ lst1
 
     s" X111" region-from-string-a           \ lst1 regx
     1                                       \ lst1 regx 1
@@ -432,31 +224,85 @@
     region-list-copy-except                 \ lst1 lst2
 
     \ Check results.
-    dup list-get-length #3 <> abort" Result not length 3?"
-
-    0 over list-get-item                    \ lst1 lst2 item0
-    s" 00X1" region-from-string-a           \ lst1 lst2 item0 regx
-    tuck region-eq                          \ lst1 slt2 regx flag
-    swap region-deallocate                  \ lst1 lst2 flag
-    is-false abort" first region not 00X1?" \ lst1 lst2
-
-    1 over list-get-item                    \ lst1 lst2 item0
-    s" X111" region-from-string-a           \ lst1 lst2 item0 regx
-    tuck region-eq                          \ lst1 slt2 regx flag
-    swap region-deallocate                  \ lst1 lst2 flag
-    is-false abort" first region not X111?" \ lst1 lst2
-
-    #2 over list-get-item                   \ lst1 lst2 item0
-    s" X100" region-from-string-a           \ lst1 lst2 item0 regx
-    tuck region-eq                          \ lst1 slt2 regx flag
-    swap region-deallocate                  \ lst1 lst2 flag
-    is-false abort" first region not X100?" \ lst1 lst2
+    s" (X100 X111 00X1)" region-list-from-string-a  \ lst1 lst2 lst3
+    2dup region-list-eq                             \ lst1 lst2 lst3 bool
+    is-false abort" region-list-test-copy-except: region lists ne?"
 
     \ Clean up.
     region-list-deallocate
     region-list-deallocate
+    region-list-deallocate
 
     cr ." region-list-test-copy-except: Ok"
+;
+
+: region-list-test-push-nosubs
+    \ Test 1, pushing a region that is a subset of regions in a list.
+    s" 10x1" region-from-string-a               \ reg'
+    s" (xx01 10xx)" region-list-from-string-a   \ reg' reg-lst'
+    2dup
+    region-list-push-nosubs                     \ reg1` reg-lst' bool
+    if
+        cr ." reg pushed?" cr
+        abort
+    else
+        cr ." reg NOT pushed"
+        dup list-get-length                     \ reg1` reg-lst' len
+        #2 = if
+        else
+            cr ." list len ne 2?" cr
+            abort
+        then
+    then
+
+    region-list-deallocate
+    region-deallocate
+
+    \ Test 2, pushing a region that is not a subset of regions in a list.
+    s" 0xx0" region-from-string-a               \ reg'
+    s" (xx01 10xx)" region-list-from-string-a   \ reg' reg-lst'
+    2dup
+    region-list-push-nosubs                     \ reg1` reg-lst' bool
+    if
+        cr ." reg pushed" cr
+        cr dup .region-list cr
+        dup list-get-length                     \ reg1` reg-lst' len
+        #3 = if
+        else
+            cr ." list len ne 3?" cr
+            abort
+        then
+    else
+        cr ." reg NOT pushed?"
+        abort
+    then
+
+    region-list-deallocate
+    drop
+
+    \ Test 3, pushing a region that is not a superset of a region in a list.
+    s" 1xxx" region-from-string-a               \ reg'
+    s" (xx01 10xx)" region-list-from-string-a   \ reg' reg-lst'
+    2dup
+    region-list-push-nosubs                     \ reg1` reg-lst' bool
+    if
+        cr ." reg pushed" cr
+        cr dup .region-list cr
+        dup list-get-length                     \ reg1` reg-lst' len
+        #2 = if
+        else
+            cr ." list len ne 2?" cr
+            abort
+        then
+    else
+        cr ." reg NOT pushed?"
+        abort
+    then
+
+    region-list-deallocate
+    drop
+
+    cr ." region-list-test-push-nosubs: Ok"
 ;
 
 : region-list-tests

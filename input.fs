@@ -101,12 +101,40 @@
     if
         cr ." current states ARE negative" cr
         rate-deallocate
+
+        \ Get current states as regions.
+        dup session-get-current-regions             \ sess cur-regc'
+
+        \ Get rate LE 0 regioncorr list.
+        over session-get-regioncorr-lol-by-rate     \ sess cur-regc' regc-lol
+        list-get-links                              \ sess cur-regc' link-first-regc-lst
+        link-get-data                               \ sess cur-regc' regc-lst
+
+        \ Get closest regcs.
+        over swap                                   \ sess cur-regc' cur-regc' regc-lst
+        regioncorr-list-closest-regioncorrs         \ sess cur-regc' clst-regc-lst'
+
+        \ Clean up.
+        swap regioncorr-deallocate                  \ sess clst-regc-lst'
+
+        \ Choose a regioncorr.
+        dup list-get-length                         \ sess clst-regc-lst' len
+        random                                      \ sess clst-regc-lst' inx
+        over list-get-item                          \ sess clst-regc-lst' regc
+
+        \ Try to change path.
+        #2 pick                                     \ sess clst-regc-lst' regc sess
+        session-change-to                           \ sess clst-regc-lst'
+        if
+            cr ." Change to non-negative regioncorr fragment succeeded" cr
+        else
+            cr ." Change to non-negative regioncorr fragment failed" cr
+        then
+
+        regioncorr-list-deallocate                 \ sess
     else
         cr ." current states ARE NOT negative" cr
-        rate-deallocate
-        \ TODO Find closest non-negative regioncorr fragment.
-        \ List is the first element in session-regioncorr-lol-by-rate.
-        \ Use session-change-to to make the change.
+        rate-deallocate                             \ sess
     then
     drop
 ;
