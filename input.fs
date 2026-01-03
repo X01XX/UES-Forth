@@ -99,7 +99,7 @@
 
     dup rate-is-negative            \ sess rate' bool
     if
-        cr ." current states are negative' seek closest non-negative states" cr
+        cr ." current states are negative, seek closest non-negative states" cr
         rate-deallocate
 
         \ Get current states as regions.

@@ -173,6 +173,28 @@
     \ Init return list.
     list-new -rot                           \ ret-lst rate1 regcr-lst0
 
-    cr ." regioncorrrate-list-more-positive-regioncorrs: TODO" cr
-    2drop
+    \ Scan items in the list.
+    list-get-links                          \ ret-lst rate1 link
+    begin
+        ?dup
+    while
+        over                                \ ret-lst rate1 link rate1
+        over link-get-data                  \ ret-lst rate1 link rate1 reginocorrrate
+        regioncorrrate-get-rate             \ ret-lst rate1 link rate1 ratex
+        dup rate-get-negative               \ ret-lst rate1 link rate1 ratex u-neg
+        0= if
+            rate-more-positive                  \ ret-lst rate1 link bool
+            if
+                dup link-get-data               \ ret-lst rate1 link regcrx
+                #3 pick                         \ ret-lst rate1 link regcx ret-lst
+                list-push-struct                \ ret-lst rate1 link
+            then
+        else                                    \ ret-lst rate1 link rate1 ratex
+            2drop                               \ ret-lst rate1 link
+        then
+
+        link-get-next
+    repeat
+                                            \ ret-lst rate1
+    drop
 ;

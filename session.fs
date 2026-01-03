@@ -1734,12 +1734,13 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             if
                 plancorr-list-deallocate            \ sess0 regc-to regc-from' pthstp-lst'
                 pathstep-list-deallocate            \ sess0 regc-to regc-from'
-                regioncorr-deallocate
+                regioncorr-deallocate               \ sess0 regc-to
                 2drop
                 true
                 exit
-            else
-                pathstep-list-deallocate
+            else                                    \ sess0 regc-to regc-from' pthstp-lst' plnc-lst
+                plancorr-list-deallocate            \ sess0 regc-to regc-from' pthstp-lst'
+                pathstep-list-deallocate            \ sess0 regc-to regc-from'
             then
         else
             pathstep-list-deallocate

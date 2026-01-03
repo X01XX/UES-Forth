@@ -363,7 +363,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         region-superset-of-state    \ pln0 dom link step d-smpl bool
         swap sample-deallocate      \ pln0 dom link step flag
         0= if
-            2drop 2drop false exit
+            2drop 2drop false
+            exit
         then
         drop                        \ pln0 dom link
 

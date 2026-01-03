@@ -194,3 +194,13 @@
 
     rate-get-negative 0<>
 ;
+
+: rate-more-positive ( rate1 rate0 ) \ Return true if tos rate is more positive than the nos rate.
+    \ Check args.
+    assert-tos-is-rate
+    assert-nos-is-rate
+
+    rate-get-positive       \ rate1 u0
+    swap rate-get-positive  \ u0 u1
+    >                       \ bool
+;
