@@ -12,3 +12,6 @@ To run:
 > include main.fs
 
 > all-tests | main
+
+A prrogram that can learn (at a low level), avoid negative states, seek positive states (a little more work is needed) and run
+on a Raspberry Pi class computer.
