@@ -198,13 +198,13 @@ cr ." main.fs"
 #1902 list-mma-init
 #3003 region-mma-init
 #0500 regioncorr-mma-init
-#0804 rule-mma-init
-#0405 rulestore-mma-init
+#0904 rule-mma-init
+#0505 rulestore-mma-init
 #0404 rulecorr-mma-init
 #0306 square-mma-init
 #0250 sample-mma-init
-#0550 changes-mma-init
-#0250 changescorr-mma-init
+#0650 changes-mma-init
+#0450 changescorr-mma-init
 #0100 group-mma-init
 #0200 need-mma-init
 #0150 planstep-mma-init

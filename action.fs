@@ -356,157 +356,116 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
     \ Check the new list is different from the old list.
     over                                \ new-lst act0 new-lst
-    over action-get-logical-structure   \ new-lst act0 new-lst old-lst
-    2dup region-list-eq                 \ new-lst act0 new-lst old-lst flag
+    over action-get-logical-structure   \ new-lst act0 new-lst old-lst'
+    2dup region-list-eq                 \ new-lst act0 new-lst old-lst' flag
     if cr ." region lists equal?" cr then
-    nip                                 \ new-lst act0 old-lst
+    nip                                 \ new-lst act0 old-lst'
 
     \ Get/save current LS.
     cr ." old list " dup .region-list cr
 
-    -rot                                \ old-ls new-ls act0
+    -rot                                \ old-lst' new-lst act0
 
     \ Store new structure.
-    2dup                                \ old-ls new-ls act0 new-ls act0
-    _action-set-logical-structure       \ old-ls new-ls act0
+    2dup                                \ old-lst' new-lst act0 new-lst act0
+    _action-set-logical-structure       \ old-lst' new-lst act0
 
     \ Save action, for now..
-    -rot                                \ act0 old-ls new-ls
+    -rot                                \ act0 old-lst' new-lst
 
     \ Get old regions that are deleted.
-    2dup                                \ act0 old-ls new-ls old-ls new-ls
-    region-list-set-difference          \ act0 old-ls new-ls old-gone'
+    2dup                                \ act0 old-lst' new-lst old-lst' new-lst
+    region-list-set-difference          \ act0 old-lst' new-lst old-gone'
     cr ." Old LS regions deleted: " dup .region-list cr
 
     \ Scan deleted regions.
-    dup list-get-links                   \ act0 old-ls new-ls old-gone' link
+    dup list-get-links                   \ act0 old-lst' new-lst old-gone' link
     begin
         ?dup
     while
-        dup link-get-data               \ act0 old-ls new-ls old-gone' link region
+        dup link-get-data               \ act0 old-lst' new-lst old-gone' link old-ls-reg
 
         \ If group exists, delete it.
-        #5 pick                         \ act0 old-ls new-ls old-gone' link region act0
-        _action-delete-group-if-exists  \ act0 old-ls new-ls old-gone' link flag
+        #5 pick                         \ act0 old-lst' new-lst old-gone' link old-ls-reg act0
+        _action-delete-group-if-exists  \ act0 old-lst' new-lst old-gone' link flag
         if
             cr #4 spaces dup link-get-data .region
             space ." deleted group"
         then
 
-        link-get-next                   \ act0 old-ls new-ls old-gone' link
+        link-get-next                   \ act0 old-lst' new-lst old-gone' link
     repeat
     cr
-                                        \ act0 old-ls new-ls old-gone'
-    region-list-deallocate              \ act0 old-ls new-ls
+                                        \ act0 old-lst' new-lst old-gone'
+    region-list-deallocate              \ act0 old-lst' new-lst
 
-    \ Get new regions.
-    dup                                 \ act0 old-ls new-ls new-ls
-    #2 pick                             \ act0 old-ls new-ls new-ls old-os
+    \ Display new regions.
+    dup                                 \ act0 old-lst' new-lst new-lst
+    #2 pick                             \ act0 old-lst' new-lst new-lst old-lst'
 
-    region-list-set-difference          \ act0 old-ls new-ls new-added'
+    region-list-set-difference          \ act0 old-lst' new-lst new-added'
     cr ." New LS regions added: " dup .region-list cr
-    region-list-deallocate              \ act0 old-ls new-ls
+    region-list-deallocate              \ act0 old-lst' new-lst
+    drop                                \ act0 old-lst'
+    region-list-deallocate              \ act0
 
-    \ Scan new regions.
-    dup list-get-links                      \ act0 old-ls new-ls link
+    \ Calc and store defining regions.
+    dup action-calc-defining-regions        \ act0 df-lst
+    2dup swap                               \ act0 df-lst df-lst act0
+    _action-update-defining-regions         \ act0 df-lst 
+
+    \ Scan for new regions.
+    list-get-links                          \ act0 link
     begin
         ?dup
     while
-        dup link-get-data                   \ act0 old-ls new-ls link region
+        dup link-get-data                   \ act0 link region
 
-        cr #4 spaces dup .region
+        cr #4 spaces ." defining region: " dup .region
 
-        \ Get states in region.
-        #4 pick action-get-squares          \ act0 old-ls new-ls link region sqr-lst
-        square-list-states-in-region        \ act0 old-ls new-ls link sta-lst1
-
-        \ Get states only is one region.
-        dup                                 \ act0 old-ls new-ls link sta-lst1 sta-lst1
-        #3 pick                             \ act0 old-ls new-ls link sta-lst1 sta-lst1 new-ls
-        region-list-states-in-one-region    \ act0 old-ls new-ls link sta-lst1 sta-lst2
-        swap list-deallocate                \ act0 old-ls new-ls link sta-lst2
-
-        dup
-        list-is-empty                       \ act0 old-ls new-ls link sta-lst2 flag
-        if                                  \ act0 old-ls new-ls link sta-lst2
-            list-deallocate                 \ act0 old-ls new-ls link
-            space ." is NOT defining"
-
-            \ If group exists, delete it.
-            dup link-get-data               \ act0 old-ls new-ls link region
-            #4 pick                         \ act0 old-ls new-ls link region act0
-            _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
-            if                              \ act0 old-ls new-ls link
-                space ." deleted group"
-            then
-        else                                    \ act0 old-ls new-ls link sta-lst2
-            \ space ." region is defining " dup .value-list
-            list-deallocate                     \ act0 old-ls new-ls link
-
-            \ Check if group already exists
-            dup link-get-data                   \ act0 old-ls new-ls link reg
-            #4 pick                             \ act0 old-ls new-ls link reg act0
-            action-get-groups                   \ act0 old-ls new-ls link reg grps
-            group-list-member                   \ act0 old-ls new-ls link flag
-            if                                  \ act0 old-ls new-ls link
-                space ." group already exists"
+        #2 pick                             \ act0 link reg act0
+        action-get-groups                   \ act0 link reg grps
+        group-list-member                   \ act0 link flag
+        if                                  \ act0 link
+            space ." group already exists"
+        else
+            dup link-get-data                   \ act0 link reg
+            #2 pick                             \ act0 link reg act0
+            action-get-squares                  \ act0 link reg sqr-lst1
+            square-list-in-region               \ act0 link sqr-lst2
+            dup list-is-empty                   \ act0 link sqr-lst2 flag
+            if                                  \ act0 link sqr-lst2
+                space ." no squares found "
+                list-deallocate
             else
-                dup link-get-data                   \ act0 old-ls new-ls link reg
-                #4 pick                             \ act0 old-ls new-ls link reg act0
-                action-get-squares                  \ act0 old-ls new-ls link reg sqr-lst1
-                square-list-in-region               \ act0 old-ls new-ls link sqr-lst2
-                dup list-is-empty                   \ act0 old-ls new-ls link sqr-lst2 flag
-                if                                  \ act0 old-ls new-ls link sqr-lst2
-                    space ." is NOT defining"
-                    square-list-deallocate
+                dup                             \ act0 link sqr-lst2 sqr-lst2
+                square-list-get-rules           \ act0 link sqr-lst2, ruls true | false
+                if                              \ act0 link sqr-lst2 ruls
+                    rulestore-deallocate        \ act0 link sqr-lst2
+                    over link-get-data          \ act0 link sqr-lst2 reg
+                    group-new                   \ act0 link grp
+                    #2 pick action-get-groups   \ act0 link grp grp-lst
+                    group-list-push             \ act0 link
+                else                            \ act0 link sqr-lst2
+                    space ." rules not found, must be a problem"
+                    square-list-deallocate      \ act0 link
 
                     \ If group exists, delete it.
-                    dup link-get-data               \ act0 old-ls new-ls link region
-                    #4 pick                         \ act0 old-ls new-ls link region act0
-                    _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
-                    if                              \ act0 old-ls new-ls link
+                    dup link-get-data               \ act0 link region
+                    #2 pick                         \ act0 link region act0
+                    _action-delete-group-if-exists  \ act0 link flag
+                    if                              \ act0 link
                         space ." deleted group"
-                    then
-                else
-                    dup                             \ act0 old-ls new-ls link sqr-lst2 sqr-lst2
-                    square-list-get-rules           \ act0 old-ls new-ls link sqr-lst2, ruls true | false
-                    if                              \ act0 old-ls new-ls link sqr-lst2 ruls
-                        space ." is defining" over .square-list-states
-                        \ TODO? change group-new to take rules.
-                        rulestore-deallocate        \ act0 old-ls new-ls link sqr-lst2
-                        over link-get-data          \ act0 old-ls new-ls link sqr-lst2 reg
-                        group-new                   \ act0 old-ls new-ls link grp
-                        #4 pick action-get-groups   \ act0 old-ls new-ls link grp grp-lst
-                        group-list-push             \ act0 old-ls new-ls link
-                    else                            \ act0 old-ls new-ls link sqr-lst2
-                        space ." is NOT defining"
-                        square-list-deallocate      \ act0 old-ls new-ls link
-
-                        \ If group exists, delete it.
-                        dup link-get-data               \ act0 old-ls new-ls link region
-                        #4 pick                         \ act0 old-ls new-ls link region act0
-                        _action-delete-group-if-exists  \ act0 old-ls new-ls link flag
-                        if                              \ act0 old-ls new-ls link
-                            space ." deleted group"
-                        then
                     then
                 then
             then
         then
 
-        link-get-next                   \ act0 old-ls new-ls link
+        link-get-next                   \ act0 link
     repeat
     cr
-                                        \ act0 old-ls new-ls
-
-    \ Deallocate
-    drop                                \ act0 old-ls
-
-    region-list-deallocate              \ act0
-
-    dup action-calc-defining-regions    \ act0 df-lst
-    over _action-update-defining-regions
-
+                                        \ act0
+    \ Clean up.
     drop                                \
     \ cr ."  _action-update-logical-structure: end" cr
 ;

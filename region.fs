@@ -435,6 +435,14 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     assert-tos-is-region
     assert-nos-is-region
 
+    \ Check address.
+    2dup =                  \ reg1 reg0 bool
+    if
+        2drop
+        true
+        exit
+    then
+
     over region-high-state over region-high-state <>
     if
         2drop

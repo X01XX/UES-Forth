@@ -6,7 +6,7 @@
 \ Struct fields
 0                           constant group-header-disp      \ 16 bits, [0] struct id, [1] use count (16), [1] pnc (8 bits)
 group-header-disp   cell+   constant group-region-disp      \ The group region.
-group-region-disp   cell+   constant group-r-region-disp    \ A Region covered the group rules, often a proper subset of the group-region.
+group-region-disp   cell+   constant group-r-region-disp    \ A Region covered by the group rules, often a proper subset of the group-region.
 group-r-region-disp cell+   constant group-squares-disp     \ A square list.
 group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
