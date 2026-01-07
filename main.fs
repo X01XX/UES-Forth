@@ -29,8 +29,7 @@
 \ 53171     53173       53197    53717
 \
 \ Struct ids not yet used:
-\ 53719,
-\ 53731, 59797, 61379, 61717, 61979.
+\ 53719, 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
 cr ." Starting vocabulary UES," cr

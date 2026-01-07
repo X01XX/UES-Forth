@@ -1,15 +1,16 @@
 \ Implement a Action struct and functions.
 
 #29717 constant action-id
-    #6 constant action-struct-number-cells
+    #7 constant action-struct-number-cells
 
 \ Struct fields
-0                                       constant action-header-disp             \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits).
-action-header-disp               cell+  constant action-squares-disp            \ A square-list
-action-squares-disp              cell+  constant action-incompatible-pairs-disp \ A region-list
-action-incompatible-pairs-disp   cell+  constant action-logical-structure-disp  \ A region-list
-action-logical-structure-disp    cell+  constant action-groups-disp             \ A group-list.
-action-groups-disp               cell+  constant action-function-disp           \ An xt to run to get a sample.
+0                                     constant action-header-disp               \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits).
+action-header-disp              cell+ constant action-squares-disp              \ A square-list
+action-squares-disp             cell+ constant action-incompatible-pairs-disp   \ A region-list
+action-incompatible-pairs-disp  cell+ constant action-logical-structure-disp    \ A region-list
+action-logical-structure-disp   cell+ constant action-groups-disp               \ A group-list.
+action-groups-disp              cell+ constant action-function-disp             \ An xt to run to get a sample.
+action-function-disp            cell+ constant action-defining-regions-disp     \ Defining regions, region-list, from action-logical-structure.
 
 0 value action-mma \ Storage for action mma instance.
 
@@ -196,6 +197,27 @@ action-groups-disp               cell+  constant action-function-disp           
     !                       \ Set the field.
 ;
 
+\ Return the defining-regions region-list from an action instance.
+: action-get-defining-regions ( addr -- lst )
+    \ Check arg.
+    assert-tos-is-action
+
+    action-defining-regions-disp +  \ Add offset.
+    @                               \ Fetch the field.
+;
+
+\ Set the defining-regions region-list of an action instance, use only in this file.
+: _action-set-defining-regions ( u1 addr -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-list
+
+    action-defining-regions-disp +  \ Add offset.
+    !struct                         \ Store it.
+;
+
+\ End accessors
+
 \ Return true if a region, in the logical structure, is a defining region.
 : action-region-is-defining ( reg1 act0 -- flag )
     \ Check args.
@@ -208,18 +230,46 @@ action-groups-disp               cell+  constant action-function-disp           
     region-list-member                  \ reg1 act0 LS flag
     0= abort" Region not in logical structure"
 
-    -rot                                \ LS reg1 act0
-    action-get-squares                  \ LS reg1 sqr-lst
-    square-list-states-in-region        \ LS sta-lst
-    swap                                \ sta-lst LS
+                                        \ reg1 act0 LS
+    \ Init remainder list.
+    #2 pick                             \ reg1 act0 LS reg1
+    list-new tuck                       \ reg1 act0 LS rem-lst reg1 rem-lst
+    list-push-struct                    \ reg1 act0 LS rem-lst
 
-    region-list-states-in-one-region    \ sta-lst2
+    \ Prep for loop.
+    swap list-get-links                 \ reg1 act0 rem-lst ls-link
 
-    dup list-is-empty
+    begin
+        ?dup
+    while
+        dup link-get-data               \ reg1 act0 rem-lst ls-link regx
+
+        \ Check if the region is the same as the given region. If so, skip it.
+        #4 pick                         \ reg1 act0 rem-lst ls-link regx reg1
+        region-eq                       \ reg1 act0 rem-lst ls-link bool
+        if
+        else
+            dup link-get-data               \ reg1 act0 rem-lst ls-link regx
+            #2 pick                         \ reg1 act0 rem-lst ls-link regx rem-lst
+            region-list-subtract-region     \ reg1 act0 rem-lst ls-link rem-lst'
+
+            rot                             \ reg1 act0 ls-link rem-lst' rem-lst
+            region-list-deallocate          \ reg1 act0 ls-link rem-lst'
+            swap                            \ reg1 act0 rem-lst' ls-link
+        then
+
+        link-get-next
+    repeat
+                                        \ reg1 act0 rem-lst
+
+    dup list-is-empty                   \ reg1 act0 rem-lst bool
     if
         list-deallocate
+        2drop
         false
     else
+        region-list-deallocate
+        2drop
         true
     then
 ;
@@ -242,6 +292,57 @@ action-groups-disp               cell+  constant action-function-disp           
         2drop
         false
     then
+;
+
+\ Update defining-regions.
+\ First calc-update logical-structure, then calc defining regions.
+: _action-update-defining-regions ( reg-lst1 act0 -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region-list
+
+    \ If list is empty, add maximum domain region.
+    over list-is-empty                      \ reg-lst act0 bool
+    if
+        cur-domain-xt execute               \ reg-lst act0 dom
+        domain-get-max-region-xt execute    \ reg-lst act0 mx-reg
+        #2 pick list-push-struct            \ reg-lst act0
+    then
+
+    dup action-get-defining-regions         \ reg-lst act0 df-lst
+    -rot                                    \ df-lst reg-lst1 act0
+    _action-set-defining-regions            \ df-lst
+    region-list-deallocate                  \
+;
+
+\ Calculate defining regions, from action-logical-structure.
+: action-calc-defining-regions ( act0 -- df-lst )
+    \ Check arg.
+    assert-tos-is-action
+
+    \ Init return list.
+    list-new                                \ act0 df-lst
+
+    \ Prep for loop.
+    over action-get-logical-structure       \ act0 df-lst ls-lst
+    list-get-links                          \ act0 df-lst ls-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ act0 df-lst ls-link regx
+        #3 pick                             \ act0 df-lst ls-link regx act0
+        action-region-is-defining           \ act0 df-lst ls-link bool
+        if
+            dup link-get-data               \ act0 df-lst ls-link regx
+            #2 pick                         \ act0 df-lst ls-link regx df-lst
+            list-push-struct                \ act0 df-lst ls-link
+        then
+
+        link-get-next
+    repeat
+                                            \ act0 df-lst
+    nip
 ;
 
 \ Update the logical-structure region-list of an action instance, use only in this file.
@@ -403,6 +504,9 @@ action-groups-disp               cell+  constant action-function-disp           
 
     region-list-deallocate              \ act0
 
+    dup action-calc-defining-regions    \ act0 df-lst
+    over _action-update-defining-regions
+
     drop                                \
     \ cr ."  _action-update-logical-structure: end" cr
 ;
@@ -440,16 +544,25 @@ action-groups-disp               cell+  constant action-function-disp           
     list-new                            \ nb1 act lst
     over _action-set-incompatible-pairs \ nb1 act
 
-    \ Set logical-structure list.
-    list-new                            \ nb1 act lst
-    2dup swap                           \ nb1 act lst lst act
-    _action-set-logical-structure       \ nb1 act lst
+    \ Get max region.
+    swap                                \ act nb1
+    all-bits                            \ act all-bits
+    0 region-new2                       \ act mx-reg
 
-    \ All max region.
-    rot                                 \ act lst nb1
-    all-bits                            \ act lst all-bits
-    0 region-new2                       \ act lst reg
-    swap region-list-push               \ act
+    \ Set logical-structure list.
+    dup                                 \ act mx-reg mx-reg
+    list-new                            \ act mx-reg mx-reg lst
+    tuck                                \ act mx-reg lst mx-reg lst
+    list-push-struct                    \ act mx-reg lst
+    #2 pick                             \ act mx-reg lst act
+    _action-set-logical-structure       \ act mx-reg
+
+    \ Set defining-regions list.
+    list-new                            \ act mx-reg lst
+    tuck                                \ act lst mx-reg lst
+    list-push-struct                    \ act lst
+    over                                \ act lst act
+    _action-set-defining-regions        \ act
 
     \ Set group list.
     list-new                            \ act lst
@@ -471,6 +584,8 @@ action-groups-disp               cell+  constant action-function-disp           
 
     dup action-get-logical-structure cr #7 spaces ." LS: " .region-list
     dup action-get-incompatible-pairs cr #7 spaces ." IP: " .region-list
+    dup action-get-defining-regions cr #7 spaces ." DF: " .region-list
+
     \ cr ." Groups: "
     \ Print each group.
     action-get-groups list-get-links
@@ -505,6 +620,7 @@ action-groups-disp               cell+  constant action-function-disp           
         dup action-get-squares square-list-deallocate
         dup action-get-incompatible-pairs region-list-deallocate
         dup action-get-logical-structure region-list-deallocate
+        dup action-get-defining-regions region-list-deallocate
         dup action-get-groups group-list-deallocate
 
         \ Deallocate instance.
@@ -514,7 +630,7 @@ action-groups-disp               cell+  constant action-function-disp           
     then
 ;
 
-\ Get a list of incompatible pairs, no supersets, given a square.
+\ Get a list of incompatible pairs, as regioons, no supersets, given a square.
 : action-find-incompatible-pairs-nosups ( sqr1 act0 -- square-list )
     \ cr ." action-find-incompatible-pairs-nosups: start" cr
     \ Check args.
@@ -604,8 +720,8 @@ action-groups-disp               cell+  constant action-function-disp           
             drop
         else
             dup                                     \ act0 inclst link regx regx
-            #4 pick action-get-logical-structure    \ act0 inclst link regx regx LS-lst
-            [ ' region-superset-of ] literal -rot   \ act0 inclst link regx xt regx LS-lst
+            #4 pick action-get-defining-regions     \ act0 inclst link regx regx DF-lst
+            [ ' region-superset-of ] literal -rot   \ act0 inclst link regx xt regx DF-lst
             list-member                             \ act0 inclst link regx flag
             if
                 \ Add region to the action-incompatible-pairs  list.
@@ -1120,6 +1236,112 @@ action-groups-disp               cell+  constant action-function-disp           
 
 ' action-make-need to action-make-need-xt
 
+\ Look for needs of corners of a given rank.
+: action-check-corners-get-rank-list ( act0 -- rnk-lst )
+    \ Check args.
+    assert-tos-is-action
+
+    \ Prep for loop.
+    dup action-get-incompatible-pairs           \ act0 par-lst
+    dup region-list-states                      \ act0 par-lst sta-lst'
+
+    \ Get list of the number of regions states are in, no dup.
+    list-new                                    \ act0 par-lst sta-lst' rnk-lst
+    over list-get-links                         \ act0 par-lst sta-lst' rnk-lst sta-link
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ act0 par-lst sta-lst' rnk-lst sta-link stax
+        #4 pick                                 \ act0 par-lst sta-lst' rnk-lst sta-link stax par-lst
+        region-list-number-regions-state-in     \ act0 par-lst sta-lst' rnk-lst sta-link u
+
+        \ Ignore value 1, a point on a "logical edge", not a "logical corner".
+        dup 1 <>                                \ act0 par-lst sta-lst' rnk-lst sta-link u bool
+        if
+            [ ' = ] literal                     \ act0 par-lst sta-lst' rnk-lst sta-link u xt
+            over                                \ act0 par-lst sta-lst' rnk-lst sta-link u xt u
+            #4 pick                             \ act0 par-lst sta-lst' rnk-lst sta-link u xt u rnk-lst
+            list-member                         \ act0 par-lst sta-lst' rnk-lst sta-link u bool
+            if
+                drop                            \ act0 par-lst sta-lst' rnk-lst sta-link
+            else
+                #2 pick                         \ act0 par-lst sta-lst' rnk-lst sta-link u rnk-lst
+                list-push                       \ act0 par-lst sta-lst' rnk-lst sta-link
+            then
+        else                                    \ act0 par-lst sta-lst' rnk-lst sta-link u
+            drop                                \ act0 par-lst sta-lst' rnk-lst sta-link
+        then
+
+        link-get-next
+    repeat
+                                                \ act0 par-lst sta-lst' rnk-lst
+    \ Sort list, descending.
+    [ ' < ] literal over list-sort              \ act0 par-lst sta-lst' rnk-lst
+
+    swap list-deallocate                        \ act0 par-lst rnk-lst
+    nip nip                                     \ rnk-lst
+;
+
+\ Check incomptible pairs for "logical corner" needs.
+: action-check-corners ( act0 -- need-lst )
+    \ Check arg.
+    assert-tos-is-action
+    cr ." action-check-corners: act: " dup action-get-inst-id . cr
+
+    \ Get list of descending ranks, like 4, 3, 2 (but no 1).
+    dup action-check-corners-get-rank-list      \ act0 rnk-lst'
+    dup list-is-empty                           \ act0 rnk-lst'
+    if
+        nip
+        exit
+    then
+    cr ." incompat pairs state ranks are: " [ ' . ] literal over .list cr
+
+    \ Prep for loop.
+    over action-get-incompatible-pairs swap     \ act0 par-lst rnk-lst'
+    over region-list-states swap                \ act0 par-lst sta-lst' rnk-lst'
+
+    \ Check higher numbered corners first.
+    dup list-get-links                          \ act0 par-lst sta-lst rnk-lst' link
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ act0 par-lst sta-lst' rnk-lst' link rank
+
+        #3 pick list-get-links                  \ act0 par-lst sta-lst' rnk-lst' link rank sta-link
+        begin
+            ?dup
+        while
+            dup link-get-data                   \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax
+            #6 pick                             \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax par-lst
+            region-list-number-regions-state-in \ act0 par-lst sta-lst' rnk-lst' link rank sta-link rnkx
+            #2 pick                             \ act0 par-lst sta-lst' rnk-lst' link rank sta-link rnkx rank
+            =                                   \ act0 par-lst sta-lst' rnk-lst' link rank sta-link bool
+            if                                  \ act0 par-lst sta-lst' rnk-lst' link rank sta-link
+                dup link-get-data               \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax
+            cr ." check sta: " dup .
+                #6 pick                         \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax par-lst
+                region-list-regions-state-in    \ act0 par-lst sta-lst' rnk-lst' link rank sta-link reg-lst'
+            space ." in: " dup .region-list cr
+                \ todo
+                region-list-deallocate          \ act0 par-lst sta-lst' rnk-lst' link rank sta-link
+            then
+
+            link-get-next
+        repeat
+        cr ." todo rank " dup . cr
+        drop
+
+        link-get-next
+    repeat
+                                                \ act0 par-lst sta-lst' rnk-lst'
+
+    list-deallocate                             \ act0 par-lst sta-lst'
+    list-deallocate                             \ act0 par-lst
+    2drop                                       \
+    list-new                                    \ ret-lst
+;
+
 \ Return a list of needs for an action, given the current state
 \ and the reachable region.
 : action-get-needs ( reg1 sta1 act0 -- ned-lst )
@@ -1197,6 +1419,12 @@ action-groups-disp               cell+  constant action-function-disp           
 
         link-get-next           \ reg1 ret-lst sta1 act0 | link
     repeat
+
+
+    \ Check for corners.
+    \ dup action-check-corners   \ reg1 ret-lst sta1 act0 | need-lst
+    \ cr ." todo: Process needs from action-check-corners"
+    \ need-list-deallocate
 
     \ Check for non-adjacent incompatible pairs.
     dup action-get-incompatible-pairs   \ reg1 ret-lst sta1 act0 | par-lst

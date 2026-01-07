@@ -54,15 +54,6 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     then
 ;
 
-\ Check 3OS for rulecorr, unconventional, leaves stack unchanged.
-: assert-3os-is-rulecorr ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-rulecorr
-    is-false if
-        s" 3OS is not an allocated rulecorr"
-        .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
 \ Return the rulecorr list field from a rule instance.
@@ -293,43 +284,6 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     repeat
                                     \ cngs-lst
     changescorr-new                 \ regc
-;
-
-: rulecorr-list-deallocate ( rulc-lst0 -- )
-    \ Check arg.
-    assert-tos-is-list
-
-    \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                        \ rulc-lst0 uc
-    #2 < if
-        \ Deallocate rulecorrs in the list.
-        [ ' rulecorr-deallocate ] literal over      \ rulc-lst0 xt rulc-lst0
-        list-apply                                  \ rulc-lst0
-
-        \ Deallocate the list.
-        list-deallocate
-    else
-        struct-dec-use-count
-    then
-;
-
-\ Deallocate a list of lists of rulecorr.
-: rulecorr-lol-deallocate ( rulc-lol0 -- )
-    \ Check arg.
-    assert-tos-is-list
-
-    \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                        \ rulc-lol0 uc
-    #2 < if
-        \ Deallocate rulecorr instances in the list.
-        [ ' rulecorr-list-deallocate ] literal over \ rulc-lol0 xt rulc-lol0
-        list-apply                                  \ rulc-lol0
-
-        \ Deallocate the list.
-        list-deallocate                             \
-    else
-        struct-dec-use-count
-    then
 ;
 
 \ Apply a rulecorr to a regioncorr, forward-chaining.

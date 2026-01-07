@@ -22,17 +22,6 @@
     then
 ;
 
-\ Check 3OS for bool, unconventional, leaves stack unchanged.
-: assert-3os-is-bool ( 3os nos tos -- 3os nos tos )
-    #2 pick dup is-false
-    swap -1 =
-    or
-    is-false if
-        s" 3OS is not bool"
-        .abort-xt execute
-    then
-;
-
 : .bool ( b -- )
     \ Check arg.
     assert-tos-is-bool

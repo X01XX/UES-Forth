@@ -60,15 +60,6 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     then
 ;
 
-\ Check 3OS for regioncorrrate, unconventional, leaves stack unchanged.
-: assert-3os-is-regioncorrrate ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-regioncorrrate
-    is-false if
-        s" NOS is not an allocated regioncorrrate"
-        .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
 \ Return the first field from a regioncorrrate instance.

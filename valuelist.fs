@@ -2,11 +2,33 @@
 
 \ To deallocate a value list, use list-deallocate.
 
+\ Check if tos is a list, if non-empty, with the first item being a value.
+: assert-tos-is-value-list ( tos -- tos )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-value
+        drop
+    then
+;
+
+\ Check if nos is a list, if non-empty, with the first item being a value.
+: assert-nos-is-value-list ( tos -- tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-value
+        drop
+    then
+;
+
 \ Return the intersection of two value lists.
 : value-list-set-intersection ( list1 list0 -- list-result )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-value-list
+    assert-nos-is-value-list
 
     [ ' = ] literal -rot        \ xt list1 list0
     list-intersection           \ list-result
@@ -15,8 +37,8 @@
 \ Return the union of two value lists.
 : value-list-set-union ( list1 list0 -- list-result )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-value-list
+    assert-nos-is-value-list
 
     [ ' = ] literal -rot        \ xt list1 list0
     list-union                  \ list-result
@@ -25,8 +47,8 @@
 \ Return the difference of two value lists.
 : value-list-set-difference ( list1 list0 -- list-result )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-list
+    assert-tos-is-value-list
+    assert-nos-is-value-list
 
     [ ' = ] literal -rot        \ xt list1 list0
     list-difference             \ list-result
@@ -35,7 +57,7 @@
 \ Print a value-list
 : .value-list ( list0 -- )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-value-list
 
     [ ' .value ] literal swap .list
 ;
@@ -45,7 +67,7 @@
 \ Remove a value from a value-list.
 : value-list-remove ( val list -- item true | false )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-value-list
     assert-nos-is-value
 
     [ ' = ] literal -rot
@@ -55,7 +77,7 @@
 \ Push a value onto a list, if there are no duplicates in the list.
 : value-list-push-nodups ( val1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-value-list
     assert-nos-is-value
 
     \ Return if any value in the list is a superset of val1.

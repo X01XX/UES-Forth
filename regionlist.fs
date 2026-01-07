@@ -22,6 +22,17 @@
     then
 ;
 
+\ Check if 3os is a list, if non-empty, with the first item being a region.
+: assert-3os-is-region-list ( nos tos -- nos tos )
+    assert-3os-is-list
+    #2 pick list-is-not-empty
+    if
+        #2 pick list-get-links link-get-data
+        assert-tos-is-region
+        drop
+    then
+;
+
 \ Deallocate a region list.
 : region-list-deallocate ( lst0 -- )
     \ Check arg.
@@ -85,8 +96,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    over struct-inc-use-count
-    list-push
+    list-push-struct
 ;
 
 ' region-list-push to region-list-push-xt
@@ -456,6 +466,15 @@
     [ ' region-superset-of ] literal -rot list-member
 ;
 
+\ Return true if a region-list contains a subset, or equal, region.
+: region-list-any-subset-of ( reg1 list0 -- flag )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region
+
+    [ ' region-subset-of ] literal -rot list-member
+;
+
 \ Return true if a region-list contains a intersection of a region.
 : region-list-any-intersection-of ( reg1 list0 -- flag )
     \ Check args.
@@ -706,6 +725,37 @@
     drop                                \ ret-lst
 ;
 
+\ Return the number of regions a state is in.
+: region-list-number-regions-state-in ( sta1 lst0 -- reg-lst )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-value
+
+    \ Init count.
+    0 -rot                              \ cnt sta lst0
+
+    \ Prep for loop.
+    list-get-links                      \ cnt sta link
+
+    \ Check each region.
+    begin
+        ?dup
+    while
+        \ Check the current region.
+        over                            \ cnt sta link sta1
+        over link-get-data              \ cnt sta link sta1 regx
+        region-superset-of-state        \ cnt sta link flag
+        if                              \ cnt sta link
+            \ Inc counter
+            rot 1 + -rot                \ cnt sta link
+        then
+
+        link-get-next
+    repeat
+
+    drop                                \ cnt
+;
+
 \ Copy a region-list, removing subsets.
 : region-list-copy-nosubs ( lst0 - lst )
     \ Check arg.
@@ -759,7 +809,7 @@
     while
         dup link-get-data   \ lst0 link nedx
         #2 pick             \ lst0 link nedx lst0
-        region-list-push      \ lst0 link
+        region-list-push    \ lst0 link
 
         link-get-next
     repeat

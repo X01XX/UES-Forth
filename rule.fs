@@ -11,8 +11,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 0 value rule-mma    \ Storage for rule mma instance.
 
-\ Init rule mma, return the addr of allocated memory.
-: rule-mma-init ( num-items -- ) \ sets rule-mma.
+: rule-mma-init ( num-items -- ) \ Init rule mma, return the addr of allocated memory.
     dup 1 <
     abort" rule-mma-init: Invalid number of items."
 
@@ -20,15 +19,14 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     rule-struct-number-cells swap mma-new to rule-mma
 ;
 
-\ Check rule mma usage.
-: assert-rule-mma-none-in-use ( -- )
+: assert-rule-mma-none-in-use ( -- )    \ Check all rule array items are unallocated.
     rule-mma mma-in-use 0<>
     abort" rule-mma use GT 0"
 ;
 
 \ Check instance type.
 
-: is-allocated-rule ( addr -- flag )
+: is-allocated-rule ( addr -- flag )    \ Check if an address is within the rule array.
     \ Insure the given addr cannot be an invalid addr.
     dup rule-mma mma-within-array
     if
@@ -39,8 +37,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Check TOS for rule, unconventional, leaves stack unchanged.
-: assert-tos-is-rule ( tos -- tos )
+: assert-tos-is-rule ( tos -- tos ) \ Check TOS for rule, unconventional, leaves stack unchanged.
     dup is-allocated-rule
     is-false if
         s" TOS is not an allocated rule."
@@ -48,8 +45,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Check NOS for rule, unconventional, leaves stack unchanged.
-: assert-nos-is-rule ( nos tos -- nos tos )
+: assert-nos-is-rule ( nos tos -- nos tos ) \ Check NOS for rule, unconventional, leaves stack unchanged.
     over is-allocated-rule
     is-false if
         s" NOS is not an allocated rule."
@@ -57,19 +53,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Check 3OS for rule, unconventional, leaves stack unchanged.
-: assert-3os-is-rule ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-rule
-    is-false if
-        s" 3OS is not an allocated rule."
-        .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
-\ Return the m00 field of a rule instance.
-: rule-get-m00 ( rul0 -- u)
+: rule-get-m00 ( rul0 -- u) \ Return the m00 field of a rule instance.
     \ Check arg.
     assert-tos-is-rule
 
@@ -77,14 +63,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     @               \ Fetch the field.
 ;
 
-\ Set the m00 field of a rule instance, use only in this file.
-: _rule-set-m00 ( u1 rul0 -- )
+: _rule-set-m00 ( u1 rul0 -- )  \ Set the m00 field of a rule instance, use only in this file.
     rule-m00-disp + \ Add offset.
     !               \ Set the field.
 ;
 
-\ Return the m01 field of a rule instance.
-: rule-get-m01 ( rul0 -- u)
+: rule-get-m01 ( rul0 -- u) \ Return the m01 field of a rule instance.
     \ Check arg.
     assert-tos-is-rule
 
@@ -92,14 +76,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     @               \ Fetch the field.
 ;
 
-\ Set the m01 field of a rule instance, use only in this file.
-: _rule-set-m01 ( u1 rul0 -- )
+: _rule-set-m01 ( u1 rul0 -- )  \ Set the m01 field of a rule instance, use only in this file.
     rule-m01-disp + \ Add offset.
     !               \ Set the field.
 ;
 
-\ Return the m11 field of a rule instance.
-: rule-get-m11 ( rul0 -- u)
+: rule-get-m11 ( rul0 -- u) \ Return the m11 field of a rule instance.
     \ Check arg.
     assert-tos-is-rule
 
@@ -107,14 +89,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     @               \ Fetch the field.
 ;
 
-\ Set the m11 field of a rule instance, use only in this file.
-: _rule-set-m11 ( u1 rul0 -- )
+: _rule-set-m11 ( u1 rul0 -- )  \ Set the m11 field of a rule instance, use only in this file.
     rule-m11-disp + \ Add offset.
     !               \ Set the field.
 ;
 
-\ Return the m10 field of a rule instance.
-: rule-get-m10 ( rul0 -- u)
+: rule-get-m10 ( rul0 -- u) \ Return the m10 field of a rule instance.
     \ Check arg.
     assert-tos-is-rule
 
@@ -122,16 +102,14 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     @               \ Fetch the field.
 ;
 
-\ Set the m10 field of a rule instance, use only in this file.
-: _rule-set-m10 ( u1 rul0 -- )
+: _rule-set-m10 ( u1 rul0 -- )  \ Set the m10 field of a rule instance, use only in this file.
     rule-m10-disp + \ Add offset.
     !               \ Set the field.
 ;
 
 \ End accessors.
 
-\ Allocate a rule, setting id and use count only, use only in this file.
-: _rule-allocate ( -- rul0 )
+: _rule-allocate ( -- rul0 )    \ Allocate a rule, setting id and use count only, use only in this file.
     \ Allocate space.
     rule-mma mma-allocate   \ addr
 
@@ -143,8 +121,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0 over struct-set-use-count \ addr
 ;
 
-\ Create a rule from two numbers on the stack.
-: rule-new ( u-result u-initial -- addr)
+: rule-new ( u-result u-initial -- addr)    \ Create a rule from two numbers on the stack.
     \ Check args.
     assert-tos-is-value
     assert-nos-is-value
@@ -176,8 +153,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     nip nip                 \ addr
 ;
 
-\ Push all masks onto stack.
-: rule-get-masks ( rul0 -- m00 m01 m11 m10 )
+: rule-get-masks ( rul0 -- m00 m01 m11 m10 )    \ Push all four masks onto stack.
     \ Check arg.
     assert-tos-is-rule
 
@@ -187,8 +163,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     rule-get-m10            \ m00 m01 m11 m10
 ;
 
-\ Return true if two rules are equal.
-: rule-eq ( rul1 rul0 -- flag )
+: rule-eq ( rul1 rul0 -- flag ) \ Return true if two rules are equal.
     \ Check arg.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -230,8 +205,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Print a rule.
-: .rule ( rul0 -- )
+: .rule ( rul0 -- ) \ Print a rule.
     \ Check arg.
     assert-tos-is-rule
 
@@ -308,8 +282,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     2drop 2drop drop
 ;
 
-\ Deallocate a rule.
-: rule-deallocate ( rul0 -- )
+: rule-deallocate ( rul0 -- )   \ Deallocate a rule.
     \ Check arg.
     assert-tos-is-rule
 
@@ -324,8 +297,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Return rule initial region.
-: rule-calc-initial-region ( rul0 -- reg0 )
+: rule-calc-initial-region ( rul0 -- reg0 ) \ Return rule initial region.
     \ Check arg.
     assert-tos-is-rule
 
@@ -335,8 +307,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     region-new
 ;
 
-\ Return rule result region.
-: rule-calc-result-region ( rul0 -- reg0 )
+: rule-calc-result-region ( rul0 -- reg0 )  \ Return rule result region.
     \ Check arg.
     assert-tos-is-rule
 
@@ -347,8 +318,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     region-new
 ;
 
-\ Return true if two rules intersect.
-: rule-intersects ( rul1 rul0 -- flag )
+: rule-intersects ( rul1 rul0 -- flag ) \ Return true if two rules intersect.
     \ Check arg.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -366,8 +336,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap region-deallocate      \ flag
 ;
 
-\ Return true if a rule's change intersects a changes' changes.
-: rule-intersects-changes ( csgs1 rul0 -- flag )
+: rule-intersects-changes ( csgs1 rul0 -- flag )    \ Return true if a rule's change intersects a changes' changes.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes
@@ -383,8 +352,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0<>
 ;
 
-\ Return true if a rule's initial region intersects a region.
-: rule-initial-region-intersects-region ( reg1 rul0 -- bool )
+: rule-initial-region-intersects ( reg1 rul0 -- bool )  \ Return true if a rule's initial region intersects a region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -394,8 +362,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap region-deallocate      \ bool
 ;
 
-\ Return true if a rule's result region intersects a region.
-: rule-result-region-intersects-region ( reg1 rul0 -- bool )
+: rule-result-region-intersects ( reg1 rul0 -- bool )   \ Return true if a rule's result region intersects a region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -405,8 +372,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap region-deallocate      \ bool
 ;
 
-\ Return true if all bit positions in a rule are represented.
-: rule-all-bits-set ( rul0 -- flag )
+: rule-all-bits-set ( rul0 -- flag )    \ Return true if all bit positions in a rule are represented.
     \ Check arg.
     assert-tos-is-rule
 
@@ -420,11 +386,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     =
 ;
 
-\ Return the valid result of a rule intersection, or false.
 \ A valid intersection may not have the same initial region as the intersection
 \ of the two rules initial regions.
 \ As X1 & Xx = 01, X1 & XX = 11, X0 & Xx = 10, X0 & XX = 00.
-: rule-intersection ( rul1 rul0 -- result true | false )
+: rule-intersection ( rul1 rul0 -- result true | false )    \ Return the valid result of a rule intersection, or false.
     \ Check arg.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -480,74 +445,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Prune 0->X and 1->X positions in a rule.
-\
-\ An invalid union may be partially valid with additional massaging:
-\    X1 + XX = 11 (discard 0X)
-\    X1 + Xx = 01 (discard 1X)
-\    X0 + XX = 00 (discard 1X)
-\    X0 + Xx = 10 (discard 0X)
-\ Then call rule-all-bits-set, to see if the result is valid.
-\ : _rule-prune ( rul0 - rul0 )
-\    \ Check arg.
-\    assert-tos-is-rule
-\
-\    dup rule-get-masks          \ rul0 m00 m01 m11 m10
-\
-\    \ Get 1->X and 0->X positions.
-\    and -rot and                \ rul0 m1X m0X
-\
-\    dup if                      \ rul0 m1X m0X
-\        \ m0x is not zero.
-\
-\        \ Get bits that are not 0X.
-\        !not                    \ rul0 m1x n0x
-\
-\        \ Adjust m00.
-\        2 pick                  \ rul0 m1x n0x rul0
-\        rule-get-m00            \ rul0 m1x n0x m00
-\        over and                \ rul0 m1x n0x new-m00
-\        3 pick                  \ rul0 m1x n0x new-m00 rul0
-\        _rule-set-m00           \ rul0 m1x n0x
-\
-\        \ Adjust m01.
-\        2 pick                  \ rul0 m1x n0x rul0
-\        rule-get-m01            \ rul0 m1x n0x m01
-\        and                     \ rul0 m1x new-m01
-\        2 pick                  \ rul0 m1x new-m01 rul0
-\        _rule-set-m01           \ rul0 m1x
-\
-\    else                        \ rul0 m1x 0
-\        drop                    \ rul0 m1x
-\    then
-\
-\    dup if                      \ rul0 m1X
-\        \ m1x is not zero.
-\
-\        \ Get bits that are not 1X.
-\        !not                    \ rul0 n1x
-\
-\        \ Adjust m11.
-\        over                    \ rul0 n1x rul0
-\        rule-get-m11            \ rul0 n1x m11
-\        over and                \ rul0 n1x new-m11
-\        2 pick                  \ rul0 n1x new-m11 rul0
-\        _rule-set-m11           \ rul0 n1x
-\
-\        \ Adjust m10.
-\        over                    \ rul0 n1x rul0
-\        rule-get-m10            \ rul0 n1x m10
-\        and                     \ rul0 new-m10
-\        over                    \ rul0 new-m10 rul0
-\        _rule-set-m10           \ rul0
-\
-\    else                        \ rul0 0
-\        drop                    \ rul0
-\    then
-\ ;
-
-\ Or the masks of two rules, not checking if the result is valid.
-: rule-or ( rul1 rul0 -- rul )
+: rule-or ( rul1 rul0 -- rul )  \ Or the masks of two rules, not checking if the result is valid.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -585,8 +483,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     tuck _rule-set-m00      \ rul
 ;
 
-\ Return a rule's change mask.
-: rule-change-mask ( rul0 -- mask )
+: rule-change-mask ( rul0 -- mask ) \ Return a rule's change mask.
     \ Check arg.
     assert-tos-is-rule
 
@@ -595,11 +492,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     or                      \ mask
 ;
 
-\ Return the valid result of a rule union, or false.
-\ Valid result bit positions can be:
-\  Change:      0->1, 1->0, X->x (that is, x-not)
-\  No change:   0->0, 1->1, X->X
-: rule-union-by-changes ( rul1 rul0 -- result true | false )
+: rule-union-by-changes ( rul1 rul0 -- result true | false )    \ If two rule changes (m01, m10) are equal, form a union.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -618,8 +511,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     true
 ;
 
-\ Return the valid result of a rule union, or false.
-: rule-union ( rul1 rul0 -- result true | false )
+: rule-union ( rul1 rul0 -- result true | false )   \ Return the result of a rule union, if valid.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -655,17 +547,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     tuck _rule-set-m11      \ m00 m01 rul
     tuck _rule-set-m01      \ m00 rul
     tuck _rule-set-m00      \ rul
-
-    \ Check rule.
-
-    \ _rule-prune             \ rul
-    \ dup rule-all-bits-set   \ rul flag
-    \ if
-    \    true                 \ rul flag
-    \ else
-    \     rule-deallocate
-    \     false
-    \ then
 
     \ Check for 0->X.
     dup rule-get-m00
@@ -689,11 +570,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Return a rule for translating one region (tos) to an equal, or subset of another region (nos).
-\ 0->X becomes 0->0, 1->X becomes 1->1, by the principle of Least Change, and in that case,
-\ the result is a proper subset of the target region.
+\ 0->X becomes 0->0, 1->X becomes 1->1, by the principle of Least Change.
 \ There is no possibility of an X->x position in the result rule.
-: rule-new-region-to-region ( reg-to reg-from -- rul )
+: rule-new-region-to-region ( reg-to reg-from -- rul )  \ Return a rule for translating one region (tos) to another.
     \ Check arg.
     assert-tos-is-region
     assert-nos-is-region
@@ -744,30 +623,24 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     tuck _rule-set-m10                  \ rul
 ;
 
-\ Return a rule restricted to an intersecting initial region.
-: rule-restrict-initial-region ( reg1 rul0 -- rul t | f )
+: rule-restrict-initial-region ( reg1 rul0 -- rul t | f )   \ Return a rule restricted to an intersecting initial region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
     \ cr ." rule-restrict-initial-region: " over .region space dup .rule cr
-    tuck                        \ rul0 reg1 rul0
-    rule-calc-initial-region    \ rul0 reg1 reg-initial'
-    2dup                        \ rul0 reg1 reg-initial' reg1 reg-initial'
-    \ cr ." rule-restrict-initial-region: reg1: " over .region space ." rule initial: " dup .region cr
-    region-intersects           \ rul0 reg1 reg-initial' flag
-    swap region-deallocate      \ rul0 reg1 flag
+
+    2dup rule-initial-region-intersects  \ reg1 rul0 bool 
     is-false if
         2drop
         false
         exit
     then
 
+    swap                        \ rul0 reg1
     dup region-high-state swap  \ rul0 high reg1
     region-low-state            \ rul0 high low
 
     !not                        \ rul0 ones zeros
-    \ cr ." ones:  " over .value cr
-    \ cr ." zeros: " dup .value cr
 
     #2 pick rule-get-m00        \ rul0 ones zeros | m00
     over and                    \ rul0 ones zeros | n00
@@ -797,24 +670,19 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     true
 ;
 
-\ Return a rule restricted to a result region.
-: rule-restrict-result-region ( reg1 rul0 -- rul t | f )
+: rule-restrict-result-region ( reg1 rul0 -- rul t | f )    \ Return a rule restricted to a result region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
 
-    tuck                        \ rul0 reg1 rul0
-    rule-calc-result-region     \ rul0 reg1 reg-result'
-    2dup                        \ rul0 reg1 reg-result reg1 reg-result'
-
-    region-intersects           \ rul0 reg1 reg-result' flag
-    swap region-deallocate      \ rul0 reg1 flag
+    2dup rule-result-region-intersects  \ reg1 rul0 bool 
     is-false if
         2drop
         false
         exit
     then
 
+    swap                        \ rul0 reg1
     dup region-high-state swap  \ rul0 high reg1
     region-low-state            \ rul0 high low
 
@@ -848,40 +716,35 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     true
 ;
 
-\ Add one to the m00 mask of a rule.
-: _rule-adjust-mask-m00 ( rul -- )
+: _rule-adjust-mask-m00 ( rul -- )  \ Add one to the m00 mask of a rule.
     dup rule-get-m00        \ rul m00
     1+
     swap                    \ m00 rul
     _rule-set-m00
 ;
 
-\ Add one to the m01 mask of a rule.
-: _rule-adjust-mask-m01 ( rul -- )
+: _rule-adjust-mask-m01 ( rul -- )  \ Add one to the m01 mask of a rule.
     dup rule-get-m01        \ rul m01
     1+
     swap                    \ m01 rul
     _rule-set-m01
 ;
 
-\ Add one to the m11 mask of a rule.
-: _rule-adjust-mask-m11 ( rul -- )
+: _rule-adjust-mask-m11 ( rul -- )  \ Add one to the m11 mask of a rule.
     dup rule-get-m11        \ rul m11
     1+
     swap                    \ m11 rul
     _rule-set-m11
 ;
 
-\ Add one to the m10 mask of a rule.
-: _rule-adjust-mask-m10 ( rul -- )
+: _rule-adjust-mask-m10 ( rul -- )  \ Add one to the m10 mask of a rule.
     dup rule-get-m10        \ rul m10
     1+
     swap                    \ m10 rul
     _rule-set-m10
 ;
 
-\ Shift all masks left by 1 bit position.
-: rule-lshift ( rul -- )
+: rule-lshift ( rul -- )    \ Shift all masks left by 1 bit position.
     dup rule-get-m00 1 lshift over _rule-set-m00
     dup rule-get-m01 1 lshift over _rule-set-m01
     dup rule-get-m11 1 lshift over _rule-set-m11
@@ -891,7 +754,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Givin initial and result chars,
 \ left-shift all rule masks, set the right-most rule mask
 \ bit positions.  For the rule-from-string function.
-: _rule-adjust-masks ( ci cr rul0 -- )
+: _rule-adjust-masks ( ci cr rul0 -- )  \ Adjust rule, by rule-from-string.
     \ Check arg
     assert-tos-is-rule
 
@@ -948,10 +811,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     endcase
 ;
 
-\ Return a rule from a string, like 00/01/11/10/XX/Xx/X0/X1/
 \ The slash (/) characters, *including the last*, are important as separators.
 \ The uderscore (_) character can also be used.
-: rule-from-string ( addr n -- rule )
+: rule-from-string ( addr n -- rule )   \ Return a rule from a string, like 00/01/11/10/XX/Xx/X0/X1/
     \ Init rule.
     _rule-allocate                  \ addr n rul
     0 over _rule-set-m00
@@ -984,7 +846,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     drop
 ;
 
-: rule-get-changes ( rul0 -- cngs )
+: rule-get-changes ( rul0 -- cngs ) \ Return a changes struct, from a rule.
     \ Check arg.
     assert-tos-is-rule
 
@@ -993,8 +855,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     changes-new
 ;
 
-\ Apply a rule to a given state, forward-chaining, returning a sample.
-: rule-apply-to-state-f ( sta1 rul0 -- smpl true | false )
+: rule-apply-to-state-fc ( sta1 rul0 -- smpl true | false )  \ Apply a rule to a given state, forward-chaining, returning a sample.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-value
@@ -1023,9 +884,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     true
 ;
 
-
-\ Return true if a rule changes at least one bit.
-: rule-makes-change ( rul0 -- flag )
+: rule-makes-change ( rul0 -- flag )    \ Return true if a rule changes at least one bit.
     \ Check arg.
     assert-tos-is-rule
 
@@ -1040,9 +899,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0<>
 ;
 
-\ Ruturn a rule restricted, initial and result regions, to a given
-\ region.
-: rule-restrict-to-region ( reg1 rul0 -- rul t | f )
+: rule-restrict-to-region ( reg1 rul0 -- rul t | f )    \ Return a rule restricted, initial and result regions, to a given region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -1070,8 +927,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-\ Return true if rule has at least one needed change.
-: rule-changes-null ( rul0 -- flag )
+: rule-changes-null ( rul0 -- flag )    \ Return true if rule has at least one needed change.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes
@@ -1092,11 +948,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0=                          \ flag
 ;
 
-\ Return a rule with given changes isolated for forward chaining.
 \ Matching change m10 positions and X->x becomes 1->0.
 \ Matching change m01 positions and X->x becomes 0->1.
 \ For non-intersecting, reachable, rules, for forward, or backward, chaining.
-: rule-isolate-changes ( cngs1 rul0 -- rul)
+: rule-isolate-changes ( cngs1 rul0 -- rul) \ Return a rule with given changes isolated for forward chaining.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes
@@ -1151,64 +1006,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     2nip nip                    \ rul
 ;
 
-\ Apply a rule to a given region, backward-chaining, returning an initial region.
-\ A from/to pair of regions is passed, to form a needed rule, part of which may be
-\ satisfied by the target rule, rul0.
-: rule-apply-to-region-bc ( reg-to reg-from rul0 -- rule t | f )
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
-    assert-3os-is-region
-    #2 pick #2 pick region-intersects abort" from\to regions intersect?"
-
-    \ Restrict the result region of the rule.
-    #2 pick over                    \ reg-to reg-from rul0 | reg-to rul0
-    rule-restrict-result-region     \ reg-to reg-from rul0 | rul0' t | f
-    if
-    else
-        3drop
-        false
-        exit
-    then
-    \ TODO
-
-    \ Get rule changes that are needed in reg-from -> reg-to.
-    over                            \ reg-to reg-from rul0 | reg-to' rul0' reg-to'
-    #4 pick                         \ reg-to reg-from rul0 | reg-to' rul0' reg-to' reg-from
-    changes-new-region-to-region    \ reg-to reg-from rul0 | reg-to' rul0' ft-cngs'
-    dup                             \ reg-to reg-from rul0 | reg-to' rul0' ft-cngs'
-    over                            \ reg-to reg-from rul0 | reg-to' rul0' ft-cngs' rul0'
-    rule-get-changes                \ reg-to reg-from rul0 | reg-to' rul0' ft-cngs' cngs-rul'
-    2dup changes-intersection       \ reg-to reg-from rul0 | reg-to' rul0' ft-cngs' cngs-rul' cngs-needed'
-    swap changes-deallocate         \ reg-to reg-from rul0 | reg-to' rul0' ft-cngs' cngs-needed'
-    swap changes-deallocate         \ reg-to reg-from rul0 | reg-to' rul0' cngs-needed'
-
-    \ Check if the target rule' has any needed changes.
-    dup changes-null                \ reg-to reg-from rul0 | reg-to' rul0' cngs-needed' bool
-    if                              \ reg-to reg-from rul0 | reg-to' rul0' cngs-needed'
-        changes-deallocate
-        rule-deallocate
-        region-deallocate
-        3drop
-        false
-        exit
-    then
-                                    \ reg-to reg-from rul0 | reg-to' rul0' cngs-needed'
-
-    \ Isolate needed changes in the rule that may be in X->0, X->1, or X->x.
-    2dup swap                       \ reg-to reg-from rul0 | reg-to' rul0' cngs-needed' cngs-needed' rul0'
-    rule-isolate-changes            \ reg-to reg-from rul0 | reg-to' rul0' cngs-needed' rul0''
-
-    \ Clean up.
-    swap changes-deallocate         \ reg-to reg-from rul0 | reg-to' rul0' rul0''
-    swap rule-deallocate            \ reg-to reg-from rul0 | reg-to' rul0''
-    swap region-deallocate          \ reg-to reg-from rul0 | rul0''
-    2nip nip                        \ rul0''
-    true
-;
-
-\ Given a rule and wanted changes, return the number of unwanted changes.
-: rule-number-unwanted-changes ( cngs1 rul0 -- u )
+: rule-number-unwanted-changes ( cngs1 rul0 -- u )  \ Given a rule and wanted changes, return the number of unwanted changes.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes
@@ -1225,9 +1023,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ cr ." rule-number-unwanted-changes: returning: " dup dec. cr
 ;
 
-\ Return a step for a rule (tos) and needed changes (nos).
-\ If the rule has a needed change, a step will be returned.
-: rule-calc-step-by-changes ( cngs1 rul0 -- step t | f )
+: rule-calc-step-by-changes ( cngs1 rul0 -- step t | f )    \ Return a step for a rule (tos) and needed changes (nos), if any.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes
@@ -1244,24 +1040,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-: rule-has-needed-changes ( reg-to reg-from rul0 -- bool )
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
-    assert-3os-is-region
-
-    #2 pick #2 pick                             \ | reg-to reg-from
-    changes-new-region-to-region                \ | ned-cngs'
-
-    \ Check if rule has a needed change.
-    2dup swap                                   \ | ned-cngs' ned-cngs' rul0
-    rule-intersects-changes                     \ | ned-cngs' bool
-    swap changes-deallocate                     \ | bool
-    2nip nip                                    \ bool
-;
-
-\ Return true if using a rule is premature, in forward-chaining.
-: rule-use-is-premature-fc  ( reg-to reg-from rul0 -- bool )
+: rule-use-is-premature-fc  ( reg-to reg-from rul0 -- bool )    \ Return true if using a rule is premature, in forward-chaining.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -1285,8 +1064,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap changes-deallocate             \ bool
 ;
 
-\ Return true if using a rule is premature, in backward-chaining.
-: rule-use-is-premature-bc  ( reg-to reg-from rul0 -- bool )
+: rule-use-is-premature-bc  ( reg-to reg-from rul0 -- bool )    \ Return true if using a rule is premature, in backward-chaining.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -1311,9 +1089,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap changes-deallocate             \ bool
 ;
 
-\ Combine tos rule to nos rule.
-\ The tos rule result region has to intersect the nos initial rule.
-: rule-combine2 ( rul1-to rul0-from -- rul )
+: rule-combine2 ( rul1-to rul0-from -- rul )    \ Return a rule bye combining tos rule to nos rule.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -1529,8 +1305,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ cr ." rule-calc-step-bc: to: " #2 pick .region space ." from: " over .region space ." rule: " dup .rule cr
 
     #2 pick #2 pick                             \ | reg-to reg-from
-\    2dup region-superset-of                     \ | reg-to reg-from bool
-\    abort" rule-calc-step-bc: 1 region subset?"   \ | reg-to reg-from
     2dup swap region-superset-of                \ | reg-to reg-from bool
     abort" rule-calc-step-bc: 2 region subset?"   \ | reg-to reg-from
 
@@ -1683,8 +1457,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap rule-deallocate            \ rul-0b1
 ;
 
-\ Return true if a rule is valid.
-: rule-is-valid ( rul0 - bool )
+: rule-is-valid ( rul0 - bool ) \ Return true if a rule is valid.
     \ Check arg.
     assert-tos-is-rule
 
@@ -1721,8 +1494,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     =                           \ bool
 ;
 
-\ Return the result of applying a rule to an initial-region intersecting region.
-: rule-apply-to-region-fc ( reg1 rul0 -- reg t | f )
+: rule-apply-to-region-fc ( reg1 rul0 -- reg t | f )    \ Return the result of applying a rule to an initial-region intersecting region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region

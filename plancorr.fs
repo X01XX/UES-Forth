@@ -54,15 +54,6 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     then
 ;
 
-\ Check 3OS for plancorr, unconventional, leaves stack unchanged.
-: assert-3os-is-plancorr ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-plancorr
-    is-false if
-        s" 3OS is not an allocated plancorr"
-        .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
 \ Return the plancorr list field from a plan instance.

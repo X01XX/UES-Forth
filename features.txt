@@ -24,6 +24,8 @@ Next try union by change-mask and same-result, possibly creating X->1 and X->0 b
 
 The huge emphasis on small functions in Forth is a little too much, in my opinion.
 
+Maybe small functions could be used to hide intermediate structs that are used and deallocated?
+
 Stack contents can be recorded, "managed", in comments, line-by-line.
 
 Start struct functions with a struct name, and make the TOS an instance of the struct, except for <struct name>-new.

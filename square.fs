@@ -658,8 +658,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     then
 ;
 
-\ Return char C = Compatible, I = Incompatible, M = More samples needed.
-: square-compare ( sqr1 sqr0 -- char )
+: square-compare ( sqr1 sqr0 -- char )  \ Return char C = Compatible, I = Incompatible, M = More samples needed.
     \ Check args.
     assert-tos-is-square
     assert-nos-is-square
@@ -735,6 +734,22 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     then
 
     square-compare [char] I =
+;
+
+\ Return true if two squares are compatible.
+: square-compatible ( sqr1 sqr0 -- flag )
+    \ Check args.
+    assert-tos-is-square
+    assert-nos-is-square
+
+    2dup square-eq
+    if
+        2drop
+        true
+        exit
+    then
+
+    square-compare [char] C =
 ;
 
 \ Return true if a square state matches a value.

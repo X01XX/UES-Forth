@@ -55,15 +55,6 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     then
 ;
 
-\ Check 3OS for changescorr, unconventional, leaves stack unchanged.
-: assert-3os-is-changescorr ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-changescorr
-    is-false if
-        s" 3OS is not an allocated changescorr"
-        .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
 \ Return the changescorr list field from a changescorr instance.
@@ -158,24 +149,6 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
         \ Deallocate instance.
         changescorr-mma mma-deallocate
-    else
-        struct-dec-use-count
-    then
-;
-
-: changescorr-list-deallocate ( chgsc-lst0 -- )
-    \ Check arg.
-    assert-tos-is-changescorr
-
-    \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                        \ lst0 uc
-    #2 < if
-        \ Deallocate changes instances in the list.
-        [ ' changescorr-deallocate ] literal over   \ lst0 xt lst0
-        list-apply                                  \ lst0
-
-        \ Deallocate the list.
-        list-deallocate                             \
     else
         struct-dec-use-count
     then

@@ -60,19 +60,10 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
     then
 ;
 
-\ Check 3OS for sample, unconventional, leaves stack unchanged.
-: assert-3os-is-sample ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-sample
-    is-false if
-        s" 3OS is not an allocated sample"
-        .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
 \ Return the initial field from a sample instance.
-: sample-get-initial ( addr -- u)
+: sample-get-initial ( smp0 -- u)
     \ Check arg.
     assert-tos-is-sample
 
@@ -81,15 +72,16 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 ;
 
 \ Return the result field from a sample instance.
-: sample-get-result ( addr -- u)
+: sample-get-result ( smp0 -- u)
     \ Check arg.
     assert-tos-is-sample
 
     sample-result-disp +    \ Add offset.
     @                       \ Fetch the field.
 ;
+
 \ Set the initial field from a sample instance, use only in this file.
-: _sample-set-initial ( u1 addr -- )
+: _sample-set-initial ( u1 smp0 -- )
     \ Check args.
     assert-tos-is-sample
     assert-nos-is-value
@@ -99,21 +91,13 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 ;
 
 \ Set the result field from a sample instance, use only in this file.
-: _sample-set-result ( u1 addr -- )
+: _sample-set-result ( u1 smp0 -- )
     \ Check args.
     assert-tos-is-sample
     assert-nos-is-value
 
     sample-result-disp +    \ Add offset.
     !                       \ Set result field.
-;
-
-: sample-get-states ( smpl -- u-r u-i )
-    \ Check arg.
-    assert-tos-is-sample
-
-    dup sample-get-result swap  \ r smpl
-    sample-get-initial          \ r i
 ;
 
 \ End accessors.
@@ -123,21 +107,21 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ If you want to keep the sample on the stack, or in a value, or variable,
 \ run dup struct-inc-use-count, then deallocate it from there when done using it.
 \ If you want to push the sample onto a list, sample-list-push will increment the use count.
-: sample-new ( r1 i0 -- addr)
+: sample-new ( r1 i0 -- smp)
     \ Check args.
     assert-tos-is-value
     assert-nos-is-value
 
     \ Allocate space.
-    sample-mma mma-allocate     \ u1 u2 addr
+    sample-mma mma-allocate     \ u1 u2 smp
 
     \ Store id.
-    sample-id over              \ u1 u2 addr id addr
-    struct-set-id               \ u1 u2 addr
+    sample-id over              \ u1 u2 smp id smp
+    struct-set-id               \ u1 u2 smp
 
     \ Store states
-    tuck _sample-set-initial   \ u1  addr
-    tuck _sample-set-result    \ addr
+    tuck _sample-set-initial   \ u1  smp
+    tuck _sample-set-result    \ smp
 ;
 
 \ Print a sample.
@@ -171,104 +155,3 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
         struct-dec-use-count
     then
 ;
-
-\ Return a changes instance from a sample.
-: sample-calc-changes ( smpl0 -- cngs )
-    \ Check arg.
-    assert-tos-is-sample
-
-    dup sample-get-initial      \ smpl0 i-sta
-    over sample-get-result      \ smpl0 i-sta r-sta
-    2dup invert and             \ smpl0 i-sta r-sta m10
-    -rot                        \ smpl0 m10 i-sta r-sta
-    swap invert and             \ smpl0 m10 m01
-    changes-new                 \ smpl0 cngs
-    nip
-;
-
-\ Return true if a sample result state is NE the initial state.
-: sample-any-change ( smpl -- flag )
-    \ Check arg.
-    assert-tos-is-sample
-
-    dup sample-get-initial      \ smpl0 i-sta
-    swap sample-get-result      \ i-sta r-sta
-    <>
-;
-
-\ Return true if a state is between a sample initial and result states,
-\ inclusive.
-: sample-state-between ( sta1 smpl0 -- flag )
-    \ Check args.
-    assert-tos-is-sample
-    assert-nos-is-value
-
-    dup sample-get-initial      \ sta1 smpl0 s-i
-    swap sample-get-result      \ sta1 s-i s-r
-    value-between
-;
-
-\ Return true if to samples are equal.
-: sample-eq ( smpl1 smpl2 -- flag )
-    \ Check args.
-    assert-tos-is-sample
-    assert-nos-is-sample
-
-    over sample-get-initial     \ smpl1 smpl2 1-i
-    over sample-get-initial     \ smpl1 smpl2 1-i 2-i
-    <> if
-        2drop false exit
-    then
-                                \ smpl1 smpl2
-    sample-get-result           \ smpl1 2-r
-    swap sample-get-result      \ 2-r 1-r
-    =
-;
-
-\ Return true if a sample contains a given state.
-: sample-contains-state ( sta1 smpl0 -- flag )
-    \ Check args.
-    assert-tos-is-sample
-    assert-nos-is-value
-
-    sample-get-states       \ sta1 s1-r s1-i
-    rot                     \ s1-r s1-i sta1
-    tuck                    \ s1-r sta1 s1-i sta1
-    =                       \ s1-r sta1 flag
-    if
-        2drop
-        true
-        exit
-    then
-
-    =                       \ flag
-;
-
-\ Return true if two samples share at least one state.
-: sample-intersects ( smpl1 smpl0 -- flag )
-    \ Check args.
-    assert-tos-is-sample
-    assert-nos-is-sample
-
-    sample-get-states       \ smpl1 s0-r s0-i
-    rot                     \ s0-r s0-i smpl1
-    tuck                    \ s0-r smpl1 s0-i smpl1
-    sample-contains-state   \ s0-r smpl1 flag
-    if
-        2drop
-        true
-        exit
-    then
-                            \ s0-r smpl1
-    sample-contains-state   \ flag
-;
-
-\ Return a region for a sample.
-: sample-to-region ( smpl0 -- reg )
-    \ Check arg.
-    assert-tos-is-sample
-
-    sample-get-states
-    region-new
-;
-

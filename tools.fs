@@ -19,11 +19,6 @@
     clearstack
 ;
 
-\ Show base in decimal, while preserving the base.
-: .base-dec ( -- )  \ Side effect: Print a number.
-    base @ dec.    \ Get current base.
-;
-
 \ Set base to binary.
 : binary  ( -- ) \ Side effect: Session base is changed.
     #2 base !

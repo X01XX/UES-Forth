@@ -9,6 +9,8 @@
 # For function names that have only one reference, that is the function definition,
 # and will be displayed.
 
+echo "A function may be used only in a test file, to test the function (so may be deleted), or to test other functions (should be kept)."
+
 srcdir=.
 
 # Set work directory, should not exist.
@@ -22,7 +24,7 @@ fi
 mkdir $wrkdir
 
 # Put each file into work directory.
-/usr/bin/cat $srcdir/*.fs > $wrkdir/source.fs
+/usr/bin/ls *.fs | /usr/bin/grep -v _t.fs | /usr/bin/xargs -n 1 /usr/bin/cat >> $wrkdir/source.fs
 if [ -e $wrkdir/unused.txt ]
 then
    /usr/bin/rm $wrkdir/unused.txt
@@ -40,7 +42,7 @@ functions=`/usr/bin/cat $wrkdir/functions.txt`
 # Check the number of references for each function name.
 for line in $functions
 do
- 	count=`/usr/bin/grep -- $line $wrkdir/source.fs | grep -cv -- "$line:"`  # remove references to the function name in prints and aborts.
+ 	count=`/usr/bin/grep -- $line $wrkdir/source.fs | /usr/bin/grep -v -- $line- | /usr/bin/grep -cv -- "$line:"`  # remove references to the function name in prints and aborts.
  	if [ $count -lt 2 ]
    	then
         echo "    " $line

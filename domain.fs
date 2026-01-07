@@ -269,6 +269,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     rot                         \ dom0 nb xt1
 
     action-new                  \ dom0 actx
+
     swap                        \ actx dom0
     2dup                        \ actx dom0 actx dom0
     domain-get-actions          \ actx dom0 actx act-lst

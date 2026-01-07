@@ -55,24 +55,6 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     then
 ;
 
-\ Check 3OS for plan, unconventional, leaves stack unchanged.
-: assert-3os-is-plan ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-plan
-    is-false if
-        s" 3OS is not an allocated plan"
-       .abort-xt execute
-    then
-;
-
-\ Check 4OS for plan, unconventional, leaves stack unchanged.
-: assert-4os-is-plan ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick is-allocated-plan
-    is-false if
-        s" 4OS is not an allocated plan"
-       .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
 \ Return the plan domain.

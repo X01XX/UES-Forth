@@ -329,7 +329,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     assert-nos-is-value
 
     planstep-get-rule       \ sta1 rul
-    rule-apply-to-state-f   \ sta
+    rule-apply-to-state-fc  \ sta
 ;
 
 \ Return true if two plansteps can be linked plnstp1 result region to plnstp0 initial region.

@@ -113,7 +113,7 @@
     s" 01/10/X1/X1/" rule-from-string          \ rul
     cr ." rule: " dup .rule cr
     %0101 over                                  \ rul 1 rul
-    rule-apply-to-state-f                       \ rul smpl true
+    rule-apply-to-state-fc                      \ rul smpl true
     if
         cr ." smpl " dup .sample cr
         dup sample-get-result
@@ -128,7 +128,7 @@
     s" Xx/Xx/X0/X0/" rule-from-string          \ rul
     cr ." rule: " dup .rule cr
     %0101 over                                  \ rul 1 rul
-    rule-apply-to-state-f                       \ rul smpl true
+    rule-apply-to-state-fc                      \ rul smpl true
     if
         cr ." smpl " dup .sample cr
         dup sample-get-result
@@ -143,7 +143,7 @@
     s" XX/XX/00/11/" rule-from-string          \ rul
     cr ." rule: " dup .rule cr
     %0101 over                                  \ rul 1 rul
-    rule-apply-to-state-f                       \ rul smpl true
+    rule-apply-to-state-fc                      \ rul smpl true
     if
         cr ." smpl " dup .sample cr
         dup sample-get-result

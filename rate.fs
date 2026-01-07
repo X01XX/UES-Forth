@@ -55,15 +55,6 @@
     then
 ;
 
-\ Check 3OS for rate, unconventional, leaves stack unchanged.
-: assert-3os-is-rate ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-rate
-    is-false if
-        s" NOS is not an allocated rate"
-        .abort-xt execute
-    then
-;
-
 \ Start accessors.
 
 \ Return the first field from a rate instance.

@@ -223,15 +223,6 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     \ cr ." group-new: " dup hex . decimal cr
 ;
 
-: group-new-from-sample ( smpl -- sqr )
-    \ Check arg.
-    assert-tos-is-sample
-
-    dup sample-get-result
-    swap sample-get-initial
-    group-new
-;
-
 : group-deallocate ( grp0 -- )
     \ Check arg.
     assert-tos-is-group

@@ -725,15 +725,6 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     true
 ;
 
-: session-add-regioncorrrate-fragment ( regcr1 sess0 -- )
-    \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorrrate
-
-    session-get-regioncorrrate-fragments   \ regcr1 regcr-lst
-    regioncorrrate-list-push               \
-;
-
 \ Return the highest rate for a regc, the highest rate regclst that has a superset regc.
 : session-highest-rate-regclst ( regc1 sess0 -- n )
     \ Check args.
