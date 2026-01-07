@@ -557,6 +557,19 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         ?dup
     while
         dup link-get-data           \ pln-to' pln-from' link plnstpx
+
+        \ Check for back-track
+        dup                         \ pln-to' pln-from' link plnstpx plnstpx
+        #3 pick                     \ pln-to' pln-from' link plnstpx plnstpx pln-from'
+        plan-check-step-result      \ pln-to' pln-from' link plnstpx bool
+        if
+            2drop                   \ pln-to' pln-from'
+            plan-deallocate         \ pln-to'
+            plan-deallocate         \
+            false
+            exit
+        then
+
         #2 pick                     \ pln-to' pln-from' link plnstpx pln-from'
         plan-push-end               \ pln-to' pln-from' link
 
