@@ -159,18 +159,20 @@ cs
     assert-rulestore-mma-none-in-use
     assert-rulecorr-mma-none-in-use
     assert-square-mma-none-in-use
-    assert-group-mma-none-in-use
     assert-sample-mma-none-in-use
-    assert-need-mma-none-in-use
-    assert-planstep-mma-none-in-use
-    assert-pathstep-mma-none-in-use
-    assert-plan-mma-none-in-use
-    assert-plancorr-mma-none-in-use
-    assert-action-mma-none-in-use
     assert-changes-mma-none-in-use
     assert-changescorr-mma-none-in-use
+    assert-group-mma-none-in-use
+    assert-need-mma-none-in-use
+    assert-planstep-mma-none-in-use
+    assert-plancorr-mma-none-in-use
+    assert-pathstep-mma-none-in-use
+    assert-plan-mma-none-in-use
     assert-rate-mma-none-in-use
     assert-regioncorrrate-mma-none-in-use
+    assert-action-mma-none-in-use
+    assert-domain-mma-none-in-use
+    assert-session-mma-none-in-use
 
     depth 0<>
     if
@@ -197,11 +199,11 @@ cr ." main.fs"
 #3500 link-mma-init
 #1902 list-mma-init
 #3003 region-mma-init
-#0500 regioncorr-mma-init
+#0600 regioncorr-mma-init
 #0904 rule-mma-init
 #0505 rulestore-mma-init
 #0404 rulecorr-mma-init
-#0306 square-mma-init
+#0406 square-mma-init
 #0250 sample-mma-init
 #0650 changes-mma-init
 #0450 changescorr-mma-init

@@ -36,6 +36,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     stack-new to session-stack
 ;
 
+\ Check session mma usage.
+: assert-session-mma-none-in-use ( -- )
+    session-mma mma-in-use 0<>
+    abort" session-mma use GT 0"
+;
+
 \ Check instance type.
 : is-allocated-session ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.

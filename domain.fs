@@ -20,6 +20,12 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     domain-struct-number-cells swap mma-new to domain-mma
 ;
 
+\ Check domain mma usage.
+: assert-domain-mma-none-in-use ( -- )
+    domain-mma mma-in-use 0<>
+    abort" domain-mma use GT 0"
+;
+
 \ Check instance type.
 : is-allocated-domain ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
