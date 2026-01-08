@@ -237,13 +237,13 @@ cr
     group-mma mma-free
     need-mma mma-free
     planstep-mma mma-free
+    plancorr-mma mma-free
     pathstep-mma mma-free
     plan-mma mma-free
-    plancorr-mma mma-free
-    action-mma mma-free
-    domain-mma mma-free
     rate-mma mma-free
     regioncorrrate-mma mma-free
+    action-mma mma-free
+    domain-mma mma-free
     session-mma mma-free
 ;
 

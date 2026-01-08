@@ -6,6 +6,8 @@ Uses home-grown memory management.
 Bits value is a number, not a struct.  No difference between state or mask.
 Limited by cell size, use of the sign bit may be tricky.
 
+Multiple domains increases the total number of bits that may be used.
+
 square pnc calc a little different.
 
 square compare: pn 1 square rule cannot be compatible with both rules in a pn 2 square. 
