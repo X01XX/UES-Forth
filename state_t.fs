@@ -83,7 +83,7 @@
 
     cr ." state-test-boolean-algebra: Ok" cr
 ;
- 
+
 : state-tests
     0 set-domain
     state-test-complement

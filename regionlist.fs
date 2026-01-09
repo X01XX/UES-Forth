@@ -1048,3 +1048,54 @@
     repeat
                                 \ ret-lst
 ;
+
+\ Check if a region is a defining region.
+: region-list-region-is-defining ( reg1 reg-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region
+
+    over                                    \ reg1 reg-lst0 reg1
+    dup struct-inc-use-count                \ reg1 reg-lst0 reg1
+    list-new tuck                           \ reg-lst0 rem-lst reg1' rem-lst
+    list-push-struct                        \ reg-lst0 rem-lst
+
+    \ Prep for loop.
+    swap list-get-links                     \ reg1 rem-lst ls-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ reg1 rem-lst ls-link regx
+
+        \ Check if the region is the same as the given region. If so, skip it.
+        #3 pick                             \ reg1 rem-lst ls-link regx reg1
+        region-eq                           \ reg1 rem-lst ls-link bool
+        if
+        else
+            dup link-get-data               \ reg1 rem-lst ls-link regx
+            #2 pick                         \ reg1 rem-lst ls-link regx rem-lst
+            region-list-subtract-region     \ reg1 rem-lst ls-link rem-lst'
+
+            rot                             \ reg1 ls-link rem-lst' rem-lst
+            region-list-deallocate          \ reg1 ls-link rem-lst'
+            swap                            \ reg1 rem-lst' ls-link
+        then
+
+        link-get-next
+    repeat
+                                        \ reg1 rem-lst
+
+    dup list-is-empty                   \ reg1 rem-lst bool
+    if
+        list-deallocate
+        dup struct-dec-use-count         \ reg1
+        drop
+        false
+    else
+        region-list-deallocate
+        dup struct-dec-use-count         \ reg1
+        drop
+        true
+    then
+;

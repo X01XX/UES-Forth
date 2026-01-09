@@ -231,47 +231,11 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     0= abort" Region not in logical structure"
 
                                         \ reg1 act0 LS
-    \ Init remainder list.
-    #2 pick                             \ reg1 act0 LS reg1
-    list-new tuck                       \ reg1 act0 LS rem-lst reg1 rem-lst
-    list-push-struct                    \ reg1 act0 LS rem-lst
-
-    \ Prep for loop.
-    swap list-get-links                 \ reg1 act0 rem-lst ls-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data               \ reg1 act0 rem-lst ls-link regx
-
-        \ Check if the region is the same as the given region. If so, skip it.
-        #4 pick                         \ reg1 act0 rem-lst ls-link regx reg1
-        region-eq                       \ reg1 act0 rem-lst ls-link bool
-        if
-        else
-            dup link-get-data               \ reg1 act0 rem-lst ls-link regx
-            #2 pick                         \ reg1 act0 rem-lst ls-link regx rem-lst
-            region-list-subtract-region     \ reg1 act0 rem-lst ls-link rem-lst'
-
-            rot                             \ reg1 act0 ls-link rem-lst' rem-lst
-            region-list-deallocate          \ reg1 act0 ls-link rem-lst'
-            swap                            \ reg1 act0 rem-lst' ls-link
-        then
-
-        link-get-next
-    repeat
-                                        \ reg1 act0 rem-lst
-
-    dup list-is-empty                   \ reg1 act0 rem-lst bool
-    if
-        list-deallocate
-        2drop
-        false
-    else
-        region-list-deallocate
-        2drop
-        true
-    then
+    \ Get results.
+    rot                                 \ act0 LS reg1
+    swap                                \ act0 reg1 LS
+    region-list-region-is-defining      \ act0 bool
+    nip
 ;
 
 : _action-delete-group-if-exists ( reg1 act0 -- flag )

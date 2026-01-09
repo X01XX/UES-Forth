@@ -305,6 +305,132 @@
     cr ." region-list-test-push-nosubs: Ok"
 ;
 
+: region-list-test-logic
+    \ Init a list of incomptible pairs.
+    \ The case of the X-bit allows controlling the states represented.
+    \ X0X0 = (1010, 0000), X0x0 = (1000, 0010).
+
+    \ List of incompatible state pairs, as regions.
+    s" (00X1 X100)" region-list-from-string-a       \ reg-lst'
+
+    cr cr ." Incompatible pair list: " dup .region-list cr
+
+    \ Init list for defining regions.
+    list-new swap                                   \ df-lst' reg-lst
+
+    \ Init result list.
+
+    cur-domain-xt execute                           \ df-lst' reg-lst' max-reg' dom
+    domain-get-max-region-xt execute                \ df-lst' reg-lst' max-reg'
+    list-new                                        \ df-lst' reg-lst' max-reg' result-lst'
+    tuck list-push-struct                           \ df-lst' reg-lst' result-lst'
+
+    \ Prep for loop.
+    over list-get-links                             \ df-lst' reg-lst' result-lst' link
+
+    \ Process each incompatible pair in reg-lst.
+    begin
+        ?dup
+    while
+        \ Make calculation using region states.
+        dup link-get-data                           \ df-lst' reg-lst' rslt-lst' link regx
+        region-get-states                           \ df-lst' reg-lst' rslt-lst' link s0 s1
+        state-not-a-or-not-b                        \ df-lst' reg-lst' rslt-lst' link ls-lst'
+
+        \ Intersect calculation with results.
+        dup                                         \ df-lst' reg-lst' rslt-lst' link ls-lst' ls-lst'
+        #3 pick                                     \ df-lst' reg-lst' rslt-lst' link ls-lst' ls-lst' rslt-lst'
+        region-list-intersections-nosubs            \ df-lst' reg-lst' rslt-lst' link ls-lst' rslt-lst''
+
+        \ Clean up.
+        swap region-list-deallocate                 \ df-lst' reg-lst' rslt-lst' link rslt-lst''
+        rot                                         \ df-lst' reg-lst' link rslt-lst'' rslt-lst'
+        region-list-deallocate                      \ df-lst' reg-lst' link rslt-lst''
+        swap                                        \ df-lst' reg-lst' rslt-lst'' link
+        
+        link-get-next
+    repeat
+                                                    \ df-lst' reg-lst' rslt-lst''
+
+    cr ." Result"
+    cr ." Region  Contains"
+    cr ." ------  --------"
+    dup list-get-links
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
+        cr dup .region 4 spaces
+
+        \ Check each state to see if its in the current result region.
+        #3 pick                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-lst'
+        list-get-links                              \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link
+        begin
+            ?dup
+        while
+            \ Get region states.
+            dup link-get-data                       \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link regx
+            region-get-states                       \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1
+
+            \ Check and print states.
+            dup                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1 s1
+            #4 pick                                 \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1 s1 rslt-reg
+            region-superset-of-state                \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1 bool
+            if
+                space hex.
+            else
+                drop
+            then
+                                                    \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0
+            dup                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s0
+            #3 pick                                 \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s0 rslt-reg
+            region-superset-of-state                \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 bool
+            if
+                space hex.
+            else
+                drop
+            then
+
+            link-get-next
+        repeat
+                                                    \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
+
+        \ Check if the region is defining.
+                                                    \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
+        #2 pick                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg rslt-lst'
+        region-list-region-is-defining              \ df-lst' reg-lst' rslt-lst' rslt-link bool
+        if
+            space ." defining"
+            dup link-get-data                       \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
+            #4 pick                                 \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg df-lst'
+            list-push-struct                        \ df-lst' reg-lst' rslt-lst' rslt-link
+        then
+
+        link-get-next
+    repeat
+                                                    \ df-lst' reg-lst' rslt-lst'
+    \ Clean up
+    region-list-deallocate
+    region-list-deallocate
+
+    cr cr ." Defining regions: " dup .region-list cr
+
+    \ Check for any left-out regions.
+    cur-domain-xt execute                           \ df-lst' dom
+    domain-get-max-region-xt execute                \ df-lst' max-reg'
+    list-new                                        \ df-lst' max-reg' result-lst'
+    tuck list-push-struct                           \ df-lst' result-lst'
+    2dup region-list-subtract                       \ df-lst' result-lst' left-lst'
+
+    cr ." Implied defining regions: " dup .region-list cr
+    
+    region-list-deallocate
+    region-list-deallocate
+    region-list-deallocate
+
+    cr ." region-list-test-logic: Ok" cr
+;
+
 : region-list-tests
     0 set-domain
     region-list-test-region-intersections-n

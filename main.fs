@@ -180,6 +180,7 @@ cs
     then
 ;
 
+\ Test files.
 include square_t.fs
 include squarelist_t.fs
 include region_t.fs
