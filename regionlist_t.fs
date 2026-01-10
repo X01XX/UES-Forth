@@ -310,81 +310,85 @@
     \ The case of the X-bit allows controlling the states represented.
     \ X0X0 = (1010, 0000), X0x0 = (1000, 0010).
 
-    \ List of incompatible state pairs, as regions.
-    s" (00X1 X100)" region-list-from-string-a       \ reg-lst'
+    \ List of incompatible state pairs (inc-), as regions.
+    s" (00X1 X100)" region-list-from-string-a       \ inc-lst'
 
     cr cr ." Incompatible pair list: " dup .region-list cr
 
-    \ Init list for defining regions.
-    list-new swap                                   \ df-lst' reg-lst
+    \ Check if list is empty, production placeholder.
+    dup list-is-empty
+    if
+        region-list-deallocate
+        exit
+    then
 
-    \ Init result list.
+    \ Init logical structure (ls-) list.
+    cur-domain-xt execute                           \ inc-lst' max-reg' dom
+    domain-get-max-region-xt execute                \ inc-lst' max-reg'
+    list-new                                        \ inc-lst' max-reg' ls-lst'
+    tuck list-push-struct                           \ inc-lst' ls-lst'
 
-    cur-domain-xt execute                           \ df-lst' reg-lst' max-reg' dom
-    domain-get-max-region-xt execute                \ df-lst' reg-lst' max-reg'
-    list-new                                        \ df-lst' reg-lst' max-reg' result-lst'
-    tuck list-push-struct                           \ df-lst' reg-lst' result-lst'
-
-    \ Prep for loop.
-    over list-get-links                             \ df-lst' reg-lst' result-lst' link
-
-    \ Process each incompatible pair in reg-lst.
+    \ Process each incompatible pair in inc-lst.
+    over list-get-links                             \ inc-lst' ls-lst' link
     begin
         ?dup
     while
         \ Make calculation using region states.
-        dup link-get-data                           \ df-lst' reg-lst' rslt-lst' link regx
-        region-get-states                           \ df-lst' reg-lst' rslt-lst' link s0 s1
-        state-not-a-or-not-b                        \ df-lst' reg-lst' rslt-lst' link ls-lst'
+        dup link-get-data                           \ inc-lst' ls-lst' link regx
+        region-get-states                           \ inc-lst' ls-lst' link s0 s1
+        state-not-a-or-not-b                        \ inc-lst' ls-lst' link ls-lst'
 
         \ Intersect calculation with results.
-        dup                                         \ df-lst' reg-lst' rslt-lst' link ls-lst' ls-lst'
-        #3 pick                                     \ df-lst' reg-lst' rslt-lst' link ls-lst' ls-lst' rslt-lst'
-        region-list-intersections-nosubs            \ df-lst' reg-lst' rslt-lst' link ls-lst' rslt-lst''
+        dup                                         \ inc-lst' ls-lst' link ls-lst' ls-lst'
+        #3 pick                                     \ inc-lst' ls-lst' link ls-lst' ls-lst' ls-lst'
+        region-list-intersections-nosubs            \ inc-lst' ls-lst' link ls-lst' ls-lst''
 
         \ Clean up.
-        swap region-list-deallocate                 \ df-lst' reg-lst' rslt-lst' link rslt-lst''
-        rot                                         \ df-lst' reg-lst' link rslt-lst'' rslt-lst'
-        region-list-deallocate                      \ df-lst' reg-lst' link rslt-lst''
-        swap                                        \ df-lst' reg-lst' rslt-lst'' link
+        swap region-list-deallocate                 \ inc-lst' ls-lst' link ls-lst''
+        rot                                         \ inc-lst' link ls-lst'' ls-lst'
+        region-list-deallocate                      \ inc-lst' link ls-lst''
+        swap                                        \ inc-lst' ls-lst'' link
         
         link-get-next
     repeat
-                                                    \ df-lst' reg-lst' rslt-lst''
+                                                    \ inc-lst' ls-lst'
+
+    \ Init defining region (df-) list.
+    list-new                                        \ inc-lst' ls-lst' df-lst'
 
     cr ." Result"
     cr ." Region  Contains"
     cr ." ------  --------"
-    dup list-get-links
+    over list-get-links                             \ inc-lst' ls-lst' df-lst' ls-link
     begin
         ?dup
     while
-        dup link-get-data                           \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
+        dup link-get-data                           \ inc-lst' ls-lst' df-lst' ls-link ls-reg
         cr dup .region 4 spaces
 
-        \ Check each state to see if its in the current result region.
-        #3 pick                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-lst'
-        list-get-links                              \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link
+        \ Check each incompatible-pair state to see if its in a logical-structure region.
+        #4 pick                                     \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-lst'
+        list-get-links                              \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link
         begin
             ?dup
         while
             \ Get region states.
-            dup link-get-data                       \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link regx
-            region-get-states                       \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1
+            dup link-get-data                       \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link inc-reg
+            region-get-states                       \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0 s1
 
             \ Check and print states.
-            dup                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1 s1
-            #4 pick                                 \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1 s1 rslt-reg
-            region-superset-of-state                \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s1 bool
+            dup                                     \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0 s1 s1
+            #4 pick                                 \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0 s1 s1 ls-reg
+            region-superset-of-state                \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0 s1 bool
             if
                 space hex.
             else
                 drop
             then
-                                                    \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0
-            dup                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s0
-            #3 pick                                 \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 s0 rslt-reg
-            region-superset-of-state                \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg reg-link s0 bool
+                                                    \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0
+            dup                                     \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0 s0
+            #3 pick                                 \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0 s0 ls-reg
+            region-superset-of-state                \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-link s0 bool
             if
                 space hex.
             else
@@ -393,37 +397,156 @@
 
             link-get-next
         repeat
-                                                    \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
+                                                    \ inc-lst' ls-lst' df-lst' ls-link ls-reg
 
         \ Check if the region is defining.
-                                                    \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
-        #2 pick                                     \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg rslt-lst'
-        region-list-region-is-defining              \ df-lst' reg-lst' rslt-lst' rslt-link bool
+                                                    \ inc-lst' ls-lst' df-lst' ls-link ls-reg
+        #3 pick                                     \ inc-lst' ls-lst' df-lst' ls-link ls-reg ls-lst'
+        region-list-region-is-defining              \ inc-lst' ls-lst' df-lst' ls-link bool
         if
             space ." defining"
-            dup link-get-data                       \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg
-            #4 pick                                 \ df-lst' reg-lst' rslt-lst' rslt-link rslt-reg df-lst'
-            list-push-struct                        \ df-lst' reg-lst' rslt-lst' rslt-link
+            dup link-get-data                       \ inc-lst' ls-lst' df-lst' ls-link ls-reg
+            #2 pick                                 \ inc-lst' ls-lst' df-lst' ls-link ls-reg df-lst'
+            list-push-struct                        \ inc-lst' ls-lst' df-lst' ls-link
         then
 
         link-get-next
     repeat
-                                                    \ df-lst' reg-lst' rslt-lst'
-    \ Clean up
-    region-list-deallocate
-    region-list-deallocate
+                                                    \ inc-lst' ls-lst' df-lst'
 
     cr cr ." Defining regions: " dup .region-list cr
 
-    \ Check for any left-out regions.
-    cur-domain-xt execute                           \ df-lst' dom
-    domain-get-max-region-xt execute                \ df-lst' max-reg'
-    list-new                                        \ df-lst' max-reg' result-lst'
-    tuck list-push-struct                           \ df-lst' result-lst'
-    2dup region-list-subtract                       \ df-lst' result-lst' left-lst'
+    \ Check for any left-over regions.
+    cur-domain-xt execute                           \ inc-lst' ls-lst' df-lst' dom
+    domain-get-max-region-xt execute                \ inc-lst' ls-lst' df-lst' max-reg'
+    list-new                                        \ inc-lst' ls-lst' df-lst' max-reg' max-lst'
+    tuck list-push-struct                           \ inc-lst' ls-lst' df-lst' max-lst'
+    over                                            \ inc-lst' ls-lst' df-lst' max-lst' df-lst'
+    over                                            \ inc-lst' ls-lst' df-lst' max-lst' df-lst' max-lst'
+    region-list-subtract                            \ inc-lst' ls-lst' df-lst' max-lst' lft-lst'
 
-    cr ." Implied defining regions: " dup .region-list cr
+    \ Clean up.
+    swap region-list-deallocate                     \ inc-lst' ls-lst' df-lst' lft-lst'
+
+    cr ." Left-over regions: " dup .region-list cr
+
+    \ Check if list is empty, production placeholder.
+    dup list-is-empty
+    if
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+        exit
+    then
+
+    \ Find non-defining regions.
+                                                    \ inc-lst' ls-lst' df-lst' lft-lst'
+    \ Init non-defining (ndf-) list.
+    list-new                                        \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst'
+    \ For each logical-structure region...
+    #3 pick                                         \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-lst'
+    list-get-links                                  \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link
+    begin
+        ?dup
+    while
+        [ ' = ] literal                             \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link xt
+        over link-get-data                          \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link xt ls-reg
+        #5 pick                                     \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link xt ls-reg df-lst'
+        list-member                                 \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link bool
+        if
+        else
+            dup link-get-data                       \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link ls-reg
+            #2 pick                                 \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link ls-reg ndf-lst'
+            list-push-struct                        \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ls-link
+        then
+
+        link-get-next
+    repeat
+
+    \ Find non-defining regions (ndf-) that intersect left-over (lft- )regions.
+                                                    \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst'
+    cr ." non defining regions: " dup .region-list cr
+
+    list-new                                        \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst'
+    over list-get-links                             \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst' ndf-link
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst' ndf-link ndf-reg
+        #4 pick                                     \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst' ndf-link ndf-reg lft-lst'
+        region-list-any-intersection-of             \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst' ndf-link bool
+        if
+            dup link-get-data                       \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst' ndf-link ndf-reg
+            #2 pick                                 \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst' ndf-link ndf-reg ndfint-lst'
+            list-push-struct                        \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst' ndf-link
+        then
+
+        link-get-next
+    repeat
+
+                                                    \ inc-lst' ls-lst' df-lst' lft-lst' ndf-lst' ndfint-lst'
+    cr ." non-defining regions intersecting left-over regions: " dup .region-list
+
+    \ Clean up.
+    swap region-list-deallocate                     \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst'
+
+    cr cr ." non-defining regions intersecting left-over regions, number intersections with incompatible pair regions" cr
+
+    \ Test list empty, placeholder for production.
+    dup list-is-empty
+    if
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+    then
+
+    \ Find non-defining, intersecting, regions count the number of intersects with incompatible pairs.
+
+    \ Init max counter.
+    0                                               \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt
+    over list-get-links                             \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-link
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-link ndfint-reg
+        #7 pick                                     \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-link ndfint-reg inc-lst'
+        region-list-number-intersections            \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-link u
+        over link-get-data cr .region space dup . cr
+
+        \ Update max count.
+        rot                                         \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' ndfint-link u cnt
+        max swap                                    \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-link
+
+        link-get-next
+    repeat
+                                                    \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt
+    cr ." max count: " dup . cr
+
+    \ Test max value, placeholder for production.
+    dup 0= if
+        drop
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+        region-list-deallocate
+        exit
+    then
+
+    \ TODO Get max number intersection regions.
+
+
     
+    drop
+
+
+
+    
+    region-list-deallocate
+    region-list-deallocate
     region-list-deallocate
     region-list-deallocate
     region-list-deallocate

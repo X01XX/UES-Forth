@@ -1099,3 +1099,34 @@
         true
     then
 ;
+
+\ Return the number of intersections for a given region.
+: region-list-number-intersections ( reg1 lst0 -- reg-lst )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region
+
+    \ Init count.
+    0 -rot                              \ cnt sta lst0
+
+    \ Prep for loop.
+    list-get-links                      \ cnt sta link
+
+    \ Check each region.
+    begin
+        ?dup
+    while
+        \ Check the current region.
+        over                            \ cnt sta link reg1
+        over link-get-data              \ cnt sta link reg1 regx
+        region-intersects               \ cnt sta link flag
+        if                              \ cnt sta link
+            \ Inc counter
+            rot 1 + -rot                \ cnt sta link
+        then
+
+        link-get-next
+    repeat
+
+    drop                                \ cnt
+;
