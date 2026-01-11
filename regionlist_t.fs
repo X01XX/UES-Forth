@@ -305,7 +305,7 @@
     cr ." region-list-test-push-nosubs: Ok"
 ;
 
-: region-list-test-logic
+: region-list-test-unmask-defining-region
     \ Init a list of incomptible pairs.
     \ The case of the X-bit allows controlling the states represented.
     \ X0X0 = (1010, 0000), X0x0 = (1000, 0010).
@@ -536,22 +536,63 @@
         exit
     then
 
-    \ TODO Get max number intersection regions.
+    \ Get max number intersection regions.
+    list-new                                        \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2'
+    #2 pick list-get-links                          \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link ndfint-reg
 
+        \ Check if region has the maximum number of intersections.
+        #8 pick                                     \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link ndfint-reg inc-lst'
+        region-list-number-intersections            \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link int-cnt
+        #3 pick                                     \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link int-cnt cnt
+        =                                           \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link bool
+        if
+            \ Add the region to the result list.
+            dup link-get-data                       \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link ndfint-reg
+            #2 pick                                 \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link ndfint-reg ndfint-lst2'
+            list-push-struct                        \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2' ndfint-link
+        then
 
-    
-    drop
+        link-get-next
+    repeat
+                                                    \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' cnt ndfint-lst2'
+    cr ." max count regions: " dup .region-list cr
 
+    \ Clean up.
+    nip                                             \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst' ndfint-lst2'
+    swap region-list-deallocate                     \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst2'
 
+    \ Get states from incompatible list in each selected region.
+    dup list-get-links                              \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst2' ndfint-link
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst2' ndfint-link regx
+    cr ." reg: " dup .region
+        #6 pick                                     \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst2' ndfint-link regx inc-lst'
+        region-list-states-in                       \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst2' ndfint-link sta-lst'
+    space ." states in: " dup .value-list cr
 
-    
+        \ TODO
+        \ Check external-adjacent states, given region and state-in, to try forming a "logical corner" to unmask a new defining region.
+        \ A compatible, external-adjacent, state stops consideraton for the state-in.
+        \ An existing external-adjacent state may need more samples.
+        \ A missing external-adjacent state needs a first sample.
+        list-deallocate
+        
+        link-get-next
+    repeat
+                                                    \ inc-lst' ls-lst' df-lst' lft-lst' ndfint-lst2'
     region-list-deallocate
     region-list-deallocate
     region-list-deallocate
     region-list-deallocate
     region-list-deallocate
 
-    cr ." region-list-test-logic: Ok" cr
+    cr ." region-list-test-unmask-defining-region: Ok" cr
 ;
 
 : region-list-tests

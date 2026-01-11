@@ -1107,26 +1107,78 @@
     assert-nos-is-region
 
     \ Init count.
-    0 -rot                              \ cnt sta lst0
+    0 -rot                              \ cnt reg1 lst0
 
     \ Prep for loop.
-    list-get-links                      \ cnt sta link
+    list-get-links                      \ cnt reg1 link
 
     \ Check each region.
     begin
         ?dup
     while
         \ Check the current region.
-        over                            \ cnt sta link reg1
-        over link-get-data              \ cnt sta link reg1 regx
-        region-intersects               \ cnt sta link flag
-        if                              \ cnt sta link
+        over                            \ cnt reg1 link reg1
+        over link-get-data              \ cnt reg1 link reg1 regx
+        region-intersects               \ cnt reg1 link flag
+        if                              \ cnt reg1 link
             \ Inc counter
-            rot 1 + -rot                \ cnt sta link
+            rot 1 + -rot                \ cnt reg1 link
         then
 
         link-get-next
     repeat
 
     drop                                \ cnt
+;
+
+\ Return a list of state intersections for a given region.
+: region-list-states-in ( reg1 lst0 -- sta-lst )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region
+
+    \ Init return list.
+    list-new -rot                       \ sta-lst reg1 lst0
+
+    \ Prep for loop.
+    list-get-links                      \ sta-lst reg1 link
+
+    \ Check each region.
+    begin
+        ?dup
+    while
+        \ Check the current region.
+        over                            \ sta-lst reg1 link reg1
+        over link-get-data              \ sta-lst reg1 link reg1 regx
+        region-intersects               \ sta-lst reg1 link flag
+        if                              \ sta-lst reg1 link
+            dup link-get-data           \ sta-lst reg1 link regx
+            region-get-states           \ sta-lst reg1 link s1 s0
+            \ Check state 0.
+            dup                         \ sta-lst reg1 link s1 s0 s0
+            #4 pick                     \ sta-lst reg1 link s1 s0 s0 reg1
+            region-superset-of-state    \ sta-lst reg1 link s1 s0 bool
+            if
+                #4 pick                 \ sta-lst reg1 link s1 s0 sta-lst
+                list-push               \ sta-lst reg1 link s1
+            else
+                drop                    \ sta-lst reg1 link s1
+            then
+
+            \ Check state 1.
+            dup                         \ sta-lst reg1 link s1 s1
+            #3 pick                     \ sta-lst reg1 link s1 s1 reg1
+            region-superset-of-state    \ sta-lst reg1 link s1 bool
+            if
+                #3 pick                 \ sta-lst reg1 link s1 sta-lst
+                list-push               \ sta-lst reg1 link
+            else
+                drop                    \ sta-lst reg1 link
+            then
+        then
+
+        link-get-next
+    repeat
+
+    drop                                \ sta-lst
 ;
