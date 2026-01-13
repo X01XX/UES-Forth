@@ -9,17 +9,17 @@
     %0000 %0001 region-new              \ reg
 
     \ Init plan.
-    cur-domain-xt execute plan-new      \ reg pln
+    current-domain plan-new             \ reg pln
 
     \ Add first step.
     s" 00/XX/01/11/" rule-from-string   \ reg pln rul
-    cur-action-xt execute               \ reg pln rul act
+    current-action                      \ reg pln rul act
     planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     \ Add second step.
     s" 01/XX/11/11/" rule-from-string   \ reg pln rul
-    cur-action-xt execute               \ reg pln rul act
+    current-action                      \ reg pln rul act
     planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
@@ -57,17 +57,17 @@
     %0000 %0100 region-new              \ reg
 
     \ Init plan.
-    cur-domain-xt execute plan-new      \ reg pln
+    current-domain plan-new             \ reg pln
 
     \ Add first step.
     s" 00/XX/01/X1/" rule-from-string   \ reg pln rul
-    cur-action-xt execute               \ reg pln rul act
+    current-action                      \ reg pln rul act
     planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     \ Add second step.
     s" 01/XX/11/11/" rule-from-string   \ reg pln rul
-    cur-action-xt execute               \ reg pln rul act
+    current-action                      \ reg pln rul act
     planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
@@ -117,17 +117,17 @@
     %1011 %1010 region-new              \ reg
 
     \ Init plan.
-    cur-domain-xt execute plan-new      \ reg pln
+    current-domain plan-new             \ reg pln
 
     \ Add first step.
     s" 00/XX/01/Xx/" rule-from-string   \ reg pln rul
-    cur-action-xt execute               \ reg pln rul act
+    current-action                      \ reg pln rul act
     planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
     \ Add second step.
     s" 01/XX/11/X1/" rule-from-string   \ reg pln rul
-    cur-action-xt execute               \ reg pln rul act
+    current-action                      \ reg pln rul act
     planstep-new                        \ reg pln stp
     over plan-push-end                  \ reg pln
 
@@ -164,17 +164,17 @@
 
 : plan-test-link-step-to-initial-region
      \ Init plan.
-    cur-domain-xt execute plan-new      \ pln
+    current-domain plan-new             \ pln
 
     \ Add step to plan.
     s" 00/11/01/XX/" rule-from-string   \ pln rul
-    cur-action-xt execute               \ pln rul act
+    current-action                      \ pln rul act
     planstep-new                        \ pln stp
     over plan-push                      \ pln
 
     \ create step to link.
     s" 10/XX/00/00/" rule-from-string       \ pln rul
-    cur-action-xt execute                   \ pln rul act
+    current-action                          \ pln rul act
     planstep-new                            \ pln stp
 
     swap                                    \ stp pln
@@ -205,17 +205,17 @@
 
 : plan-test-link-step-to-result-region
      \ Init plan.
-    cur-domain-xt execute plan-new      \ pln
+    current-domain plan-new             \ pln
 
     \ Add step to plan.
     s" 00/11/01/XX/" rule-from-string   \ pln rul
-    cur-action-xt execute               \ pln rul act
+    current-action                      \ pln rul act
     planstep-new                        \ pln stp
     over plan-push                      \ pln
 
     \ create step to link.
     s" 01/XX/11/00/" rule-from-string       \ pln rul
-    cur-action-xt execute                   \ pln rul act
+    current-action                          \ pln rul act
     planstep-new                            \ pln stp
 
     swap                                    \ stp pln

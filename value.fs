@@ -1,7 +1,7 @@
 \ Return true if a number is a valid value.
 : is-value ( u0 -- flag )
     dup                                 \ u0 u0
-    cur-domain-xt execute               \ u0 u0 dom
+    current-domain                      \ u0 u0 dom
     domain-get-all-bits-mask-xt execute \ u0 u0 msk
     and                                 \ u0 u0'
     =                                   \ flag
@@ -10,7 +10,7 @@
 \ Return true if a number is an invalid value.
 : is-not-value ( u0 -- flag )
     dup                         \ u0 u0
-    cur-domain-xt execute       \ u0 u0
+    current-domain              \ u0 u0
     domain-get-all-bits-mask-xt
     execute                     \ u0 u0 msk
     and                         \ u0'
@@ -50,7 +50,7 @@
     assert-tos-is-value
 
     \ Setup for bit-position loop.
-    cur-domain-xt execute           \ val0 dom
+    current-domain                  \ val0 dom
     domain-get-ms-bit-mask-xt
     execute                         \ val0 ms-bit
 
@@ -125,7 +125,7 @@
 \ Return the bitwise "NOT" of an unsigned number,
 \ while remaining within the bounds of allowable bits.
 : !not ( u1 -- u2 )
-    cur-domain-xt execute       \ u1 dom
+    current-domain              \ u1 dom
     domain-get-all-bits-mask-xt \ u1 xt
     execute                     \ u1 all-bits
     tuck                        \ all u1 all
@@ -149,4 +149,21 @@
 \ while remaining within the bounds of allowable bits.
 : !nxor ( u1 u2 -- u3 )
     xor !not
+;
+
+\ Return a list of single-one-bit value from a given value.
+: value-split ( val0 -- val-lst )
+    \ Check arg.
+    assert-tos-is-value
+
+    \ Init return list.
+    list-new swap           \ val-lst val0
+
+    begin
+        ?dup
+    while
+        value-isolate-lsb   \ val-lst val0 val-lsb
+        #2 pick             \ val-lst val0 val-lsb val-lst
+        list-push           \ val-lst val0
+    repeat
 ;

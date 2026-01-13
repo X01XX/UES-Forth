@@ -25,8 +25,12 @@
 
 ' xtabort value session-stack-tos-xt
 
+' xtabort value session-get-current-domain-xt
 
-' xtabort value cur-domain-xt
+' xtabort value session-get-domains-xt
+
+' xtabort value session-number-domains-xt
+
 
 
 ' xtabort value domain-get-all-bits-mask-xt
@@ -41,6 +45,8 @@
 
 ' xtabort value domain-get-current-state-xt
 
+' xtabort value domain-get-current-action-xt
+
 ' xtabort value domain-get-sample-xt
 
 ' xtabort value domain-get-plan-fc-xt
@@ -54,8 +60,6 @@
 
 ' xtabort value domain-get-num-bits-xt
 
-
-' xtabort value cur-action-xt
 
 ' xtabort value action-get-inst-id-xt
 

@@ -268,7 +268,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ If list is empty, add maximum domain region.
     over list-is-empty                      \ reg-lst act0 bool
     if
-        cur-domain-xt execute               \ reg-lst act0 dom
+        current-domain                      \ reg-lst act0 dom
         domain-get-max-region-xt execute    \ reg-lst act0 mx-reg
         #2 pick list-push-struct            \ reg-lst act0
     then
@@ -759,7 +759,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
     \ Init new logical-structure region list.
     list-new                                \ act0 ls-new
-    cur-domain-xt execute                   \ act0 ls-new dom
+    current-domain                          \ act0 ls-new dom
     domain-get-max-region-xt execute        \ act0 ls-new max-reg
     over region-list-push                   \ act0 ls-new
 
@@ -1021,7 +1021,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
                 list-new                \ act0 grp-lst sqr sqr-lst
                 tuck                    \ act0 grp-lst sqr-lst sqr sqr-lst
                 square-list-push        \ act0 grp-lst sqr-lst
-                cur-domain-xt execute   \ act0 grp-lst sqr-lst dom
+                current-domain          \ act0 grp-lst sqr-lst dom
                 domain-get-max-region-xt execute   \ act0 grp-lst sqr-lst mreg
                 group-new               \ act0 grp-lst grp
                 swap                    \ act0 grp grp-lst
@@ -1153,7 +1153,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             abort
         then
     then
-    cur-domain-xt execute   \ u2 sta1 act0 domx
+    current-domain          \ u2 sta1 act0 domx
     need-new                \ need
 ;
 
@@ -1274,7 +1274,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     assert-3os-is-region
 
     \ cr
-    \ ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ ." Dom: " current-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id . space ." get-needs for " over .value space ." TODO"
     \ cr
 
@@ -1366,12 +1366,12 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             if
                 \ Get a state between the states that define the region. TODO use better selection method.
 
-                \    Get a single, arbitray, bit, from a mask of dirrerent bits between the two states.
+                \ Get a single, arbitrary, bit, from a mask of different bits between the two states.
                 dup link-get-data           \ reg1 ret-lst sta1 act0 | link regx
                 region-get-states xor       \ reg1 ret-lst sta1 act0 | link dif-msk
                 value-isolate-lsb nip       \ reg1 ret-lst sta1 act0 | link bit
 
-                \    Calc the state between.
+                \ Calc the state between.
                 over link-get-data          \ reg1 ret-lst sta1 act0 | link bit regx
                 region-get-state-0          \ reg1 ret-lst sta1 act0 | link bit r-sta-0
                 xor                         \ reg1 ret-lst sta1 act0 | link sta'
@@ -1538,7 +1538,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         exit
     then
 
-    \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ cr ." Dom: " current-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-by-changes: " over .changes cr
 
@@ -1591,7 +1591,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     swap region-superset-of                         \ | bool
     abort" action-calc-steps-fc 2: region subset?"    \ |
 
-    \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ cr ." Dom: " current-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
 
@@ -1644,7 +1644,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     swap region-superset-of                         \ | bool
     abort" action-calc-steps-bc 2: region subset?"    \ |
 
-    \ cr ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute .
+    \ cr ." Dom: " current-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-bc: " #2 pick .region space over .region cr
 
@@ -1681,4 +1681,79 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     repeat
                                     \ ret-lst reg-to reg-from
     2drop                           \ ret-lst
+;
+
+\ Return corner needs, given a region and a state, representing an existing square, in the region.
+: action-corner-needs ( sta2 reg1 act0 -- need-lst )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+    assert-3os-is-value
+
+    \ Init return list.
+    list-new                                \ sta2 reg1 act0 ret-lst
+    \ Get square represented by the given state.
+    #3 pick                                 \ sta2 reg1 act0 ret-lst sta2
+    #2 pick action-find-square              \ sta2 reg1 act0 ret-lst, sqr2 t | f
+    is-false abort" action-corner-needs: square not found?"
+
+    \ Get edge bits.
+    #3 pick                                 \ sta2 reg1 act0 ret-lst sqr2 reg1
+    region-edge-mask value-split            \ sta2 reg1 act0 ret-lst sqr2 msk-lst'
+
+    \ Prep for loop.
+    dup list-get-links                      \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link mskx
+        #7 pick                             \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link mskx sta2
+        xor                                 \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax
+        dup                                 \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax stax
+        #6 pick                             \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax act0
+        action-find-square                  \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax, sqrx t | f
+        if
+            dup square-get-pnc              \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax sqrx pnc
+            if
+                \ Check if square is compatible.
+                nip                         \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link sqrx
+                #3 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link sqrx sqr2
+                square-compatible           \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link bool
+                if
+                    \ State cannot be used to define a logical corner.
+                    drop                    \ sta2 reg1 act0 ret-lst sqr2 msk-lst'
+                    list-deallocate         \ sta2 reg1 act0 ret-lst sqr2
+                    drop                    \ sta2 reg1 act0 ret-lst
+                    need-list-deallocate    \ sta2 reg1 act0
+                    3drop                   \
+                    list-new                \ ret-lst
+                    exit
+                then
+            else                            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax sqrx
+                \ Add need for another sample.
+                drop                        \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax
+                #3 swap                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax
+                #6 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax act0
+                action-make-need            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx
+                #4 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx ret-lst
+                list-push-struct            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link
+            then
+        else                                \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax
+            \ Add need for first sample.
+            #3 swap                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax
+            #6 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax act0
+            action-make-need            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx
+            #4 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx ret-lst
+            list-push-struct            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link
+        then
+
+        link-get-next
+    repeat
+
+                                            \ sta2 reg1 act0 ret-lst sqr msk-lst'
+    list-deallocate                         \ sta2 reg1 act0 ret-lst sqr
+    drop                                    \ sta2 reg1 act0 ret-lst
+    2nip                                    \ act0 ret-lst
+    nip                                     \ ret-lst
 ;

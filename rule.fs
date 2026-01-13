@@ -212,7 +212,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Set up masks and most-significant-bit,
     \ the basis of each cycle.
     rule-get-masks                      \ m00 m01 m11 m10
-    cur-domain-xt execute               \ m00 m01 m11 m10 dom
+    current-domain                      \ m00 m01 m11 m10 dom
     domain-get-ms-bit-mask-xt execute   \ m00 m01 m11 m10 ms
 
     begin
@@ -381,7 +381,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     or or or                \ m-all
 
     \ Check that all bit positions are used.
-    cur-domain-xt execute               \ m-all dom
+    current-domain                      \ m-all dom
     domain-get-all-bits-mask-xt execute \ m-all msk
     =
 ;
@@ -1031,7 +1031,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     2dup rule-intersects-changes    \ cgs1 rul0 bool
     if
         nip                         \ rul0
-        cur-action-xt execute       \ rul0 act
+        current-action              \ rul0 act
         planstep-new-xt execute     \ stp
         true
     else
@@ -1210,7 +1210,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         -rot                                    \ | u-unw ned-cngs' rul0'
 
         \ Make step.
-        cur-action-xt execute                   \ | u-unw ned-cngs' rul0' act
+        current-action                          \ | u-unw ned-cngs' rul0' act
         planstep-new-xt execute                 \ | u-unw ned-cngs' stpx
         swap changes-deallocate                 \ | u-unw stpx
 
@@ -1277,7 +1277,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap                                        \ reg-to reg-from rul0 | u-unw rul0'
 
     \ Make step.
-    cur-action-xt execute                       \ | u-unw rul0' act
+    current-action                              \ | u-unw rul0' act
     planstep-new-xt execute                     \ | u-unw stp
 
     \ Update unwanted number of changes.
@@ -1306,9 +1306,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     #2 pick #2 pick                             \ | reg-to reg-from
     2dup swap region-superset-of                \ | reg-to reg-from bool
-    abort" rule-calc-step-bc: 2 region subset?"   \ | reg-to reg-from
-
-    \ Check for needed changes.
+    abort" rule-calc-step-bc: 2 region subset?" \ | reg-to reg-from
 
     \ Get needed changes.
     changes-new-region-to-region                \ | ned-cngs'
@@ -1324,9 +1322,21 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         exit
     then
 
+    \ Limit the effect of X->0, X-> 1, changes.
+                                                \ reg-to reg-from rul0 | ned-cngs'
+    over rule-calc-result-region dup            \ reg-to reg-from rul0 | ned-cngs' rslt' rslt'
+    #5 pick                                     \ reg-to reg-from rul0 | ned-cngs' rslt' rslt' reg-to
+    region-translate-to-region                  \ reg-to reg-from rul0 | ned-cngs' rslt' rslt''
+    swap region-deallocate                      \ reg-to reg-from rul0 | ned-cngs' rslt''
+    dup                                         \ reg-to reg-from rul0 | ned-cngs' rslt'' rslt''
+    #3 pick                                     \ reg-to reg-from rul0 | ned-cngs' rslt'' rslt'' rul0
+    rule-restrict-result-region                 \ reg-to reg-from rul0 | ned-cngs' rslt'', rul0' t | f
+    is-false abort" restrict result region failed?"
+    swap region-deallocate                      \ reg-to reg-from rul0 | ned-cngs' rul0'
+    
     \ Check if rule reg-to intersects rule result-region.
-    #3 pick #2 pick                             \ reg-to reg-from rul0 | ned-cngs' reg-to rul0
-    rule-restrict-result-region                 \ | ned-cngs', rul0' t | f
+    #4 pick over                                \ reg-to reg-from rul0 | ned-cngs' rul0' reg-to rul0'
+    rule-result-region-intersects               \ | ned-cngs', rul0' t | f
     if                                          \ | ned-cngs' rul0'
 
         \ Get number unwanted changes.
@@ -1335,7 +1345,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         -rot                                    \ | u-unw ned-cngs' rul0'
 
         \ Make step.
-        cur-action-xt execute                   \ | u-unw ned-cngs' rul0' act
+        current-action                          \ | u-unw ned-cngs' rul0' act
         planstep-new-xt execute                 \ | u-unw ned-cngs' stpx
         swap changes-deallocate                 \ | u-unw stpx
 
@@ -1354,10 +1364,17 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ reg-to does not intersect rule result-region.
 
-    \ Check if rule use is premature.           \ reg-to reg-from rul0 | ned-cngs'
-    #3 pick #3 pick #3 pick                     \ reg-to reg-from rul0 | ned-cngs' reg-to reg-from rul0
-    rule-use-is-premature-bc                    \ reg-to reg-from rul0 | ned-cngs' bool
+    \ Check if rule use is last possible step.  \ reg-to reg-from rul0 | ned-cngs' rul0'
+    dup rule-calc-result-region                 \ reg-to reg-from rul0 | ned-cngs' rul0' rslt0'
+    #5 pick over                                \ reg-to reg-from rul0 | ned-cngs' rul0' rslt0' reg-to rslt0'
+    changes-new-region-to-region                \ reg-to reg-from rul0 | ned-cngs' rul0' rslt0' cngs'
+    swap region-deallocate                      \ reg-to reg-from rul0 | ned-cngs' rul0' cngs'
+    #2 pick                                     \ reg-to reg-from rul0 | ned-cngs' rul0' cngs' ned-cngs'
+    over                                        \ reg-to reg-from rul0 | ned-cngs' rul0' cngs' ned-cngs' cngs'
+    changes-intersect                           \ reg-to reg-from rul0 | ned-cngs' rul0' cngs' bool
+    swap changes-deallocate                     \ reg-to reg-from rul0 | ned-cngs' rul0' bool   
     if
+        rule-deallocate
         changes-deallocate
         3drop
         false
@@ -1365,47 +1382,25 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         exit
     then
 
-    \ Calc rule from rul0 result-region to reg-to.
-                                                \ reg-to reg-from rul0 | ned-cngs'
-    #3 pick #2 pick                             \ reg-to reg-from rul0 | ned-cngs' reg-to rul0
-    rule-calc-result-region                     \ reg-to reg-from rul0 | ned-cngs' reg-to rul-r'
-
-    \ Calc translated rule result region.
-    2dup swap                                   \ reg-to reg-from rul0 | ned-cngs' reg-to rul-r' reg-to rul-r'
-    region-translate-to-region                  \ reg-to reg-from rul0 | ned-cngs' reg-to rul-r' rul-r''
-
-    swap region-deallocate                      \ reg-to reg-from rul0 | ned-cngs' reg-to rul-r''
-
+                                                \ reg-to reg-from rul0 | ned-cngs' rul0'
     \ Calc rule from rule result-region, adjusted, to reg-to.
-    tuck                                        \ | ned-cngs' rul-r'' reg-to rul-r''
-    rule-new-region-to-region                   \ | ned-cngs' rul-r'' rul1'
-    swap region-deallocate                      \ | ned-cngs' rul1'
-
-    \ Restrict rule to likely limits based on reg-to.
-    \ X->1 1 = X->1
-    \ X->0 0 = X->0
-    \ X->X 1 = 1->1
-    \ X->X 0 = 0->0
-    \ X->x 0 = 1->0
-    \ X->x 1 = 0->1
-    dup rule-calc-initial-region dup            \ | ned-cngs' rul1' rul1-i' rul1-i'
-    #4 pick                                     \ | ned-cngs' rul1' rul1-i' rul1-i' rul0
-    rule-restrict-result-region                 \ | ned-cngs' rul1' rul1-i', rul0' t | f
-    is-false abort" rule-calc-step-bc: rule-restrict-result-region failed?"
-
-    swap region-deallocate                      \ | ned-cngs' rul1' rul0'
+    #4 pick                                     \ reg-to reg-from rul0 | ned-cngs' rul0' reg-to
+    over rule-calc-result-region                \ reg-to reg-from rul0 | ned-cngs' rul0' reg-to rul-r'
+    tuck                                        \ | ned-cngs' rul0' rul-r' reg-to rul-r'
+    rule-new-region-to-region                   \ | ned-cngs' rul0' rul-r' rul1'
+    swap region-deallocate                      \ | ned-cngs' rul0' rul1'
 
     \ Calc number unwanted changes.
-    2dup rule-combine2                          \ | ned-cngs' rul1' rul0' rul3'
-    #3 pick over                                \ | ned-cngs' rul1' rul0' rul3' ned-cngs' rul3'
-    rule-number-unwanted-changes                \ | ned-cngs' rul1' rul0' rul3' u-unw
-    swap rule-deallocate                        \ | ned-cngs' rul1' rul0' u-unw
-    rot rule-deallocate                         \ | ned-cngs' rul0' u-unw
+    2dup swap rule-combine2                     \ | ned-cngs' rul0' rul1' rul3'
+    #3 pick over                                \ | ned-cngs' rul0' rul1' rul3' ned-cngs' rul3'
+    rule-number-unwanted-changes                \ | ned-cngs' rul0' rul1' rul3' u-unw
+    swap rule-deallocate                        \ | ned-cngs' rul0' rul1' u-unw
+    swap rule-deallocate                        \ | ned-cngs' rul0' u-unw
     rot changes-deallocate                      \ | rul0' u-unw
     swap                                        \ | u-unw rul0'
 
     \ Make step.
-    cur-action-xt execute                       \ | u-unw rul0' act
+    current-action                              \ | u-unw rul0' act
     planstep-new-xt execute                     \ | u-unw stp
 
     \ Update unwanted number of changes.
@@ -1486,7 +1481,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     dup rule-get-m11 swap       \ m00 m01 m11 rul0
     rule-get-m10                \ m00 m01 m11 m10
     or or or                    \ mxx
-    cur-domain-xt execute       \ mxx dom
+    current-domain              \ mxx dom
     domain-get-all-bits-mask-xt \ mxx dom xt
     execute                     \ mxx dxx
     \ cr ." mxx: " over .value space ." dxx : " dup .value cr

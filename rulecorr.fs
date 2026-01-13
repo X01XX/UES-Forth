@@ -82,7 +82,9 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 : rulecorr-new ( rul-lst0 -- rulc )
     \ check arg.
     assert-tos-is-rule-list
-    dup list-get-length number-domains <> abort" rulecorr-new: invalid list length?"
+    dup list-get-length
+    current-session session-number-domains-xt execute
+    <> abort" rulecorr-new: invalid list length?"
 
     \ Allocate space.
     rulecorr-mma mma-allocate   \ rul-lst0 rulc

@@ -511,7 +511,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
         \ Make need.
         #4 swap                 \ 4 sta0'
-        cur-action-xt execute   \ 4 sta0' actx
+        current-action          \ 4 sta0' actx
         action-make-need-xt     \ 4 sta0' actx xt
         execute                 \ nedx
         true
@@ -534,7 +534,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
         nip
         square-get-state        \ sta-0
         #5 swap                 \ 5 sta-0
-        cur-action-xt execute   \ 5 sta-0 actx
+        current-action          \ 5 sta-0 actx
         action-make-need-xt     \ 5 sta-0 actx xt
         execute                 \ nedx
         true
@@ -561,7 +561,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
                 \ Make need.
                 square-get-state        \ | s-sta
                 #5 swap                 \ | 5 s-sta
-                cur-action-xt execute   \ | 5 s-sta actx
+                current-action          \ | 5 s-sta actx
                 action-make-need-xt     \ | 5 s-sta actx xt
                 execute                 \ | nedx
                 2nip nip                \ nedx

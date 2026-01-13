@@ -175,9 +175,7 @@ cs
     assert-session-mma-none-in-use
 
     depth 0<>
-    if
-        cr ." stack not empty " .s cr
-    then
+    abort" stack not empty "
 ;
 
 \ Test files.

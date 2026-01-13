@@ -503,8 +503,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
         drop                            \ rf sqr0
     else                                \ rf sqr0 pn-new
         \ Handle pn change.
-        cr  ." Dom: " cur-domain-xt execute domain-get-inst-id-xt execute dec. space
-            ." Act: " cur-action-xt execute action-get-inst-id-xt execute dec. space
+        cr  ." Dom: " current-domain domain-get-inst-id-xt execute dec. space
+            ." Act: " current-action action-get-inst-id-xt execute dec. space
             over square-get-state
             ." square " .value
             over square-get-pn
@@ -531,6 +531,15 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     if                                  \ rf sqr0 pnc-new
         2drop                           \ rf
     else
+        \ Handle pnc change.
+        cr  ." Dom: " current-domain domain-get-inst-id-xt execute dec. space
+            ." Act: " current-action action-get-inst-id-xt execute dec. space
+        over square-get-state
+        ." square " .value
+        over square-get-pnc
+        space ." pnc changed from " .pnc
+        space ." to " dup .pnc cr
+
         \ Update pnc.
         swap _square-set-pnc            \ rf
         \ Set return flag to true.

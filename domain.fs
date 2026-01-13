@@ -173,6 +173,8 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     @
 ;
 
+' domain-get-current-action to domain-get-current-action-xt
+
 \ Set the current action of a domain instance.
 : domain-set-current-action ( act1 dom0 -- )
     \ Check args.
@@ -419,13 +421,6 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     region-new                      \ cng-agg reg
     swap changes-deallocate         \ reg
 ;
-
-\ Return the current-action.
-: cur-action ( -- act )
-    cur-domain-xt execute domain-get-current-action
-;
-
-' cur-action to cur-action-xt
 
 \ Return the all bits mask.
 : domain-get-all-bits-mask ( dom -- mask )
@@ -854,7 +849,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 ' domain-get-plan-fc to domain-get-plan-fc-xt
 
 : domain-calc-step-bc ( reg-to reg-from dom0 -- step true | false )
-    \ cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
+    cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -968,7 +963,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 \ Form a plan by getting successive steps closer, between
 \ a sample result state to a sample initial state.
 : domain-get-plan2-bc ( depth reg-to reg-from dom0 -- plan true | false )
-    \ cr ." domain-get-plan2-bc: start: depth: " #3 pick . space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
+    cr ." domain-get-plan2-bc: start: depth: " #3 pick . space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
     \ Check args.
     assert-tos-is-domain
     assert-3os-is-region
@@ -1028,7 +1023,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         over planstep-get-result-region         \ depth reg-to reg-from dom0 | pln reg-to | stpx reg-from stp-r
         region-intersects                       \ depth reg-to reg-from dom0 | pln reg-to | stpx bool
         if
-            \ cr ." plan: " #2 pick .plan space ." add intersecting step bc: " dup .step cr
+            cr ." plan: " #2 pick .plan space ." add intersecting step bc: " dup .planstep cr
             \ Add intersecting step to plan.
                                             \ depth reg-to reg-from dom0 | pln reg-to | stpx
             #2 pick                         \ depth reg-to reg-from dom0 | pln reg-to | stpx pln
@@ -1066,7 +1061,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
         else                                        \ depth reg-to reg-from dom0 | pln reg-to | stpx
         \ Process non-intersecting step.
                                                     \ depth reg-to reg-from dom0 | pln reg-to | stpx
-            \ cr ." plan: " #2 pick .plan space ." add extending step bc: " dup .step cr
+            cr ." plan: " #2 pick .plan space ." add extending step bc: " dup .planstep cr
             \ Set up for recursion.
             #6 pick 1-                              \ depth reg-to reg-from dom0 | pln reg-to | stpx | depth   ( -1 to prevent infinite recursion )
             over planstep-get-result-region         \ depth reg-to reg-from dom0 | pln reg-to | stpx | depth stp-r
@@ -1178,7 +1173,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 \ Using a random depth-first backward-chaining strategy. Try a number
 \ of times to find a plan to accomplish a desired sample.
 : domain-get-plan-bc ( depth reg-to reg-from dom0 -- plan true | false )
-    \ cr ." domain-get-plan-bc: " .stack-structs-xt execute cr
+    cr ." domain-get-plan-bc: " .stack-structs-xt execute cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region

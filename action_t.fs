@@ -2,12 +2,13 @@
 
 \ Test adding samples and changing the logical structure, incompatible pairs.
 : action-test-add-sample
-    \ cr ." depth s1: " depth . cr
+    \ Init action that does nothing.
     #4                              \ 4
     [ ' act-0-get-sample ] literal  \ 4 xt
     action-new                      \ act
     cr dup .action cr
 
+    \ Add arbitrary samples.
     #4 #5 sample-new                \ act smpl
     dup #2 pick action-add-sample   \ act smpl
 
@@ -32,9 +33,11 @@
         abort
     then
 
+    cr ." at 1" cr
     #3 pick action-get-logical-structure list-get-length
     #6 <>
     if
+    cr ." at 2" cr
         cr ." list length not 6?" #3 pick action-get-logical-structure .region-list
         abort
     then
@@ -54,6 +57,7 @@
         abort
     then
 
+cr ." at 3" cr
     #5 pick action-get-logical-structure
     \ cr ." ls: " dup .region-list
     list-get-length
@@ -87,7 +91,6 @@
 
     sample-deallocate
     action-deallocate
-    \ cr ." depth 1: " depth . cr
 
     cr ." action-test-add-sample: Ok"
 ;

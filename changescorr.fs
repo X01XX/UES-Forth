@@ -85,7 +85,9 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 : changescorr-new ( lst0 -- addr)
     \ check arg.
     assert-tos-is-changes-list
-    dup list-get-length number-domains <> abort" changescorr-new: invalid list length?"
+    dup list-get-length
+    current-session session-number-domains-xt execute
+    <> abort" changescorr-new: invalid list length?"
 
     \ Allocate space.
     changescorr-mma mma-allocate   \ lst0 cngsc

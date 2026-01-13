@@ -604,7 +604,13 @@ cr .s cr
     rule-calc-step-bc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
         \ cr dup .planstep cr
+        \ Check planstep number unwanted changes.
+        dup planstep-get-number-unwanted-changes
+        2 <> abort" Unexpected number of unwanted changes?"
+
+        \ Check planstep rule.
         dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
+        \ cr ." rule: " dup .rule cr
         s" 01/01/11/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool

@@ -73,6 +73,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     @                       \ Fetch the field.
 ;
 
+' session-get-domains to session-get-domains-xt
+
 : _session-set-domains ( lst sess0 -- ) \ Set the domain-list for an session instance.
     \ Check arg.
     assert-tos-is-session
@@ -90,6 +92,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     session-current-domain-disp +   \ Add offset.
     @                               \ Fetch the field.
 ;
+
+' session-get-current-domain to session-get-current-domain-xt
 
 \ Set the current domain for an session instance.
 : session-set-current-domain ( dom sess0 -- )
@@ -700,13 +704,6 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     swap _session-update-needs          \
 ;
 
-\ Return the current domain.
-: cur-domain ( -- dom )
-    current-session session-get-current-domain
-;
-
-' cur-domain to cur-domain-xt
-
 \ Return a domain, given a domain ID.
 : session-find-domain ( u1 sess0 -- dom t | f )
     \ Check args.
@@ -1120,15 +1117,6 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     session-process-regioncorrrates        \ recalc with new regioncorrrate.
 ;
-
-\ Return the number of domains.
-: session-get-number-domains ( -- u )
-    current-session
-    session-get-domains
-    list-get-length
-;
-
-' session-get-number-domains to session-get-number-domains-xt
 
 : set-domain ( u1 )
     current-session             \ u1 sess
@@ -1760,3 +1748,14 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     swap regioncorr-deallocate                      \ sess rate
     nip
 ;
+
+\ Return the numebr of domains.
+: session-number-domains ( sess0 -- u )
+    \ Check arg.
+    assert-tos-is-session
+
+    session-get-domains
+    list-get-length
+;
+
+' session-number-domains to session-number-domains-xt

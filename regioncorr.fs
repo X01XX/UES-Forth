@@ -109,8 +109,9 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ check arg.
     assert-tos-is-region-list
 
-    dup list-get-length number-domains <> abort" regioncorr-new: invalid list length?"
-
+    dup list-get-length
+    current-session session-number-domains-xt execute
+    <> abort" regioncorr-new: invalid list length?"
 
     \ Allocate space.
     regioncorr-mma mma-allocate   \ reg-lst0 regc
@@ -387,7 +388,9 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 : regioncorr-from-parsed-string ( addr n -- regc t | f )
 
     \ Check number tokens.
-    session-get-number-domains-xt execute   \ addr0 cnt0 cnt2 domain-count
+    current-session
+    session-number-domains-xt
+    execute                     \ addr0 cnt0 cnt2 domain-count
     <> if                       \ addr0 cnt0
         0 do
             2drop
@@ -422,7 +425,9 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     \ Check results.                \ ret-lst
     dup list-get-length             \ ret-lst len
-    session-get-number-domains-xt execute   \ ret-lst len dnum
+    current-session
+    session-number-domains-xt
+    execute                         \ ret-lst len dnum
     <> if
         region-list-deallocate
         false

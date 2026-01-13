@@ -3,7 +3,7 @@
     \ Check arg.
     assert-tos-is-value
 
-    cur-domain-xt execute               \ u0 dom
+    current-domain                      \ u0 dom
     domain-get-all-bits-mask-xt execute \ u0 all-bits
     0 region-new                        \ u0 reg-max
     \ dup struct-inc-use-count

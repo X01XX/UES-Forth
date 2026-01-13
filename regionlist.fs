@@ -376,7 +376,7 @@
     assert-tos-is-region-list
 
     list-new                    \ lst0 lst1
-    cur-domain-xt execute       \ lst0 lst1 dom
+    current-domain              \ lst0 lst1 dom
     domain-get-max-region-xt
     execute                     \ lst0 lst1 regM
     over region-list-push       \ lst0 lst1
@@ -716,7 +716,7 @@
             \ Add the region to the return list.
             dup link-get-data           \ ret-lst sta link regx
             #3 pick                     \ ret-lst sta link regx ret-lst
-            region-list-push            \ ret-lst sta link
+            list-push-struct            \ ret-lst sta link
         then
 
         link-get-next

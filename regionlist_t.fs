@@ -323,7 +323,7 @@
     then
 
     \ Init logical structure (ls-) list.
-    cur-domain-xt execute                           \ inc-lst' max-reg' dom
+    current-domain                                  \ inc-lst' max-reg' dom
     domain-get-max-region-xt execute                \ inc-lst' max-reg'
     list-new                                        \ inc-lst' max-reg' ls-lst'
     tuck list-push-struct                           \ inc-lst' ls-lst'
@@ -417,7 +417,7 @@
     cr cr ." Defining regions: " dup .region-list cr
 
     \ Check for any left-over regions.
-    cur-domain-xt execute                           \ inc-lst' ls-lst' df-lst' dom
+    current-domain                                  \ inc-lst' ls-lst' df-lst' dom
     domain-get-max-region-xt execute                \ inc-lst' ls-lst' df-lst' max-reg'
     list-new                                        \ inc-lst' ls-lst' df-lst' max-reg' max-lst'
     tuck list-push-struct                           \ inc-lst' ls-lst' df-lst' max-lst'
