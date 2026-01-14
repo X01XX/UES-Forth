@@ -456,26 +456,6 @@ cr .s cr
     cr ." rule-test-new-region-to-region: Ok" cr
 ;
 
-: rule-test-isolate-changes
-    \ m10   m01
-    %0010 %0100 changes-new             \ cngs
-    cr dup .changes
-    s" X1/Xx/Xx/X0/" rule-from-string   \ cngs rulx
-    cr dup .rule
-    2dup rule-isolate-changes           \ cngs rulx rulx'
-    cr dup .rule cr
-    s" X1/01/10/X0/" rule-from-string   \ cngs rulx rulx' rul-t
-    2dup rule-eq                        \ cngs rulx rulx' rul-t flag
-    0= abort" rules not eq 1?"
-
-    rule-deallocate
-    rule-deallocate
-    rule-deallocate                     \ cngs
-    changes-deallocate
-
-    cr ." rule-test-isolate-changes: Ok" cr
-;
-
 : rule-test-calc-step-fc
     \ Test 1, reg-from intersects rule initial-region.
     %1101 %1101 region-new                  \ reg-to
@@ -484,7 +464,7 @@ cr .s cr
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
-        cr ." step: " dup .planstep cr
+        \ cr ." step1: " dup .planstep cr
         \ cr dup .step cr
         dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
         s" 01/11/01/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
@@ -514,7 +494,7 @@ cr .s cr
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
-    cr ." step: " dup .planstep cr
+        \ cr ." step2: " dup .planstep cr
         dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
         s" 01/10/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         \ cr ." expt: " dup .rule space ." found: " over .rule cr
@@ -543,7 +523,7 @@ cr .s cr
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
-    cr ." step: " dup .planstep cr
+        \ cr ." step3: " dup .planstep cr
         dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
         s" 00/X1/X0/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         \ cr ." expt: " dup .rule space ." found: " over .rule cr
@@ -573,13 +553,13 @@ cr .s cr
     \ Test 1, reg-to intersects rule result-region.
     %1101 %1101 region-new                  \ reg-to
     %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/XX/00/11/" rule-from-string       \ reg-to reg-from rulx
+    s" 01/XX/X0/11/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
     rule-calc-step-bc                       \ reg-to reg-from rulx | stp t | f
     if                                      \ reg-to reg-from rulx | stp
-        \ cr dup .step cr
-        dup planstep-get-rule                \ reg-to reg-from rulx | stp stp-rul
-        s" 01/11/00/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+        \ cr dup .planstep cr
+        dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
+        s" 01/11/X0/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
         tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
         rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
         is-false abort" unexpected rule?"
@@ -594,7 +574,7 @@ cr .s cr
         abort
     then
 
-    \ Test 2, reg-to does not intersect the rule result-region,
+    \ Test 2, reg-to does not rule-number-unwanted-changesintersect the rule result-region,
     \ but the rule result region is reachable from reg-to without using another needed change.
     \ Reg-from to the rule initial-region does require a needed change.
     %1101 %1101 region-new                  \ reg-to
@@ -606,7 +586,7 @@ cr .s cr
         \ cr dup .planstep cr
         \ Check planstep number unwanted changes.
         dup planstep-get-number-unwanted-changes
-        2 <> abort" Unexpected number of unwanted changes?"
+        1 <> abort" Unexpected number of unwanted changes?"
 
         \ Check planstep rule.
         dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
@@ -630,6 +610,24 @@ cr .s cr
     cr ." rule-test-calc-step-bc: Ok" cr
 ;
 
+: rule-test-number-unwanted-changes
+    \ Test 1.
+    %0111 %0111 region-new                  \ reg-to
+    %0100 %0100 region-new                  \ reg-to reg-from
+    s" XX/00/00/Xx/" rule-from-string       \ reg-to reg-from rulx
+
+    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx reg-to reg-from rulx
+    rule-number-unwanted-changes            \ reg-to reg-from rulx u
+    cr ." Number unwanted changes: " dup .
+    1 <> abort" Number unwanted changes ne 1?"
+    
+    rule-deallocate
+    region-deallocate
+    region-deallocate
+
+    cr ." rule-test-number-unwanted-changes: Ok" cr
+;
+
 : rule-tests
     0 set-domain
     rule-test-restrict-initial-region
@@ -638,7 +636,6 @@ cr .s cr
     rule-test-restrict-to-region
     rule-test-combine2
     rule-test-new-region-to-region
-    rule-test-isolate-changes
     rule-test-calc-step-fc
     rule-test-calc-step-bc
 ;

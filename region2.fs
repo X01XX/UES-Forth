@@ -28,7 +28,7 @@
     \ Change x over 1 positions to 0 over 1, one position at a time.
                                     \ reg1 reg0 list
     over region-x-mask              \ reg1 reg0 list | xmask
-    #3 pick region-1-mask           \ reg1 reg0 list | xmask 1mask
+    #3 pick region-edge-1-mask      \ reg1 reg0 list | xmask 1mask
     and                             \ reg1 reg0 list | x1mask
 
     begin
@@ -45,7 +45,7 @@
     \ Change x over 0 positions to 1 over 0, one position at a time.
                                     \ reg1 reg0 list
     over region-x-mask              \ reg1 reg0 list | xmask
-    #3 pick region-0-mask           \ reg1 reg0 list | xmask 0mask
+    #3 pick region-edge-0-mask      \ reg1 reg0 list | xmask 0mask
     and                             \ reg1 reg0 list | x0mask
     begin
         dup

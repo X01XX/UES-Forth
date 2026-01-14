@@ -375,8 +375,8 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     xor
 ;
 
-\ Return a regions 1-1 mask.
-: region-1-mask ( reg0 -- mask )
+\ Return a region's edge 1 mask.
+: region-edge-1-mask ( reg0 -- mask )
     \ Check arg.
     assert-tos-is-region
 
@@ -385,8 +385,8 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     and
 ;
 
-\ Return a regions 0-0 mask.
-: region-0-mask ( reg0 -- mask )
+\ Return a region's edge 0 mask.
+: region-edge-0-mask ( reg0 -- mask )
     \ Check arg.
     assert-tos-is-region
 
@@ -738,16 +738,16 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
     \ Change selected reg-from X positions to zero.
     over region-x-mask      \ reg-to reg-from tx
-    over region-0-mask      \ reg-to reg-from tx f0
+    over region-edge-0-mask \ reg-to reg-from tx f0
     and                     \ reg-to reg-from 0x
 
     #2 pick                 \ reg-to reg-from 0x reg-to
     region-x-to-0           \ reg-to reg-from reg-to'
 
     \ Change selected reg-from' X positions to one.
-    #2 pick region-x-mask   \ reg-to reg-from reg-to' tx
-    #2 pick region-1-mask   \ reg-to reg-from reg-to' tx f1
-    and                     \ reg-to reg-from reg-to' 1x
+    #2 pick region-x-mask       \ reg-to reg-from reg-to' tx
+    #2 pick region-edge-1-mask  \ reg-to reg-from reg-to' tx f1
+    and                         \ reg-to reg-from reg-to' 1x
 
     over region-x-to-1      \ reg-to reg-from reg-to' reg-to''
 

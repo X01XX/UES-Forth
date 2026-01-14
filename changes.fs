@@ -206,12 +206,12 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
     \ Get reg-from masks.
     dup region-x-mask -rot      \ fx reg-to reg-from
-    dup region-0-mask -rot      \ fx f0 reg-to reg-from
-    region-1-mask swap          \ fx f0 f1 reg-to
+    dup region-edge-0-mask -rot \ fx f0 reg-to reg-from
+    region-edge-1-mask swap     \ fx f0 f1 reg-to
 
     \ Get reg-to masks.
-    dup region-0-mask swap      \ fx f0 f1 t0 reg-to
-    region-1-mask               \ fx f0 f1 t0 t1
+    dup region-edge-0-mask swap \ fx f0 f1 t0 reg-to
+    region-edge-1-mask          \ fx f0 f1 t0 t1
 
     \ Calc changes m10.
     #4 pick #2 pick and         \ fx f0 f1 t0 t1 | mx0
@@ -296,8 +296,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     nip nip
 ;
 
-\ Return true if changes are all zero.
-: changes-null ( cngs0 -- bool )
+: changes-null ( cngs0 -- bool )    \ Return true if changes masks are all zero.
     \ Check arg.
     assert-tos-is-changes
 
@@ -312,8 +311,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     0=
 ;
 
-\ Return the inversion of a given changes instance.
-: changes-invert ( cngs0 -- cngs )
+: changes-invert ( cngs0 -- cngs )  \ Return the inversion of a changes masks.
     \ Check arg.
     assert-tos-is-changes
 
@@ -324,9 +322,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     changes-new                 \ cngs
 ;
 
-
-
-: changes-number-changes ( cngs0 -- u )
+: changes-number-changes ( cngs0 -- u ) \ Return number of 1-bits in the changes masks.
     \ Check arg.
     assert-tos-is-changes
 
@@ -334,4 +330,39 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     swap                                \ u10 cngs0
     changes-get-m01 value-num-bits      \ u10 u01
     +
+;
+
+\ Return true if two changes are equal.
+: changes-eq ( cngs1 cngs0 -- bool )
+    \ Check args.
+    assert-tos-is-changes
+    assert-nos-is-changes
+
+    2dup =          \ cngs1 cngs0 bool
+    if
+        2drop
+        true
+        exit
+    then
+
+    changes-get-masks   \ cngs1 0m10 0m01
+    rot                 \ 0m10 0m01 cngs1
+    changes-get-masks   \ 0m10 0m01 1m10 1m01
+    rot                 \ 0m10 1m10 1m01 0m01
+    = -rot              \ bool 0m10 1m10
+    =                   \ bool bool
+    and                 \ bool
+;
+
+\ Return true if the tos changes is a superset of the nos changes.
+: changes-superset-of ( cngs-sub cngs-sup -- bool )
+    \ Check args.
+    assert-tos-is-changes
+    assert-nos-is-changes
+
+    over                    \ cngs-sub cngs-sup cngs-sub
+    changes-intersection    \ cngs-sub cngs-int'
+    tuck                    \ cngs-int' cngs-sub cngs-int'
+    changes-eq              \ cngs-int' bool
+    swap changes-deallocate \ bool
 ;
