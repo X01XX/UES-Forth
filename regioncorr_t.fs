@@ -172,10 +172,24 @@
 
 \ Assume domain0 is 4-bit, Domain 1 is 5-bit.
 : regioncorr-tests
+    current-session-new                             \ ses
+
+    \ Init domain 0.
+    #4 over domain-new                              \ ses dom0
+    over                                            \ ses dom0 ses
+    session-add-domain                              \ ses
+
+    \ Init domain 1.
+    #5 over domain-new                              \ ses dom0
+    swap                                            \ dom0 ses
+    session-add-domain                              \
+
     regioncorr-test-superset
     regioncorr-test-intersects
     regioncorr-test-subtract
     regioncorr-test-complement
     regioncorr-test-distance
+
+    current-session-deallocate
 ;
 

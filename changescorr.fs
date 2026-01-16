@@ -86,7 +86,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     \ check arg.
     assert-tos-is-changes-list
     dup list-get-length
-    current-session session-number-domains-xt execute
+    current-session session-get-number-domains-xt execute
     <> abort" changescorr-new: invalid list length?"
 
     \ Allocate space.

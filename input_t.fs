@@ -44,6 +44,5 @@
 ;
 
 : input-tests
-    0 set-domain
     input-test-parse-string
 ;

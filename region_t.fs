@@ -109,9 +109,17 @@
 ;
 
 : region-tests
-    0 set-domain
+    current-session-new                             \ sess
+
+    \ Init domain 0.
+    #4 over domain-new                              \ sess dom0
+    swap                                            \ dom0 sess
+    session-add-domain                              \
+
     region-test-region-subtract
     region-test-states-in
     region-test-translate-to-region
+
+    current-session-deallocate
 ;
 

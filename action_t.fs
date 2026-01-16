@@ -2,11 +2,15 @@
 
 \ Test adding samples and changing the logical structure, incompatible pairs.
 : action-test-add-sample
-    \ Init action that does nothing.
-    #4                              \ 4
-    [ ' act-0-get-sample ] literal  \ 4 xt
-    action-new                      \ act
-    cr dup .action cr
+    current-session-new                             \ sess
+
+    \ Init domain 0.
+    #4 over domain-new                              \ sess dom0
+    tuck swap                                       \ dom0 dom0 sess
+    session-add-domain                              \ dom0
+
+    0  swap domain-find-action                      \ act0 t | f
+    is-false abort" act0 not found?"
 
     \ Add arbitrary samples.
     #4 #5 sample-new                \ act smpl
@@ -33,11 +37,9 @@
         abort
     then
 
-    cr ." at 1" cr
     #3 pick action-get-logical-structure list-get-length
     #6 <>
     if
-    cr ." at 2" cr
         cr ." list length not 6?" #3 pick action-get-logical-structure .region-list
         abort
     then
@@ -57,7 +59,6 @@
         abort
     then
 
-cr ." at 3" cr
     #5 pick action-get-logical-structure
     \ cr ." ls: " dup .region-list
     list-get-length
@@ -90,12 +91,12 @@ cr ." at 3" cr
     over cr .action cr
 
     sample-deallocate
-    action-deallocate
+    drop
+    current-session-deallocate
 
     cr ." action-test-add-sample: Ok"
 ;
 
 : action-tests
-    0 set-domain
     action-test-add-sample
 ;

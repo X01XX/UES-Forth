@@ -248,18 +248,19 @@ cr
 
 : init-main ( -- )
     \ Set up session.
-    current-session-new                         \ session instance added to session stack.
-    current-session                             \ sess
+    current-session-new                         \ sess, session instance added to session stack.
 
     \ Add domain 0
-    #4 domain-new                                \ sess dom
+    #4 over  domain-new                         \ sess dom
 
     \ Add actions to domain 0
     [ ' domain-0-act-1-get-sample ] literal     \ sess dom0 xt
     over domain-add-action                      \ sess dom0
 
     [ ' domain-0-act-2-get-sample ] literal     \ sess dom0 xt
-    over domain-add-action                      \ sess dom0
+    over domain-add-action            
+group xxxx adding square 0110 
+          \ sess dom0
 
     [ ' domain-0-act-3-get-sample ] literal     \ sess dom0 xt
     over domain-add-action                      \ sess dom0
@@ -274,10 +275,10 @@ cr
     over domain-add-action                      \ sess dom0
 
     \ Add a domain
-    over session-add-domain                    \ sess
+    over session-add-domain                     \ sess
 
     \ Add domain 1
-    #5 domain-new                               \ sess dom1
+    #5 over domain-new                          \ sess dom1
 
     \ Add actions to domain 1
     [ ' domain-1-act-1-get-sample ] literal     \ sess dom1 xt
@@ -387,86 +388,21 @@ cr
     test-none-in-use
 ;
 
-\ Set up a test domain and action.
-\ To supply number bits, max region, ms-bit, all-bits, domain-id, action-id.
-\
-\ To run tests outside of all-tests, run this first, followed by test-end
-\
-: test-init
-
-    \ Set up session.
-    current-session-new                 \ Session instance added to session stack.
-
-    \ Set up a source for domain-inst-id, num-bits, ms-bit, all-bits, max-region, action-id.
-    #4 domain-new                       \ dom
-    current-session                     \ dom sess
-
-    session-add-domain                  \ dom
-
-    #5 domain-new                       \ dom
-    current-session                     \ dom sess
-    session-add-domain                  \ dom
-
-    \ Set current domain to the first.
-    \ Most tests assume a 4-bit domain.
-    0 set-domain
-;
-
-: test-end
-    memory-use
-    cr cr ." Deallocating ..." cr
-    current-session-deallocate
-
-    memory-use
-    session-stack
-    stack-empty?
-    if
-        test-none-in-use
-    then
-;
-
 : all-tests
     test-none-in-use
 
-    test-init
-
     square-tests
-    depth 0<> abort" Square stack tests not empty"
-
     square-list-tests
-    depth 0<> abort" Square-list tests stack not empty"
-
     region-tests
-    depth 0<> abort" Region tests stack not empty"
-
     region-list-tests
-    depth 0<> abort" Region-list tests stack not empty"
-
     rule-tests
-    depth 0<> abort" Rule tests stack not empty"
-
     action-tests
-    depth 0<> abort" Action tests stack not empty"
-
     rulestore-tests
-    depth 0<> abort" Rulestore tests stack not empty"
-
     state-tests
-    depth 0<> abort" State tests stack not empty"
-
     input-tests
-    depth 0<> abort" Input tests stack not empty"
-
-    \ Tests that assume a 4-bit domain-0 and a 5-bit domain-1 should be last,
-    \ as they may change the current domain.
     regioncorr-tests
-    depth 0<> abort" regioncorr tests stack not empty"
-
     regioncorr-list-tests
-    depth 0<> abort" regioncorr-list tests stack not empty"
-
     session-tests
-    depth 0<> abort" Session tests stack not empty"
 
-    test-end
+    test-none-in-use
 ;

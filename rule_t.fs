@@ -396,7 +396,7 @@
 ;
 
 : rule-test-new-region-to-region
-cr .s cr
+
     \ Test 1.
     s" 0011" region-from-string-a   \ reg-from
     s" 0110" region-from-string-a   \ reg-from reg-to
@@ -410,7 +410,7 @@ cr .s cr
     rule-deallocate
     region-deallocate
     region-deallocate
- cr .s cr
+
     \ Test 2.
     s" XXX1" region-from-string-a   \ reg-from
     s" 01XX" region-from-string-a   \ reg-from reg-to
@@ -424,7 +424,7 @@ cr .s cr
     rule-deallocate
     region-deallocate
     region-deallocate
- cr .s cr
+
     \ test 3.
     s" 0101" region-from-string-a   \ reg-from
     s" XXXX" region-from-string-a   \ reg-from reg-to
@@ -438,7 +438,7 @@ cr .s cr
     rule-deallocate
     region-deallocate
     region-deallocate
- cr .s cr
+
     \ Test 4.
     s" 0XXX" region-from-string-a   \ reg-from
     s" 0X10" region-from-string-a   \ reg-from reg-to
@@ -452,7 +452,7 @@ cr .s cr
     rule-deallocate
     region-deallocate
     region-deallocate
- cr .s cr
+
     cr ." rule-test-new-region-to-region: Ok" cr
 ;
 
@@ -629,7 +629,13 @@ cr .s cr
 ;
 
 : rule-tests
-    0 set-domain
+    current-session-new                             \ sess
+
+    \ Init domain 0.
+    #4 over domain-new                              \ sess dom0
+    swap                                            \ dom0 sess
+    session-add-domain                              \
+
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
     rule-test-apply-to-state-f
@@ -638,5 +644,7 @@ cr .s cr
     rule-test-new-region-to-region
     rule-test-calc-step-fc
     rule-test-calc-step-bc
+
+    current-session-deallocate
 ;
 

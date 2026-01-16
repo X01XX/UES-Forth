@@ -3,49 +3,49 @@
 \ Implementing the example in the sections of theory.html named "Choosing the next rule" and "A reason to not choose a rule".
 : session-test-domain-get-plan-fc
     \ Init session.
-    current-session-new
+    current-session-new                 \ ses
 
     \ Init domain.
-    #4 domain-new dup                   \ dom dom
-    current-session                     \ dom dom sess
-    session-add-domain                  \ dom
+    #4 current-session domain-new dup   \ sess dom dom
+    #2 pick                             \ sess dom dom sess
+    session-add-domain                  \ ses dom
 
     \ Add act1, act2 and act3.
-    [ ' noop ] literal over domain-add-action   \ dom
-    [ ' noop ] literal over domain-add-action   \ dom
-    [ ' noop ] literal over domain-add-action   \ dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
 
     \ Set up group for act0.
-    0 over domain-find-action                   \ dom, act0 t | f
+    0 over domain-find-action                   \ ses dom, act0 t | f
     0= abort" can't find act0?"
-    %0010 %0110 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act0
-    %0000 %0100 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0010 %0110 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act0
+    %0000 %0100 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act1.
-    1 over domain-find-action                   \ dom, act1 t | f
+    1 over domain-find-action                   \ ses dom, act1 t | f
     0= abort" can't find act1?"
-    %0001 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act1
-    %1001 %1000 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0001 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act1
+    %1001 %1000 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act2.
-    #2 over domain-find-action                  \ dom, act2 t | f
+    #2 over domain-find-action                  \ ses dom, act2 t | f
     0= abort" can't find act2?"
-    %0011 %0001 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act2
-    %1011 %1001 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0011 %0001 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act2
+    %1011 %1001 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act3.
-    #3 over domain-find-action                  \ dom, act3 t | f
+    #3 over domain-find-action                  \ ses dom, act3 t | f
     0= abort" can't find act3?"
-    %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act3
-    %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act3
+    %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
-    %0111 %0111 region-new                      \ dom reg-to
-    %0100 %0100 region-new                      \ dom reg-to reg-from
+    %0111 %0111 region-new                      \ ses dom reg-to
+    %0100 %0100 region-new                      \ ses dom reg-to reg-from
 
-    #3                                          \ dom reg-to reg-from | #3
-    #2 pick #2 pick                             \ dom reg-to reg-from | #3 reg-to reg-from
-    #5 pick                                     \ dom reg-to reg-from | #3 reg-to reg-from dom
-    domain-get-plan-fc                          \ dom reg-to reg-from, plan t | f
+    #3                                          \ ses dom reg-to reg-from | #3
+    #2 pick #2 pick                             \ ses dom reg-to reg-from | #3 reg-to reg-from
+    #5 pick                                     \ ses dom reg-to reg-from | #3 reg-to reg-from dom
+    domain-get-plan-fc                          \ ses dom reg-to reg-from, plan t | f
     if
         cr ." plan " dup .plan cr
         dup plan-get-length #4 <> abort" plan not 4 steps long?"
@@ -60,7 +60,7 @@
     region-deallocate
     drop
 
-    current-session .session
+    .session
 
     current-session-deallocate
 
@@ -69,50 +69,50 @@
 
 : session-test-domain-get-plan-bc
     \ Init session.
-    current-session-new
+    current-session-new                 \ ses
 
     \ Init domain.
-    #4 domain-new dup                   \ dom dom
-    current-session                     \ dom dom sess
-    session-add-domain                  \ dom
+    #4 current-session domain-new dup   \ ses dom dom
+    #2 pick                             \ ses dom dom ses
+    session-add-domain                  \ ses dom
 
     \ Add act1, act2 and act3.
-    [ ' noop ] literal over domain-add-action   \ dom
-    [ ' noop ] literal over domain-add-action   \ dom
-    [ ' noop ] literal over domain-add-action   \ dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
 
     \ Set up group for act0.
-    0 over domain-find-action                   \ dom, act0 t | f
+    0 over domain-find-action                   \ ses dom, act0 t | f
     0= abort" can't find act0?"
-    %0010 %0110 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act0
-    %0000 %0100 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0010 %0110 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act0
+    %0000 %0100 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act1.
-    1 over domain-find-action                   \ dom, act1 t | f
+    1 over domain-find-action                   \ ses dom, act1 t | f
     0= abort" can't find act1?"
-    %0001 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act1
-    %1001 %1000 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0001 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act1
+    %1001 %1000 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act2.
-    #2 over domain-find-action                  \ dom, act2 t | f
+    #2 over domain-find-action                  \ ses dom, act2 t | f
     0= abort" can't find act2?"
-    %0011 %0001 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act2
-    %1011 %1001 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0011 %0001 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act2
+    %1011 %1001 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act3.
-    #3 over domain-find-action                  \ dom, act3 t | f
+    #3 over domain-find-action                  \ ses dom, act3 t | f
     0= abort" can't find act3?"
-    %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act3
-    %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act3
+    %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     current-session .session
 
-    %0111 %0111 region-new                      \ dom reg-to
-    %0100 %0100 region-new                      \ dom reg-to reg-from
-    #3                                          \ dom reg-to reg-from | #3
-    #2 pick #2 pick                             \ dom reg-to reg-from | #3 reg-to reg-from
-    #5 pick                                     \ dom reg-to reg-from | #3 reg-to reg-from dom
-    domain-get-plan-bc                          \ dom reg-to reg-from, plan t | f
+    %0111 %0111 region-new                      \ ses dom reg-to
+    %0100 %0100 region-new                      \ ses dom reg-to reg-from
+    #3                                          \ ses dom reg-to reg-from | #3
+    #2 pick #2 pick                             \ ses dom reg-to reg-from | #3 reg-to reg-from
+    #5 pick                                     \ ses dom reg-to reg-from | #3 reg-to reg-from dom
+    domain-get-plan-bc                          \ ses dom reg-to reg-from, plan t | f
     if
         cr ." plan " dup .plan cr
         dup plan-get-length #4 <> abort" plan not 4 steps long?"
@@ -127,7 +127,7 @@
     region-deallocate
     drop
 
-    current-session .session
+    .session
 
     current-session-deallocate
 
@@ -136,49 +136,50 @@
 
 : session-test-domain-asymmetric-chaining
     \ Init session.
-    current-session-new
+    current-session-new                 \ ses
 
     \ Init domain.
-    #4 domain-new dup                   \ dom dom
-    current-session                     \ dom dom sess
-    session-add-domain                  \ dom
+    #4 over                             \ ses #4 ses
+    domain-new dup                      \ ses dom dom
+    #2 pick                             \ ses dom dom ses
+    session-add-domain                  \ ses dom
 
     \ Add act1, act2 and act3.
-    [ ' noop ] literal over domain-add-action   \ dom
-    [ ' noop ] literal over domain-add-action   \ dom
-    [ ' noop ] literal over domain-add-action   \ dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
+    [ ' noop ] literal over domain-add-action   \ ses dom
 
     \ Set up group for act0.
-    0 over domain-find-action                   \ dom, act0 t | f
+    0 over domain-find-action                   \ ses dom, act0 t | f
     0= abort" can't find act0?"
-    %0010 %0110 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act0
-    %0000 %0100 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0010 %0110 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act0
+    %0000 %0100 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act1.
-    1 over domain-find-action                   \ dom, act1 t | f
+    1 over domain-find-action                   \ ses dom, act1 t | f
     0= abort" can't find act1?"
-    %0001 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act1
-    %1001 %1000 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0001 %0000 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act1
+    %1001 %1000 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act2.
-    #2 over domain-find-action                  \ dom, act2 t | f
+    #2 over domain-find-action                  \ ses dom, act2 t | f
     0= abort" can't find act2?"
-    %0011 %0001 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act2
-    %1011 %1001 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0011 %0001 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act2
+    %1011 %1001 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     \ Set up group for act3.
-    #3 over domain-find-action                  \ dom, act3 t | f
+    #3 over domain-find-action                  \ ses dom, act3 t | f
     0= abort" can't find act3?"
-    %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ dom act3
-    %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ dom
+    %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act3
+    %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
     current-session .session
 
-    %0111 %0111 region-new                      \ dom reg-to
-    %0100 %0100 region-new                      \ dom reg-to reg-from
-    2dup                                        \ dom reg-to reg-from | reg-to reg-from
-    #4 pick                                     \ dom reg-to reg-from | reg-to reg-from dom
-    domain-asymmetric-chaining                  \ dom reg-to reg-from, plan t | f
+    %0111 %0111 region-new                      \ ses dom reg-to
+    %0100 %0100 region-new                      \ ses dom reg-to reg-from
+    2dup                                        \ ses dom reg-to reg-from | reg-to reg-from
+    #4 pick                                     \ ses dom reg-to reg-from | reg-to reg-from dom
+    domain-asymmetric-chaining                  \ ses dom reg-to reg-from, plan t | f
     if
         cr ." plan " dup .plan cr
         dup plan-get-length #4 <> abort" plan not 4 steps long?"
@@ -193,7 +194,7 @@
     region-deallocate
     drop
 
-    current-session .session
+    .session
 
     current-session-deallocate
 
@@ -202,136 +203,135 @@
 
 : session-test-change-to
     \ Init session.
-    current-session-new
+    current-session-new                             \ ses
 
     \ Init domain 0.
-    #4 domain-new dup                               \ dom0 dom0
-    current-session                                 \ dom0 dom0 sess
-    session-add-domain                              \ dom0
+    #4 current-session domain-new dup               \ ses dom0 dom0
+    #2 pick                                         \ ses dom0 dom0 sess
+    session-add-domain                              \ ses dom0
 
     \ Add act1, act2, act3, and act4.
-    [ ' xor-1 ] literal over domain-add-action      \ dom0
-    [ ' xor-2 ] literal over domain-add-action      \ dom0
-    [ ' xor-4 ] literal over domain-add-action      \ dom0
-    [ ' xor-8 ] literal over domain-add-action      \ dom0
+    [ ' xor-1 ] literal over domain-add-action      \ ses dom0
+    [ ' xor-2 ] literal over domain-add-action      \ ses dom0
+    [ ' xor-4 ] literal over domain-add-action      \ ses dom0
+    [ ' xor-8 ] literal over domain-add-action      \ ses dom0
 
     \ Set up group for act1.
-    1 over domain-find-action                       \ dom0, act1 t | f
+    1 over domain-find-action                       \ ses dom0, act1 t | f
     0= abort" can't find act1?"
-    %0000 over action-get-sample sample-deallocate  \ dom0 act1
-    %1111 swap action-get-sample sample-deallocate  \ dom0
+    %0000 over action-get-sample sample-deallocate  \ ses dom0 act1
+    %1111 swap action-get-sample sample-deallocate  \ ses dom0
 
     \ Set up group for act2.
-    #2 over domain-find-action                      \ dom0, act2 t | f
+    #2 over domain-find-action                      \ ses dom0, act2 t | f
     0= abort" can't find act2?"
-    %0000 over action-get-sample sample-deallocate  \ dom0 act2
-    %1111 swap action-get-sample sample-deallocate  \ dom0
+    %0000 over action-get-sample sample-deallocate  \ ses dom0 act2
+    %1111 swap action-get-sample sample-deallocate  \ ses dom0
 
     \ Set up group for act3.
-    #3 over domain-find-action                      \ dom0, act3 t | f
+    #3 over domain-find-action                      \ ses dom0, act3 t | f
     0= abort" can't find act3?"
-    %0000 over action-get-sample sample-deallocate  \ dom0 act3
-    %1111 swap action-get-sample sample-deallocate  \ dom0
+    %0000 over action-get-sample sample-deallocate  \ ses dom0 act3
+    %1111 swap action-get-sample sample-deallocate  \ ses dom0
 
     \ Set up group for act4.
-    #4 over domain-find-action                      \ dom0, act4 t | f
+    #4 over domain-find-action                      \ ses dom0, act4 t | f
     0= abort" can't find act4?"
-    %0000 over action-get-sample sample-deallocate  \ dom0 act4
-    %1111 swap action-get-sample sample-deallocate  \ dom0
+    %0000 over action-get-sample sample-deallocate  \ ses dom0 act4
+    %1111 swap action-get-sample sample-deallocate  \ ses dom0
     drop
 
     \ Init domain 1.
-    #5 domain-new dup                               \ dom1 dom1
-    current-session                                 \ dom1 dom1 sess
-    session-add-domain                              \ dom1
+    #5 current-session domain-new dup               \ ses dom1 dom1
+    current-session                                 \ ses dom1 dom1 sess
+    session-add-domain                              \ ses dom1
 
     \ Add act1, act2, act3, act4 and act5.
-    [ ' xor-1 ] literal over domain-add-action      \ dom1
-    [ ' xor-2 ] literal over domain-add-action      \ dom1
-    [ ' xor-4 ] literal over domain-add-action      \ dom1
-    [ ' xor-8 ] literal over domain-add-action      \ dom1
-    [ ' xor-16 ] literal over domain-add-action     \ dom1
+    [ ' xor-1 ] literal over domain-add-action      \ ses dom1
+    [ ' xor-2 ] literal over domain-add-action      \ ses dom1
+    [ ' xor-4 ] literal over domain-add-action      \ ses dom1
+    [ ' xor-8 ] literal over domain-add-action      \ ses dom1
+    [ ' xor-16 ] literal over domain-add-action     \ ses dom1
 
     \ Set up group for act1.
-    1 over domain-find-action                       \ dom1, act1 t | f
+    1 over domain-find-action                       \ ses dom1, act1 t | f
     0= abort" can't find act1?"
-    %00000 over action-get-sample sample-deallocate \ dom1 act1
-    %11111 swap action-get-sample sample-deallocate \ dom1
+    %00000 over action-get-sample sample-deallocate \ ses dom1 act1
+    %11111 swap action-get-sample sample-deallocate \ ses dom1
 
     \ Set up group for act2.
-    #2 over domain-find-action                      \ dom1, act2 t | f
+    #2 over domain-find-action                      \ ses dom1, act2 t | f
     0= abort" can't find act2?"
-    %00000 over action-get-sample sample-deallocate \ dom1 act2
-    %11111 swap action-get-sample sample-deallocate \ dom1
+    %00000 over action-get-sample sample-deallocate \ ses dom1 act2
+    %11111 swap action-get-sample sample-deallocate \ ses dom1
 
     \ Set up group for act3.
-    #3 over domain-find-action                      \ dom1, act3 t | f
+    #3 over domain-find-action                      \ ses dom1, act3 t | f
     0= abort" can't find act3?"
-    %00000 over action-get-sample sample-deallocate \ dom1 act3
-    %11111 swap action-get-sample sample-deallocate \ dom1
+    %00000 over action-get-sample sample-deallocate \ ses dom1 act3
+    %11111 swap action-get-sample sample-deallocate \ ses dom1
 
     \ Set up group for act4.
-    #4 over domain-find-action                      \ dom1, act4 t | f
+    #4 over domain-find-action                      \ ses dom1, act4 t | f
     0= abort" can't find act3?"
-    %00000 over action-get-sample sample-deallocate \ dom1 act4
-    %11111 swap action-get-sample sample-deallocate \ dom1
+    %00000 over action-get-sample sample-deallocate \ ses dom1 act4
+    %11111 swap action-get-sample sample-deallocate \ ses dom1
 
     \ Set up group for act5.
-    #5 over domain-find-action                      \ dom1, act5 t | f
+    #5 over domain-find-action                      \ ses dom1, act5 t | f
     0= abort" can't find act5?"
-    %00000 over action-get-sample sample-deallocate \ dom1 act5
-    %11111 swap action-get-sample sample-deallocate \ dom1
-    drop                                                                        \
-    
-    current-session                                 \ sess
-    s" (X1X1 01X1X)" regioncorr-from-string-a       \ sess regc
-    -1 #2 rate-new                                  \ sess regc rt
-    regioncorrrate-new                              \ sess regc-rt
-    \ cr ." regioncorrrate: " dup .regioncorrrate cr
-    over session-add-regioncorrrate                  \ sess
+    %00000 over action-get-sample sample-deallocate \ ses dom1 act5
+    %11111 swap action-get-sample sample-deallocate \ ses dom1
+    drop                                            \ ses
 
-    s" (1XX1 01X1X)" regioncorr-from-string-a       \ sess regc
-    #-2 0 rate-new                                  \ sess
-    regioncorrrate-new                              \ sess regc-rt
+    s" (X1X1 01X1X)" regioncorr-from-string-a       \ ses regc
+    -1 #2 rate-new                                  \ ses regc rt
+    regioncorrrate-new                              \ ses regc-rt
     \ cr ." regioncorrrate: " dup .regioncorrrate cr
-    over session-add-regioncorrrate                 \ sess
+    over session-add-regioncorrrate                 \ ses
+
+    s" (1XX1 01X1X)" regioncorr-from-string-a       \ ses regc
+    #-2 0 rate-new                                  \ ses
+    regioncorrrate-new                              \ ses regc-rt
+    \ cr ." regioncorrrate: " dup .regioncorrrate cr
+    over session-add-regioncorrrate                 \ ses
 
     0 over session-find-domain                      \ sess, dom t | f
     is-false abort" domain 0 not found?"
-    over session-set-current-domain                 \ sess
+    over session-set-current-domain                 \ ses
 
     \ 0
-\    s" (0011 01111)" regioncorr-from-string-a       \ sess regc-to
-\    s" (0000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
+\    s" (0011 01111)" regioncorr-from-string-a       \ ses regc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ ses regc-to regc-from
 
     \ -1
     \ Set domain 0 current state.
-    0 over session-find-domain                      \ sess, dom t | f
+    0 over session-find-domain                      \ ses, dom t | f
     is-false abort" domain0 not found?"
-    %1000 swap domain-set-current-state             \ sess
+    %1000 swap domain-set-current-state             \ ses
 
     \ Set domain1 current state.
-    1 over session-find-domain                      \ sess, dom t | f
+    1 over session-find-domain                      \ ses, dom t | f
     is-false abort" domain1 not found?"
-    %01111 swap domain-set-current-state             \ sess
+    %01111 swap domain-set-current-state            \ ses
 
     dup .session
 
     \ Create from/to regioncorr instances.
-    s" (0111 01111)" regioncorr-from-string-a       \ sess regc-to
-    s" (1000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
+    s" (0111 01111)" regioncorr-from-string-a       \ ses regc-to
+    s" (1000 01111)" regioncorr-from-string-a       \ ses regc-to regc-from
 
     \ -2
-\    s" (1001 01111)" regioncorr-from-string-a       \ sess regc-to
-\    s" (0000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
+\    s" (1001 01111)" regioncorr-from-string-a       \ ses regc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ ses regc-to regc-from
 
     \ -3
-\    s" (1101 01111)" regioncorr-from-string-a       \ sess regc-to
-\    s" (0000 01111)" regioncorr-from-string-a       \ sess regc-to regc-from
+\    s" (1101 01111)" regioncorr-from-string-a       \ ses regc-to
+\    s" (0000 01111)" regioncorr-from-string-a       \ ses regc-to regc-from
 
-    over                                            \ sess regc-to regc-from regc-to
-    #3 pick                                         \ sess regc-to regc-from regc-to sess
-    session-change-to                               \ sess regc-to regc-from bool
+    over                                            \ ses regc-to regc-from regc-to
+    #3 pick                                         \ ses regc-to regc-from regc-to sess
+    session-change-to                               \ ses regc-to regc-from bool
     if
         cr ." change succeeded" cr
     else
@@ -350,24 +350,23 @@
 
 : session-test-corner-needs
     \ Init session.
-    current-session-new                             \
-    current-session                                 \ sess
+    current-session-new                             \ ses
 
     \ Init domain 0.
-    #4 domain-new                                   \ sess dom0
-    2dup swap                                       \ sess dom0 dom0 sess
-    session-add-domain                              \ sess dom0
+    #4 over domain-new                              \ ses dom0
+    2dup swap                                       \ ses dom0 dom0 sess
+    session-add-domain                              \ ses dom0
 
     \ Get act0.
-    0 over domain-find-action                       \ sess dom0, act0 t | f
+    0 over domain-find-action                       \ ses dom0, act0 t | f
     is-false abort" act0 not found?"
 
     \ Add arbitrary samples
-    #5 #5 sample-new                                \ sess dom0 act0 smpl5
-    2dup swap action-add-sample                     \ sess dom0 act0 smpl5
-    2dup swap action-add-sample                     \ sess dom0 act0 smpl5
-    2dup swap action-add-sample                     \ sess dom0 act0 smpl5
-    2dup swap action-add-sample                     \ sess dom0 act0 smpl5
+    #5 #5 sample-new                                \ ses dom0 act0 smpl5
+    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
+    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
+    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
+    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
 
     cr over .action cr
 

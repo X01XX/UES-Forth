@@ -83,7 +83,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     \ check arg.
     assert-tos-is-plan-list
     dup list-get-length
-    current-session session-number-domains-xt execute
+    current-session session-get-number-domains-xt execute
     <> abort" plancorr-new: invalid list length?"
 
     \ Allocate space.

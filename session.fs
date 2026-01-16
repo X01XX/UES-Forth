@@ -63,6 +63,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     then
 ;
 
+' assert-tos-is-session to assert-tos-is-session-xt
+
 \ Start accessors.
 
 : session-get-domains ( sess0 -- lst )  \ Return the domain-list from an session instance.
@@ -324,7 +326,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ' session-calc-max-regions to session-calc-max-regions-xt
 
 \ Create an session, given an instance ID.
-: current-session-new ( -- ) \ new session pushed onto session stack.
+: current-session-new ( -- sess ) \ new session pushed onto session stack.
     \ cr ." current-session-new: start " .s cr
     \ Allocate space.
     session-mma mma-allocate        \ ses
@@ -364,7 +366,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     list-new
     over _session-set-pathstep-lol-by-rate              \ sess
 
-    session-stack stack-push
+    dup session-stack stack-push                        \ sess
     \ cr ." current-session-new: end " .s cr
 ;
 
@@ -1750,7 +1752,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 \ Return the numebr of domains.
-: session-number-domains ( sess0 -- u )
+: session-get-number-domains ( sess0 -- u )
     \ Check arg.
     assert-tos-is-session
 
@@ -1758,4 +1760,4 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     list-get-length
 ;
 
-' session-number-domains to session-number-domains-xt
+' session-get-number-domains to session-get-number-domains-xt

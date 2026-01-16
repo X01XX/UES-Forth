@@ -1,11 +1,12 @@
 \ Implement a Action struct and functions.
 
 #29717 constant action-id
-    #7 constant action-struct-number-cells
+    #8 constant action-struct-number-cells
 
 \ Struct fields
 0                                     constant action-header-disp               \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits).
-action-header-disp              cell+ constant action-squares-disp              \ A square-list
+action-header-disp              cell+ constant action-parent-domain-disp        \ Domain pointer.
+action-parent-domain-disp       cell+ constant action-squares-disp              \ A square-list
 action-squares-disp             cell+ constant action-incompatible-pairs-disp   \ A region-list
 action-incompatible-pairs-disp  cell+ constant action-logical-structure-disp    \ A region-list
 action-logical-structure-disp   cell+ constant action-groups-disp               \ A group-list.
@@ -101,6 +102,24 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     4c!
 ;
 
+\ Return the parent domain of the action.
+: action-get-parent-domain ( act0 -- dom )
+    \ Check arg.
+    assert-tos-is-action
+
+    action-parent-domain-disp + \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the parent domain of an action.
+: _action-set-parent-domain ( dom act0 -- )
+    \ Check args.
+    assert-tos-is-action
+
+    action-parent-domain-disp + \ Add offset.
+    !                           \ Set the field.
+;
+
 \ Return the square-list from an action instance.
 : action-get-squares ( act0 -- lst )
     \ Check arg.
@@ -188,7 +207,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     @                       \ Fetch the field.
 ;
 
-\ Set the futction xt that implements an action.
+\ Set the function xt that implements an action.
 : _action-set-function ( xt act0 -- )
     \ Check args.
     assert-tos-is-action
@@ -268,7 +287,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ If list is empty, add maximum domain region.
     over list-is-empty                      \ reg-lst act0 bool
     if
-        current-domain                      \ reg-lst act0 dom
+        dup                                 \ reg-lst act0
+        action-get-parent-domain            \ reg-lst act0 dom
         domain-get-max-region-xt execute    \ reg-lst act0 mx-reg
         #2 pick list-push-struct            \ reg-lst act0
     then
@@ -440,52 +460,62 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 \ The instance ID defaults to zero.
 \ It will likely be reset to match its position in a list, using action-set-inst-id,
 \ which avoids duplicates and may be useful as an index into the list.
-: action-new ( nb1 xt1 -- addr)
+: action-new ( xt1 dom0 -- addr)
+    \ Check arg.
+    assert-tos-is-domain-xt execute
 
     \ Allocate space.
-    action-mma mma-allocate     \ nb1 xt1 actr
+    action-mma mma-allocate             \ xt1 dom0 actr
 
     \ Store struct id.
-    action-id over              \ nb1 xt1 act id act
-    struct-set-id               \ nb1 xt1 act
+    action-id over                      \ xt1 dom0 act id act
+    struct-set-id                       \ xt1 dom0 act
 
     \ Init use count.
-    0 over struct-set-use-count \ nb1 xt1 act
+    0 over struct-set-use-count         \ xt1 dom0 act
 
-    \ Set intance ID.
-    0 over
-    action-set-inst-id              \ nb1 xt1 act
+    \ Set instance ID.
+    over                                \ xt1 dom0 act dom0
+    domain-get-number-actions-xt        \ xt1 dom0 act dom0 xt
+    execute                             \ xt1 dom0 act na
+    over action-set-inst-id             \ xt1 dom0 act
 
     \ Set xt
-    tuck _action-set-function       \ nb1 act
+    rot over                            \ dom0 act xt1 act
+    _action-set-function                \ dom0 act
 
     \ Set squares list.
-    list-new                        \ nb1 act lst
-    over _action-set-squares        \ nb1 act
+    list-new                            \ dom0 act lst
+    over _action-set-squares            \ dom0 act
 
     \ Set incompatible-pairs list.
-    list-new                            \ nb1 act lst
-    over _action-set-incompatible-pairs \ nb1 act
+    list-new                            \ dom0 act lst
+    over _action-set-incompatible-pairs \ dom0 act
 
     \ Get max region.
-    swap                                \ act nb1
-    all-bits                            \ act all-bits
-    0 region-new2                       \ act mx-reg
+    over domain-get-num-bits-xt         \ dom0 act xt
+    execute                             \ dom0 act nb
+    all-bits                            \ dom0 act all-bits
+    0 region-new2                       \ dom0 act mx-reg
 
     \ Set logical-structure list.
-    dup                                 \ act mx-reg mx-reg
-    list-new                            \ act mx-reg mx-reg lst
-    tuck                                \ act mx-reg lst mx-reg lst
-    list-push-struct                    \ act mx-reg lst
-    #2 pick                             \ act mx-reg lst act
-    _action-set-logical-structure       \ act mx-reg
+    dup                                 \ dom0 act mx-reg mx-reg
+    list-new                            \ dom0 act mx-reg mx-reg lst
+    tuck                                \ dom0 act mx-reg lst mx-reg lst
+    list-push-struct                    \ dom0 act mx-reg lst
+    #2 pick                             \ dom0 act mx-reg lst act
+    _action-set-logical-structure       \ dom0 act mx-reg
 
     \ Set defining-regions list.
-    list-new                            \ act mx-reg lst
-    tuck                                \ act lst mx-reg lst
-    list-push-struct                    \ act lst
-    over                                \ act lst act
-    _action-set-defining-regions        \ act
+    list-new                            \ dom0 act mx-reg lst
+    tuck                                \ dom0 act lst mx-reg lst
+    list-push-struct                    \ dom0 act lst
+    over                                \ dom0 act lst act
+    _action-set-defining-regions        \ dom0 act
+
+    \ Set parent-domain.
+    tuck                                \ act dom0 act
+    _action-set-parent-domain           \ act
 
     \ Set group list.
     list-new                            \ act lst
@@ -759,7 +789,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
     \ Init new logical-structure region list.
     list-new                                \ act0 ls-new
-    current-domain                          \ act0 ls-new dom
+    over                                    \ act0 ls-new act0
+    action-get-parent-domain                \ act0 ls-new dom
     domain-get-max-region-xt execute        \ act0 ls-new max-reg
     over region-list-push                   \ act0 ls-new
 
@@ -1016,16 +1047,18 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
             if
                 \ Add max region with first square.
-                                        \ sqr act0 grp-lst
-                rot                     \ act0 grp-lst sqr
-                list-new                \ act0 grp-lst sqr sqr-lst
-                tuck                    \ act0 grp-lst sqr-lst sqr sqr-lst
-                square-list-push        \ act0 grp-lst sqr-lst
-                current-domain          \ act0 grp-lst sqr-lst dom
-                domain-get-max-region-xt execute   \ act0 grp-lst sqr-lst mreg
-                group-new               \ act0 grp-lst grp
-                swap                    \ act0 grp grp-lst
-                group-list-push         \ act0
+                                            \ sqr act0 grp-lst
+                rot                         \ act0 grp-lst sqr
+                list-new                    \ act0 grp-lst sqr sqr-lst
+                tuck                        \ act0 grp-lst sqr-lst sqr sqr-lst
+                square-list-push            \ act0 grp-lst sqr-lst
+                #2 pick                     \ act0 grp-lst sqr-lst act0
+                action-get-parent-domain    \ act0 grp-lst sqr-lst dom
+                domain-get-max-region-xt    \ act0 grp-lst sqr-lst xt
+                execute                     \ act0 grp-lst sqr-lst mreg
+                group-new                   \ act0 grp-lst grp
+                swap                        \ act0 grp grp-lst
+                group-list-push             \ act0
                 drop
             else
                 3drop
@@ -1153,8 +1186,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             abort
         then
     then
-    current-domain          \ u2 sta1 act0 domx
-    need-new                \ need
+    dup action-get-parent-domain    \ u2 sta1 act0 domx
+    need-new                        \ need
 ;
 
 ' action-make-need to action-make-need-xt
@@ -1274,7 +1307,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     assert-3os-is-region
 
     \ cr
-    \ ." Dom: " current-domain domain-get-inst-id-xt execute .
+    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id . space ." get-needs for " over .value space ." TODO"
     \ cr
 
@@ -1538,7 +1571,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         exit
     then
 
-    \ cr ." Dom: " current-domain domain-get-inst-id-xt execute .
+    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-by-changes: " over .changes cr
 
@@ -1591,7 +1624,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     swap region-superset-of                         \ | bool
     abort" action-calc-steps-fc 2: region subset?"    \ |
 
-    \ cr ." Dom: " current-domain domain-get-inst-id-xt execute .
+    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
 
@@ -1644,7 +1677,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     swap region-superset-of                         \ | bool
     abort" action-calc-steps-bc 2: region subset?"    \ |
 
-    \ cr ." Dom: " current-domain domain-get-inst-id-xt execute .
+    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-bc: " #2 pick .region space over .region cr
 

@@ -85,8 +85,16 @@
 ;
 
 : state-tests
-    0 set-domain
+    current-session-new                             \ sess
+
+    \ Init domain 0.
+    #4 over domain-new                              \ sess dom0
+    swap                                            \ dom0 sess
+    session-add-domain                              \
+
     state-test-complement
     state-test-not-a-or-not-b
     state-test-boolean-algebra
+
+    current-session-deallocate
 ;

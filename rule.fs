@@ -1125,6 +1125,22 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap changes-deallocate                         \ bool
 ;
 
+\ Return true if a rule contains at least one needed change, reg-from to reg-to.
+: rule-contains-needed-change ( reg-to reg-from rul0 -- bool )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-region
+    assert-3os-is-region
+
+    \ Get needed changes.
+    -rot                                        \ rul0 reg-to reg-from
+    changes-new-region-to-region                \ rul0 ned-cngs'
+
+    \ Check if rule contains at least one needed change.
+    tuck swap                                   \ ned-cngs' ned-cngs' rul0
+    rule-intersects-changes                     \ ned-cngs' bool
+    swap changes-deallocate                     \ bool 
+;
 
 \ Get a step from a given rule, for forward chaining, from a given region (reg-from), to another, non-intersecting, given region (reg-to), if possible.
 \
@@ -1149,26 +1165,18 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick                             \ | reg-to reg-from
-    2dup
-    swap region-superset-of                     \ | reg-to reg-from bool
-    abort" rule-calc-step-fc: 2 region subset?" \ | reg-to reg-from
+    swap region-superset-of                     \ | bool
+    abort" rule-calc-step-fc: 2 region subset?" \ |
 
     \ Check for needed changes.
-
-    \ Get needed changes.
-    changes-new-region-to-region                \ reg-to reg-from rul0 | ned-cngs'
-
-    \ Check if rule contains at least one needed change.
-    2dup swap rule-intersects-changes           \ | ned-cngs' bool
+    #2 pick #2 pick #2 pick                     \ | reg-to reg-from rul0
+    rule-contains-needed-change                 \ | bool
     if
-    else                                        \ reg-to reg-from rul0 | ned-cngs'
-        changes-deallocate
+    else
         3drop
         false
         exit
     then
-
-    changes-deallocate                          \ reg-to reg-from rul0 |
 
     \ Check if reg-from intersects rule initial-region.
 
@@ -1259,24 +1267,18 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ cr ." rule-calc-step-bc: to: " #2 pick .region space ." from: " over .region space ." rule: " dup .rule cr
 
     #2 pick #2 pick                             \ | reg-to reg-from
-    2dup swap region-superset-of                \ | reg-to reg-from bool
-    abort" rule-calc-step-bc: 2 region subset?" \ | reg-to reg-from
+    swap region-superset-of                     \ | bool
+    abort" rule-calc-step-bc: 2 region subset?" \ |
 
-    \ Get needed changes.
-    changes-new-region-to-region                \ | ned-cngs'
-
-    \ Check if rule contains at least one needed change.
-    2dup swap rule-intersects-changes           \ reg-to reg-from rul0 | ned-cngs' bool
+    \ Check for needed changes.
+    #2 pick #2 pick #2 pick                     \ | reg-to reg-from rul0
+    rule-contains-needed-change                 \ | bool
     if
     else
-        changes-deallocate
         3drop
         false
-        \ cr ." rule-calc-step-bc: 1 false" cr
         exit
     then
-
-    changes-deallocate                          \ reg-to reg-from rul0 |
 
     \ Check if rule reg-to intersects rule result-region.
     #2 pick over                                \ reg-to reg-from rul0 | reg-to rul0

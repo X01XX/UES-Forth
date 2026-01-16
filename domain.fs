@@ -1,11 +1,12 @@
 \ Implement a Domain struct and functions.
 
 #31379 constant domain-id
-    #4 constant domain-struct-number-cells
+    #5 constant domain-struct-number-cells
 
 \ Struct fields
 0                                   constant domain-header-disp         \ 16-bits [0] struct id, [1] use count, [2] instance id (8 bits), num-bits (8 bits)
-domain-header-disp          cell+   constant domain-actions-disp        \ A action-list
+domain-header-disp          cell+   constant domain-parent-session-disp \ A session.
+domain-parent-session-disp  cell+   constant domain-actions-disp        \ A action-list
 domain-actions-disp         cell+   constant domain-current-state-disp  \ A state/value.
 domain-current-state-disp   cell+   constant domain-current-action-disp \ An action addr.
 
@@ -188,6 +189,24 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     !
 ;
 
+\ Return the parent session of the domain.
+: domain-get-parent-session ( act0 -- dom )
+    \ Check arg.
+    assert-tos-is-domain
+
+    domain-parent-session-disp + \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the parent session of an domain.
+: _domain-set-parent-session ( dom act0 -- )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-parent-session-disp +    \ Add offset.
+    !                               \ Set the field.
+;
+
 \ End accessors.
 
 \ Create a domain, given the number of bits to be used.
@@ -197,33 +216,43 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 \ using domain-set-inst-id, which avoids duplicates and may be useful as an index into the list.
 \
 \ The current state defaults to zero, but can be set with domain-set-current-state.
-: domain-new ( nb0 -- addr)
+: domain-new ( nb1 ses0 -- addr)
+    \ Check arg.
+    assert-tos-is-session-xt execute
 
     \ Allocate space.
-    domain-mma mma-allocate         \ nb0 dom
+    domain-mma mma-allocate         \ nb1 ses0 dom
 
     \ Store struct id.
-    domain-id over                  \ nb0 dom id dom
-    struct-set-id                   \ nb0 dom
+    domain-id over                  \ nb1 ses0 dom id dom
+    struct-set-id                   \ nb1 ses0 dom
 
     \ Init use count
-    0 over struct-set-use-count     \ nb0 dom
+    0 over struct-set-use-count     \ nb1 ses0 dom
 
-    \ Set intance ID.
-    0 over                          \ nb0 dom 0 dom
-    domain-set-inst-id              \ nb0 dom
+    \ Set instance ID.
+    over                            \ nb1 ses0 dom ses0
+    session-get-number-domains-xt   \ nb1 ses0 dom ses0 xt
+    execute                         \ nb1 ses0 dom nd
+    over                            \ nb1 ses0 dom nd dom
+    domain-set-inst-id              \ nb1 ses0 dom
 
     \ Set num bits.
-    2dup _domain-set-num-bits       \ nb0 dom
+    rot over                        \ ses0 dom nb1 dom
+    _domain-set-num-bits            \ ses0 dom
+
+    \ Set parent session field.
+    tuck                            \ dom ses0 dom
+    _domain-set-parent-session      \ dom
 
     \ Set actions list.
-    list-new                        \ nb0 dom lst
-    2dup swap                       \ nb0 dom lst lst dom
-    _domain-set-actions             \ nb0 dom lst
+    list-new                        \ dom lst
+    2dup swap                       \ dom lst lst dom
+    _domain-set-actions             \ dom lst
 
     \ Add action 0.
-    rot                             \ dom lst nb0
-    [ ' act-0-get-sample ] literal  \ dom lst nb0 xt
+    [ ' act-0-get-sample ] literal  \ dom lst xt
+    #2 pick                         \ dom lst xt dom
     action-new                      \ dom lst act
     tuck swap                       \ dom act act lst
 
@@ -273,8 +302,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     \ Check args.
     assert-tos-is-domain
 
-    dup domain-get-num-bits     \ xt1 dom0 nb
-    rot                         \ dom0 nb xt1
+    tuck                        \ dom0 xt1 dom0
 
     action-new                  \ dom0 actx
 
@@ -1488,8 +1516,21 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 
 \ Set the current domain.
 : domain-set-current ( dom0 -- )
-    current-session
+    \ Check arg.
+    assert-tos-is-domain
+
+    dup domain-get-parent-session
     session-set-current-domain-xt execute
 ;
 
 ' domain-set-current to domain-set-current-xt
+
+: domain-get-number-actions ( dom -- na )
+    \ Check arg.
+    assert-tos-is-domain
+
+    domain-get-actions      \ act-lst
+    list-get-length         \ len
+;
+
+' domain-get-number-actions to domain-get-number-actions-xt

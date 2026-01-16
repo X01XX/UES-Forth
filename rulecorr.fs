@@ -83,7 +83,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     \ check arg.
     assert-tos-is-rule-list
     dup list-get-length
-    current-session session-number-domains-xt execute
+    current-session session-get-number-domains-xt execute
     <> abort" rulecorr-new: invalid list length?"
 
     \ Allocate space.

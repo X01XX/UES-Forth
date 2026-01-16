@@ -364,7 +364,7 @@
         ?dup
     while
         dup link-get-data                           \ inc-lst' ls-lst' df-lst' ls-link ls-reg
-        cr dup .region 4 spaces
+        cr dup .region #4 spaces
 
         \ Check each incompatible-pair state to see if its in a logical-structure region.
         #4 pick                                     \ inc-lst' ls-lst' df-lst' ls-link ls-reg inc-lst'
@@ -596,7 +596,13 @@
 ;
 
 : region-list-tests
-    0 set-domain
+    current-session-new                             \ sess
+
+    \ Init domain 0.
+    #4 over domain-new                              \ sess dom0
+    swap                                            \ dom0 sess
+    session-add-domain                              \
+
     region-list-test-region-intersections-n
     region-list-test-subtract-n
     region-list-test-states
@@ -604,5 +610,7 @@
     region-list-test-intersection-fragments
     region-list-test-normalize
     region-list-test-copy-except
+
+    current-session-deallocate
 ;
 

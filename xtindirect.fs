@@ -29,8 +29,7 @@
 
 ' xtabort value session-get-domains-xt
 
-' xtabort value session-number-domains-xt
-
+' xtabort value assert-tos-is-session-xt
 
 
 ' xtabort value domain-get-all-bits-mask-xt
@@ -53,6 +52,7 @@
 
 ' xtabort value domain-get-plan-bc-xt
 
+' xtabort value domain-get-number-actions-xt
 
 ' xtabort value assert-tos-is-domain-xt
 

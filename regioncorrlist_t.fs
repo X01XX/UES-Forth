@@ -399,6 +399,18 @@
 ;
 
 : regioncorr-list-tests
+    current-session-new                             \ ses
+
+    \ Init domain 0.
+    #4 over domain-new                              \ ses dom0
+    over                                            \ ses dom0 ses
+    session-add-domain                              \ ses
+
+    \ Init domain 1.
+    #5 over domain-new                              \ ses dom0
+    swap                                            \ dom0 ses
+    session-add-domain                              \
+
     regioncorr-list-test-any-superset
     regioncorr-list-test-remove-subsets
     regioncorr-list-test-push-nosubs
@@ -407,6 +419,8 @@
     regioncorr-list-test-complement
     regioncorr-list-test-normalize
     regioncorr-list-test-intersection-fragments
+
+    current-session-deallocate
 
     cr ." regioncorr-list tests: Ok" cr
 ;

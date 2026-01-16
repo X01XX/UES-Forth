@@ -33,9 +33,6 @@
     assert-tos-is-domain-list
     assert-nos-is-domain
 
-    dup list-get-length         \ dom dom-lst len
-    #2 pick                     \ dom dom-lst len dom
-    domain-set-inst-id          \ dom dom-lst
     list-push-end-struct        \
 ;
 
