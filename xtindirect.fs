@@ -23,8 +23,6 @@
 
 ' xtabort value session-calc-max-regions-xt
 
-' xtabort value session-stack-tos-xt
-
 ' xtabort value session-get-current-domain-xt
 
 ' xtabort value session-get-domains-xt
@@ -103,5 +101,5 @@
 
 ' xtabort value regioncorr-get-list-xt
 
-
+' xtabort value test-none-in-use-xt
 

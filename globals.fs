@@ -1,7 +1,15 @@
 
-\ Return the current session, instead of passing it down through arguments.
-: current-session
-    session-stack-tos-xt execute
+\ A store for the current session.
+0 value current-session-store
+
+: current-session ( -- ses )
+    current-session-store   \ ses
+    ?dup
+    if
+    else
+        cr ." No session is allocated."
+        abort
+    then
 ;
 
 \ Return the current domain, instead of passing it down through arguments.

@@ -165,9 +165,9 @@ cs
     assert-group-mma-none-in-use
     assert-need-mma-none-in-use
     assert-planstep-mma-none-in-use
-    assert-plancorr-mma-none-in-use
     assert-pathstep-mma-none-in-use
     assert-plan-mma-none-in-use
+    assert-plancorr-mma-none-in-use
     assert-rate-mma-none-in-use
     assert-regioncorrrate-mma-none-in-use
     assert-action-mma-none-in-use
@@ -175,8 +175,13 @@ cs
     assert-session-mma-none-in-use
 
     depth 0<>
-    abort" stack not empty "
+    if
+        cr ." stack not empty " .s cr
+        abort
+    then
 ;
+
+' test-none-in-use to test-none-in-use-xt
 
 \ Test files.
 include square_t.fs
@@ -213,11 +218,11 @@ cr ." main.fs"
 #0370 pathstep-mma-init
 #0150 plan-mma-init
 #0040 plancorr-mma-init
-#0050 action-mma-init
-#0025 domain-mma-init
 #0100 rate-mma-init
 #0100 regioncorrrate-mma-init
-#0005 session-mma-init
+#0050 action-mma-init
+#0025 domain-mma-init
+#0001 session-mma-init
 cr
 
 \ Free heap memory before exiting.
@@ -237,9 +242,9 @@ cr
     group-mma mma-free
     need-mma mma-free
     planstep-mma mma-free
-    plancorr-mma mma-free
     pathstep-mma mma-free
     plan-mma mma-free
+    plancorr-mma mma-free
     rate-mma mma-free
     regioncorrrate-mma mma-free
     action-mma mma-free

@@ -21,19 +21,13 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
 0 value session-mma     \ Storage for session mma instance.
 
-0 value session-stack   \ Stack for controlled access to session instances,
-                        \ primarily for testing purposes.
-
 \ Init session mma, return the addr of allocated memory.
 : session-mma-init ( num-items -- ) \ sets region-mma.
     dup 1 <
     abort" session-mma-init: Invalid number of items."
 
     cr ." Initializing Session store."
-    session-struct-number-cells over mma-new to session-mma
-
-    \ Create stack for session instances.
-    stack-new to session-stack
+    session-struct-number-cells swap mma-new to session-mma
 ;
 
 \ Check session mma usage.
@@ -284,12 +278,6 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 \ End accessors.
 
-: session-stack-tos ( -- sess )
-    session-stack stack-tos
-;
-
-' session-stack-tos to session-stack-tos-xt
-
 \ Return an regc of max domain regions.
 : session-calc-max-regions ( sess0 -- regioncorr )
 
@@ -327,6 +315,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
 \ Create an session, given an instance ID.
 : current-session-new ( -- sess ) \ new session pushed onto session stack.
+    test-none-in-use-xt execute
+    
     \ cr ." current-session-new: start " .s cr
     \ Allocate space.
     session-mma mma-allocate        \ ses
@@ -366,8 +356,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     list-new
     over _session-set-pathstep-lol-by-rate              \ sess
 
-    dup session-stack stack-push                        \ sess
     \ cr ." current-session-new: end " .s cr
+    dup to current-session-store
 ;
 
 \ Print a session.
@@ -438,7 +428,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 : current-session-deallocate ( -- ) \ Deallocate the session.
-    session-stack stack-tos         \ sess
+    current-session             \ sess
 
     \ Clear fields.
     dup session-get-domains domain-list-deallocate
@@ -456,12 +446,15 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     regioncorr-lol-deallocate
 
     \ Deallocate a list of rulcorrlst list.
-    session-get-pathstep-lol-by-rate   \ ruls-lst
-    pathstep-lol-deallocate           \
+    dup session-get-pathstep-lol-by-rate   \ ses ruls-lst
+    pathstep-lol-deallocate                \ ses
 
     \ Deallocate session.
-    session-stack stack-pop
     session-mma mma-deallocate
+
+    0 to current-session-store
+    
+    test-none-in-use-xt execute
 ;
 
 : session-get-sample ( act2 dom1 sess0 -- sample )  \ Get a sample from an action in a domain.
