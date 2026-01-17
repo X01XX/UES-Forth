@@ -11,6 +11,17 @@
     then
 ;
 
+\ Check if nos is a list, if non-empty, with the first item being a rule.
+: assert-nos-is-rule-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-rule
+        drop
+    then
+;
+
 \ Deallocate a rule list.
 : rule-list-deallocate ( lst0 -- )
     \ Check args.

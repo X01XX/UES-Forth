@@ -16,3 +16,10 @@
     domain-get-current-action-xt execute
 ;
 
+: action-parent-domain ( act0 -- dom )
+    \ Check arg.
+    assert-tos-is-action-xt execute
+
+    action-get-parent-domain-xt execute
+;
+    

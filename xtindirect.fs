@@ -69,6 +69,8 @@
 
 ' xtabort value action-make-need-xt
 
+' xtabort value action-get-parent-domain-xt
+
 
 ' xtabort value memory-use-xt
 

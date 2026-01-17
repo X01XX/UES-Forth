@@ -456,33 +456,27 @@
     cr ." rule-test-new-region-to-region: Ok" cr
 ;
 
-: rule-test-calc-step-fc
+: rule-test-calc-for-planstep-fc
     \ Test 1, reg-from intersects rule initial-region.
     %1101 %1101 region-new                  \ reg-to
     %0100 %0100 region-new                  \ reg-to reg-from
     s" Xx/XX/01/01/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
-    if                                      \ reg-to reg-from rulx | stp
-        \ cr ." step1: " dup .planstep cr
-        \ cr dup .step cr
-        dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
-        s" 01/11/01/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
-        tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
-        rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
-        is-false abort" rule-test-calc-step-fc 1: unexpected rule?"
+    rule-calc-for-planstep-fc               \ reg-to reg-from rulx | rul' t | f
+    if                                      \ reg-to reg-from rulx | rul'
+        \ cr ." step1: " dup .rule cr
+        s" 01/11/01/01/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
+        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
+        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
+        is-false abort" rule-test-calc-for-planstep-fc: 1: unexpected rule?"
 
-        rule-deallocate                         \ reg-to reg-from rulx | stp
-        dup                                     \ reg-to reg-from rulx | stp stp
-        planstep-get-number-unwanted-changes    \ reg-to reg-from rulx | stp u-unw
-        1 = is-false abort" rule-test-calc-step-fc 1: invalid number of unwanted changes"
-
-        planstep-deallocate
+        rule-deallocate                         \ reg-to reg-from rulx | rul'
+        rule-deallocate
         rule-deallocate
         region-deallocate
         region-deallocate
     else                                \ reg-to reg-from rulx
-        cr ." rule-test-calc-step-fc 1: rule-calc-step-fc failed?"
+        cr ." rule-test-calc-for-planstep-fc: 1 rule-calc-planstep-fc failed?"
         abort
     then
 
@@ -492,27 +486,22 @@
     %0100 %0100 region-new                  \ reg-to reg-from
     s" 01/Xx/11/Xx/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
-    if                                      \ reg-to reg-from rulx | stp
-        \ cr ." step2: " dup .planstep cr
-        dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
-        s" 01/10/11/01/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+    rule-calc-for-planstep-fc               \ reg-to reg-from rulx | rul' t | f
+    if                                      \ reg-to reg-from rulx | rul'
+        \ cr ." step2: " dup .rule cr
+        s" 01/10/11/01/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
         \ cr ." expt: " dup .rule space ." found: " over .rule cr
-        tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
-        rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
-        is-false abort" rule-test-calc-step-fc 2: unexpected rule?"
+        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
+        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
+        is-false abort" rule-test-calc-for-planstep-fc: 2 unexpected rule?"
 
-        rule-deallocate                         \ reg-to reg-from rulx | stp
-        dup                                     \ reg-to reg-from rulx | stp stp
-        planstep-get-number-unwanted-changes    \ reg-to reg-from rulx | stp u-unw
-        #2 = is-false abort" rule-test-calc-step-fc 2: invalid number of unwanted changes"
-
-        planstep-deallocate
+        rule-deallocate                     \ reg-to reg-from rulx | rul'
+        rule-deallocate
         rule-deallocate
         region-deallocate
         region-deallocate
-    else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-fc 2: failed?"
+    else                                    \ reg-to reg-from rulx
+        cr ." rule-calc-for-planstep-fc: 2 failed?"
         abort
     then
 
@@ -521,56 +510,50 @@
     %0111 %0001 region-new                  \ reg-to reg-from
     s" XX/X1/X0/XX/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-step-fc                       \ reg-to reg-from rulx | stp t | f
-    if                                      \ reg-to reg-from rulx | stp
-        \ cr ." step3: " dup .planstep cr
-        dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
-        s" 00/X1/X0/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
+    rule-calc-for-planstep-fc               \ reg-to reg-from rulx | rul' t | f
+    if                                      \ reg-to reg-from rulx | rul'
+        \ cr ." step3: " dup .rule cr
+        s" 00/X1/X0/11/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
         \ cr ." expt: " dup .rule space ." found: " over .rule cr
-        tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
-        rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
-        is-false abort" rule-test-calc-step-fc: 3 unexpected rule?"
+        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
+        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
+        is-false abort" rule-test-calc-for-planstep-fc: 3 unexpected rule?"
 
-        rule-deallocate                         \ reg-to reg-from rulx | stp
-        dup                                     \ reg-to reg-from rulx | stp stp
-        planstep-get-number-unwanted-changes    \ reg-to reg-from rulx | stp u-unw
-        0 = is-false abort" rule-test-calc-step-fc: 3 invalid number of unwanted changes"
-
-        planstep-deallocate
+        rule-deallocate                     \ reg-to reg-from rulx | rul'
+        rule-deallocate
         rule-deallocate
         region-deallocate
         region-deallocate
-    else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-fc: 3 failed?"
+    else                                    \ reg-to reg-from rulx
+        cr ." rule-calc-for-planstep-fc: 3 failed?"
         abort
     then
 
-    cr ." rule-test-calc-step-fc: Ok" cr
+    cr ." rule-test-calc-for-planstep-fc: Ok" cr
 ;
 
-: rule-test-calc-step-bc
+: rule-test-calc-for-planstep-bc
 
     \ Test 1, reg-to intersects rule result-region.
     %1101 %1101 region-new                  \ reg-to
     %0100 %0100 region-new                  \ reg-to reg-from
     s" 01/XX/X0/11/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-step-bc                       \ reg-to reg-from rulx | stp t | f
-    if                                      \ reg-to reg-from rulx | stp
-        \ cr dup .planstep cr
-        dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
-        s" 01/11/X0/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
-        tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
-        rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
+    rule-calc-for-planstep-bc               \ reg-to reg-from rulx | rul' t | f
+    if                                      \ reg-to reg-from rulx | rul'
+        \ cr dup .rule cr
+        s" 01/11/X0/11/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
+        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
+        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
         is-false abort" unexpected rule?"
 
+        rule-deallocate                     \ reg-to reg-from rulx | rul'
         rule-deallocate
-        planstep-deallocate
         rule-deallocate
         region-deallocate
         region-deallocate
     else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-bc: 1 failed?"
+        cr ." rule-calc-for-planstep-bc: 1 failed?"
         abort
     then
 
@@ -581,33 +564,27 @@
     %0100 %0100 region-new                  \ reg-to reg-from
     s" 01/Xx/11/XX/" rule-from-string       \ reg-to reg-from rulx
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-step-bc                       \ reg-to reg-from rulx | stp t | f
-    if                                      \ reg-to reg-from rulx | stp
-        \ cr dup .planstep cr
-        \ Check planstep number unwanted changes.
-        dup planstep-get-number-unwanted-changes
-        1 <> abort" Unexpected number of unwanted changes?"
-
+    rule-calc-for-planstep-bc               \ reg-to reg-from rulx | rul' t | f
+    if                                      \ reg-to reg-from rulx | rul'
         \ Check planstep rule.
-        dup planstep-get-rule               \ reg-to reg-from rulx | stp stp-rul
         \ cr ." rule: " dup .rule cr
-        s" 01/01/11/11/" rule-from-string   \ reg-to reg-from rulx | stp stp-rul rul-t'
-        tuck                                \ reg-to reg-from rulx | stp rul-t' stp-rul rul-t'
-        rule-eq                             \ reg-to reg-from rulx | stp rul-t' bool
+        s" 01/01/11/11/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
+        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul rul-t'
+        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
         is-false abort" unexpected rule?"
 
+        rule-deallocate                     \ reg-to reg-from rulx | rul'
         rule-deallocate
-        planstep-deallocate
         rule-deallocate
         region-deallocate
         region-deallocate
     else                                \ reg-to reg-from rulx
-        cr ." rule-calc-step-bc: 2 failed?"
+        cr ." rule-calc-for-planstep-bc: 2 failed?"
         abort
     then
 
 
-    cr ." rule-test-calc-step-bc: Ok" cr
+    cr ." rule-test-calc-for-planstep-bc: Ok" cr
 ;
 
 : rule-test-number-unwanted-changes
@@ -642,8 +619,8 @@
     rule-test-restrict-to-region
     rule-test-combine2
     rule-test-new-region-to-region
-    rule-test-calc-step-fc
-    rule-test-calc-step-bc
+    rule-test-calc-for-planstep-fc
+    rule-test-calc-for-planstep-bc
 
     current-session-deallocate
 ;

@@ -95,7 +95,7 @@ include rulecorr.fs
 
 include plan.fs
 include planlist.fs
-include plan_t.fs
+
 include plancorr.fs
 include plancorrlist.fs
 
@@ -191,6 +191,7 @@ include input_t.fs
 include regioncorr_t.fs
 include regioncorrlist_t.fs
 include session_t.fs
+include plan_t.fs
 
 cr ." main.fs"
 
@@ -258,9 +259,7 @@ cr
     over domain-add-action                      \ sess dom0
 
     [ ' domain-0-act-2-get-sample ] literal     \ sess dom0 xt
-    over domain-add-action            
-group xxxx adding square 0110 
-          \ sess dom0
+    over domain-add-action                      \ sess dom0
 
     [ ' domain-0-act-3-get-sample ] literal     \ sess dom0 xt
     over domain-add-action                      \ sess dom0
@@ -403,6 +402,7 @@ group xxxx adding square 0110
     regioncorr-tests
     regioncorr-list-tests
     session-tests
+    plan-tests
 
     test-none-in-use
 ;

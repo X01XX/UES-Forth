@@ -414,44 +414,42 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     rulestore-calc-changes  \ changes
 ;
 
-\ Return a list of possible forward-chaining steps, given a from-region (tos) and a to-region (nos).
-\ Return 0, 1 or 2 forward steps.
-: group-calc-steps-fc ( reg-to reg-from grp0 -- stp-lst )
+\ Return a list of possible rules, for forward-chaining steps, given a from-region (tos) and a to-region (nos).
+: group-calc-for-plansteps-fc ( reg-to reg-from grp0 -- rul-lst )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-region
     assert-3os-is-region
+    \ cr ." group-calc-for-plansteps-fc:" cr
     #2 pick #2 pick                             \ | reg-to reg-from
-\    2dup
-\    region-superset-of                     \ | reg-to reg-from bool
-\    abort" group-calc-steps-fc 1: region subset?" \ | reg-to reg-from
     swap region-superset-of                     \ | bool
-    abort" group-calc-steps-fc 2: region subset?" \ |
-    \ cr ." group-calc-forward-steps:" cr
+    abort" group-calc-for-plansteps-fc: region subset?"
 
-    group-get-rules         \ reg-to reg-from rul-str
-    rulestore-calc-steps-fc \ stp-lst
+    group-get-rules                             \ reg-to reg-from rul-str
+    rulestore-calc-for-plansteps-fc             \ rul-lst
 ;
 
-\ Return a list of possible backward-chaining steps, given a from-region (tos) and a to-region (nos).
-\ Return 0, 1 or 2 forward steps.
-: group-calc-steps-bc ( reg-to reg-from grp0 -- stp-lst )
+\ Return a list of possible rules, for backward-chaining steps, given a from-region (tos) and a to-region (nos).
+: group-calc-for-plansteps-bc ( reg-to reg-from grp0 -- rul-lst )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-region
     assert-3os-is-region
-    \ cr ." group-calc-forward-steps:" cr
+    \ cr ." group-calc-for-steps-bc:" cr
+    #2 pick #2 pick                             \ | reg-to reg-from
+    swap region-superset-of                     \ | bool
+    abort" group-calc-for-steps-bc: region subset?"
 
-    group-get-rules         \ reg-to reg-from rul-str
-    rulestore-calc-steps-bc \ stp-lst
+    group-get-rules                             \ reg-to reg-from rul-str
+    rulestore-calc-for-plansteps-bc             \ rul-lst
 ;
 
-\ Return a list of steps having needed changes, given a group (tos) and needed changes (nos).
-: group-calc-steps-by-changes ( cngs1 grp0 -- stp-lst )
+\ Return a list of rules having needed changes, given a group (tos) and needed changes (nos).
+: group-calc-for-plansteps-by-changes ( cngs1 grp0 -- rul-lst )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-changes
-    \ cr ." group-calc-steps-by-changes:" cr
+     \ cr ." group-calc-for-plansteps-by-changes:" cr
     over changes-null
     if
         2drop
@@ -459,8 +457,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
         exit
     then
 
-    group-get-rules                     \ cngs1 rul-str
-    rulestore-calc-steps-by-changes     \ stp-lst
+    group-get-rules                         \ cngs1 rul-str
+    rulestore-calc-for-plansteps-by-changes \ rul-lst
 ;
 
 \ Return a fill need, if any.

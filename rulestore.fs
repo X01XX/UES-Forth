@@ -517,8 +517,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 ;
 
 \ Given a rulestore (tos), and needed changes (nos), return a list
-\ of steps that make the needed changes.
-: rulestore-calc-steps-by-changes ( cngs1 ruls0 -- stp-lst )
+\ of rules that make the needed changes.
+: rulestore-calc-for-plansteps-by-changes ( cngs1 ruls0 -- rul-lst )
     \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-changes
@@ -529,133 +529,136 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         exit
     then
 
-    \ Init return list.
-    list-new                                \ cngs1 ruls0 stp-lst
-    swap                                    \ cngs1 stp-lst ruls0
-    rot                                     \ stp-lst ruls0 cngs1
+     \ Init return list.
+    list-new                                \ cngs1 ruls0 rul-lst
 
     \ Process rule 0.
-    dup                                     \ stp-lst ruls0 cngs1 cngs1
-    #2 pick                                 \ stp-lst ruls0 cngs1 cngs1 ruls0
-    rulestore-get-rule-0                    \ stp-lst ruls0 cngs1 cngs1 rul0
+    over                                    \ cngs1 ruls0 rul-lst ruls0
+    rulestore-get-rule-0                    \ cngs1 ruls0 rul-lst rul0
     ?dup if
-        rule-calc-step-by-changes           \ stp-lst ruls0 cngs1, stp t | f
-        if                                  \ stp-lst ruls0 cngs1 stp
-            #3 pick                         \ stp-lst ruls0 cngs1 stp stp-lst
-            planstep-list-push-xt execute   \ stp-lst ruls0 cngs1
+        #3 pick                             \ cngs1 ruls0 rul-lst rul0 cngs1
+        swap                                \ cngs1 ruls0 rul-lst cngs1 rul0
+        rule-calc-for-planstep-by-changes   \ cngs1 ruls0 rul-lst, rul t | f
+        if                                  \ cngs1 ruls0 rul-lst rul
+            over                            \ cngs1 ruls0 rul-lst rul rul-lst
+            list-push-struct                \ cngs1 ruls0 rul-lst
         then
-    else                                    \ stp-lst ruls0 cngs1
-        2drop                               \ stp-lst
+    else                                    \ cngs1 ruls0 rul-lst
+        nip nip                             \ rul-lst
         exit
     then
-                                            \ stp-lst ruls0 cngs1
+                                            \ cngs1 ruls0 rul-lst
     \ Process rule 1.
-    swap                                    \ stp-lst cngs1 ruls0
-    rulestore-get-rule-1                    \ stp-lst cngs1 rul1
+    over                                    \ cngs1 ruls0 rul-lst ruls0
+    rulestore-get-rule-1                    \ cngs1 ruls0 rul-lst rul1
     ?dup if
-        rule-calc-step-by-changes           \ stp-lst, stp t | f
-        if                                  \ stp-lst stp
-            over                            \ stp-lst stpx stp-lst
-            planstep-list-push-xt execute   \ stp-lst
+        #3 pick                             \ cngs1 ruls0 rul-lst rul1 cngs1
+        swap                                \ cngs1 ruls0 rul-lst cngs1 rul1
+        rule-calc-for-planstep-by-changes   \ cngs1 ruls0 rul-lst, rul t | f
+        if                                  \ cngs1 ruls0 rul-lst rul
+            over                            \ cngs1 ruls0 rul-lst rulx rul-lst
+            list-push-struct                \ cngs1 ruls0 rul-lst
         then
-    else
-        drop                                \ stp-lst
     then
+                                            \ cngs1 ruls0 rul-lst
+    nip nip                                 \ rul-lst
 ;
 
 \ Given a rulestore, a from region (tos), and a goal region (nos), return a list
-\ of steps that may help make the needed changes, for forward chaining.
-\ These steps' initial-region may intersect reg-from, or be reachable from reg-from without making a needed change.
-: rulestore-calc-steps-fc ( reg-to reg-from ruls0 -- stp-lst )
+\ of rules that may help make the needed changes, for forward chaining.
+\ These rule's initial-region may intersect reg-from, or be reachable from reg-from without making a needed change.
+: rulestore-calc-for-plansteps-fc ( reg-to reg-from ruls0 -- rul-lst )
     \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-region
     assert-3os-is-region
-    #2 pick #2 pick                                 \ | reg-to reg-from
-\    2dup region-superset-of                         \ | reg-to reg-from bool
-\    abort" rulestore-calc-steps-fc 1: region subset?" \ | reg-to reg-from
-    swap region-superset-of                         \ | bool
-    abort" rulestore-calc-steps-fc 2: region subset?" \ |
+    #2 pick #2 pick                                     \ | reg-to reg-from
+    swap region-superset-of                             \ | bool
+    abort" rulestore-calc-plansteps-fc 2: region subset?"
 
     \ Init return list.
-    list-new                                \ reg-to reg-from ruls0 stp-lst
-    swap                                    \ reg-to reg-from stp-lst ruls0
-    2swap                                   \ stp-lst ruls0 reg-to reg-from
+    list-new                                \ reg-to reg-from ruls0 rul-lst
 
     \ Process rule 0.
-    #2 pick                                 \ stp-lst ruls0 reg-to reg-from ruls0
-    rulestore-get-rule-0                    \ stp-lst ruls0 reg-to reg-from rul0
+    over                                    \ reg-to reg-from ruls0 rul-lst ruls0
+    rulestore-get-rule-0                    \ reg-to reg-from ruls0 rul-lst rul0
     ?dup if
-        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to
-        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to reg-from
-        rot                                 \ stp-lst ruls0 reg-to reg-from reg-to reg-from rul0
-        rule-calc-step-fc                   \ stp-lst ruls0 reg-to reg-from, stp t | f
-        if                                  \ stp-lst ruls0 reg-to reg-from stp
-            #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
-            planstep-list-push-xt execute   \ stp-lst ruls0 reg-to reg-from
+        #4 pick                             \ reg-to reg-from ruls0 rul-lst rul0 reg-to
+        #4 pick                             \ reg-to reg-from ruls0 rul-lst rul0 reg-to reg-from
+        rot                                 \ reg-to reg-from ruls0 rul-lst reg-to reg-from rul0
+        rule-calc-for-planstep-fc           \ reg-to reg-from ruls0 rul-lst, rul t | f
+        if                                  \ reg-to reg-from ruls0 rul-lst rul
+            over                            \ reg-to reg-from ruls0 rul-lst rul rul-lst
+            list-push-struct                \ reg-to reg-from ruls0 rul-lst
         then
-    else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
-        3drop                               \ stp-lst
+    else                                    \ reg-to reg-from ruls0 rul-lst
+        2nip                                \ ruls0 rul-lst
+        nip                                 \ rul-lst
         exit
     then
-                                            \ stp-lst ruls0 reg-to reg-from
+                                            \ reg-to reg-from ruls0 rul-lst
     \ Process rule 1.
-    rot                                     \ stp-lst reg-to reg-from ruls0
-    rulestore-get-rule-1                    \ stp-lst reg-to reg-from rul1
+    over                                    \ reg-to reg-from ruls0 rul-lst ruls0
+    rulestore-get-rule-1                    \ reg-to reg-from ruls0 rul-lst rul1
     ?dup if
-        rule-calc-step-fc                   \ stp-lst, stp t | f
-        if                                  \ stp-lst stp
-            over                            \ stp-lst stpx stp-lst
-            planstep-list-push-xt execute   \ stp-lst
+        #4 pick #4 pick                     \ reg-to reg-from ruls0 rul-lst rul1 reg-to reg-from
+        rot                                 \ reg-to reg-from ruls0 rul-lst reg-to reg-from rul1
+        rule-calc-for-planstep-fc           \ reg-to reg-from ruls0 rul-lst, rul t | f
+        if                                  \ reg-to reg-from ruls0 rul-lst rul
+            over                            \ reg-to reg-from ruls0 rul-lst rulx rul-lst
+            list-push-struct                \ reg-to reg-from ruls0 rul-lst
         then
-    else
-        2drop                               \ stp-lst
     then
+                                            \ reg-to reg-from ruls0 rul-lst
+    2nip                                    \ ruls0 rul-lst
+    nip                                     \ rul-lst
 ;
 
 \ Given a rulestore, a from region (tos), and a goal region (nos), return a list
-\ of steps that may help make the needed changes, for backward chaining.
-\ These steps' result-region may intersect reg-to, or be reachable from reg-to without making a needed change.
-: rulestore-calc-steps-bc ( reg-to reg-from ruls0 -- stp-lst )
+\ of rules that may help make the needed changes, for backward chaining.
+\ These rule's result-region may intersect reg-to, or be reachable from reg-to without making a needed change.
+: rulestore-calc-for-plansteps-bc ( reg-to reg-from ruls0 -- rul-lst )
     \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-region
     assert-3os-is-region
 
     \ Init return list.
-    list-new                                \ reg-to reg-from ruls0 stp-lst
-    swap                                    \ reg-to reg-from stp-lst ruls0
-    2swap                                   \ stp-lst ruls0 reg-to reg-from
+    list-new                                \ reg-to reg-from ruls0 rul-lst
 
     \ Process rule 0.
-    #2 pick                                 \ stp-lst ruls0 reg-to reg-from ruls0
-    rulestore-get-rule-0                    \ stp-lst ruls0 reg-to reg-from rul0
+    over                                    \ reg-to reg-from ruls0 rul-lst ruls0
+    rulestore-get-rule-0                    \ reg-to reg-from ruls0 rul-lst rul0
     ?dup if
-        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to
-        #2 pick                             \ stp-lst ruls0 reg-to reg-from rul0 reg-to reg-from
-        rot                                 \ stp-lst ruls0 reg-to reg-from reg-to reg-from rul0
-        rule-calc-step-bc                   \ stp-lst ruls0 reg-to reg-from, stp t | f
-        if                                  \ stp-lst ruls0 reg-to reg-from stp
-            #4 pick                         \ stp-lst ruls0 reg-to reg-from stp stp-lst
-            planstep-list-push-xt execute   \ stp-lst ruls0 reg-to reg-from
+        #4 pick                             \ reg-to reg-from ruls0 rul-lst rul0 reg-to
+        #4 pick                             \ reg-to reg-from ruls0 rul-lst rul0 reg-to reg-from
+        rot                                 \ reg-to reg-from ruls0 rul-lst reg-to reg-from rul0
+        rule-calc-for-planstep-bc           \ reg-to reg-from ruls0 rul-lst, rul t | f
+        if                                  \ reg-to reg-from ruls0 rul-lst rul
+            over                            \ reg-to reg-from ruls0 rul-lst rul rul-lst
+            list-push-struct                \ reg-to reg-from ruls0 rul-lst
         then
-    else                                    \ stp-lst ruls0 reg-to reg-from reg-to reg-from
-        3drop                               \ stp-lst
+    else                                    \ reg-to reg-from ruls0 rul-lst
+        2nip                                \ ruls0 rul-lst
+        nip                                 \ rul-lst
         exit
     then
-                                            \ stp-lst ruls0 reg-to reg-from
+                                            \ reg-to reg-from ruls0 rul-lst
     \ Process rule 1.
-    rot                                     \ stp-lst reg-to reg-from ruls0
-    rulestore-get-rule-1                    \ stp-lst reg-to reg-from rul1
+    over                                    \ reg-to reg-from ruls0 rul-lst ruls0
+    rulestore-get-rule-1                    \ reg-to reg-from ruls0 rul-lst rul1
     ?dup if
-        rule-calc-step-bc                   \ stp-lst, stp t | f
-        if                                  \ stp-lst stp
-            over                            \ stp-lst stpx stp-lst
-            planstep-list-push-xt execute   \ stp-lst
+        #4 pick #4 pick                     \ reg-to reg-from ruls0 rul-lst rul1 reg-to reg-from
+        rot                                 \ reg-to reg-from ruls0 rul-lst reg-to reg-from rul1
+        rule-calc-for-planstep-bc           \ reg-to reg-from ruls0 rul-lst, rul t | f
+        if                                  \ reg-to reg-from ruls0 rul-lst rul
+            over                            \ reg-to reg-from ruls0 rul-lst rulx rul-lst
+            list-push-struct                \ reg-to reg-from ruls0 rul-lst
         then
-    else
-        2drop                               \ stp-lst
     then
+                                            \ reg-to reg-from ruls0 rul-lst
+    2nip                                    \ ruls0 rul-lst
+    nip                                     \ rul-lst
 ;
 
 \ Return a pn value, based on the number of rules stored in a rulestore.

@@ -74,6 +74,15 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     then
 ;
 
+\ Check 4OS for region, unconventional, leaves stack unchanged.
+: assert-4os-is-region ( 4os 3os nos tos -- 4os 3os nos tos )
+    #3 pick is-allocated-region
+    is-false if
+        s" 4OS is not an allocated region"
+        .abort-xt execute
+    then
+;
+
 \ Start accessors.
 
 \ Return the first field from a region instance.

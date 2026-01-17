@@ -111,6 +111,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     @                           \ Fetch the field.
 ;
 
+' action-get-parent-domain to action-get-parent-domain-xt
+
 \ Set the parent domain of an action.
 : _action-set-parent-domain ( dom act0 -- )
     \ Check args.
@@ -1557,163 +1559,257 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     repeat
 ;
 
-\ Return a list of possible steps, given to/from regions.
-\ Steps may, or may not, intersect the to/from regions.
-\ If they do not intersect, there are no restrictions.
-: action-calc-steps-by-changes ( cngs1 act0 -- stp-lst )
+\ Return a step, given reg-to, reg-from, and a rule.
+: action-make-planstep ( reg-to reg-from rul1 act0 -- stp )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-changes
-    over changes-null
-    if
-        2drop
-        false
-        exit
-    then
+    assert-nos-is-rule
+    assert-3os-is-region
+    assert-4os-is-region
 
-    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
-    \ space ." Act: " dup action-get-inst-id .
-    \ space ." action-calc-steps-by-changes: " over .changes cr
+    \ Get number unwanted changes.
+    #3 pick #3 pick #3 pick                 \ | reg-to reg-from rul1
+    rule-number-unwanted-changes            \ | u-unw
+
+    \ Make step.
+    #2 pick                                 \ | u-unw rul1
+    #2 pick                                 \ | u-unw rul1 act0
+    planstep-new                            \ | u-unw stp
+
+    \ Set number unwanted changes.
+    tuck                                    \ | stp u-unw stp
+    planstep-set-number-unwanted-changes    \ | stp
+
+    \ Clean up.
+    2nip                                    \ reg-to act0 stp
+    nip nip                                 \ stp
+;
+
+\ Return a step list, given reg-to, reg-from, and a rule list.
+: action-planstep-list-from-rule-list ( reg-to reg-from rul-lst1 act0 -- plnstp-lst )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-rule-list
+    assert-3os-is-region
+    assert-4os-is-region
 
     \ Init return list.
-    list-new                            \ cngs1 act0 ret-lst
-    -rot                                \ ret-lst cngs1 act0
+    list-new                        \ reg-to reg-from rul-lst1 act0 plnstp-lst
 
-    action-get-groups                   \ ret-lst cngs1 grp-lst
-    list-get-links                      \ ret-lst cngs1 link
+    \ Prep for loop, for each rule.
+    #2 pick list-get-links          \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link
+
     begin
         ?dup
     while
-        dup link-get-data               \ ret-lst cngs1 link grpx
+        #5 pick #5 pick             \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link reg-to reg-from
+        #2 pick link-get-data       \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link reg-to reg-from rulx
+        #5 pick                     \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link reg-to reg-from rulx act0
+        action-make-planstep        \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link stp
+        #2 pick                     \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link stp plnstp-lst
+        list-push-struct            \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link
 
-        \ Check if group might apply.
-        group-get-pn                    \ ret-lst cngs1 link pn
-        #3 <                            \ ret-lst cngs1 link flag
-        if                              \ ret-lst cngs1 link
-            2dup                        \ ret-lst cngs1 link cngs1 link
-            link-get-data               \ ret-lst cngs1 link cngs1 grpx
-            group-calc-steps-by-changes \ ret-lst cngs1 link stp-lst
-            dup list-is-empty           \ ret-lst cngs1 link stp-lst bool
-            if
-            else
-                dup                     \ ret-lst cngs1 link stp-lst stp-lst
-                #4 pick                 \ ret-lst cngs1 link stp-lst stp-lst ret-lst
-                planstep-list-append    \ ret-lst cngs1 link stp-lst
-            then
-            planstep-list-deallocate    \ ret-lst cngs1 link
-        then
-
-        link-get-next                   \ ret-lst cngs1 link
+        link-get-next
     repeat
-                                        \ ret-lst cngs1
-    drop                                \ ret-lst
+                                    \ reg-to reg-from rul-lst1 act0 plnstp-lst
+    \ Clean up.
+    2nip                            \ reg-to act0 plnstp-lst
+    nip nip                         \ plnstp-lst
 ;
 
-\ Return a list of possible forward-chaining steps, given region-from and region-to regions.
-\ Steps may, or may not, intersect the from region.
-\ If they do not intersect reg-from, going reg-from to the step initial-region cannot require a needed change.
-: action-calc-steps-fc ( reg-to reg-from act0 -- stp-lst )
+\ Return a list of possible plansteps, given to/from regions.
+\ Steps may, or may not, intersect the to/from regions.
+\ If they do not intersect, there are no restrictions.
+: action-calc-plansteps-by-changes ( reg-to reg-from act0 -- plnstp-lst )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
     assert-3os-is-region
     #2 pick #2 pick                                 \ | reg-to reg-from
-\    2dup
-\    region-superset-of                         \ | reg-to reg-from bool
-\    abort" action-calc-steps-fc 1: region subset?"    \ | reg-to reg-from
     swap region-superset-of                         \ | bool
-    abort" action-calc-steps-fc 2: region subset?"    \ |
+    abort" action-calc-plansteps-by-changes: region subset?"    \ |
+
+    \ cr ." action-calc-plansteps-by-changes: Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
+    \ space ." Act: " dup action-get-inst-id .
+    \ space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
+
+    \ Get needed changes.
+    #2 pick #2 pick                         \ reg-to reg-from act0 reg-to reg-from
+    changes-new-region-to-region            \ reg-to reg-from act0 cngs'
+
+    \ Init return list.
+    list-new                                \ reg-to reg-from act0 cngs' ret-lst
+
+    #2 pick action-get-groups               \ reg-to reg-from act0 cngs' ret-lst grp-lst
+    list-get-links                          \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ reg-to reg-from act0 cngs' ret-lst grp-lnk grpx
+
+        \ Check if group might apply.
+        group-get-pn                        \ reg-to reg-from act0 cngs' ret-lst grp-lnk pn
+        #3 <                                \ reg-to reg-from act0 cngs' ret-lst grp-lnk flag
+        if                                  \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+
+            \ Get backward rules, if any.
+            #2 pick over                    \ reg-to reg-from act0 cngs' ret-lst grp-lnk cngs' grp-lnk
+            link-get-data                   \ reg-to reg-from act0 cngs' ret-lst grp-lnk cngs' grpx
+            group-calc-for-plansteps-by-changes \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst'
+
+            dup list-is-empty               \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' bool
+            if
+                list-deallocate             \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+
+            else                            \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+                \ Get planstep from rules.
+                #6 pick #6 pick                     \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' reg-to reg-from
+                #2 pick                             \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' reg-to reg-from rul-lst'
+                #7 pick                             \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' reg-to reg-from rul-lst' act0
+                action-planstep-list-from-rule-list \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' plnstp-lst'
+                swap rule-list-deallocate           \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst'
+
+                \ Append planstep-list to return list.
+                dup                         \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst' plnstp-lst'
+                #3 pick                     \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst' plnstp-lst' ret-lst
+                planstep-list-append        \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst'
+                planstep-list-deallocate    \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+            then
+        then
+
+        link-get-next                       \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+    repeat
+                                            \ reg-to reg-from act0 cngs' ret-lst
+    swap changes-deallocate                 \ reg-to reg-from act0 ret-lst
+    2nip                                    \ act0 ret-lst
+    nip                                     \ ret-lst
+;
+
+\ Return a list of possible forward-chaining plansteps, given region-from and region-to regions.
+\ Steps may, or may not, intersect the from region.
+\ If they do not intersect reg-from, going reg-from to the step initial-region cannot require a needed change.
+: action-calc-plansteps-fc ( reg-to reg-from act0 -- plnstp-lst )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region
+    assert-3os-is-region
+    #2 pick #2 pick                                 \ | reg-to reg-from
+    swap region-superset-of                         \ | bool
+    abort" action-calc-plansteps-fc: region subset?"    \ |
 
     \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
 
     \ Init return list.
-    list-new swap                       \ reg-to reg-from ret-lst act0
-    2swap                               \ ret-lst act0 reg-to reg-from
-    rot                                 \ ret-lst reg-to reg-from act0
+    list-new                                \ reg-to reg-from act0 ret-lst
 
-    action-get-groups                   \ ret-lst reg-to reg-from grp-lst
-    list-get-links                      \ ret-lst reg-to reg-from link
+    over action-get-groups                  \ reg-to reg-from act0 ret-lst grp-lst
+    list-get-links                          \ reg-to reg-from act0 ret-lst rul-link
     begin
         ?dup
     while
-        dup link-get-data               \ ret-lst reg-to reg-from link grpx
+        dup link-get-data                   \ reg-to reg-from act0 ret-lst rul-link grpx
 
         \ Check if group might apply.
-        group-get-pn                    \ ret-lst reg-to reg-from link pn
-        #3 <                            \ ret-lst reg-to reg-from link flag
-        if                              \ ret-lst reg-to reg-from link
-            #2 pick #2 pick #2 pick     \ ret-lst reg-to reg-from link reg-to reg-from link
-            link-get-data               \ ret-lst reg-to reg-from link reg-to reg-from grpx
-            group-calc-steps-fc         \ ret-lst reg-to reg-from link stp-lst
-            dup list-is-empty           \ ret-lst reg-to reg-from link stp-lst bool
-            is-false if                 \ ret-lst reg-to reg-from link stp-lst
-                dup                     \ ret-lst reg-to reg-from link stp-lst stp-lst
-                #5 pick                 \ ret-lst reg-to reg-from link stp-lst stp-lst ret-lst
-                planstep-list-append    \ ret-lst reg-to reg-from link stp-lst
+        group-get-pn                        \ reg-to reg-from act0 ret-lst rul-link pn
+        #3 <                                \ reg-to reg-from act0 ret-lst rul-link flag
+        if                                  \ reg-to reg-from act0 ret-lst rul-link
+
+            \ Get backward rules, if any.
+            #4 pick #4 pick #2 pick         \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from link
+            link-get-data                   \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from grpx
+            group-calc-for-plansteps-fc     \ reg-to reg-from act0 ret-lst rul-link rul-lst'
+
+            dup list-is-empty               \ reg-to reg-from act0 ret-lst rul-link rul-lst' bool
+            if
+                list-deallocate             \ ret-lst reg-to reg-from link
+
+            else                            \ reg-to reg-from act0 ret-lst rul-link
+                \ Get planstep from rules.
+                #5 pick #5 pick             \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from
+                #2 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst'
+                #6 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst' act0
+                action-planstep-list-from-rule-list \ reg-to reg-from act0 ret-lst rul-link rul-lst' plnstp-lst'
+                swap rule-list-deallocate   \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
+
+                \ Append planstep-list to return list.
+                dup                         \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst'
+                #3 pick                     \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst' ret-lst
+                planstep-list-append        \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
+                planstep-list-deallocate    \ reg-to reg-from act0 ret-lst rul-link
             then
-            planstep-list-deallocate    \ ret-lst reg-to reg-from link
         then
 
-        link-get-next                   \ ret-lst reg-to reg-from link
+        link-get-next                       \ reg-to reg-from act0 ret-lst rul-link
     repeat
-                                        \ ret-lst reg-to reg-from
-    2drop                               \ ret-lst
+                                            \ reg-to reg-from act0 ret-lst
+    2nip                                    \ act0 ret-lst
+    nip                                     \ ret-lst
     \ cr ." returning steps: " dup .step-list cr
 ;
 
-\ Return a list of possible backward-chaining steps, given a sample.
+\ Return a list of possible backward-chaining plansteps, given a sample.
 \ Steps may, or may not, intersect region reg-to.
 \ If they do not intersect reg-to, going from the step initial-region to reg-to cannot require a needed change.
-: action-calc-steps-bc ( reg-to reg-from act0 -- stp-lst )
+: action-calc-plansteps-bc ( reg-to reg-from act0 -- plnstp-lst )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
     assert-3os-is-region
-    #2 pick #2 pick                                 \ | reg-to reg-from
-\    2dup region-superset-of                         \ | reg-to reg-from bool
-\    abort" action-calc-steps-bc 1: region subset?"    \ | reg-to reg-from
-    swap region-superset-of                         \ | bool
-    abort" action-calc-steps-bc 2: region subset?"    \ |
+    #2 pick #2 pick                                     \ | reg-to reg-from
+    swap region-superset-of                             \ | bool
+    abort" action-calc-plansteps-bc: region subset?"    \ |
 
     \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
     \ space ." Act: " dup action-get-inst-id .
     \ space ." action-calc-steps-bc: " #2 pick .region space over .region cr
 
     \ Init return list.
-    list-new swap                   \ reg-to reg-from ret-lst act0
-    2swap                           \ ret-lst act0 reg-to reg-from
-    rot                             \ ret-lst reg-to reg-from act0
+    list-new                                \ reg-to reg-from act0 ret-lst
 
-    action-get-groups               \ ret reg-to reg-from grp-lst
-    list-get-links                  \ ret reg-to reg-from link
+    over action-get-groups                  \ reg-to reg-from act0 ret-lst grp-lst
+    list-get-links                          \ reg-to reg-from act0 ret-lst rul-link
     begin
         ?dup
     while
-        dup link-get-data           \ ret reg-to reg-from link reg-to reg-from grpx
+        dup link-get-data                   \ reg-to reg-from act0 ret-lst rul-link grpx
 
         \ Check if group might apply.
-        group-get-pn                \ ret-lst reg-to reg-from link pn
-        #3 <                        \ ret-lst reg-to reg-from link flag
-        if                          \ ret-lst reg-to reg-from link
-            \ Get backward steps, step-list returned may be empty.
-            #2 pick #2 pick #2 pick \ ret-lst reg-to reg-from link reg-to reg-from link
-            link-get-data           \ ret-lst reg-to reg-from link reg-to reg-from grpx
-            group-calc-steps-bc     \ ret-lst reg-to reg-from link stp-lst
-            dup list-is-empty       \ ret-lst reg-to reg-from link stp-lst bool
-            is-false if
-                dup                     \ ret-lst reg-to reg-from link stp-lst stp-lst
-                #5 pick                 \ ret-lst reg-to reg-from link stp-lst stp-lst ret-lst
-                planstep-list-append    \ ret-lst reg-to reg-from link stp-lst
+        group-get-pn                        \ reg-to reg-from act0 ret-lst rul-link pn
+        #3 <                                \ reg-to reg-from act0 ret-lst rul-link flag
+        if                                  \ reg-to reg-from act0 ret-lst rul-link
+
+            \ Get backward rules, if any.
+            #4 pick #4 pick #2 pick         \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from link
+            link-get-data                   \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from grpx
+            group-calc-for-plansteps-bc     \ reg-to reg-from act0 ret-lst rul-link rul-lst'
+
+            dup list-is-empty               \ reg-to reg-from act0 ret-lst rul-link rul-lst' bool
+            if
+                list-deallocate             \ ret-lst reg-to reg-from link
+
+            else                            \ reg-to reg-from act0 ret-lst rul-link
+                \ Get planstep from rules.
+                #5 pick #5 pick             \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from
+                #2 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst'
+                #6 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst' act0
+                action-planstep-list-from-rule-list \ reg-to reg-from act0 ret-lst rul-link rul-lst' plnstp-lst'
+                swap rule-list-deallocate   \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
+
+                \ Append planstep-list to return list.
+                dup                         \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst'
+                #3 pick                     \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst' ret-lst
+                planstep-list-append        \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
+                planstep-list-deallocate    \ reg-to reg-from act0 ret-lst rul-link
             then
-            planstep-list-deallocate    \ ret-lst reg-to reg-from link
         then
 
-        link-get-next               \ ret-lst reg-to reg-from link
+        link-get-next                       \ reg-to reg-from act0 ret-lst rul-link
     repeat
-                                    \ ret-lst reg-to reg-from
-    2drop                           \ ret-lst
+                                            \ reg-to reg-from act0 ret-lst
+    2nip                                    \ act0 ret-lst
+    nip                                     \ ret-lst
 ;
 
 \ Return corner needs, given a region and a state, representing an existing square, in the region.

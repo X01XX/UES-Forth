@@ -1058,7 +1058,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap changes-deallocate         \ u
 ;
 
-: rule-calc-step-by-changes ( cngs1 rul0 -- step t | f )    \ Return a step for a rule (tos) and needed changes (nos), if any.
+: rule-calc-for-planstep-by-changes ( cngs1 rul0 -- rul t | f )    \ Return a rule cantaining needed changes for a step for a step.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes
@@ -1066,8 +1066,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     2dup rule-intersects-changes    \ cgs1 rul0 bool
     if
         nip                         \ rul0
-        current-action              \ rul0 act
-        planstep-new-xt execute     \ stp
         true
     else
         2drop
@@ -1142,23 +1140,20 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap changes-deallocate                     \ bool 
 ;
 
-\ Get a step from a given rule, for forward chaining, from a given region (reg-from), to another, non-intersecting, given region (reg-to), if possible.
+\ Return a rule, or a subset of a rule, for forward chaining, from a given region (reg-from), to another, non-intersecting, given region (reg-to), if possible.
 \
 \ A rule with an initial-region that does not intersect reg-from, but the initial-region does intersect the union of reg-from and reg-to,
 \ will necessarily require a needed change to go from reg-from to the rule's initial-region, will therefore be premature to use,
 \ and will return false.
 \
-\ A returned step's rule will have at least one wanted change.
+\ A returned rule will have at least one wanted change.
 \
-\ A returned step's rule with an initial-region that does intersect reg-from, with a result intersecting the union of reg-from and reg-to,
+\ A returned rule with an initial-region that does intersect reg-from, with a result intersecting the union of reg-from and reg-to,
 \ will have no unwanted changes.
 \
-\ A returned step's rule with an initial-region that does not intersect reg-from, will have at least one unwanted change.
+\ A returned rule with an initial-region that does not intersect reg-from, will have at least one unwanted change.
 \
-\ If the rule has a needed change,
-\ If the rule initial-region intersects reg-from, or
-\ going from reg-from to the rule initial-region does not contain a needed change, a step will be returned.
-: rule-calc-step-fc ( reg-to reg-from rul0 -- step t | f )
+: rule-calc-for-planstep-fc ( reg-to reg-from rul0 -- rul t | f )
    \  cr ." rule-calc-step-fc: from: " over .region space ." to: " #2 pick .region space ." rule: " dup .rule cr
     \ Check args.
     assert-tos-is-rule
@@ -1166,7 +1161,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-3os-is-region
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
-    abort" rule-calc-step-fc: 2 region subset?" \ |
+    abort" rule-calc-planstep-fc: 2 region subset?" \ |
 
     \ Check for needed changes.
     #2 pick #2 pick #2 pick                     \ | reg-to reg-from rul0
@@ -1183,22 +1178,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     2dup                                        \ | reg-from rul0
     rule-restrict-initial-region                \ | rul0' t | f
     if                                          \ | rul0'
-        \ Get number unwanted changes.
-        #3 pick #3 pick #2 pick                 \ | rul0' reg-to reg-from rul0'
-        rule-number-unwanted-changes            \ | rul0' u-unw
-        swap                                    \ | u-unw rul0'
-
-        \ Make step.
-        current-action                          \ | u-unw rul0' act
-        planstep-new-xt execute                 \ | u-unw stpx
-
-        \ Set number unwanted changes.
-        tuck                                    \ | stpx u-unw stpx
-        planstep-set-number-unwanted-changes-xt \ | stpx u-unw stpx xt
-        execute                                 \ | stpx
-
-        \ Clean up.                             \ | stpx
-        2nip nip                                \ stpx
+        \ Clean up.
+        2nip nip                                \ rul0'
 
         \ Return
         true
@@ -1232,34 +1213,18 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         exit
     then
 
-    \ Get number unwanted changes.
-    #3 pick #3 pick                             \ reg-to reg-from rul0 | rul0' reg-to reg-from
-    #2 pick                                     \ reg-to reg-from rul0 | rul0' reg-to reg-from rul0'
-    rule-number-unwanted-changes                \ reg-to reg-from rul0 | rul0' u-unw
-    swap                                        \ reg-to reg-from rul0 | u-unw rul0'
-
-    \ Make step.
-    current-action                              \ | u-unw rul0' act
-    planstep-new-xt execute                     \ | u-unw stp
-
-    \ Update unwanted number of changes.
-    tuck                                        \ | stp u-unw stp
-    planstep-set-number-unwanted-changes-xt     \ | stp u-unw stp xt
-    execute                                     \ | stp
-    \ cr ." indirect step: " dup .step-xt execute cr
-
     \ Clean up.
-    2nip nip                                     \ stp
+    2nip nip                                     \ rul0'
 
     \ Return
     true
 ;
 
-\ Get a step from a rule, if it can be applied to a from-region (tos) to-region (nos) pair, for the purpose of backward chaining.
+\ Return a rule, or a subset of a rule, if it can be applied to a from-region (tos) to-region (nos) pair, for the purpose of backward chaining.
 \ If the rule has a needed change,
 \ If the rule result-region intersects reg-to, or
 \ going from reg-to to the rule result-region does not contain a needed change, a step will be returned.
-: rule-calc-step-bc ( reg-to reg-from rul0 -- step t | f )
+: rule-calc-for-planstep-bc ( reg-to reg-from rul0 -- rul t | f )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -1268,7 +1233,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
-    abort" rule-calc-step-bc: 2 region subset?" \ |
+    abort" rule-calc-for-planstep-bc: 2 region subset?" \ |
 
     \ Check for needed changes.
     #2 pick #2 pick #2 pick                     \ | reg-to reg-from rul0
@@ -1284,24 +1249,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     #2 pick over                                \ reg-to reg-from rul0 | reg-to rul0
     rule-restrict-result-region                 \ | rul0' t | f
     if                                          \ | rul0'
-
-        \ Get number unwanted changes.
-        #3 pick #3 pick                         \ | rul0' reg-to reg-from
-        #2 pick                                 \ | rul0' reg-to reg-from rul0'
-        rule-number-unwanted-changes            \ | rul0' u-unw
-        swap                                    \ | u-unw rul0'
-
-        \ Make step.
-        current-action                          \ | u-unw rul0' act
-        planstep-new-xt execute                 \ | u-unw stpx
-
-        \ Set number unwanted changes.
-        tuck                                    \ | stpx u-unw stpx
-        planstep-set-number-unwanted-changes-xt \ | stpx u-unw stpx xt
-        execute                                 \ | stpx
-
-        \ Clean up.                             \ | stpx
-        2nip nip                                \ stpx
+        \ Clean up.                             \ | rul0'
+        2nip nip                                \ rul0'
 
         \ Return
         true
@@ -1332,27 +1281,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         rule-deallocate
         3drop
         false
-        \ cr ." rule-calc-step-bc: 2 false" cr
+        \ cr ." rule-calc-for-planstep-bc: 2 false" cr
         exit
     then
 
-    \ Calc number unwanted changes.
-    #3 pick #3 pick                             \ reg-to reg-from rul0 | rul0' reg-to reg-from
-    #2 pick                                     \ reg-to reg-from rul0 | rul0' reg-to reg-from rul0'
-    rule-number-unwanted-changes                \ reg-to reg-from rul0 | rul0' u-unw
-    swap                                        \ reg-to reg-from rul0 | u-usw rul0'
-
-    \ Make step.
-    current-action                              \ | u-unw rul0' act
-    planstep-new-xt execute                     \ | u-unw stp
-
-    \ Update unwanted number of changes.
-    tuck                                        \ | stp u-unw stp
-    planstep-set-number-unwanted-changes-xt     \ | stp u-unw stp xt
-    execute                                     \ | stp
-
     \ Clean up.
-    2nip nip                                     \ stp
+    2nip nip                                     \ rul0'
 
     \ Return
     true
