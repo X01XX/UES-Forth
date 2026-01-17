@@ -58,6 +58,8 @@
 
 ' xtabort value domain-get-num-bits-xt
 
+' xtabort value domain-state-pair-complement-xt
+
 
 ' xtabort value action-get-inst-id-xt
 

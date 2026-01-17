@@ -1537,3 +1537,39 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 ;
 
 ' domain-get-number-actions to domain-get-number-actions-xt
+
+\ Return the complement af a state.
+: domain-state-complement ( u1 dom0 -- list )
+    \ Check arg.
+    assert-tos-is-domain
+    assert-nos-is-value
+
+    domain-get-max-region               \ u1 reg-max
+
+    tuck                                \ reg-max u1 reg-max
+    region-subtract-state               \ reg-max list
+    swap region-deallocate              \ list
+;
+
+\ Return ~A + ~B for a state pair.
+: domain-state-pair-complement ( u2 u1 dom0 -- list )
+    \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-value
+    assert-3os-is-value
+
+    tuck                            \ u2 dom0 u1 dom0
+    domain-state-complement         \ u2 dom0 comp1
+
+    -rot                            \ comp1 u2 dom0
+    domain-state-complement         \ comp1 comp2
+
+    2dup region-list-set-union      \ comp1 comp2 list-u
+
+    swap region-list-deallocate     \ comp1 list-u
+
+    swap region-list-deallocate     \ list-u
+;
+
+' domain-state-pair-complement to domain-state-pair-complement-xt
+

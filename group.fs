@@ -461,8 +461,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     rulestore-calc-for-plansteps-by-changes \ rul-lst
 ;
 
-\ Return a fill need, if any.
-: group-get-fill-need ( reg1 grp0 -- ned t | f )
+\ Return a fill need state, if any.
+: group-get-fill-need-state ( reg1 grp0 -- sta t | f )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-region
@@ -505,13 +505,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     \ space ." cng-msk: " dup .value cr
     ?dup
     if
+        \ Return altered state.
         xor                     \ sta0'
-
-        \ Make need.
-        #4 swap                 \ 4 sta0'
-        current-action          \ 4 sta0' actx
-        action-make-need-xt     \ 4 sta0' actx xt
-        execute                 \ nedx
         true
     else
         drop
@@ -520,7 +515,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 ;
 
 \ Return a need to confirm a group.
-: group-get-confirm-need ( grp0 -- ned t | f )
+: group-get-confirm-need-state ( grp0 -- sta t | f )
     \ Check arg.
     assert-tos-is-group
 
@@ -528,13 +523,9 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     list-get-item               \ grp0 | sqr-0
     dup square-get-pnc          \ grp0 | sqr-0 pnc
     0= if                       \ grp0 | sqr-0
-        \ Make need for square 0.
+        \ Return square state.
         nip
         square-get-state        \ sta-0
-        #5 swap                 \ 5 sta-0
-        current-action          \ 5 sta-0 actx
-        action-make-need-xt     \ 5 sta-0 actx xt
-        execute                 \ nedx
         true
         exit
     else
@@ -556,13 +547,9 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
             #3 pick                     \ grp0 g-r-reg link sqrx s-sta g-r-reg
             region-superset-of-state    \ grp0 g-r-reg link sqrx flag
             0= if                       \ grp0 g-r-reg link sqrx
-                \ Make need.
+                \ Return square state.
                 square-get-state        \ | s-sta
-                #5 swap                 \ | 5 s-sta
-                current-action          \ | 5 s-sta actx
-                action-make-need-xt     \ | 5 s-sta actx xt
-                execute                 \ | nedx
-                2nip nip                \ nedx
+                2nip nip                \ s-sta
                 true
                 exit
             else                        \ grp0 g-r-reg link sqrx

@@ -688,7 +688,10 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
                 \ Calc regions possible for incompatible pair.
                 region-get-states                   \ act0 inclst link s0 s1
-                state-not-a-or-not-b                \ act0 inclst link reg-lst
+                #4 pick                             \ act0 inclst link s0 s1 act0
+                action-get-parent-domain            \ act0 inclst link s0 s1 dom
+                domain-state-pair-complement-xt     \ act0 inclst link s0 s1 dom xt
+                execute                             \ act0 inclst link reg-lst
 
                 \ Calc new action-logical-structure.
                 #3 pick action-get-logical-structure    \ act0 inclst link reg-lst lsl-lst
@@ -806,7 +809,10 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         \ Get next ~A + ~B region list.
         dup link-get-data                   \ act0 ls-new link region
         region-get-states                   \ act0 ls-new link s1 s0
-        state-not-a-or-not-b                \ act0 ls-new link nanb-lst
+        #4 pick                             \ act0 ls-new link s1 s0 act0
+        action-get-parent-domain            \ act0 ls-new link s1 s0 dom
+        domain-state-pair-complement-xt     \ act0 ls-new link s1 s0 dom xt
+        execute                             \ act0 ls-new link nanb-lst
 
         \ Intersect with most recent logical-structure region list.
         rot                                 \ act0 link nanb-lst ls-new
@@ -1483,10 +1489,15 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         group-get-region            \ reg1 ret-lst sta1 act0 link reg1 grp-reg
         region-intersects           \ reg1 ret-lst sta1 act0 link flag
         if
-            #4 pick                 \ reg1 ret-lst sta1 act0 link reg1
-            over link-get-data      \ reg1 ret-lst sta1 act0 link reg1 grpx
-            group-get-fill-need     \ reg1 ret-lst sta1 act0 link, nedx t | f
+            #4 pick                     \ reg1 ret-lst sta1 act0 link reg1
+            over link-get-data          \ reg1 ret-lst sta1 act0 link reg1 grpx
+            group-get-fill-need-state   \ reg1 ret-lst sta1 act0 link, stax t | f
             if
+                \ Make fill need.
+                #4 swap                 \ reg1 ret-lst sta1 act0 link #4 stax
+                #3 pick                 \ reg1 ret-lst sta1 act0 link #4 stax act0
+                action-make-need        \ reg1 ret-lst sta1 act0 link nedx
+    
                 \ Add need to the return list.
                 #4 pick                 \ reg1 ret-lst sta1 act0 link nedx ret-lst
                 need-list-push          \ reg1 ret-lst sta1 act0 link
@@ -1508,13 +1519,18 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         ?dup
     while
         \ Get group confirm need.
-        dup link-get-data           \ reg1 ret-lst sta1 act0 link grpx
-        group-get-confirm-need      \ reg1 ret-lst sta1 act0 link, nedx t | f
+        dup link-get-data               \ reg1 ret-lst sta1 act0 link grpx
+        group-get-confirm-need-state    \ reg1 ret-lst sta1 act0 link, stax t | f
 
         if
+            \ Make need.
+            #5 swap                     \ reg1 ret-lst sta1 act0 link #4 stax
+            #3 pick                     \ reg1 ret-lst sta1 act0 link #4 stax act0
+            action-make-need            \ reg1 ret-lst sta1 act0 link nedx
+
             \ Add needs to the return list.
-            #4 pick                 \ reg1 ret-lst sta1 act0 link nedx ret-lst
-            need-list-push          \ reg1 ret-lst sta1 act0 link
+            #4 pick                     \ reg1 ret-lst sta1 act0 link nedx ret-lst
+            need-list-push              \ reg1 ret-lst sta1 act0 link
             3drop nip
             exit
         then

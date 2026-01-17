@@ -62,8 +62,6 @@ include region2.fs
 
 include regionlist.fs
 
-include state.fs
-
 include changes.fs
 include changeslist.fs
 include changes2.fs
@@ -191,12 +189,12 @@ include regionlist_t.fs
 include rule_t.fs
 include action_t.fs
 include rulestore_t.fs
-include state_t.fs
 include input_t.fs
 include regioncorr_t.fs
 include regioncorrlist_t.fs
 include session_t.fs
 include plan_t.fs
+include domain_t.fs
 
 cr ." main.fs"
 
@@ -402,12 +400,12 @@ cr
     rule-tests
     action-tests
     rulestore-tests
-    state-tests
     input-tests
     regioncorr-tests
     regioncorr-list-tests
     session-tests
     plan-tests
+    domain-tests
 
     test-none-in-use
 ;
