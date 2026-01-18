@@ -30,6 +30,9 @@ Maybe small functions could be used to hide intermediate structs that are used a
 
 Stack contents can be recorded, "managed", in comments, line-by-line.
 
+\ Comment on what a word is being used to achieve.
+word            \ Contents of the stack, since the start of the function, after the word runs.
+
 Start struct functions with a struct name, and make the TOS an instance of the struct, except for <struct name>-new.
  
 A function with "get" in its name returns the address of a struct field, and does not need to be
