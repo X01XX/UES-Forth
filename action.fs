@@ -1829,6 +1829,9 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 ;
 
 \ Return corner needs, given a region and a state, representing an existing square, in the region.
+\ The region is not completely overlapped by defining regions, but has a state adjacent to
+\ a defining region corner.
+\ Where there is a corner, there may be other corners.
 : action-corner-needs ( sta2 reg1 act0 -- need-lst )
     \ Check args.
     assert-tos-is-action

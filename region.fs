@@ -85,7 +85,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
 \ Start accessors.
 
-\ Return the first field from a region instance.
+\ Return the state-0 field from a region instance.
 : region-get-state-0 ( addr -- u)
     \ Check arg.
     assert-tos-is-region
@@ -94,7 +94,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     @                       \ Fetch the field.
 ;
 
-\ Return the second field from a region instance.
+\ Return the state-1 field from a region instance.
 : region-get-state-1 ( addr -- u)
     \ Check arg.
     assert-tos-is-region
@@ -104,22 +104,22 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     @                       \ Fetch the field.
 ;
 
-\ Set the first field from a region instance, use only in this file.
+\ Set the state-0 field from a region instance, use only in this file.
 : _region-set-state-0 ( u1 addr -- )
     \ Check args.
     assert-tos-is-region
 
     region-state-0-disp +   \ Add offset.
-    !                       \ Set first field.
+    !                       \ Set the field.
 ;
 
-\ Set the second field from a region instance, use only in this file.
+\ Set the state-1 field from a region instance, use only in this file.
 : _region-set-state-1 ( u1 addr -- )
     \ Check args.
     assert-tos-is-region
 
     region-state-1-disp +   \ Add offset.
-    !                       \ Set second field.
+    !                       \ Set the field.
 ;
 
 \ End accessors.
@@ -151,9 +151,6 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
 \ Create a region from two numbers on the stack.
 \ The numbers may be the same.
-\ If you want to keep the region on the stack, or in a value, or variable,
-\ run dup struct-inc-use-count, then deallocate it from there when done using it.
-\ If you want to push the region onto a list, region-list-push will increment the use count.
 : region-new ( u1 u0 -- addr )
     \ Check args.
     assert-tos-is-value
@@ -162,8 +159,6 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Make a new region without checking the values.
     region-new2
 ;
-
-\ ' region-new to region-new-xt
 
 \ Print a region.
 : .region ( reg0 -- )
@@ -764,4 +759,13 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     swap region-deallocate  \ reg-to reg-from reg-to''
     nip nip                 \ reg-to''
     \ space ." = " dup .region cr
+;
+
+\ Return a copy of a region.
+: region-copy ( reg0 -- reg )
+    \ Check arg.
+    assert-tos-is-region
+
+    region-get-states   \ s1 s0
+    region-new
 ;

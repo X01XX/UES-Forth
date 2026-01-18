@@ -57,7 +57,7 @@
 
 \ Start accessors.
 
-\ Return the first field from a rate instance.
+\ Return the positive field from a rate instance.
 : rate-get-positive ( rt0 -- u)
     \ Check arg.
     assert-tos-is-rate
@@ -65,7 +65,7 @@
     2w@                     \ Fetch the field.
 ;
 
-\ Return the second field from a rate instance.
+\ Return the negative field from a rate instance.
 : rate-get-negative ( rt0 -- n )
     \ Check arg.
     assert-tos-is-rate

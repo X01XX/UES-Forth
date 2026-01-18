@@ -90,7 +90,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Set the rule of a planstep instance, use only in this file.
 : _planstep-set-rule ( rul1 plnstp0 -- )
     planstep-rule-disp +    \ Add offset.
-    !                       \ Set field.
+    !struct                 \ Set the field.
 ;
 
 \ Return the planstep initial-region.
@@ -105,7 +105,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Set the initial-region of a planstep instance, use only in this file.
 : _planstep-set-initial-region ( reg1 plnstp0 -- )
     planstep-initial-region-disp +      \ Add offset.
-    !                                   \ Set field.
+    !struct                             \ Set the field.
 ;
 
 \ Return the planstep rule.
@@ -120,7 +120,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Set the result-region of a planstep instance, use only in this file.
 : _planstep-set-result-region ( reg1 plnstp0 -- )
     planstep-result-region-disp +   \ Add offset.
-    !                               \ Set field.
+    !struct                         \ Set the field.
 ;
 
 \ Return the planstep changes.
@@ -135,7 +135,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Set the changes of a planstep instance, use only in this file.
 : _planstep-set-changes ( cngs1 plnstp0 -- )
     planstep-changes-disp + \ Add offset.
-    !                       \ Set field.
+    !struct                 \ Set the field.
 ;
 
 \ Return planstep number-unwanted-changes.
@@ -180,22 +180,18 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
     \ Set initial-region.
     over rule-calc-initial-region           \ rul1 plnstpx reg
-    1 over struct-set-use-count
     over _planstep-set-initial-region       \ rul1 plnstpx
 
     \ Set result-region.
     over rule-calc-result-region            \ rul1 plnstpx reg
-    1 over struct-set-use-count
     over _planstep-set-result-region        \ rul1 plnstpx
 
     \ Set changes.
     over rule-get-changes                   \ rul1 plnstpx cngs
-    1 over struct-set-use-count
     over _planstep-set-changes              \ rul1 plnstpx
 
     \ Set rule.
     tuck                                    \ plnstpx rul1 plnstpx
-    over struct-inc-use-count
     _planstep-set-rule                      \ plnstpx
 
     \ Init number-unwanted-changes.

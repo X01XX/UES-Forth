@@ -82,9 +82,9 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 ;
 
 \ Set the step-list of a plan instance, use only in this file.
-: _plan-set-step-list ( u1 addr -- )
+: _plan-set-step-list ( stp-lst1 pln0 -- )
     plan-step-list-disp +   \ Add offset.
-    !                       \ Set field.
+    !struct                 \ Set the field.
 ;
 
 \ End accessors.
@@ -110,7 +110,6 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
     \ Set step-list.
     list-new
-    dup struct-inc-use-count        \ addr plnplnstp-lst
     over _plan-set-step-list        \ addr
 ;
 

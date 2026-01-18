@@ -126,10 +126,7 @@
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr
 
-    \ Inc list use count.
-    over struct-inc-use-count
-
-    list-push                           \
+    list-push-struct                     \
 ;
 
 \ Add a regc to an regc list, removing subsets.

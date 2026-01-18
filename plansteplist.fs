@@ -53,8 +53,7 @@
     assert-tos-is-planstep-list
     assert-nos-is-planstep
 
-    over struct-inc-use-count
-    list-push-end
+    list-push-end-struct
 ;
 
 \ Push a planstep to a planstep-list.
@@ -63,8 +62,7 @@
     assert-tos-is-planstep-list
     assert-nos-is-planstep
 
-    over struct-inc-use-count
-    list-push
+    list-push-struct
 ;
 
 ' planstep-list-push to planstep-list-push-xt

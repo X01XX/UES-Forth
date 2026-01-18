@@ -79,7 +79,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Start accessors.
 
-\ Return the first field from a region instance.
+\ Return the list field from a region instance.
 : regioncorr-get-list ( regc0 -- lst )
     \ Check arg.
     assert-tos-is-regioncorr
@@ -90,16 +90,14 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 ' regioncorr-get-list to regioncorr-get-list-xt
 
-\ Set the first field from a region instance, use only in this file.
+\ Set the list field from a region instance, use only in this file.
 : _regioncorr-set-list ( lst1 regc0 -- )
     \ Check args.
     assert-tos-is-regioncorr
 
     \ Store list
-    over struct-inc-use-count
-
     regioncorr-list-disp +    \ Add offset.
-    !                         \ Set first field.
+    !struct                   \ Set the field.
 ;
 
 \ End accessors.
@@ -125,6 +123,15 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     tuck                          \ regc reg-lst0 regc
     _regioncorr-set-list          \ regc
+;
+
+\ Return a copy of a regioncorr.
+: regioncorr-copy ( regc0 -- regc )
+    \ Check arg.
+    assert-tos-is-regioncorr
+
+    regioncorr-get-list     \ reg-lst
+    regioncorr-new
 ;
 
 \ Print a region-list corresponding to the session domain list.

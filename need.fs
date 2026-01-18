@@ -107,7 +107,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     assert-nos-is-domain-xt execute
 
     need-domain-disp +  \ Add offset.
-    !                   \ Set first field.
+    !                   \ Set the field.
 ;
 
 \ Return the action field from a need instance.
@@ -126,7 +126,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     assert-nos-is-action-xt execute
 
     need-action-disp +  \ Add offset.
-    !                   \ Set first field.
+    !                   \ Set the field.
 ;
 
 \ Return the target field from a need instance.
@@ -144,7 +144,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     assert-tos-is-need
 
     need-target-disp +  \ Add offset.
-    !                   \ Set first field.
+    !                   \ Set the field.
 ;
 
 : need-get-type ( ned0 -- type )

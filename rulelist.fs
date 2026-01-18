@@ -45,8 +45,7 @@
     assert-tos-is-rule-list
     assert-nos-is-rule
 
-    over struct-inc-use-count
-    list-push-end
+    list-push-end-struct
 ;
 
 \ Push a rule to a rule-list.
@@ -55,8 +54,7 @@
     assert-tos-is-rule-list
     assert-nos-is-rule
 
-    over struct-inc-use-count
-    list-push
+    list-push-struct
 ;
 
 \ Print a rule-list

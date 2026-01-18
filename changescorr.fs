@@ -73,10 +73,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     assert-nos-is-list
 
     \ Store list
-    over struct-inc-use-count
-
     changescorr-list-disp +    \ Add offset.
-    !                          \ Set first field.
+    !struct                    \ Set the field.
 ;
 
 \ End accessors.

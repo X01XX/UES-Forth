@@ -1034,8 +1034,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     \ Init result rcl-list.
     list-new                                    \ sess0 val-lst sub-lst rslt-lst
-    over struct-inc-use-count
-    2dup list-push                              \ sess0 val-lst sub-lst rslt-lst
+    2dup list-push-struct                       \ sess0 val-lst sub-lst rslt-lst
     swap                                        \ sess0 val-lst rslt-lst sub-lst
                                                 \ sess0 val-lst rslt-lst sub-lst
     #2 pick list-get-links                      \ sess0 val-lst rslt-lst sub-lst link
@@ -1386,8 +1385,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Promote regc-from to make it easier to replac.
     rot                             \ ret-lst regc-to pthstp-lst1 sess0 | regc-from
 
-    \ In the loop, regc-from is temporary, so protect the passed regc-from from one deallocation.
-    dup struct-one-free-deallocate  \ ret-lst regc-to pthstp-lst1 sess0 | regc-from
+    \ In the loop, regc-from is temporary, so protect the passed regc-from from deallocation.
+    regioncorr-copy                 \ ret-lst regc-to pthstp-lst1 sess0 | regc-from'
 
 
     begin
@@ -1609,11 +1608,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Promote regc-from, so its easier to replace.
     swap                        \ plnc-lst pthstp-lst regc-to sess0 regc-from
 
-    \ In the loop, regc-from is temporary, so protect the passed regc-from from one deallocation.
-    dup struct-one-free-deallocate
+    \ In the loop, regc-from is temporary, so protect the passed regc-from from deallocation.
+    \ dup struct-one-free-deallocate
+    regioncorr-copy             \ plnc-lst pthstp-lst regc-to sess0 regc-from'
 
     \ Prep for loop.
-    #3 pick list-get-links              \ plnc-lst pthstp-lst regc-to sess0 regc-from pthstp-link
+    #3 pick list-get-links              \ plnc-lst pthstp-lst regc-to sess0 regc-from' pthstp-link
 
     begin
         ?dup

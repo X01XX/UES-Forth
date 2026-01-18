@@ -140,9 +140,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     assert-tos-is-square
     assert-nos-is-rulestore
 
-    over struct-inc-use-count
-
-    square-rules-disp + !
+    square-rules-disp +
+    !struct
 ;
 
 : square-get-pn ( sqr0 -- pn )

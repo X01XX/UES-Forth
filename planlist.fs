@@ -63,6 +63,5 @@
     assert-tos-is-plan-list
     assert-nos-is-plan
 
-    over struct-inc-use-count
-    list-push-end
+    list-push-end-struct
 ;

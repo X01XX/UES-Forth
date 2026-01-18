@@ -318,12 +318,12 @@
     \ Check if list is empty, production placeholder.
     dup list-is-empty
     if
-        region-list-deallocate
+        list-deallocate
         exit
     then
 
     \ Init logical structure (ls-) list.
-    current-domain                                  \ dom0 inc-lst' max-reg' dom
+    #2 pick                                         \ dom0 inc-lst' max-reg' dom
     domain-get-max-region-xt execute                \ dom0 inc-lst' max-reg'
     list-new                                        \ dom0 inc-lst' max-reg' ls-lst'
     tuck list-push-struct                           \ dom0 inc-lst' ls-lst'
@@ -337,12 +337,12 @@
         dup link-get-data                           \ dom0 inc-lst' ls-lst' link regx
         region-get-states                           \ dom0 inc-lst' ls-lst' link s0 s1
         #5 pick                                     \ dom0 inc-lst' ls-lst' link s0 s1 dom0
-        domain-state-pair-complement                \ dom0 inc-lst' ls-lst' link ls-lst'
+        domain-state-pair-complement                \ dom0 inc-lst' ls-lst' link cmp-lst'
 
         \ Intersect calculation with results.
-        dup                                         \ dom0 inc-lst' ls-lst' link ls-lst' ls-lst'
-        #3 pick                                     \ dom0 inc-lst' ls-lst' link ls-lst' ls-lst' ls-lst'
-        region-list-intersections-nosubs            \ dom0 inc-lst' ls-lst' link ls-lst' ls-lst''
+        dup                                         \ dom0 inc-lst' ls-lst' link cmp-lst' cmp-lst'
+        #3 pick                                     \ dom0 inc-lst' ls-lst' link cmp-lst' cmp-lst' ls-lst'
+        region-list-intersections-nosubs            \ dom0 inc-lst' ls-lst' link cmp-lst' ls-lst''
 
         \ Clean up.
         swap region-list-deallocate                 \ dom0 inc-lst' ls-lst' link ls-lst''
@@ -418,7 +418,7 @@
     cr cr ." Defining regions: " dup .region-list cr
 
     \ Check for any left-over regions.
-    current-domain                                  \ dom0 inc-lst' ls-lst' df-lst' dom
+    #3 pick                                         \ dom0 inc-lst' ls-lst' df-lst' dom
     domain-get-max-region-xt execute                \ dom0 inc-lst' ls-lst' df-lst' max-reg'
     list-new                                        \ dom0 inc-lst' ls-lst' df-lst' max-reg' max-lst'
     tuck list-push-struct                           \ dom0 inc-lst' ls-lst' df-lst' max-lst'

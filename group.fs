@@ -76,9 +76,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 \ Set the region of a group instance, use only in this file.
 : _group-set-region ( reg1 addr -- )
-    over struct-inc-use-count
     group-region-disp + \ Add offset.
-    !                   \ Set field.
+    !struct             \ Set the field.
 ;
 
 \ Return the group squares region.
@@ -92,9 +91,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 \ Set the square region of a group instance, use only in this file.
 : _group-set-r-region ( reg1 addr -- )
-    over struct-inc-use-count
     group-r-region-disp +   \ Add offset.
-    !                       \ Set field.
+    !struct                 \ Set the field.
 ;
 
 \ Return group 8-bit pnc value, as a bool.
@@ -118,9 +116,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 ;
 
 : _group-set-rules ( rulstr1 sqr0 -- )
-    over struct-inc-use-count
-
-    group-rules-disp + !
+    group-rules-disp +
+    !struct
 ;
 
 \ Return the group squares.
@@ -135,7 +132,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Set the squares field of a group instance, use only in this file.
 : _group-set-squares ( sqr-lst addr -- )
     group-squares-disp +    \ Add offset.
-    !                       \ Set field.
+    !struct                 \ Set the field.
 ;
 
 : group-get-pn ( grp0 -- pn )

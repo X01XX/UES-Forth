@@ -131,8 +131,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    over struct-inc-use-count
-    list-push-end
+    list-push-end-struct
 ;
 
 \ Remove a region from a region-list, and deallocate.
@@ -434,7 +433,6 @@
                 if
                     drop
                 else
-                    \ dup struct-inc-use-count
                     region-deallocate
                 then
             then
@@ -1056,8 +1054,8 @@
     assert-nos-is-region
 
     over                                    \ reg1 reg-lst0 reg1
-    dup struct-inc-use-count                \ reg1 reg-lst0 reg1
-    list-new tuck                           \ reg-lst0 rem-lst reg1' rem-lst
+    region-copy                             \ reg1 reg-lst0 reg1c
+    list-new tuck                           \ reg-lst0 rem-lst reg1 rem-lst
     list-push-struct                        \ reg-lst0 rem-lst
 
     \ Prep for loop.
@@ -1089,12 +1087,10 @@
     dup list-is-empty                   \ reg1 rem-lst bool
     if
         list-deallocate
-        dup struct-dec-use-count         \ reg1
         drop
         false
     else
         region-list-deallocate
-        dup struct-dec-use-count         \ reg1
         drop
         true
     then

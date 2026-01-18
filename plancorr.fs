@@ -71,9 +71,8 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     assert-tos-is-plancorr
 
     \ Store list
-    over struct-inc-use-count
     plancorr-list-disp +    \ Add offset.
-    !                       \ Set first field.
+    !struct                 \ Set the field.
 ;
 
 \ End accessors.
@@ -93,9 +92,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     plancorr-id over            \ pln-lst0 plnc id plnc
     struct-set-id               \ pln-lst0 plnc
 
-    \ Init use count.
-    0 over struct-set-use-count \ pln-lst0 plnc
-
+    \ Store plan list.
     tuck                        \ plnc pln-lst0 plnc
     _plancorr-set-list          \ plnc
 ;

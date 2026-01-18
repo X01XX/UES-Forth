@@ -71,9 +71,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     assert-tos-is-rulecorr
 
     \ Store list
-    over struct-inc-use-count
     rulecorr-list-disp +    \ Add offset.
-    !                       \ Set first field.
+    !struct                 \ Set the field.
 ;
 
 \ End accessors.

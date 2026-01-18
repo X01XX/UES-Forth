@@ -104,9 +104,6 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 
 \ Create a sample from two numbers on the stack.
 \ The numbers may be the same.
-\ If you want to keep the sample on the stack, or in a value, or variable,
-\ run dup struct-inc-use-count, then deallocate it from there when done using it.
-\ If you want to push the sample onto a list, sample-list-push will increment the use count.
 : sample-new ( r1 i0 -- smp)
     \ Check args.
     assert-tos-is-value

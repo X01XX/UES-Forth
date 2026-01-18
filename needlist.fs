@@ -87,8 +87,7 @@
     assert-tos-is-need-list
     assert-nos-is-need
 
-    over struct-inc-use-count
-    list-push
+    list-push-struct
 ;
 
 \ Append nos need-list to the tos need-list.

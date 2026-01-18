@@ -74,7 +74,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set the rule of a pathstep instance, use only in this file.
 : _pathstep-set-rules ( rulc1 pstp0 -- )
     pathstep-rules-disp +   \ Add offset.
-    !                       \ Set field.
+    !struct                 \ Set field.
 ;
 
 \ Return the pathstep initial-region.
@@ -89,7 +89,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set the initial-region of a pathstep instance, use only in this file.
 : _pathstep-set-initial-regions ( regc1 pstp0 -- )
     pathstep-initial-regions-disp + \ Add offset.
-    !                               \ Set field.
+    !struct                         \ Set the field.
 ;
 
 \ Return the pathstep rule.
@@ -104,7 +104,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set the result-region of a pathstep instance, use only in this file.
 : _pathstep-set-result-regions ( regc1 pstp0 -- )
     pathstep-result-regions-disp +  \ Add offset.
-    !                               \ Set field.
+    !struct                         \ Set the field.
 ;
 
 \ Return the pathstep changes.
@@ -119,7 +119,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set the changes of a pathstep instance, use only in this file.
 : _pathstep-set-changes ( cngsc1 pstp0 -- )
     pathstep-changes-disp + \ Add offset.
-    !                       \ Set field.
+    !struct                 \ Set the field.
 ;
 
 \ Return pathstep number-unwanted-changes.
@@ -157,22 +157,18 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
     \ Set initial-region.
     over rulecorr-calc-initial-regions      \ rulc1 pstp reg
-    1 over struct-set-use-count
     over _pathstep-set-initial-regions      \ rulc1 pstp
 
     \ Set result-region.
     over rulecorr-calc-result-regions       \ rulc1 pstp reg
-    1 over struct-set-use-count
     over _pathstep-set-result-regions       \ rulc1 pstp
 
     \ Set changes.
     over rulecorr-get-changes               \ rulc1 pstp cngs
-    1 over struct-set-use-count
     over _pathstep-set-changes              \ rulc1 pstp
 
     \ Set rule.
     tuck                                    \ pstp rulc1 pstp
-    over struct-inc-use-count
     _pathstep-set-rules                     \ pstp
 
     \ Init number-unwanted-changes.

@@ -55,8 +55,7 @@
     assert-tos-is-plancorr-list
     assert-nos-is-plancorr
 
-    over struct-inc-use-count
-    list-push-end
+    list-push-end-struct
 ;
 
 \ Run a plancorr list plan.

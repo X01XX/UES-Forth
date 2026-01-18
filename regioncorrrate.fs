@@ -62,7 +62,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 
 \ Start accessors.
 
-\ Return the first field from a regioncorrrate instance.
+\ Return the rate field from a regioncorrrate instance.
 : regioncorrrate-get-rate ( addr -- u)
     \ Check arg.
     assert-tos-is-regioncorrrate
@@ -71,34 +71,33 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     @                           \ Fetch the field.
 ;
 
-\ Return the second field from a regioncorrrate instance.
-: regioncorrrate-get-regioncorr ( addr -- u)
+\ Return the regioncorr field from a regioncorrrate instance.
+: regioncorrrate-get-regioncorr ( regcr0 -- regc )
     \ Check arg.
     assert-tos-is-regioncorrrate
 
-    \ Get second state.
     regioncorrrate-regioncorr-disp +    \ Add offset.
     @                                   \ Fetch the field.
 ;
 
-\ Set the first field from a regioncorrrate instance, use only in this file.
+\ Set the rate field from a regioncorrrate instance, use only in this file.
 : _regioncorrrate-set-rate ( rate1 regcr0 -- )
     \ Check args.
     assert-tos-is-regioncorrrate
     assert-nos-is-rate
 
     regioncorrrate-rate-disp +  \ Add offset.
-    !                           \ Set first field.
+    !struct                     \ Set the field.
 ;
 
-\ Set the second field from a regioncorrrate instance, use only in this file.
+\ Set the regioncorr field from a regioncorrrate instance, use only in this file.
 : _regioncorrrate-set-regioncorr ( regc1 regcr0 -- )
     \ Check args.
     assert-tos-is-regioncorrrate
     assert-nos-is-regioncorr
 
     regioncorrrate-regioncorr-disp +    \ Add offset.
-    !                                   \ Set second field.
+    !struct                             \ Set the field.
 ;
 
 \ End accessors.
@@ -121,12 +120,10 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 
     \ Store rate.
     swap                                \ regc1 regcr rate
-    dup struct-inc-use-count            \ regc1 regcre rate
     over _regioncorrrate-set-rate       \ regc1 regcr
 
     \ Store regioncorr.
     swap                                \ regcr regc1
-    dup struct-inc-use-count            \ regcr regc1
     over _regioncorrrate-set-regioncorr \ regcr
 ;
 
