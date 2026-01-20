@@ -97,7 +97,7 @@
     cr ." action-test-add-sample: Ok"
 ;
 
-: action-test-discover-corner-needs
+: action-test-possible-corner-needs
     \ Init session.
     current-session-new                             \ ses
 
@@ -162,19 +162,26 @@
 
     cr dup .action cr
 
-    action-discover-corner-needs                    \ sess dom0 act0 ned-lst'
+    action-possible-corner-needs                    \ sess dom0 act0 ned-lst'
 
     cr ." needs: " dup .need-list cr
+
+    \ Check result.
+    dup list-get-length 1 <>
+    abort" need-list length is invalid?"
+
+    #9 over need-list-contains-target
+    is-false abort" Nedd target not found?"
 
     \ Clean up.
     need-list-deallocate
     2drop
     current-session-deallocate
 
-    cr ." action-test-discover-corner-needs: Ok" cr
+    cr ." action-test-possible-corner-needs: Ok" cr
 ;
 
 : action-tests
     action-test-add-sample
-    \ action-test-discover-corner-needs
+    action-test-possible-corner-needs
 ;

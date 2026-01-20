@@ -110,3 +110,30 @@
                         \ lst0
     drop
 ;
+
+\ Return true if a need in a list has a given target state.
+: need-list-contains-target ( sta1 lst0 -- bool )
+    \ Check args.
+    assert-tos-is-need-list
+    assert-nos-is-value
+
+    list-get-links          \ sta1 link
+    begin
+        ?dup
+    while
+        dup link-get-data   \ sta1 link nedx
+        need-get-target     \ sta1 link n-sta
+        #2 pick             \ sta1 link n-sta sta1
+        =                   \ sta1 link
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                            \ sta1
+    drop                    \
+    false
+;
