@@ -185,8 +185,7 @@ list-header-disp    cell+   constant list-links-disp
 \ Add data to the end of a list.
 \ If data is a struct, having a use count, caller to inc use count.
 \
-\ e.g. TOS is a list of numbers.
-\ #5 over list-push-end
+\ If list data are struct instances, use list-push-end-struct, to inc the use count.
 : list-push-end ( data list-addr -- )
     \ Check arg.
     assert-tos-is-list
@@ -381,8 +380,7 @@ list-header-disp    cell+   constant list-links-disp
 \ Return a list containing items that match a given test execution token and test item.
 \ xt signature is ( item link-data -- flag ) or ( filler link-data -- flag )
 \
-\ e.g. TOS is a list of numbers.
-\ [ ' < ] literal over #5 swap list-find-all
+\ If list data are struct instances, use list-find-all-struct, to inc the use counts.
 : list-find-all ( xt item list -- list )
     \ Check arg.
     assert-tos-is-list
@@ -426,8 +424,7 @@ list-header-disp    cell+   constant list-links-disp
 \ Pop an item from the beginning of a list.
 \ If list data are struct instances, the caller should dec the instance use count of the result.
 \
-\ e.g. TOS is a list of structs.
-\ dup list-pop if dup struct-dec-use-count then
+\ If list data are struct instances, use list-pop-struct, to dec the use count.
 : list-pop ( lst0 -- data true | false )
     \ Check arg.
     assert-tos-is-list
@@ -585,8 +582,7 @@ list-header-disp    cell+   constant list-links-disp
 \ Pop the last item in a list.
 \ If list data are struct instances, the caller should dec the instance use count of the result.
 \
-\ e.g. TOS is a non-empty list.
-\ dup list-pop-end if dup struct-dec-use-count then
+\ If list data are struct instances, use list-pop-end-struct, to dec the use count.
 : list-pop-end ( lst0 -- data true | false )
     \ Check arg.
     assert-tos-is-list
@@ -650,10 +646,7 @@ list-header-disp    cell+   constant list-links-disp
 \ Provide an xt for determining data equality.
 \ xt signature is ( link-data link-data -- flag )
 \
-\ If list data are struct instances, the caller should inc the instance use count of the result,
-\
-\ e.g. TOS is a list result of list-difference.
-\ [ ' struct-inc-use-count ] literal over list-apply
+\ If list data are struct instances, use list-differenc-struct, to inc the instance use counts.
 : list-difference ( xt list1 list0 -- list )
     \ Check arg.
     assert-tos-is-list
@@ -689,10 +682,7 @@ list-header-disp    cell+   constant list-links-disp
 \ Provide an xt for determining data equality.
 \ xt signature is ( link-data link-data -- flag )
 \
-\ If list data are struct instances, the caller should inc the instance use count of the result.
-\
-\ e.g. TOS is a list.
-\ [ ' struct-inc-use-count ] literal over list-apply
+\ If list data are struct instances, use list-union-struct, to inc the use counts.
 : list-union ( xt list1 list0 -- list )
     \ Check args.
     assert-tos-is-list
@@ -766,10 +756,7 @@ list-header-disp    cell+   constant list-links-disp
 \ Return the intersection of two lists.
 \ xt signature is ( link-data link-data -- flag )
 \
-\ If list data are struct instances, the caller should inc the instance use count of the result.
-\
-\ e.g. TOS is a list result of list-intersection.
-\ [ ' struct-inc-use-count ] literal over list-apply
+\ If list data are struct instances, use list-intersection-struct, to inc the use counts.
 : list-intersection ( xt list1 list0 -- list2 )
     \ Check args.
     assert-tos-is-list
@@ -894,6 +881,8 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Return a list that is a copy of a given list, but with a specific item replaced by a given item.
+\
+\ If list data are struct instances, use list-copy-except-struct, to inc the use counts.
 : list-copy-except ( new-item2 index1 lst0 -- lst )
     \ Check args.
     assert-tos-is-list

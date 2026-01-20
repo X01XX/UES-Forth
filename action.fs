@@ -285,17 +285,9 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region-list
+    cr ." New DF regions: " over .region-list cr
 
-    \ If list is empty, add maximum domain region.
-    over list-is-empty                      \ reg-lst act0 bool
-    if
-        dup                                 \ reg-lst act0
-        action-get-parent-domain            \ reg-lst act0 dom
-        domain-get-max-region-xt execute    \ reg-lst act0 mx-reg
-        #2 pick list-push-struct            \ reg-lst act0
-    then
-
-    dup action-get-defining-regions         \ reg-lst act0 df-lst
+    dup action-get-defining-regions         \ reg-lst1 act0 df-lst
     -rot                                    \ df-lst reg-lst1 act0
     _action-set-defining-regions            \ df-lst
     region-list-deallocate                  \
@@ -338,7 +330,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
-    cr ." new list " over .region-list cr
+    cr ." New LS regions: " over .region-list cr
 
     \ Check the new list is different from the old list.
     over                                \ new-lst act0 new-lst
@@ -1200,110 +1192,166 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
 ' action-make-need to action-make-need-xt
 
-\ Look for needs of corners of a given rank.
-: action-check-corners-get-rank-list ( act0 -- rnk-lst )
+\ Given a state and a list of single-bit masks, get samples
+\ of squares around the state.
+: action-get-adjacent-state-needs ( sta2 msk-lst1 act0 -- ned-lst )
     \ Check args.
     assert-tos-is-action
+    assert-nos-is-value-list
+    assert-3os-is-value
 
-    \ Prep for loop.
-    dup action-get-incompatible-pairs           \ act0 par-lst
-    dup region-list-states                      \ act0 par-lst sta-lst'
+    \ Init return list.
+    list-new                                \ sta2 msk-lst1 act0 ned-lst
 
-    \ Get list of the number of regions states are in, no dup.
-    list-new                                    \ act0 par-lst sta-lst' rnk-lst
-    over list-get-links                         \ act0 par-lst sta-lst' rnk-lst sta-link
+    \ Get base square.
+    #3 pick                                 \ sta2 msk-lst1 act0 ned-lst sta2
+    #2 pick                                 \ sta2 msk-lst1 act0 ned-lst sta2 act0
+    action-find-square                      \ sta2 msk-lst1 act0 ned-lst, sqr2 t | f
+    is-false abort" action-get-adjacent-state-needs: sqr2 not found?"
+    
+    #3 pick list-get-links                  \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link
+
     begin
         ?dup
     while
-        dup link-get-data                       \ act0 par-lst sta-lst' rnk-lst sta-link stax
-        #4 pick                                 \ act0 par-lst sta-lst' rnk-lst sta-link stax par-lst
-        region-list-number-regions-state-in     \ act0 par-lst sta-lst' rnk-lst sta-link u
+        dup link-get-data                   \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link mskx
+        #6 pick                             \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link mskx sta2
+        xor                                 \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link stax
 
-        \ Ignore value 1, a point on a "logical edge", not a "logical corner".
-        dup 1 <>                                \ act0 par-lst sta-lst' rnk-lst sta-link u bool
+        dup                                 \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link stax stax
+        #5 pick                             \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link stax act0
+        action-find-square                  \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link stax, sqrx t | f
         if
-            [ ' = ] literal                     \ act0 par-lst sta-lst' rnk-lst sta-link u xt
-            over                                \ act0 par-lst sta-lst' rnk-lst sta-link u xt u
-            #4 pick                             \ act0 par-lst sta-lst' rnk-lst sta-link u xt u rnk-lst
-            list-member                         \ act0 par-lst sta-lst' rnk-lst sta-link u bool
+            dup square-get-pnc              \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link stax sqrx pnc
             if
-                drop                            \ act0 par-lst sta-lst' rnk-lst sta-link
+                2drop
             else
-                #2 pick                         \ act0 par-lst sta-lst' rnk-lst sta-link u rnk-lst
-                list-push                       \ act0 par-lst sta-lst' rnk-lst sta-link
+                \ Add need for another sample.
+                drop                        \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link stax
+                #3 swap                     \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link #3 stax
+                #5 pick                     \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link #3 stax act0
+                action-make-need            \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link nedx
+                #3 pick                     \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link nedx ret-lst
+                list-push-struct            \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link
             then
-        else                                    \ act0 par-lst sta-lst' rnk-lst sta-link u
-            drop                                \ act0 par-lst sta-lst' rnk-lst sta-link
+        else                                \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link stax
+            \ Add need for first sample.
+            #3 swap                     \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link #3 stax
+            #5 pick                     \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link #3 stax act0
+            action-make-need            \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link nedx
+            #3 pick                     \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link nedx ret-lst
+            list-push-struct            \ sta2 msk-lst1 act0 ned-lst sqr2 msk-link
         then
 
         link-get-next
     repeat
-                                                \ act0 par-lst sta-lst' rnk-lst
-    \ Sort list, descending.
-    [ ' < ] literal over list-sort              \ act0 par-lst sta-lst' rnk-lst
-
-    swap list-deallocate                        \ act0 par-lst rnk-lst
-    nip nip                                     \ rnk-lst
+                                        \ sta2 msk-lst1 act0 ned-lst sqr2
+    drop                                \ sta2 msk-lst1 act0 ned-lst
+    2nip                                \ act0 ned-lst
+    nip                                 \ ned-lst
 ;
 
-\ Check incomptible pairs for "logical corner" needs.
-: action-check-corners ( act0 -- need-lst )
+\ Look for regions that have all edges defined by incompatible pairs, where
+\ no single state has all the needed incompatible adjacent pairs.
+\ like 0X0X, and 1/3, 4/C.  This needs a test of 1/9 or 4/6.
+: action-discover-corner-needs ( reg1 act0 -- ned-lst )
     \ Check arg.
     assert-tos-is-action
-    cr ." action-check-corners: act: " dup action-get-inst-id . cr
+    \ cr ." action-discover-corner-needs: act: " dup action-get-inst-id . cr
 
-    \ Get list of descending ranks, like 4, 3, 2 (but no 1).
-    dup action-check-corners-get-rank-list      \ act0 rnk-lst'
-    dup list-is-empty                           \ act0 rnk-lst'
+     \ Init return list.
+    list-new swap                           \ ret-lst act0
+
+    \ Get defining regions.
+    dup action-get-defining-regions         \ ret-lst act0 df-lst
+
+    \ Check for no defining regions.
+    dup list-is-empty
     if
-        nip
+        2drop
         exit
     then
-    cr ." incompat pairs state ranks are: " [ ' . ] literal over .list cr
+    
+    \ Find left-over regions.
+    over action-get-parent-domain           \ ret-lst act0 df-lst dom
+    domain-get-max-region-xt execute        \ ret-lst act0 df-lst reg-max
+
+    list-new                                \ ret-lst act0 df-lst reg-max lft-lst'
+    tuck                                    \ ret-lst act0 df-lst lft-lst' reg-max lft-lst'
+    list-push-struct                        \ ret-lst act0 df-lst lft-lst'
+    tuck                                    \ ret-lst act0 lft-lst' df-lst lft-lst'
+    region-list-subtract                    \ ret-lst act0 lft-lst' lft-lst''
+    swap region-list-deallocate             \ ret-lst act0 lft-lst''
+
+    \ Check for no left over regions.
+    dup list-is-empty
+    if
+        list-deallocate
+        drop
+        exit
+    then
 
     \ Prep for loop.
-    over action-get-incompatible-pairs swap     \ act0 par-lst rnk-lst'
-    over region-list-states swap                \ act0 par-lst sta-lst' rnk-lst'
+    list-new                                \ ret-lst act0 lft-lst' ls-in-lft-lst'
+    #2 pick action-get-logical-structure    \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-lst
+    list-get-links                          \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-link
 
-    \ Check higher numbered corners first.
-    dup list-get-links                          \ act0 par-lst sta-lst rnk-lst' link
     begin
         ?dup
     while
-        dup link-get-data                       \ act0 par-lst sta-lst' rnk-lst' link rank
-
-        #3 pick list-get-links                  \ act0 par-lst sta-lst' rnk-lst' link rank sta-link
-        begin
-            ?dup
-        while
-            dup link-get-data                   \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax
-            #6 pick                             \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax par-lst
-            region-list-number-regions-state-in \ act0 par-lst sta-lst' rnk-lst' link rank sta-link rnkx
-            #2 pick                             \ act0 par-lst sta-lst' rnk-lst' link rank sta-link rnkx rank
-            =                                   \ act0 par-lst sta-lst' rnk-lst' link rank sta-link bool
-            if                                  \ act0 par-lst sta-lst' rnk-lst' link rank sta-link
-                dup link-get-data               \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax
-            cr ." check sta: " dup .
-                #6 pick                         \ act0 par-lst sta-lst' rnk-lst' link rank sta-link stax par-lst
-                region-list-regions-state-in    \ act0 par-lst sta-lst' rnk-lst' link rank sta-link reg-lst'
-            space ." in: " dup .region-list cr
-                \ todo
-                region-list-deallocate          \ act0 par-lst sta-lst' rnk-lst' link rank sta-link
-            then
-
-            link-get-next
-        repeat
-        cr ." todo rank " dup . cr
-        drop
+        dup link-get-data                   \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-link reg-ls
+        #3 pick                             \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-link reg-ls lft-lst'
+        region-list-any-intersection-of     \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-link bool
+        if
+            dup link-get-data               \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-link reg-ls
+            #2 pick                         \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-link reg-ls ls-in-lft-lst'
+            list-push-struct                \ ret-lst act0 lft-lst' ls-in-lft-lst' ls-link
+        then
 
         link-get-next
     repeat
-                                                \ act0 par-lst sta-lst' rnk-lst'
+                                            \ ret-lst act0 lft-lst' ls-in-lft-lst'
 
-    list-deallocate                             \ act0 par-lst sta-lst'
-    list-deallocate                             \ act0 par-lst
-    2drop                                       \
-    list-new                                    \ ret-lst
+    swap region-list-deallocate             \ ret-lst act0 ls-in-lft-lst'
+
+    dup list-get-links                      \ ret-lst act0 ls-in-lft-lst' lil-link
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ ret-lst act0 ls-in-lft-lst' lil-link lil-reg
+        cr ." eval " dup .region
+        #3 pick                             \ ret-lst act0 ls-in-lft-lst' lil-link lil-reg act0
+        action-get-incompatible-pairs       \ ret-lst act0 ls-in-lft-lst' lil-link lil-reg inc-prs-lst
+        region-list-intersections-of-region \ ret-lst act0 ls-in-lft-lst' lil-link int-lst'
+        space dup .region-list              \ ret-lst act0 ls-in-lft-lst' lil-link int-lst'
+
+        \ Check if the union of region X masks equals the region edge mask.
+        dup region-list-union-x-masks       \ ret-lst act0 ls-in-lft-lst' lil-link int-lst' int-x-msk
+        #2 pick link-get-data               \ ret-lst act0 ls-in-lft-lst' lil-link int-lst' int-x-msk lil-reg
+        region-edge-mask                    \ ret-lst act0 ls-in-lft-lst' lil-link int-lst' int-x-msk lil-x-mask
+        =                                   \ ret-lst act0 ls-in-lft-lst' lil-link int-lst' bool
+        if                                  \ ret-lst act0 ls-in-lft-lst' lil-link int-lst'
+            space ." = "
+            dup                             \ ret-lst act0 ls-in-lft-lst' lil-link int-lst' int-lst'
+            region-list-states              \ ret-lst act0 ls-in-lft-lst' lil-link int-lst' sta-lst'
+            swap region-list-deallocate     \ ret-lst act0 ls-in-lft-lst' lil-link sta-lst'
+            dup                             \ ret-lst act0 ls-in-lft-lst' lil-link sta-lst' sta-lst'
+            #2 pick link-get-data           \ ret-lst act0 ls-in-lft-lst' lil-link sta-lst' sta-lst' lil-reg
+            region-states-in                \ ret-lst act0 ls-in-lft-lst' lil-link sta-lst' sta-lst''
+            swap list-deallocate            \ ret-lst act0 ls-in-lft-lst' lil-link sta-lst''
+            space dup .value-list
+            list-deallocate
+        else
+            region-list-deallocate
+        then
+        cr
+
+        link-get-next
+    repeat
+                                            \ ret-lst act0 ls-in-lft-lst'
+
+    region-list-deallocate
+    drop                                    \ ret-lst
 ;
 
 \ Return a list of needs for an action, given the current state
@@ -1384,12 +1432,6 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         link-get-next           \ reg1 ret-lst sta1 act0 | link
     repeat
 
-
-    \ Check for corners.
-    \ dup action-check-corners   \ reg1 ret-lst sta1 act0 | need-lst
-    \ cr ." todo: Process needs from action-check-corners"
-    \ need-list-deallocate
-
     \ Check for non-adjacent incompatible pairs.
     dup action-get-incompatible-pairs   \ reg1 ret-lst sta1 act0 | par-lst
     list-get-links                      \ reg1 ret-lst sta1 act0 | link
@@ -1444,6 +1486,30 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         link-get-next           \ reg1 ret-lst sta1 act0 | link
     repeat
                                 \ reg1 ret-lst sta1 act0
+
+\    #2 pick                     \ reg1 ret-lst sta1 act0 ret-lst
+\    list-is-empty
+\    if
+        \ Check for new corners.
+\        #3 pick                         \ reg1 ret-lst sta1 act0 reg1
+\        over                            \ reg1 ret-lst sta1 act0 reg1 act0
+\        action-discover-corner-needs    \ reg1 ret-lst sta1 act0 ned-lst
+\        dup list-is-empty
+\        if
+\            list-deallocate
+\        else
+\            nip nip                     \ reg1 ret-lst ned-lst
+\            swap need-list-deallocate   \ reg1 ned-lst
+\            nip                         \ ned-lst
+\            dup list-get-length
+\            ?dup
+\            if
+\                cr ." corner-needs: " . cr
+\                cr current-action .action cr
+\            then
+\        exit
+\    then
+\    then
 
     \ Check if the current state is not in a group, and is not represented by a pnc square.
     over                        \ reg1 ret-lst sta1 act0 | sta1
@@ -1537,7 +1603,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
         link-get-next
     repeat
-                                \ reg1 ret-lst sta1 act0
+                                    \ reg1 ret-lst sta1 act0
 
     \ Clean up.
     2drop                       \ reg1 ret-lst
@@ -1824,84 +1890,6 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         link-get-next                       \ reg-to reg-from act0 ret-lst rul-link
     repeat
                                             \ reg-to reg-from act0 ret-lst
-    2nip                                    \ act0 ret-lst
-    nip                                     \ ret-lst
-;
-
-\ Return corner needs, given a region and a state, representing an existing square, in the region.
-\ The region is not completely overlapped by defining regions, but has a state adjacent to
-\ a defining region corner.
-\ Where there is a corner, there may be other corners.
-: action-corner-needs ( sta2 reg1 act0 -- need-lst )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-    assert-3os-is-value
-
-    \ Init return list.
-    list-new                                \ sta2 reg1 act0 ret-lst
-    \ Get square represented by the given state.
-    #3 pick                                 \ sta2 reg1 act0 ret-lst sta2
-    #2 pick action-find-square              \ sta2 reg1 act0 ret-lst, sqr2 t | f
-    is-false abort" action-corner-needs: square not found?"
-
-    \ Get edge bits.
-    #3 pick                                 \ sta2 reg1 act0 ret-lst sqr2 reg1
-    region-edge-mask value-split            \ sta2 reg1 act0 ret-lst sqr2 msk-lst'
-
-    \ Prep for loop.
-    dup list-get-links                      \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link mskx
-        #7 pick                             \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link mskx sta2
-        xor                                 \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax
-        dup                                 \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax stax
-        #6 pick                             \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax act0
-        action-find-square                  \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax, sqrx t | f
-        if
-            dup square-get-pnc              \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax sqrx pnc
-            if
-                \ Check if square is compatible.
-                nip                         \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link sqrx
-                #3 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link sqrx sqr2
-                square-compatible           \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link bool
-                if
-                    \ State cannot be used to define a logical corner.
-                    drop                    \ sta2 reg1 act0 ret-lst sqr2 msk-lst'
-                    list-deallocate         \ sta2 reg1 act0 ret-lst sqr2
-                    drop                    \ sta2 reg1 act0 ret-lst
-                    need-list-deallocate    \ sta2 reg1 act0
-                    3drop                   \
-                    list-new                \ ret-lst
-                    exit
-                then
-            else                            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax sqrx
-                \ Add need for another sample.
-                drop                        \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax
-                #3 swap                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax
-                #6 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax act0
-                action-make-need            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx
-                #4 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx ret-lst
-                list-push-struct            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link
-            then
-        else                                \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link stax
-            \ Add need for first sample.
-            #3 swap                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax
-            #6 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link #3 stax act0
-            action-make-need            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx
-            #4 pick                     \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link nedx ret-lst
-            list-push-struct            \ sta2 reg1 act0 ret-lst sqr2 msk-lst' msk-link
-        then
-
-        link-get-next
-    repeat
-
-                                            \ sta2 reg1 act0 ret-lst sqr msk-lst'
-    list-deallocate                         \ sta2 reg1 act0 ret-lst sqr
-    drop                                    \ sta2 reg1 act0 ret-lst
     2nip                                    \ act0 ret-lst
     nip                                     \ ret-lst
 ;
