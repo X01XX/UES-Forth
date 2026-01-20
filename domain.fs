@@ -1,7 +1,7 @@
 \ Implement a Domain struct and functions.
 
 #31379 constant domain-id
-    #5 constant domain-struct-number-cells
+    #8 constant domain-struct-number-cells
 
 \ Struct fields
 0                                   constant domain-header-disp         \ 16-bits [0] struct id, [1] use count, [2] instance id (8 bits), num-bits (8 bits)
@@ -9,6 +9,10 @@ domain-header-disp          cell+   constant domain-parent-session-disp \ A sess
 domain-parent-session-disp  cell+   constant domain-actions-disp        \ A action-list
 domain-actions-disp         cell+   constant domain-current-state-disp  \ A state/value.
 domain-current-state-disp   cell+   constant domain-current-action-disp \ An action addr.
+domain-current-action-disp  cell+   constant domain-max-region-disp     \ A region with all valid bits set to X.
+domain-max-region-disp      cell+   constant domain-all-bits-mask-disp  \ A mask of all bits set to 1.
+domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask with the most significant bit set to one.
+
 
 0 value domain-mma \ Storage for domain mma instance.
 
@@ -149,16 +153,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 : domain-set-current-state ( u1 dom0 -- )
     \ Check args.
     assert-tos-is-domain
-
-    \ check state for validity
-    1 over                  \ u1 dom0 1 dom0
-    domain-get-num-bits     \ u1 dom0 1 nb
-    1- lshift               \ u1 dom0 ms-bit
-    1- 1 lshift 1+          \ u1 dom0 all-bits
-    #2 pick                 \ u1 dom0 all-bits u1
-    tuck                    \ u1 dom0 u1 all-bits u1
-    and                     \ u1 dom0 u1 U2
-    <> abort" invalid state"
+    assert-nos-is-value
 
     \ Set inst id.
     domain-current-state-disp +
@@ -207,6 +202,66 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     !                               \ Set the field.
 ;
 
+\ Return the max-region of the domain.
+: domain-get-max-region ( dom0 -- reg-max )
+    \ Check arg.
+    assert-tos-is-domain
+
+    domain-max-region-disp +    \ Add offset.
+    @                           \ Fetch the field.
+;
+
+' domain-get-max-region to domain-get-max-region-xt
+
+\ Set the max region of the domain.
+: _domain-set-max-region ( reg-max dom0 -- )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-max-region-disp +    \ Add offset.
+    !struct                     \ Set the field.
+;
+
+\ Return the all-bits-mask of the domain.
+: domain-get-all-bits-mask ( dom0 -- mask )
+    \ Check arg.
+    assert-tos-is-domain
+
+    domain-all-bits-mask-disp +    \ Add offset.
+    @                           \ Fetch the field.
+;
+
+' domain-get-all-bits-mask to domain-get-all-bits-mask-xt
+
+\ Set the max region of the domain.
+: _domain-set-all-bits-mask ( mask1 dom0 -- )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-all-bits-mask-disp +    \ Add offset.
+    !                               \ Set the field.
+;
+
+\ Return the ms-bit-mask of the domain.
+: domain-get-ms-bit-mask ( dom0 -- mask )
+    \ Check arg.
+    assert-tos-is-domain
+
+    domain-ms-bit-mask-disp +   \ Add offset.
+    @                           \ Fetch the field.
+;
+
+' domain-get-ms-bit-mask to domain-get-ms-bit-mask-xt
+
+\ Set the max region of the domain.
+: _domain-set-ms-bit-mask ( mask1 dom0 -- )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-ms-bit-mask-disp +   \ Add offset.
+    !                           \ Set the field.
+;
+
 \ End accessors.
 
 \ Create a domain, given the number of bits to be used.
@@ -216,7 +271,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 \ using domain-set-inst-id, which avoids duplicates and may be useful as an index into the list.
 \
 \ The current state defaults to zero, but can be set with domain-set-current-state.
-: domain-new ( nb1 ses0 -- addr)
+: domain-new ( nb1 ses0 -- dom )
     \ Check arg.
     assert-tos-is-session-xt execute
 
@@ -253,13 +308,33 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     \ Add action 0.
     [ ' act-0-get-sample ] literal  \ dom lst xt
     #2 pick                         \ dom lst xt dom
-    action-new                      \ dom lst act
-    tuck swap                       \ dom act act lst
-
+    action-new dup                  \ dom lst act act
+    rot                             \ dom act act lst
     action-list-push-end            \ dom act
-
     over domain-set-current-action  \ dom
-    0 over domain-set-current-state \ dom
+
+    \ Set all bits mask.
+    dup domain-get-num-bits \ dom u
+    1-                      \ dom u'    Don't just take 2^n, as it might be the maximum number of bits.
+    1 swap lshift           \ dom u''   Get most-significant-bit.
+    1-                      \ dom u'''  Get all bits 1 except the msb.
+    1 lshift                \ dom u'''' Get all bits 1 except the least-significant-bit.
+    1+                      \ dom mask  Make lsb 1.
+    over _domain-set-all-bits-mask
+
+    \ Set max region.
+    dup domain-get-all-bits-mask    \ dom msk
+    0 region-new2                   \ dom regx
+    over _domain-set-max-region     \ dom
+
+    \ Set the most significant bit mask.
+    dup domain-get-num-bits \ dom u
+    1-                      \ dom u'    Don't just take 2^n, as it might be the maximum number of bits.
+    1 swap lshift           \ dom mask
+    over _domain-set-ms-bit-mask    \ dom
+
+    \ Set arbitrary current state.
+    0 over domain-current-state-disp + ! \ dom
 ;
 
 \ Print a domain.
@@ -290,6 +365,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     if
         \ Clear fields.
         dup domain-get-actions action-list-deallocate
+        dup domain-get-max-region region-deallocate
 
         \ Deallocate instance.
         domain-mma mma-deallocate
@@ -449,45 +525,6 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
     region-new                      \ cng-agg reg
     swap changes-deallocate         \ reg
 ;
-
-\ Return the all bits mask.
-: domain-get-all-bits-mask ( dom -- mask )
-    \ Check args.
-    assert-tos-is-domain
-
-    domain-get-num-bits     \ u
-    1-                      \ u'    Don't just take 2^n, as it might be the maximum number of bits.
-    1 swap lshift           \ u''   Get most-significant-bit.
-    1-                      \ u'''  Get all bits 1 except the msb.
-    1 lshift                \ u'''' Get all bits 1 except the least-significant-bit.
-    1+                      \ mask  Maku lsb 1.
-;
-
-' domain-get-all-bits-mask to domain-get-all-bits-mask-xt
-
-\ Return the most-significant-bit mask.
-: domain-get-ms-bit-mask ( dom -- mask )
-    \ Check args.
-    assert-tos-is-domain
-
-    domain-get-num-bits     \ u
-    1-                      \ u'    Don't just take 2^n, as it might be the maximum number of bits.
-    1 swap lshift           \ mask
-;
-
-' domain-get-ms-bit-mask to domain-get-ms-bit-mask-xt
-
-\ Return the maximum region for the domain's number of bits.
-\ Caller to deallocate the region.
-: domain-get-max-region ( dom0 -- regx )
-    \ Check-arg.
-    assert-tos-is-domain
-
-    domain-get-all-bits-mask    \ msk
-    0 region-new                \ regx
-;
-
-' domain-get-max-region to domain-get-max-region-xt
 
 \ Return a step forward, from an initial region,
 \ towards the goal result region.
@@ -1546,9 +1583,7 @@ domain-current-state-disp   cell+   constant domain-current-action-disp \ An act
 
     domain-get-max-region               \ u1 reg-max
 
-    tuck                                \ reg-max u1 reg-max
-    region-subtract-state               \ reg-max list
-    swap region-deallocate              \ list
+    region-subtract-state               \ list
 ;
 
 \ Return ~A + ~B for a state pair.

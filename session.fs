@@ -300,8 +300,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
         \ Add next region.
         dup link-get-data           \ sess0 reg-lst d-lisk domx
-        domain-get-max-region       \ sess0 reg-lst d-lisk regx
-        #2 pick                     \ sess0 reg-lst d-lisk regx reg-lst
+        domain-get-max-region       \ sess0 reg-lst d-lisk max-reg
+        #2 pick                     \ sess0 reg-lst d-lisk max-reg reg-lst
         region-list-push-end        \ sess0 reg-lst d-lisk
 
         link-get-next               \ sess0 reg-lst d-link

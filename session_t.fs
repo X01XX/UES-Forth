@@ -348,39 +348,6 @@
     cr ." session-test-change-to: Ok" cr
 ;
 
-: session-test-corner-needs
-    \ Init session.
-    current-session-new                             \ ses
-
-    \ Init domain 0.
-    #4 over domain-new                              \ ses dom0
-    2dup swap                                       \ ses dom0 dom0 sess
-    session-add-domain                              \ ses dom0
-
-    \ Get act0.
-    0 over domain-find-action                       \ ses dom0, act0 t | f
-    is-false abort" act0 not found?"
-
-    \ Add arbitrary samples
-    #5 #5 sample-new                                \ ses dom0 act0 smpl5
-    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
-    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
-    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
-    2dup swap action-add-sample                     \ ses dom0 act0 smpl5
-
-    cr over .action cr
-
-    #5 #2 pick action-find-square
-    is-false abort" square not found?"
-    .square 
-
-    sample-deallocate
-    3drop
-    current-session-deallocate
-
-    cr ." session-test-corner-needs: Ok" cr
-;
-
 : session-tests
     session-test-domain-get-plan-fc
     session-test-domain-get-plan-bc

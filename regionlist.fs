@@ -339,7 +339,7 @@
 \ ' region-list-subtract-region to region-list-subtract-region-xt
 
 \ From the TOS region-list, subtract the NOS region-list.
-\ In many cases, you should run region-list-subtract-n instead.
+\ In some cases, you should run region-list-subtract-n instead.
 \ Or do intersections\subtractions, followed by region-list-normalize.
 : region-list-subtract ( lst1 lst0 -- lst )
     \ Check args.
@@ -375,9 +375,7 @@
     assert-tos-is-region-list
 
     list-new                    \ lst0 lst1
-    current-domain              \ lst0 lst1 dom
-    domain-get-max-region-xt
-    execute                     \ lst0 lst1 regM
+    current-max-region          \ lst0 lst1 regM
     over region-list-push       \ lst0 lst1
     2dup                        \ lst0 lst1 lst0 lst1
     region-list-subtract        \ lst0 lst1 lst2
@@ -482,14 +480,21 @@
     [ ' region-intersects ] literal -rot list-member
 ;
 
+: region-list-intersections-of-region ( reg1 lst0 -- reg-lst )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region
+
+    [ ' region-intersects ] literal -rot list-find-all-struct
+;
+
 \ Return a list of regions that use a given state.
 : region-list-uses-state ( sta1 reg-lst0 -- list )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-value
 
-   [ ' region-uses-state ] literal -rot list-find-all       \ lst
-   [ ' struct-inc-use-count ] literal over list-apply       \ lst
+   [ ' region-uses-state ] literal -rot list-find-all-struct    \ lst
 ;
 
 : region-list-intersections-n ( lst1 lst0 -- lst )
@@ -724,7 +729,7 @@
 ;
 
 \ Return the number of regions a state is in.
-: region-list-number-regions-state-in ( sta1 lst0 -- reg-lst )
+: region-list-number-regions-state-in ( sta1 lst0 -- u )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-value
@@ -752,6 +757,36 @@
     repeat
 
     drop                                \ cnt
+;
+
+\ Return true if a state is in any region.
+: region-list-any-superset-state ( sta1 lst0 -- bool )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-value
+
+    \ Prep for loop.
+    list-get-links                      \ sta1 link
+
+    \ Check each region.
+    begin
+        ?dup
+    while
+        \ Check the current region.
+        2dup                            \ sta1 link sta1 link
+        link-get-data                   \ sta1 link sta1 regx
+        region-superset-of-state        \ sta1 link flag
+        if                              \ sta1 link
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                        \ sta1
+    drop
+    false
 ;
 
 \ Copy a region-list, removing subsets.
@@ -1177,4 +1212,29 @@
     repeat
 
     drop                                \ sta-lst
+;
+
+\ Return the union of all region x masks.
+: region-list-union-x-masks ( lst0 -- msk )
+    \ Check args.
+    assert-tos-is-region-list
+
+    \ Init return mask.
+    0 swap                              \ ret-msk lst0
+
+    \ Prep for loop.
+    list-get-links                      \ ret-msk link
+
+    \ Check each region.
+    begin
+        ?dup
+    while
+        \ Check the current region.
+        dup link-get-data               \ ret-msk link regx
+        region-x-mask                   \ ret-msk link reg-x
+        rot or                          \ link ret-msk'
+        swap                            \ ret-msk' link
+
+        link-get-next
+    repeat
 ;

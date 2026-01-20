@@ -311,7 +311,7 @@
     \ X0X0 = (1010, 0000), X0x0 = (1000, 0010).
 
     \ List of incompatible state pairs (inc-), as regions.
-    s" (00X1 X100)" region-list-from-string-a       \ inc-lst'
+    s" (00X1 X100)" region-list-from-string-a       \ dom inc-lst'
 
     cr cr ." Incompatible pair list: " dup .region-list cr
 
@@ -319,13 +319,14 @@
     dup list-is-empty
     if
         list-deallocate
+        drop
         exit
     then
 
     \ Init logical structure (ls-) list.
-    #2 pick                                         \ dom0 inc-lst' max-reg' dom
-    domain-get-max-region-xt execute                \ dom0 inc-lst' max-reg'
-    list-new                                        \ dom0 inc-lst' max-reg' ls-lst'
+    over                                            \ dom0 inc-lst' dom
+    domain-get-max-region-xt execute                \ dom0 inc-lst' max-reg
+    list-new                                        \ dom0 inc-lst' max-reg ls-lst'
     tuck list-push-struct                           \ dom0 inc-lst' ls-lst'
 
     \ Process each incompatible pair in inc-lst.
@@ -419,8 +420,8 @@
 
     \ Check for any left-over regions.
     #3 pick                                         \ dom0 inc-lst' ls-lst' df-lst' dom
-    domain-get-max-region-xt execute                \ dom0 inc-lst' ls-lst' df-lst' max-reg'
-    list-new                                        \ dom0 inc-lst' ls-lst' df-lst' max-reg' max-lst'
+    domain-get-max-region-xt execute                \ dom0 inc-lst' ls-lst' df-lst' max-reg
+    list-new                                        \ dom0 inc-lst' ls-lst' df-lst' max-reg max-lst'
     tuck list-push-struct                           \ dom0 inc-lst' ls-lst' df-lst' max-lst'
     over                                            \ dom0 inc-lst' ls-lst' df-lst' max-lst' df-lst'
     over                                            \ dom0 inc-lst' ls-lst' df-lst' max-lst' df-lst' max-lst'

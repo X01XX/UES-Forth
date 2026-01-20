@@ -9,7 +9,7 @@
     %0000 %0001 region-new              \ reg
 
     \ Init plan.
-    over action-parent-domain           \ act0 reg dom
+    over action-get-parent-domain       \ act0 reg dom
     plan-new                            \ act0 reg pln
 
     \ Add first step.
@@ -58,7 +58,7 @@
     %0000 %0100 region-new              \ act0 reg
 
     \ Init plan.
-    over action-parent-domain           \ act0 reg dom
+    over action-get-parent-domain       \ act0 reg dom
     plan-new                            \ act0 reg pln
 
     \ Add first step.
@@ -120,7 +120,7 @@
     %1011 %1010 region-new              \ act0 reg
 
     \ Init plan.
-    over action-parent-domain           \ act0 reg dom
+    over action-get-parent-domain       \ act0 reg dom
     plan-new                            \ act0 reg pln
 
     \ Add first step.
@@ -170,7 +170,7 @@
 : plan-test-link-step-to-initial-region ( act0 -- )
     cr ." at 1: " .stack-structs-xt execute cr
      \ Init plan.
-     dup action-parent-domain           \ act0 dom
+     dup action-get-parent-domain       \ act0 dom
      plan-new                           \ act0 pln
 
     \ Add step to plan.
@@ -213,7 +213,7 @@
 
 : plan-test-link-step-to-result-region ( act0 -- )
     \ Init plan.
-    dup action-parent-domain           \ act0 dom
+    dup action-get-parent-domain       \ act0 dom
     plan-new                           \ act0 pln'
 
     \ Add step to plan.

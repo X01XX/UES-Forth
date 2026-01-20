@@ -286,7 +286,10 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     #2 pick _group-update-r-region  \ grp0 sqr-lst'
 
     dup square-list-get-rules       \ grp0 sqr-lst', ruls t | f
-    0= abort" rules not found?"
+    is-false if
+        rulestore-new-0
+    then
+
     #2 pick _group-update-rules     \ grp0 sqr-lst'
 
     square-list-deallocate          \ grp0

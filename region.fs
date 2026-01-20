@@ -168,8 +168,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Setup for bit-position loop.
     dup  region-get-state-1
     swap region-get-state-0
-    current-domain                      \ st2 st1 dom
-    domain-get-ms-bit-mask-xt execute   \ st2 st1 ms-bit
+    current-ms-bit-mask     \ st2 st1 ms-bit
 
     \ Process each bit.
     begin
@@ -603,9 +602,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Check counter.
     2swap                   \ s1 s0 cnt addr
     drop                    \ s1 s0 cnt
-    current-domain          \ s1 s0 cnt dom
-    domain-get-num-bits-xt  \ s1 s0 cnt xt
-    execute                 \ s1 s0 cnt nb
+    current-num-bits        \ s1 s0 cnt nb
     <> if                   \ s1 s0
         2drop
         false
