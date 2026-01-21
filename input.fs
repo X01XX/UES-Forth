@@ -1,5 +1,5 @@
-
-: do-need ( ned -- )
+\ Do a need.  Return true if the need has been satisfied.
+: do-need ( ned -- bool )
     \ Check arg.
     assert-tos-is-need
 
@@ -19,49 +19,60 @@
         \ No plan needed, get sample.
         2dup                        \ ned act dom act dom
         domain-get-sample           \ ned act dom sample
-        sample-deallocate               \ ned act dom
+        sample-deallocate           \ ned act dom
         domain-get-inst-id
-        cr ." Dom: " dec.               \ ned act
-        .action cr                      \ ned
-        drop                            \
-    else                                \ ned act dom
-        #2 pick need-get-target         \ ned act dom t-sta
-        over domain-get-current-state   \ ned act dom t-sta c-state
-        sample-new                      \ ned act dom smpl
-        \ Create from/to regions.
-        dup sample-get-result           \ ned act dom smpl rslt
-        dup region-new                  \ ned act dom smpl reg-to
-        over sample-get-initial         \ ned act dom smpl reg-to initial
-        dup region-new                  \ ned act dom smpl reg-to reg-from
-        2dup                            \ ned act dom smpl reg-to reg-from reg-to reg-from
-        #5 pick                         \ ned act dom smpl reg-to reg-from reg-to reg-from dom
-
-        domain-get-plan                 \ ned act dom smpl reg-to reg-from, plan true | false
-        if
-            swap region-deallocate
-            swap region-deallocate      \ ned act dom smpl plan
-            dup plan-run                \ ned act dom smpl plan flag
-            if
-                cr ." plan succeeded " cr
-                                        \ ned act dom smpl plan
-                #3 pick                 \ ned act dom smpl plan act
-                #3 pick                 \ ned act dom smpl plan act dom
-                domain-get-sample       \ ned act dom smpl plan smpl
-                sample-deallocate       \ ned act dom smpl plan
-            else                        \ ned act dom smpl plan
-                cr ." plan failed " cr
-            then
-                                        \ ned act dom smpl plan
-            plan-deallocate
-        else
-            region-deallocate
-            region-deallocate           \ ned act dom smpl
-            cr ." No plan found" cr
-        then
-                                        \ ned act dom smpl
-        sample-deallocate               \ ned act dom
-        3drop
+        cr ." Dom: " dec.           \ ned act
+        .action cr                  \ ned
+        drop                        \
+        true
+        exit
     then
+                                    \ ned act dom
+    #2 pick need-get-target         \ ned act dom t-sta
+    over domain-get-current-state   \ ned act dom t-sta c-state
+    sample-new                      \ ned act dom smpl'
+
+    \ Create from/to regions.
+    dup sample-get-result           \ ned act dom smpl' rslt
+    dup region-new                  \ ned act dom smpl' reg-to'
+    over sample-get-initial         \ ned act dom smpl' reg-to' initial
+    dup region-new                  \ ned act dom smpl' reg-to' reg-from'
+    2dup                            \ ned act dom smpl' reg-to' reg-from' reg-to' reg-from'
+    #5 pick                         \ ned act dom smpl' reg-to' reg-from' reg-to' reg-from' dom
+
+    domain-get-plan                 \ ned act dom smpl' reg-to' reg-from', plan' t | f
+    if
+        swap region-deallocate
+        swap region-deallocate      \ ned act dom smpl' plan'
+        dup plan-run                \ ned act dom smpl' plan' flag
+        if
+            cr ." plan succeeded " cr
+                                    \ ned act dom smpl' plan'
+            #3 pick                 \ ned act dom smpl' plan' act
+            #3 pick                 \ ned act dom smpl' plan' act dom
+            domain-get-sample       \ ned act dom smpl' plan' smpl'
+            sample-deallocate       \ ned act dom smpl' plan'
+            plan-deallocate         \ ned act dom smpl'
+            sample-deallocate       \ ned act dom
+            3drop
+            true
+            exit
+        then
+                                    \ ned act dom smpl' plan
+        cr ." plan failed " cr
+        plan-deallocate         \ ned act dom smpl'
+        sample-deallocate       \ ned act dom
+        3drop
+        false
+        exit
+    then
+
+    cr ." No plan found" cr
+    region-deallocate               \ ned act dom smpl' reg-to'
+    region-deallocate               \ ned act dom smpl'
+    sample-deallocate               \ ned act dom
+    3drop
+    false
 ;
 
 : do-to-command ( regc-to -- )  \ Do the UI "to" command.
@@ -206,10 +217,12 @@
         over need-get-target        \ ned-lst link nedx dom-sta ned-sta
         = if                        \ ned-lst link nedx
             cr ." Need chosen: " space dup .need cr
-            nip nip                 \ nedx
-            do-need                 \
-            true
-            exit
+            do-need                 \ ned-lst link bool
+            if
+                2drop               \
+                true
+                exit
+            then
         else                        \ ned-lst link nedx
             drop                    \ ned-lst link
         then
@@ -217,12 +230,61 @@
         link-get-next
     repeat                          \ ned-lst
 
-    dup list-get-length             \ ned-lst len
-    random                          \ ned-lst indx
+    \ Init index list for need list.
+    list-new 0 #2 pick              \ ned-lst inx-lst cnt ned-lst
+    list-get-links                  \ ned-lst inx-lst cnt ned-link
+    begin
+        ?dup
+    while
+        \ Save counter in index list.
+        over                        \ ned-lst inx-lst cnt ned-link cnt
+        #3 pick                     \ ned-lst inx-lst cnt ned-link cnt inx-lst
+        list-push                   \ ned-lst inx-lst cnt ned-link
 
-    swap list-get-item              \ nedx
-    cr ." Need chosen: " space dup .need cr
-    do-need                         \
+        \ Inc counter.
+        swap 1 + swap
+
+        link-get-next
+    repeat
+                                    \ ned-lst inx-lst cnt
+    drop                            \ ned-lst inx-lst
+    \ cr ." at 1: " .stack-gbl cr
+
+    begin
+        \ cr ." inx list: 1 " dup .value-list cr
+
+        dup list-get-length             \ ned-lst inx-lst len
+        random                          \ ned-lst inx-lst inx
+        dup                             \ ned-lst inx-lst inx inx
+        #2 pick                         \ ned-lst inx-lst inx inx inx-lst
+        list-get-item                   \ ned-lst inx-lst inx inx2
+
+        #3 pick list-get-item           \ ned-lst inx-lst inx nedx
+        \ cr ." Need chosen: " space dup .need cr
+        do-need                         \ ned-lst inx-lst inx bool
+        if
+            \ Need satisfied, done.
+            drop
+            list-deallocate
+            drop
+            true
+            exit
+        then
+        \ Need not satisfied, try another, if any.
+                                        \ ned-lst inx-lst inx
+
+        \ Remove the index, avoiding random picking the same need to try again.
+        over                            \ ned-lst inx-lst inx inx-lst
+        list-remove-item                \ ned-lst inx-lst, u t | f
+        is-false abort" Item not removed?"
+                                        \ ned-lst inx-lst u
+        drop                            \ ned-lst inx-lst
+        \ cr ." inx list: 2 " dup .value-list cr
+        dup list-get-length 0=
+    until
+
+    list-deallocate                 \ ned-lst
+    drop
 
     true
 ;
@@ -280,7 +342,8 @@
         \ Get selected need.
         list-get-item                       \ ned
         cr ." You chose need: " dup .need cr
-        do-need
+        do-need                             \ bool
+        drop
         true
         exit
     then

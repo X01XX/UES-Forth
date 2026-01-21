@@ -170,8 +170,8 @@
     dup list-get-length 1 <>
     abort" need-list length is invalid?"
 
-    #9 over need-list-contains-target
-    is-false abort" Nedd target not found?"
+    0 over need-list-contains-target
+    is-false abort" Need target not found?"
 
     \ Clean up.
     need-list-deallocate

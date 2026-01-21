@@ -58,7 +58,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check tos for valid need number.
 : assert-tos-is-need-number ( tos -- tos )
-    dup 1 < over #5 > or
+    dup 1 < over #6 > or
     if
         s" tos invalid need number?"
        .abort-xt execute
@@ -69,7 +69,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 : assert-nos-is-need-number ( nos tos -- nos tos )
     over dup                     \ u1 arg0 u1 u1
     1 < swap                     \ u1 arg0 b1 u1
-    #5 >                         \ u1 arg0 b1 b2
+    #6 >                         \ u1 arg0 b1 b2
     or
     if
         s" nos invalid need number?"
@@ -81,7 +81,19 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 : assert-3os-is-need-number ( 3os nos tos -- 3os nos tos )
     #2 pick dup                  \ u2 arg1 arg0 u2 u2
     1 < swap                     \ u2 arg1 arg0 b1 u2
-    #5 >                         \ u2 arg1 arg0 b1 b2
+    #6 >                         \ u2 arg1 arg0 b1 b2
+    or
+    if
+        s" 3os invalid need number?"
+       .abort-xt execute
+    then
+;
+
+\ Check 4os for valid need number.
+: assert-4os-is-need-number ( 4os 3os nos tos -- 4os 3os nos tos )
+    #3 pick dup                  \ u2 arg1 arg0 u2 u2
+    1 < swap                     \ u2 arg1 arg0 b1 u2
+    #6 >                         \ u2 arg1 arg0 b1 b2
     or
     if
         s" 3os invalid need number?"
@@ -169,6 +181,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     assert-tos-is-domain-xt execute
     assert-nos-is-action-xt execute
     assert-3os-is-value
+    assert-4os-is-need-number
 
     \ Allocate space.
     need-mma mma-allocate           \ typ3 u2 act1 dom0 ned
@@ -216,6 +229,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
        #3 of space ." Improve logical structure" endof
        #4 of space ." Fill group" endof
        #5 of space ." Confirm group" endof
+       #6 of space ." Test possible corner" endof
         ." Unrecognized type value" abort
     endcase
 ;
