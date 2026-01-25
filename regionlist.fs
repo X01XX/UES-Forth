@@ -167,6 +167,7 @@
 
     list-remove                         \ reg2 true | false
     if
+        \ cr ." sub reg removed: " dup .region cr
         region-deallocate
         true
     else
@@ -187,6 +188,7 @@
 
     list-remove                         \ reg2 true | false
     if
+        \ cr ." sup reg removed: " dup .region cr
         region-deallocate
         true
     else
@@ -618,39 +620,6 @@
                             \ ctr sta
     drop                    \ ctr  s/b 0 or 1.
     0<>                     \ flag
-;
-
-\ Return a list of states only in one region of a region-list.
-: region-list-states-in-one-region ( sta-lst1 reg-lst0 -- sta-lst )
-    \ Check args.
-    assert-tos-is-region-list
-    assert-nos-is-list
-
-    \ State list to TOS, to scan through.
-    swap                        \ reg-lst0 sta-lst1
-
-    \ Init return list.
-    list-new swap               \ reg-lst1 ret-lst sta-lst
-
-    \ Get first link.
-    list-get-links              \ reg-lst1 ret-lst link
-
-    begin
-        ?dup
-    while
-        dup link-get-data               \ reg-lst1 ret-lst link data
-        #3 pick                         \ reg-lst1 ret-lst link data reg-lst
-        region-list-state-in-one-region \ reg-lst1 ret-lst link flag
-        if
-            dup link-get-data           \ reg-lst1 ret-lst link data
-            #2 pick                     \ reg-lst1 ret-lst link data ret-lst
-            list-push                   \ reg-lst1 ret-lst link
-        then
-
-        link-get-next                   \ reg-lst1 ret-lst link
-    repeat
-                                        \ reg-lst1 ret-lst
-    nip                                 \ ret-lst
 ;
 
 \ Return true if to region-lists are equal.
@@ -1162,61 +1131,42 @@
     drop                                \ cnt
 ;
 
-\ Return a list of state intersections for a given region.
-: region-list-states-in ( reg1 lst0 -- sta-lst )
+\ Return a list of stats, from a given list, that are a subset of any region.
+: region-list-states-not-in ( sta-lst1 reg-lst0 -- sta-lst )
     \ Check args.
     assert-tos-is-region-list
-    assert-nos-is-region
+    assert-nos-is-value-list
 
     \ Init return list.
-    list-new -rot                       \ sta-lst reg1 lst0
+    list-new                            \ sta-lst1 reg-lst0 ret-lst
 
     \ Prep for loop.
-    list-get-links                      \ sta-lst reg1 link
+    #2 pick list-get-links              \ sta-lst1 reg-lst0 ret-lst sta-link
 
-    \ Check each region.
+    \ For each state in sta-lst1.
     begin
         ?dup
     while
-        \ Check the current region.
-        over                            \ sta-lst reg1 link reg1
-        over link-get-data              \ sta-lst reg1 link reg1 regx
-        region-intersects               \ sta-lst reg1 link flag
-        if                              \ sta-lst reg1 link
-            dup link-get-data           \ sta-lst reg1 link regx
-            region-get-states           \ sta-lst reg1 link s1 s0
-            \ Check state 0.
-            dup                         \ sta-lst reg1 link s1 s0 s0
-            #4 pick                     \ sta-lst reg1 link s1 s0 s0 reg1
-            region-superset-of-state    \ sta-lst reg1 link s1 s0 bool
-            if
-                #4 pick                 \ sta-lst reg1 link s1 s0 sta-lst
-                list-push               \ sta-lst reg1 link s1
-            else
-                drop                    \ sta-lst reg1 link s1
-            then
-
-            \ Check state 1.
-            dup                         \ sta-lst reg1 link s1 s1
-            #3 pick                     \ sta-lst reg1 link s1 s1 reg1
-            region-superset-of-state    \ sta-lst reg1 link s1 bool
-            if
-                #3 pick                 \ sta-lst reg1 link s1 sta-lst
-                list-push               \ sta-lst reg1 link
-            else
-                drop                    \ sta-lst reg1 link
-            then
+        dup link-get-data               \ sta-lst1 reg-lst0 ret-lst sta-link stax
+        #3 pick                         \ sta-lst1 reg-lst0 ret-lst sta-link stax reg-lst0
+        region-list-any-superset-state  \ sta-lst1 reg-lst0 ret-lst sta-link bool
+        if
+        else
+            dup link-get-data           \ sta-lst1 reg-lst0 ret-lst sta-link stax
+            #2 pick                     \ sta-lst1 reg-lst0 ret-lst sta-link stax ret-lst
+            list-push                   \ sta-lst1 reg-lst0 ret-lst sta-link
         then
 
         link-get-next
     repeat
-
-    drop                                \ sta-lst
+                                        \ sta-lst1 reg-lst0 ret-lst
+    nip nip
+    \ cr ." region-list-states-not-in: returns: " dup .value-list cr
 ;
 
 \ Return the union of all region x masks.
 : region-list-union-x-masks ( lst0 -- msk )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-region-list
 
     \ Init return mask.

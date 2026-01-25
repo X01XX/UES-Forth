@@ -201,6 +201,49 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
 ' planstep-new to planstep-new-xt
 
+
+\ Copy a planstep.
+: planstep-copy    ( plnstp0 -- plnstp )
+    \ Check args.
+    assert-tos-is-action-xt execute
+    assert-nos-is-rule
+
+   \ Allocate space.
+    planstep-mma mma-allocate               \ plnstp0 plnstpx
+
+    \ Store id.
+    planstep-id over struct-set-id          \ plnstp0 plnstpx
+
+    \ Init use count.
+    0 over struct-set-use-count             \ plnstp0 plnstpx
+
+    \ Set action.
+    over planstep-get-action                \ plnstp0 plnstpx act
+    over _planstep-set-action               \ plnstp0 plnstpx
+
+    \ Set initial-region.
+    over planstep-get-initial-region        \ plnstp0 plnstpx reg-i
+    over _planstep-set-initial-region       \ plnstp0 plnstpx
+
+    \ Set result-region.
+    over planstep-get-result-region         \ plnstp0 plnstpx reg-r
+    over _planstep-set-result-region        \ plnstp0 plnstpx
+
+    \ Set changes.
+    over planstep-get-changes               \ plnstp0 plnstpx cngs
+    over _planstep-set-changes              \ plnstp0 plnstpx
+
+    \ Set rule.
+    over planstep-get-rule                  \ plnstp0 plnstpx rul
+    _planstep-set-rule                      \ plnstp0
+
+    \ Set number-unwanted-changes.
+    swap                                    \ plnstpx plnstp0
+    planstep-get-number-unwanted-changes    \ plnstpx u
+    over
+    planstep-set-number-unwanted-changes    \ plnstpx
+;
+
 : .planstep ( plnstp0 -- )
     \ Check arg.
     assert-tos-is-planstep

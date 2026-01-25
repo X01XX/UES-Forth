@@ -194,7 +194,7 @@
         %1100 %1100 region-new tuck         \ act0 stp pln' pln-l' regt' initial regt'
         region-neq abort" initial regions not eq?"
         region-deallocate                   \ act0 stp pln' pln-l'
-
+                                                                                                                                                       
         dup plan-get-result-region          \ act0 stp pln' pln-l' result
         %0110 %0110 region-new tuck         \ act0 stp pln' pln-l' regt' result regt'
         region-neq abort" result regions net eq?"

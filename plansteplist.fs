@@ -199,7 +199,7 @@
 
 \ Return tru eif any planstep intersects reg-to or reg-from.
 : planstep-list-any-from-to-intersections ( reg-to reg-from plnstp-lst0 -- bool )
-    \ Check arg3.
+    \ Check args.
     assert-tos-is-planstep-list
     assert-nos-is-region
     assert-3os-is-region
@@ -233,5 +233,32 @@
 
     2drop
     false
+;
+
+\ Return the union of all changes in a pathstep-list.
+: planstep-list-union-changes ( plnstp0 -- cngs )
+    \ Check arg.
+    assert-tos-is-planstep-list
+
+    \ Init return changes.
+    0 0 changes-new swap        \ ret-cngs plnstp0
+
+    \ Prep for loop.
+    list-get-links              \ ret-cngs plnstp-link
+
+    begin
+        ?dup
+    while
+        swap                    \ plnstp-link ret-cngs
+        over link-get-data      \ plnstp-link ret-cngs plnstpx
+        planstep-get-changes    \ plnstp-link ret-cngs plncngs
+        over                    \ plnstp-link ret-cngs plncngs ret-cngs
+        changes-calc-union      \ plnstp-link ret-cngs ret-cngs'
+        swap changes-deallocate \ plnstp-link ret-cngs'
+        swap                    \ ret-cngs' plnstp-link
+
+        link-get-next
+    repeat
+                                \ ret-cngs
 ;
 

@@ -152,17 +152,14 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     \ Scan the steps.
     list-get-links          \ link
     begin
-        dup link-get-data   \ link plnplnstp
-        swap                \ step link
-
-        link-get-next       \ plnplnstp link
-        dup 0=
+        dup link-get-next   \ link link-nxt
         if
-            drop
+            link-get-next   \ link-nxt
+        else
+            link-get-data   \ plnstp
             planstep-get-result-region
             exit
         then
-        nip                 \ link
     again
 ;
 
@@ -597,6 +594,15 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     planstep-list-pop   \ plnstp t | f
 ;
 
+\ Return true if a plan is empty.
+: plan-is-empty ( pln -- bool )
+    \ Check arg.
+    assert-tos-is-plan
+
+    plan-get-step-list
+    list-is-empty
+;
+
 \ Add a step to the end of a plan, returning a new plan.
 : plan-link-step-to-result-region ( plnstp-to pln-from -- pln t | f )
     \ Check args.
@@ -606,7 +612,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
     \ Check step for plan.
     2dup plan-check-step-result     \ plnstp-to pln-from bool
-    if
+    if  
         2drop
         false
         exit
@@ -630,7 +636,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         true
     else                            \ pln-to
         dup plan-pop if drop then   \ Protect step from deallocation.
-        plan-deallocate             \
+        plan-deallocate             \   
         false
     then
 ;
@@ -647,6 +653,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     if
         2drop
         false
+        cr ." plan-link-step-to-initial-region: fail 1" cr
         exit
     then
 
@@ -667,16 +674,9 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         dup plan-pop if drop then   \ Protect step from deallocation.
         plan-deallocate             \ plnstp-from pln-to
         drop
+        cr ." plan-link-step-to-initial-region: fail 2" cr
         false
     then
     \ cr ." plan-link-step-to-initial-region: end " .s cr
 ;
 
-\ Return true if a plan is empty.
-: plan-is-empty ( pln -- bool )
-    \ Check arg.
-    assert-tos-is-plan
-
-    plan-get-step-list
-    list-is-empty
-;

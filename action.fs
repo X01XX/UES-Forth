@@ -577,52 +577,61 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     then
 ;
 
-\ Get a list of incompatible pairs, as regioons, no supersets, given a square.
-: action-find-incompatible-pairs-nosups ( sqr1 act0 -- square-list )
-    \ cr ." action-find-incompatible-pairs-nosups: start" cr
+\ Get a list of incompatible pairs, as regions, no supersets, given a square.
+: action-find-incompatible-pairs-for-square ( sqr1 act0 -- square-list )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
 
-    list-new -rot                               \ retlst sqr1 act0
-    2dup action-get-squares                     \ retlst sqr1 act0 sqr1 square-list
-    [ ' square-incompatible ] literal -rot      \ retlst sqr1 act0 xt sqr1 sqr-list
-    list-find-all                               \ retlst sqr1 act0 incompat-list
+    list-new -rot                               \ ret-lst sqr1 act0
+    2dup action-get-squares                     \ ret-lst sqr1 act0 sqr1 sqr-lst
+    [ ' square-incompatible ] literal -rot      \ ret-lst sqr1 act0 xt sqr1 sqr-lst
+    list-find-all                               \ ret-lst sqr1 act0 inc-lst
 
     dup list-is-empty
     if
-        list-deallocate                         \ retlst sqr1 act0
-        2drop                                   \ retlst
-        \ cr ." action-find-incompatible-pairs-nosups: end" cr
+        list-deallocate                         \ ret-lst sqr1 act0
+        2drop                                   \ ret-lst
+        \ cr ." action-find-incompatible-pairs-for-square: end 1" cr
         exit
     then
 
-    #2 pick square-get-state                \ retlst sqr1 act0 inclst sta1
-    over list-get-links                     \ retlst sqr1 act0 inclst sta1 link
+    #2 pick square-get-state                \ ret-lst sqr1 act0 inc-lst sta1
+    over list-get-links                     \ ret-lst sqr1 act0 inc-lst sta1 link
     begin
-        dup                                 \ retlst sqr1 act0 inclst sta1 link link
+        ?dup
     while
-        dup link-get-data square-get-state  \ retlst sqr1 act0 inclst sta1 link sta2
-        #2 pick                             \ retlst sqr1 act0 inclst sta1 link sta2 sta1
-        region-new                          \ retlst sqr1 act0 inclst sta1 link regx
+        dup link-get-data square-get-state  \ ret-lst sqr1 act0 inc-lst sta1 link sta2
+        #2 pick                             \ ret-lst sqr1 act0 inc-lst sta1 link sta2 sta1
+        region-new                          \ ret-lst sqr1 act0 inc-lst sta1 link regx
 
-        dup                                 \ retlst sqr1 act0 inclst sta1 link regx regx
-        #7 pick                             \ retlst sqr1 act0 inclst sta1 link regx regx retlst
-        region-list-push-nosups             \ retlst sqr1 act0 inclst sta1 link regx flag
+        dup                                 \ ret-lst sqr1 act0 inc-lst sta1 link regx regx
+        #7 pick                             \ ret-lst sqr1 act0 inc-lst sta1 link regx regx ret-lst
+        region-list-push-nosups             \ ret-lst sqr1 act0 inc-lst sta1 link regx flag
         if
             drop
         else
             region-deallocate
         then
-                                            \ retlst sqr1 act0 inclst sta1 link
+                                            \ ret-lst sqr1 act0 inc-lst sta1 link
 
-        link-get-next                       \ retlst sqr1 act0 inclst sta1 link-next
+        link-get-next                       \ ret-lst sqr1 act0 inc-lst sta1 link-next
     repeat
-                                            \ retlst sqr1 act0 inclst sta1 0
-    2drop                                   \ retlst sqr1 act0 inclst
-    list-deallocate                         \ retlst sqr1 act0
-    2drop                                   \ retlst
-    \ cr ." action-find-incompatible-pairs-nosups: end" cr
+                                            \ ret-lst sqr1 act0 inc-lst sta1
+    drop                                    \ ret-lst sqr1 act0 inc-lst
+    list-deallocate                         \ ret-lst sqr1 act0
+
+    drop                                    \ ret-lst sqr1
+\    over list-is-empty
+\    if
+\        cr
+\        ." Dom: " current-domain-id dec.
+\        space ." Act: " current-action-id dec.
+\        space ." for square: " square-get-state .value
+\        space ." incompatible pairs: " dup .region-list
+\        cr
+\    then
+    drop
 ;
 
 \ Check a new, or changed square.
@@ -630,7 +639,6 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 : _action-check-square ( sqr1 act0 -- )
     \ cr ." _action-check-square: start" cr
     \ Check args.
-    dup is-allocated-action 0= if cr .s cr then
     assert-tos-is-action
     assert-nos-is-square
 
@@ -638,8 +646,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ If any are found, remove them and recalculate everything.
 
     \ Form regions with incompatible squares, no supersets.
-    tuck                                    \ act0 sqr1 act0
-    action-find-incompatible-pairs-nosups   \ act0 inc-lst
+    tuck                                            \ act0 sqr1 act0
+    action-find-incompatible-pairs-for-square       \ act0 inc-lst'
     dup list-is-empty
     if
         \ cr ." _action-check-square: list is empty" cr
@@ -648,61 +656,63 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         exit
     then
 
-    \ If there is no proper subset region in action-incompatible-pairs,
+    \ If there is no subset region in action-incompatible-pairs,
     \ push nosups, calc ~A + ~B, intersect with action-logical-structure.
 
-                                            \ act0 inclst
-    dup list-get-links                      \ act0 inclst link
+                                                    \ act0 inc-lst'
+    dup list-get-links                              \ act0 inc-lst' inc-link
     begin
-        ?dup                                \ act0 inclst link
+        ?dup                                        \ act0 inc-lst' inc-link
     while
-        dup link-get-data                   \ act0 inclst link regx
+        dup link-get-data                           \ act0 inc-lst' inc-link regx
 
-        \ Check if dup in action-incompatible-pairs
-        dup                                         \ act0 inclst link regx regx
-        #4 pick action-get-incompatible-pairs       \ act0 inclst link regx regx pair-lst
-        [ ' region-eq ] literal -rot                \ act0 inclst link regx xt regx pair-lst
-        list-member                                 \ act0 inclst link regx flag
+        \ Check if pair should be added.
+
+        \ Check defining regions.
+        [ ' region-superset-of ] literal            \ act0 inc-lst' inc-link regx xt
+        over                                        \ act0 inc-lst' link regx xt regx
+        #5 pick                                     \ act0 inc-lst' link regx xt regx act0
+        action-get-logical-structure                \ act0 inc-lst' link regx xt regx ls-lst
+        list-member                                 \ act0 inc-lst' link regx bool
+
         if
+            \ Add region to the action-incompatible-pairs  list.
+            cr
+            ." Dom: " current-domain-id dec.
+            ." Act: " current-action-id dec.
+            space ." Adding incompatible pair: " dup region-get-states .value space .value
+            cr
+
+            dup                                     \ act0 inc-lst link regx regx
+            #4 pick                                 \ act0 inc-lst link regx regx act0
+            action-get-incompatible-pairs           \ act0 inc-lst link regx regx inc-lst
+            region-list-push-nosups                 \ act0 inc-lst link regx flag
             drop
+
+            \ Calc regions possible for incompatible pair.
+            region-get-states                       \ act0 inc-lst link s0 s1
+            #4 pick                                 \ act0 inc-lst link s0 s1 act0
+            action-get-parent-domain                \ act0 inc-lst link s0 s1 dom
+            domain-state-pair-complement-xt         \ act0 inc-lst link s0 s1 dom xt
+            execute                                 \ act0 inc-lst link reg-lst
+
+            \ Calc new action-logical-structure.
+            #3 pick action-get-logical-structure    \ act0 inc-lst link reg-lst lsl-lst
+            2dup                                    \ act0 inc-lst link reg-lst lsl-lst reg-lst lsl-lsn
+            region-list-intersections-nosubs        \ act0 inc-lst link reg-lst lsl-lst new-reg-lst
+
+            \ Set new action-logical-structure.
+            #5 pick                                 \ act0 inc-lst link reg-lst lsl-lst new-reg-lst act0
+            _action-update-logical-structure        \ act0 inc-lst link reg-lst lsl-lst
+            drop                                    \ act0 inc-lst link reg-lst
+            region-list-deallocate                  \ act0 inc-lst link
         else
-            dup                                     \ act0 inclst link regx regx
-            #4 pick action-get-defining-regions     \ act0 inclst link regx regx DF-lst
-            [ ' region-superset-of ] literal -rot   \ act0 inclst link regx xt regx DF-lst
-            list-member                             \ act0 inclst link regx flag
-            if
-                \ Add region to the action-incompatible-pairs  list.
-                cr ." Act: " #3 pick action-get-inst-id dec. space ." Adding incompatible pair: " dup region-get-states .value space .value cr
-                dup #4 pick                         \ act0 inclst link regx regx act0
-                action-get-incompatible-pairs       \ act0 inclst link regx regx incpairs
-                region-list-push-nosups             \ act0 inclst link regx flag
-                drop
-
-                \ Calc regions possible for incompatible pair.
-                region-get-states                   \ act0 inclst link s0 s1
-                #4 pick                             \ act0 inclst link s0 s1 act0
-                action-get-parent-domain            \ act0 inclst link s0 s1 dom
-                domain-state-pair-complement-xt     \ act0 inclst link s0 s1 dom xt
-                execute                             \ act0 inclst link reg-lst
-
-                \ Calc new action-logical-structure.
-                #3 pick action-get-logical-structure    \ act0 inclst link reg-lst lsl-lst
-                2dup                                \ act0 inclst link reg-lst lsl-lst reg-lst lsl-lsn
-                region-list-intersections-nosubs    \ act0 inclst link reg-lst lsl-lst new-reg-lst
-
-                \ Set new action-logical-structure.
-                #5 pick                             \ act0 inclst link reg-lst lsl-lst new-reg-lst act0
-                _action-update-logical-structure    \ act0 inclst link reg-lst lsl-lst
-                drop                                \ act0 inclst link reg-lst
-                region-list-deallocate              \ act0 inclst link
-            else
-                drop                                \ act0 inclst link
-            then
+            drop                                    \ act0 inc-lst link
         then
 
-        link-get-next                       \ act0 inclst sta1 link-next
+        link-get-next                               \ act0 inc-lst sta1 link-next
     repeat
-                                            \ act0 inclst
+                                                    \ act0 inc-lst
 
     region-list-deallocate
     drop
@@ -780,7 +790,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
 \ Recalc action-logical-structure from action-incompatible-pairs.
 :  _action-recalc-logical-structure ( act0 -- )
-   \  cr ." _action-recalc-logical-structure: start" cr
+    \ cr ." _action-recalc-logical-structure: start" cr
     \ Check args.
     assert-tos-is-action
 
@@ -1241,16 +1251,16 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             else
                 \ Add need for another sample.
                 drop                        \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link stax
-                #6 swap                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link #3 stax
-                #5 pick                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link #3 stax act0
+                #6 swap                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link type-6 stax
+                #5 pick                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link type-6 stax act0
                 action-make-need            \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link nedx
                 #3 pick                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link nedx ret-lst
                 list-push-struct            \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link
             then
         else                                \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link stax
             \ Add need for first sample.
-            #6 swap                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link #3 stax
-            #5 pick                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link #3 stax act0
+            #6 swap                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link #6 stax
+            #5 pick                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link #6 stax act0
             action-make-need            \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link nedx
             #3 pick                     \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link nedx ret-lst
             list-push-struct            \ sta2 msk-lst1' act0 ned-lst sqr2 msk-link
@@ -1265,128 +1275,141 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     nip                                 \ ned-lst
 ;
 
-\ Look for regions that have all edges defined by incompatible pairs, where
-\ no single state has all the needed incompatible adjacent pairs.
-\ like 0X0X, and 1/3, 4/C.  This needs a test of 1/9 or 4/6.
+\ return a list of states, in incompatible pair regions, that are not in defining regions.
+: action-incompatible-pair-states-not-in-defining-regions ( act0 -- sta-lst )
+    \ Check arg.
+    assert-tos-is-action
+    dup action-get-incompatible-pairs       \ act0 inc-lst
+    region-list-states                      \ act0 sta-lst'
+    dup                                     \ act0 sta-lst' sta-lst'
+    #2 pick                                 \ act0 sta-lst' sta-lst' act0
+    action-get-defining-regions             \ act0 sta-lst' sta-lst' df-lst
+    region-list-states-not-in               \ act0 sta-lst' sta-lst''
+    swap list-deallocate                    \ act0 sta-lst''
+    nip
+    \ cr ." action-incompatible-pair-states-not-in-defining-regions: returns: " dup .value-list cr
+;
+
+: action-states-in-fewest-ls-regions ( sta-lst1 act0 -- sta-lst )
+    \ Check arg.
+    assert-tos-is-action
+    assert-nos-is-value-list
+    \ cr ." action-states-in-fewest-ls-regions: start " over .value-list cr
+
+    \ Get the logical-structure list.
+    dup action-get-logical-structure    \ sta-lst1 act0 ls-lst
+
+    \ Init minimum number regions in.
+    #99999                              \ sta-lst1 act0 ls-lst min-num
+
+    \ Check each state against the logical structure list.
+    #3 pick                             \ sta-lst1 act0 ls-lst min-num sta-lst1
+    list-get-links                      \ sta-lst1 act0 ls-lst min-num sta-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ sta-lst1 act0 ls-lst min-num sta-link stax
+        #3 pick                             \ sta-lst1 act0 ls-lst min-num sta-link stax ls-lst
+        region-list-number-regions-state-in \ sta-lst1 act0 ls-lst min-num sta-link num-in
+        rot min swap                        \ sta-lst1 act0 ls-lst min-num sta-link
+
+        link-get-next
+    repeat
+                                        \ sta-lst1 act0 ls-lst min-num
+    \ cr ." min: " dup . cr
+
+    \ Init return list.
+    list-new                            \ sta-lst1 act0 ls-lst min-num ret-lst
+
+    \ Check each state for min number regions in.
+    #4 pick                                 \ sta-lst1 act0 ls-lst min-num ret-lst sta-lst
+    list-get-links                          \ sta-lst1 act0 ls-lst min-num ret-lst sta-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ sta-lst1 act0 ls-lst min-num ret-lst sta-link stax
+        #4 pick                             \ sta-lst1 act0 ls-lst min-num ret-lst sta-link stax ls-lst
+        region-list-number-regions-state-in \ sta-lst1 act0 ls-lst min-num ret-lst sta-link num-in
+        #3 pick                             \ sta-lst1 act0 ls-lst min-num ret-lst sta-link num-in min-num
+        =                                   \ sta-lst1 act0 ls-lst min-num ret-lst sta-link bool
+        if
+            dup link-get-data               \ sta-lst1 act0 ls-lst min-num ret-lst sta-link stax
+            #2 pick                         \ sta-lst1 act0 ls-lst min-num ret-lst sta-link stax ret-lst
+            list-push                       \ sta-lst1 act0 ls-lst min-num ret-lst sta-link
+        then
+
+        link-get-next
+    repeat
+                                            \ sta-lst1 act0 ls-lst min-num ret-lst
+    2nip                                    \ sta-lst1 min-num ret-lst
+    nip nip                                 \ ret-lst
+
+   \  cr ." action-states-in-fewest-ls-regions: returns: " dup .value-list cr
+;
+
+\ Look for states, in the incompatible pair list, that ar not in a defining region.
+\ Generate needs for those states that are in the fewest number of left-over
+\ regions.
 : action-possible-corner-needs ( act0 -- ned-lst )
     \ Check arg.
     assert-tos-is-action
     \ cr ." action-possible-corner-needs: act: " dup action-get-inst-id . cr
 
-    dup action-get-logical-structure
-    list-get-length 2 <
-    if
-        drop
-        list-new
-        exit
-    then
-    
-    \ Get defining regions.
-    dup action-get-defining-regions         \ act0 df-lst
-    
-    \ Find left-over regions.
-    over action-get-parent-domain           \ act0 df-lst dom
-    domain-get-max-region-xt execute        \ act0 df-lst reg-max
-
-    list-new                                \ act0 df-lst reg-max lft-lst'
-    tuck                                    \ act0 df-lst lft-lst' reg-max lft-lst'
-    list-push-struct                        \ act0 df-lst lft-lst'
-    tuck                                    \ act0 lft-lst' df-lst lft-lst'
-    region-list-subtract                    \ act0 lft-lst' lft-lst''
-    swap region-list-deallocate             \ act0 lft-lst''
-
-    \ Check for no left over regions.
+    \ Get states that may define a corner, not yet understood.
+    dup action-incompatible-pair-states-not-in-defining-regions \ act0 sta-lst'
     dup list-is-empty
     if
-        list-deallocate
-        drop
-        list-new
+        nip
         exit
     then
 
+    \ Get states in the least logical structure regions.
+    dup #2 pick                                 \ act0 sta-lst' sta-lst' act0
+    action-states-in-fewest-ls-regions          \ act0 sta-lst' sta-lst''
+    swap list-deallocate                        \ act0 sta-lst''
+
     \ Prep for loop.
-    list-new                                \ act0 lft-lst' ls-in-lft-lst'
-    #2 pick action-get-logical-structure    \ act0 lft-lst' ls-in-lft-lst' ls-lst
+    list-new swap                               \ act0 ned-lst sta-lst''
+    #2 pick action-get-logical-structure swap   \ act0 ned-lst ls-lst sta-lst''
+    dup list-get-links                          \ act0 ned-lst ls-lst sta-lst'' sta-link
 
-    list-get-links                          \ act0 lft-lst' ls-in-lft-lst' ls-link
-
+    \ For each state in fewest non-defining regions.
     begin
         ?dup
     while
-        dup link-get-data                   \ act0 lft-lst' ls-in-lft-lst' ls-link reg-ls
-        #3 pick                             \ act0 lft-lst' ls-in-lft-lst' ls-link reg-ls lft-lst'
-        region-list-any-intersection-of     \ act0 lft-lst' ls-in-lft-lst' ls-link bool
-        if
-            dup link-get-data               \ act0 lft-lst' ls-in-lft-lst' ls-link reg-ls
-            #2 pick                         \ act0 lft-lst' ls-in-lft-lst' ls-link reg-ls ls-in-lft-lst'
-            list-push-struct                \ act0 lft-lst' ls-in-lft-lst' ls-link
-        then
+        dup link-get-data dup                   \ act0 ned-lst ls-lst sta-lst'' sta-link stax stax
+        #4 pick                                 \ act0 ned-lst ls-lst sta-lst'' sta-link stax stax ls-lst
+        region-list-regions-state-in            \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst'
+
+        \ Prep for loop.
+        dup list-get-links                      \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link
+        begin
+            ?dup
+        while
+            #2 pick                             \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link stax
+            over link-get-data                  \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link stax regx
+        \ cr ." eval " dup .region space ." and " over .value
+            #9 pick                             \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link stax regx act0
+            action-get-adjacent-state-needs     \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst'
+        \ space ." adj needs: " dup .need-list cr
+            dup                                 \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst' ned-lst'
+            #8 pick                             \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst' ned-lst' ned-lst
+            need-list-append                    \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst'
+            need-list-deallocate                \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link
+
+            link-get-next
+        repeat
+                                                \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst'
+        region-list-deallocate drop             \ act0 ned-lst ls-lst sta-lst'' sta-link
 
         link-get-next
     repeat
-                                            \ act0 lft-lst' ls-in-lft-lst'
-
-    swap region-list-deallocate             \ act0 ls-in-lft-lst'
-
-    dup list-get-links                      \ act0 ls-in-lft-lst' lil-link
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ act0 ls-in-lft-lst' lil-link lil-reg
-    \ cr ." eval " dup .region
-        #3 pick                             \ act0 ls-in-lft-lst' lil-link lil-reg act0
-        action-get-incompatible-pairs       \ act0 ls-in-lft-lst' lil-link lil-reg inc-prs-lst
-        region-list-intersections-of-region \ act0 ls-in-lft-lst' lil-link int-lst'
-    \  space dup .region-list              \ act0 ls-in-lft-lst' lil-link int-lst'
-
-        dup                             \ act0 ls-in-lft-lst' lil-link int-lst' int-lst'
-        region-list-states              \ act0 ls-in-lft-lst' lil-link int-lst' sta-lst'
-        swap region-list-deallocate     \ act0 ls-in-lft-lst' lil-link sta-lst'
-        dup                             \ act0 ls-in-lft-lst' lil-link sta-lst' sta-lst'
-        #2 pick link-get-data           \ act0 ls-in-lft-lst' lil-link sta-lst' sta-lst' lil-reg
-        region-states-in                \ act0 ls-in-lft-lst' lil-link sta-lst' sta-lst''
-        swap list-deallocate            \ act0 ls-in-lft-lst' lil-link sta-lst''
-    \ space dup .value-list
-        dup list-is-empty
-        if
-            list-deallocate
-        else
-            \ Select a state, todo better selection process.
-            dup list-get-links          \ act0 ls-in-lft-lst' lil-link sta-lst'' sta-link
-
-            begin
-                ?dup
-            while
-                dup link-get-data               \ act0 ls-in-lft-lst' lil-link sta-lst'' sta-link sta-0
-                #3 pick link-get-data           \ act0 ls-in-lft-lst' lil-link sta-lst'' sta-link sta-0 lil-reg
-                #6 pick                         \ act0 ls-in-lft-lst' lil-link sta-lst'' sta-link sta-0 lil-reg act0
-                action-get-adjacent-state-needs \ act0 ls-in-lft-lst' lil-link sta-lst'' sta-link ned-lst'
-                dup list-is-empty
-                if
-                    list-deallocate             \ act0 ls-in-lft-lst' lil-link sta-lst'' sta-link
-                else
-            \ space dup .need-list cr
-                    nip                         \ act0 ls-in-lft-lst' lil-link sta-lst'' ned-lst
-                    swap list-deallocate        \ act0 ls-in-lft-lst' lil-link ned-lst
-                    nip                         \ act0 ls-in-lft-lst' ned-lst
-                    swap region-list-deallocate \ act0 ned-lst
-                    nip                         \ ned-lst
-                    exit
-                then
-
-                link-get-next
-            repeat
-            list-deallocate
-        then
-         \ cr
-
-        link-get-next
-    repeat
-                                            \ act0 ls-in-lft-lst'
-
-    region-list-deallocate
-    drop                                    \
-    list-new                                \ ned-lst
+                                                \ act0 ned-lst ls-lst sta-lst''
+    list-deallocate                             \ act0 ned-lst ls-lst
+    drop                                        \ act0 ned-lst
+    nip
 ;
 
 \ Return a list of needs for an action, given the current state
@@ -1426,8 +1449,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             if
                 \ Make need.
                 dup link-get-data region-get-state-0    \ reg1 ret-lst sta1 act0 | link s0
-                #2 swap                                 \ reg1 ret-lst sta1 act0 | link 2 s0
-                #3 pick                                 \ reg1 ret-lst sta1 act0 | link 2 s0 act0
+                #2 swap                                 \ reg1 ret-lst sta1 act0 | link type-2 s0
+                #3 pick                                 \ reg1 ret-lst sta1 act0 | link type-2 s0 act0
                 action-make-need                        \ reg1 ret-lst sta1 act0 | link ned
                 \ Store need.
                 #4 pick need-list-push                  \ reg1 ret-lst sta1 act0 | link
@@ -1453,74 +1476,117 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             if
                 \ Make need.
                 dup link-get-data region-get-state-1    \ reg1 ret-lst sta1 act0 | link s1
-                #2 swap                                 \ reg1 ret-lst sta1 act0 | link 2 s1
-                #3 pick                                 \ reg1 ret-lst sta1 act0 | link 2 s1 act0
+                #2 swap                                 \ reg1 ret-lst sta1 act0 | link type-2 s1
+                #3 pick                                 \ reg1 ret-lst sta1 act0 | link type-2 s1 act0
                 action-make-need                        \ reg1 ret-lst sta1 act0 | link ned
                 \ Store need.
                 #4 pick need-list-push                  \ reg1 ret-lst sta1 act0 | link
-                \ 3drop                                   \ reg1 ret-lst
-                \ nip                                     \ ret-lst
+                \ 3drop                                 \ reg1 ret-lst
+                \ nip                                   \ ret-lst
                 \ exit
             then
         then
 
-        link-get-next           \ reg1 ret-lst sta1 act0 | link
+        link-get-next                                   \ reg1 ret-lst sta1 act0 | link
     repeat
+                                                        \ reg1 ret-lst sta1 act0
 
-    \ Check for non-adjacent incompatible pairs.
-    dup action-get-incompatible-pairs   \ reg1 ret-lst sta1 act0 | par-lst
-    list-get-links                      \ reg1 ret-lst sta1 act0 | link
-    begin
-        ?dup
-    while
-        \ Check if region states are non-adjacent.
-        dup link-get-data               \ reg1 ret-lst sta1 act0 | link regx
-        region-states-adjacent          \ reg1 ret-lst sta1 act0 | link flag
-        0= if                           \ reg1 ret-lst sta1 act0 | link
-            \ Check if region states are represented by squares with pnc = true.
-            dup link-get-data           \ reg1 ret-lst sta1 act0 | link regx
-            #2 pick                     \ reg1 ret-lst sta1 act0 | link regx act0
-            action-region-confirmed     \ reg1 ret-lst sta1 act0 | link flag
-            if
-                \ Get a state between the states that define the region. TODO use better selection method.
-
-                \ Get a single, arbitrary, bit, from a mask of different bits between the two states.
+    #2 pick list-is-empty
+    if
+        \ Check for non-adjacent incompatible pairs.
+        dup action-get-incompatible-pairs   \ reg1 ret-lst sta1 act0 | par-lst
+        list-get-links                      \ reg1 ret-lst sta1 act0 | link
+        begin
+            ?dup
+        while
+            \ Check if region states are non-adjacent.
+            dup link-get-data               \ reg1 ret-lst sta1 act0 | link regx
+            region-states-adjacent          \ reg1 ret-lst sta1 act0 | link flag
+            0= if                           \ reg1 ret-lst sta1 act0 | link
+                \ Check if region states are represented by squares with pnc = true.
                 dup link-get-data           \ reg1 ret-lst sta1 act0 | link regx
-                region-get-states xor       \ reg1 ret-lst sta1 act0 | link dif-msk
-                value-isolate-lsb nip       \ reg1 ret-lst sta1 act0 | link bit
-
-                \ Calc the state between.
-                over link-get-data          \ reg1 ret-lst sta1 act0 | link bit regx
-                region-get-state-0          \ reg1 ret-lst sta1 act0 | link bit r-sta-0
-                xor                         \ reg1 ret-lst sta1 act0 | link sta'
-
-                \ Check if target is in the reachable region, or equal the current state.
-                dup                         \ reg1 ret-lst sta1 act0 | link sta' sta'
-                #6 pick                     \ reg1 ret-lst sta1 act0 | link sta' sta' reg1
-                region-superset-of-state    \ reg1 ret-lst sta1 act0 | link sta' flag
-                over                        \ reg1 ret-lst sta1 act0 | link sta' flag sta'
-                #5 pick =                   \ reg1 ret-lst sta1 act0 | link sta' flag flag2
-                or                          \ reg1 ret-lst sta1 act0 | link sta' flag
+                #2 pick                     \ reg1 ret-lst sta1 act0 | link regx act0
+                action-region-confirmed     \ reg1 ret-lst sta1 act0 | link flag
                 if
-                    \ cr ." make need for non-adjacent incompatible pair " .value space ." in " dup link-get-data .region cr
-                    \ Make need.
-                    #3 swap                     \ reg1 ret-lst sta1 act0 | link 3 sta'
-                    #3 pick                     \ reg1 ret-lst sta1 act0 | link 3 sta' act0
-                    action-make-need            \ reg1 ret-lst sta1 act0 | link ned
-                    \ Store need.
-                    #4 pick need-list-push      \ reg1 ret-lst sta1 act0 | link
-                    3drop                       \ reg1 ret-lst
-                    nip                         \ ret-lst
-                    exit
-                else
-                    drop                        \ reg1 ret-lst sta1 act0 | link
+                    \ Get a state between the states that define the region. TODO use better selection method.
+    
+                    \ Get a single, arbitrary, bit, from a mask of different bits between the two states.
+                    dup link-get-data           \ reg1 ret-lst sta1 act0 | link regx
+                cr ." for pair: " dup .region cr
+                dup region-get-states           \ link regx s1 s0
+                #4 pick action-find-square      \ link regx s1, sqr0 t | f
+                is-false abort" sqr not found?"
+                cr ." sqr0: " .square cr
+                #3 pick                         \ link regx s1 act0
+                action-find-square              \ link regx, sqr1 t | f
+                is-false abort" sqr not found?"
+                cr ." sqr1: " .square cr
+                
+
+
+                
+                    region-get-states xor       \ reg1 ret-lst sta1 act0 | link dif-msk
+                    value-isolate-lsb nip       \ reg1 ret-lst sta1 act0 | link bit
+    
+                    \ Calc the state between.
+                    over link-get-data          \ reg1 ret-lst sta1 act0 | link bit regx
+                    region-get-state-0          \ reg1 ret-lst sta1 act0 | link bit r-sta-0
+                    xor                         \ reg1 ret-lst sta1 act0 | link sta'
+    
+                    \ Check if target is in the reachable region, or equal the current state.
+                    dup                         \ reg1 ret-lst sta1 act0 | link sta' sta'
+                    #6 pick                     \ reg1 ret-lst sta1 act0 | link sta' sta' reg1
+                    region-superset-of-state    \ reg1 ret-lst sta1 act0 | link sta' flag
+                    over                        \ reg1 ret-lst sta1 act0 | link sta' flag sta'
+                    #5 pick =                   \ reg1 ret-lst sta1 act0 | link sta' flag flag2
+                    or                          \ reg1 ret-lst sta1 act0 | link sta' flag
+                    if
+                        dup                     \ reg1 ret-lst sta1 act0 | link sta' sta'
+                        #3 pick                 \ reg1 ret-lst sta1 act0 | link sta' sta' act0
+                        action-find-square      \ reg1 ret-lst sta1 act0 | link sta', sqr t | f
+                        if
+                            cr ." sqr0.5: " .square cr
+                        then
+                    
+                        \ cr ." make need for non-adjacent incompatible pair " .value space ." in " dup link-get-data .region cr
+                        \ Make need.
+                        #3 swap                     \ reg1 ret-lst sta1 act0 | link type-3 sta'
+                        #3 pick                     \ reg1 ret-lst sta1 act0 | link type-3 sta' act0
+                        action-make-need            \ reg1 ret-lst sta1 act0 | link ned
+                        \ Store need.
+                        #4 pick need-list-push      \ reg1 ret-lst sta1 act0 | link
+                        3drop                       \ reg1 ret-lst
+                        nip                         \ ret-lst
+                        exit
+                    else
+                        drop                        \ reg1 ret-lst sta1 act0 | link
+                    then
                 then
             then
-        then
+    
+            link-get-next           \ reg1 ret-lst sta1 act0 | link
+        repeat
+                                    \ reg1 ret-lst sta1 act0
+    then
 
-        link-get-next           \ reg1 ret-lst sta1 act0 | link
-    repeat
-                                \ reg1 ret-lst sta1 act0
+                                                 \ reg1 ret-lst sta1 act0
+
+    #2 pick list-is-empty
+    if
+        \ Check for new corners.
+        dup                             \ reg1 ret-lst sta1 act0 act0
+        action-possible-corner-needs    \ reg1 ret-lst sta1 act0 ned-lst
+        dup list-is-empty               \ reg1 ret-lst sta1 act0
+        if
+            list-deallocate
+        else
+            dup                         \ reg1 ret-lst sta1 act0 ned-lst ned-lst
+            #4 pick                     \ reg1 ret-lst sta1 act0 ned-lst ned-lst ret-lst
+            need-list-append            \ reg1 ret-lst sta1 act0 ned-lst
+            need-list-deallocate        \ reg1 ret-lst sta1 act0
+        then
+                                    \ reg1 ret-lst sta1 act0
+    then
 
     \ Check if the current state is not in a group, and is not represented by a pnc square.
     over                        \ reg1 ret-lst sta1 act0 | sta1
@@ -1538,9 +1604,9 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         if
                                     \ reg1 ret-lst sta1 act0 |
             \ Make need.
-            1                       \ reg1 ret-lst sta1 act0 | 1 (type)
-            #2 pick                 \ reg1 ret-lst sta1 act0 | 1 sta
-            #2 pick                 \ reg1 ret-lst sta1 act0 | 1 sta act0
+            1                       \ reg1 ret-lst sta1 act0 | type-1
+            #2 pick                 \ reg1 ret-lst sta1 act0 | type-1 sta
+            #2 pick                 \ reg1 ret-lst sta1 act0 | type-1 sta act0
             action-make-need        \ reg1 ret-lst sta1 act0 | ned
             \ Store need.
             #3 pick                 \ reg1 ret-lst sta1 act0 | ned ret-lst
@@ -1571,8 +1637,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             group-get-fill-need-state   \ reg1 ret-lst sta1 act0 link, stax t | f
             if
                 \ Make fill need.
-                #4 swap                 \ reg1 ret-lst sta1 act0 link #4 stax
-                #3 pick                 \ reg1 ret-lst sta1 act0 link #4 stax act0
+                #4 swap                 \ reg1 ret-lst sta1 act0 link type-4 stax
+                #3 pick                 \ reg1 ret-lst sta1 act0 link type-4 stax act0
                 action-make-need        \ reg1 ret-lst sta1 act0 link nedx
     
                 \ Add need to the return list.
@@ -1601,8 +1667,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
 
         if
             \ Make need.
-            #5 swap                     \ reg1 ret-lst sta1 act0 link #4 stax
-            #3 pick                     \ reg1 ret-lst sta1 act0 link #4 stax act0
+            #5 swap                     \ reg1 ret-lst sta1 act0 link type-5 stax
+            #3 pick                     \ reg1 ret-lst sta1 act0 link type-5 stax act0
             action-make-need            \ reg1 ret-lst sta1 act0 link nedx
 
             \ Add needs to the return list.
@@ -1615,20 +1681,6 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         link-get-next
     repeat
                                         \ reg1 ret-lst sta1 act0
-
-    \ Check for new corners.
-    dup                             \ reg1 ret-lst sta1 act0 act0
-    action-possible-corner-needs    \ reg1 ret-lst sta1 act0 ned-lst
-    dup list-is-empty               \ reg1 ret-lst sta1 act0
-    if
-        list-deallocate
-    else
-        dup                         \ reg1 ret-lst sta1 act0 ned-lst ned-lst
-        #4 pick                     \ reg1 ret-lst sta1 act0 ned-lst ned-lst ret-lst
-        need-list-append            \ reg1 ret-lst sta1 act0 ned-lst
-        need-list-deallocate        \ reg1 ret-lst sta1 act0
-    then
-                                    \ reg1 ret-lst sta1 act0
 
     \ Clean up.
     2drop                           \ reg1 ret-lst

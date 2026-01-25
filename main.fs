@@ -56,6 +56,7 @@ include structlist.fs
 include globals.fs
 
 include value.fs
+include valuelist.fs
 
 include region.fs
 include region2.fs
@@ -75,7 +76,6 @@ include rulelist.fs
 
 include square.fs
 
-include valuelist.fs
 include squarelist.fs
 
 include need.fs

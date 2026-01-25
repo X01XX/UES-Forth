@@ -167,10 +167,16 @@
     cr ." needs: " dup .need-list cr
 
     \ Check result.
-    dup list-get-length 1 <>
+    dup list-get-length 6 <>
     abort" need-list length is invalid?"
 
+    #6 over need-list-contains-target
+    is-false abort" Need target not found?"
+    #5 over need-list-contains-target
+    is-false abort" Need target not found?"
     0 over need-list-contains-target
+    is-false abort" Need target not found?"
+    #9 over need-list-contains-target
     is-false abort" Need target not found?"
 
     \ Clean up.

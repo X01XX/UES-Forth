@@ -205,6 +205,8 @@
     then
 
     \ Look for a need that is satisfied by the current state.
+    \ Fill in easy to understand action/responses, as a foundation
+    \ to finding the corners in more complex action/responses.
                                 \ ned-lst
     dup list-get-links          \ ned-lst link
 
@@ -231,24 +233,8 @@
     repeat                          \ ned-lst
 
     \ Init index list for need list.
-    list-new 0 #2 pick              \ ned-lst inx-lst cnt ned-lst
-    list-get-links                  \ ned-lst inx-lst cnt ned-link
-    begin
-        ?dup
-    while
-        \ Save counter in index list.
-        over                        \ ned-lst inx-lst cnt ned-link cnt
-        #3 pick                     \ ned-lst inx-lst cnt ned-link cnt inx-lst
-        list-push                   \ ned-lst inx-lst cnt ned-link
-
-        \ Inc counter.
-        swap 1 + swap
-
-        link-get-next
-    repeat
-                                    \ ned-lst inx-lst cnt
-    drop                            \ ned-lst inx-lst
-    \ cr ." at 1: " .stack-gbl cr
+    dup list-get-length             \ ned-lst len
+    value-list-0-to-n               \ ned-lst inx-lst'
 
     begin
         \ cr ." inx list: 1 " dup .value-list cr
@@ -260,7 +246,7 @@
         list-get-item                   \ ned-lst inx-lst inx inx2
 
         #3 pick list-get-item           \ ned-lst inx-lst inx nedx
-        \ cr ." Need chosen: " space dup .need cr
+        cr ." Need chosen: " space dup .need cr
         do-need                         \ ned-lst inx-lst inx bool
         if
             \ Need satisfied, done.
