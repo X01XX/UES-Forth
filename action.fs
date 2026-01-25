@@ -1349,9 +1349,10 @@ action-function-disp            cell+ constant action-defining-regions-disp     
    \  cr ." action-states-in-fewest-ls-regions: returns: " dup .value-list cr
 ;
 
-\ Look for states, in the incompatible pair list, that ar not in a defining region.
-\ Generate needs for those states that are in the fewest number of left-over
+\ Look for states, in the incompatible pair list, that are not in a defining region.
+\ Generate corner needs for those states that are in the fewest number of left-over
 \ regions.
+\ Some corners will grow into multiple corners.
 : action-possible-corner-needs ( act0 -- ned-lst )
     \ Check arg.
     assert-tos-is-action
