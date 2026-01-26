@@ -860,6 +860,10 @@
         if
             cr ." Needs: No needs found" cr
             2drop
+            \ Testing start.
+\            current-session             \ | ses
+\            session-check-corners       \ |
+            \ Testing end.
         else
             drop
             cr ." Needs:" cr .need-list cr  \ n c-addr cnt

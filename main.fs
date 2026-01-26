@@ -25,11 +25,11 @@
 \ PlanStep   Plan   Group  Rate   RegionCorrRate  RegionCorr
 \ 37171,     37379, 43717, 41719, 41737,          47317
 \
-\ RuleCorr  Changescorr PathStep Plancorr
-\ 53171     53173       53197    53717
+\ RuleCorr  Changescorr PathStep Plancorr Corner
+\ 53171,    53173,      53197,   53717,   53719
 \
 \ Struct ids not yet used:
-\ 53719, 53731, 59797, 61379, 61717, 61979.
+\ 53731, 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
 cr ." Starting vocabulary UES," cr
@@ -77,6 +77,9 @@ include rulelist.fs
 include square.fs
 
 include squarelist.fs
+
+include corner.fs
+include cornerlist.fs
 
 include need.fs
 include needlist.fs
@@ -128,6 +131,7 @@ cs
     cr #4 spaces ." RuleStore mma:      " rulestore-mma .mma-usage
     cr #4 spaces ." RuleCorr mma:       " rulecorr-mma .mma-usage
     cr #4 spaces ." Square mma:         " square-mma .mma-usage
+    cr #4 spaces ." Corner mma:         " corner-mma .mma-usage
     cr #4 spaces ." Sample mma:         " sample-mma .mma-usage
     cr #4 spaces ." Changes mma:        " changes-mma .mma-usage
     cr #4 spaces ." ChangesCorr mma:    " changescorr-mma .mma-usage
@@ -157,6 +161,7 @@ cs
     assert-rulestore-mma-none-in-use
     assert-rulecorr-mma-none-in-use
     assert-square-mma-none-in-use
+    assert-corner-mma-none-in-use
     assert-sample-mma-none-in-use
     assert-changes-mma-none-in-use
     assert-changescorr-mma-none-in-use
@@ -183,6 +188,7 @@ cs
 
 \ Test files.
 include square_t.fs
+include corner_t.fs
 include squarelist_t.fs
 include region_t.fs
 include regionlist_t.fs
@@ -207,6 +213,7 @@ cr ." main.fs"
 #0505 rulestore-mma-init
 #0404 rulecorr-mma-init
 #0406 square-mma-init
+#0200 corner-mma-init
 #0250 sample-mma-init
 #0650 changes-mma-init
 #0450 changescorr-mma-init
@@ -234,6 +241,7 @@ cr
     rulestore-mma mma-free
     rulecorr-mma mma-free
     square-mma mma-free
+    corner-mma mma-free
     sample-mma mma-free
     changes-mma mma-free
     changescorr-mma mma-free
@@ -254,7 +262,7 @@ cr
     \ Set up session.
     current-session-new                         \ sess, session instance added to session stack.
 
-    \ Add domain 0
+    \ Add domain 0square_t
     #4 over  domain-new                         \ sess dom
 
     \ Add actions to domain 0
@@ -395,6 +403,7 @@ cr
 
     square-tests
     square-list-tests
+    corner-tests
     region-tests
     region-list-tests
     rule-tests

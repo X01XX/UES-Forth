@@ -255,6 +255,18 @@
         exit
     then
 
+    dup corner-mma mma-within-array
+    if
+        dup struct-get-id
+        0= if
+            ." crn-u "
+        else
+            ." crn "
+        then
+        drop
+        exit
+    then
+
     dup current-session =
     if
         ." sess "

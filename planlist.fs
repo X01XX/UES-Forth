@@ -1,6 +1,6 @@
 \ Functions for plan lists.
 
-\ Check if tos is a list, if non-empty, with the first item being a plan.
+\ Check if tos is an empty list, or has a plan instance as its first item.
 : assert-tos-is-plan-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty

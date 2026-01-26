@@ -1,6 +1,6 @@
 \ Functions for domain lists.
 
-\ Check if tos is a list, if non-empty, with the first item being a domain.
+\ Check if tos is an empty list, or has a domain instance as its first item.
 : assert-tos-is-domain-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty

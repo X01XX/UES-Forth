@@ -1,6 +1,6 @@
 \ Functions for square lists.
 
-\ Check if tos is a list, if non-empty, with the first item being a square.
+\ Check if tos is an empty list, or has a square instance as its first item.
 : assert-tos-is-square-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
@@ -11,7 +11,7 @@
     then
 ;
 
-\ Check if nos is a list, if non-empty, with the first item being a square.
+\ Check if nos is an empty list, or has a square instance as its first item.
 : assert-nos-is-square-list ( nos tos -- nos tos )
     assert-nos-is-list
     over list-is-not-empty

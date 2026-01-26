@@ -1,6 +1,6 @@
 \ Functions for a list of Region-list-core + rate, regioncorrrate, structures.
 
-\ Check if tos is a list, if non-empty, with the first item being a regioncorrrate.
+\ Check if tos is an empty list, or has a regioncorrrate instance as its first item.
 : assert-tos-is-regioncorrrate-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
@@ -11,7 +11,7 @@
     then
 ;
 
-\ Check if nos is a list, if non-empty, with the first item being a regioncorrrate.
+\ Check if nos is an empty list, or has a regioncorrrate instance as its first item.
 : assert-nos-is-regioncorrrate-list ( nos tos -- nos tos )
     assert-nos-is-list
     over list-is-not-empty

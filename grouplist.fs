@@ -1,6 +1,6 @@
 \ Functions for group lists.
 
-\ Check if tos is a non-empty list, with the first item being a group struct.
+\ Check if tos is an empty list, or has a group instance as its first item.
 : assert-tos-is-group-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty

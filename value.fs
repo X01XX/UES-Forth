@@ -161,3 +161,13 @@
         list-push           \ val-lst val0
     repeat
 ;
+
+\ Return true if two values are adjacent.
+: value-adjacent ( val1 val0 -- bool )
+    \ Check args.
+    assert-tos-is-value
+    assert-nos-is-value
+
+    xor             \ dif-msk
+    value-1-bit-set \ bool
+;

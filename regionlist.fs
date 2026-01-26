@@ -1,6 +1,6 @@
 \ Functions for region lists.
 
-\ Check if tos is a list, if non-empty, with the first item being a region.
+\ Check if tos is an empty list, or has a region instance as its first item.
 : assert-tos-is-region-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
@@ -11,7 +11,7 @@
     then
 ;
 
-\ Check if nos is a list, if non-empty, with the first item being a region.
+\ Check if nos is an empty list, or has a region instance as its first item.
 : assert-nos-is-region-list ( nos tos -- nos tos )
     assert-nos-is-list
     over list-is-not-empty
@@ -1187,4 +1187,41 @@
 
         link-get-next
     repeat
+;
+
+\ Return a list of regions that have one state in a given region.
+: region-list-state-in-region ( reg1 reg-lst0 -- reg-lst )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region
+
+    \ Init return list.
+    list-new swap                       \ reg1 ret-lst reg-lst0
+    list-get-links                      \ reg1 ret-lst reg-link
+    begin
+        ?dup
+    while
+        dup link-get-data               \ reg1 ret-lst reg-link regx
+        region-get-states               \ reg1 ret-lst reg-link s1 s0
+        #4 pick                         \ reg1 ret-lst reg-link s1 s0 reg1
+        region-superset-of-state        \ reg1 ret-lst reg-link s1 bool
+        if
+            drop                        \ reg1 ret-lst reg-link
+            dup link-get-data           \ reg1 ret-lst reg-link regx
+            #2 pick                     \ reg1 ret-lst reg-link regx ret-lst
+            list-push-struct            \ reg1 ret-lst reg-link
+        else                            \ reg1 ret-lst reg-link s1
+            #3 pick                     \ reg1 ret-lst reg-link s1 reg1
+            region-superset-of-state    \ reg1 ret-lst reg-link bool
+            if
+                dup link-get-data       \ reg1 ret-lst reg-link regx
+                #2 pick                 \ reg1 ret-lst reg-link regx ret-lst
+                list-push-struct        \ reg1 ret-lst reg-link
+            then
+        then
+
+        link-get-next
+    repeat
+                                        \ reg1 ret-lst
+    nip
 ;

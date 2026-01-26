@@ -1,6 +1,6 @@
 \ Functions for planstep lists.
 
-\ Check if tos is a non-empty list, if non-empty, with the first item being a planstep.
+\ Check if tos is an empty list, or has a planstep instance as its first item.
 : assert-tos-is-planstep-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-not-empty
@@ -11,7 +11,7 @@
     then
 ;
 
-\ Check if nos is a non-empty list, if non-empty, with the first item being a planstep.
+\ Check if nos is an empty list, or has a planstep instance as its first item.
 : assert-nos-is-planstep-list ( nos tos -- nos tos )
     assert-tos-is-list
     over list-is-not-empty

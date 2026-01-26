@@ -1971,3 +1971,49 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     2nip                                    \ act0 ret-lst
     nip                                     \ ret-lst
 ;
+
+\ Testing.
+: action-check-group-corner ( reg1 act0 -- )
+    \ Check arg.
+    assert-tos-is-action
+    assert-nos-is-region
+    cr 4 spaces ." check df reg " over .region
+
+    2dup                            \ reg1 act0 reg1 act0
+    action-get-incompatible-pairs   \ reg1 act0 reg1 ip-lst
+    region-list-state-in-region     \ reg1 act0 ip-lst2'
+    space ." ip: " dup .region-list
+    cr
+    region-list-deallocate          \ reg1 act0
+    2drop
+;
+
+: action-check-corners ( act0 -- )
+    \ Check arg.
+    assert-tos-is-action
+
+    dup action-get-incompatible-pairs   \ act0 inc-lst
+    list-get-length                     \ act0 len
+    2 <
+    if
+        drop
+        exit
+    then
+    cr ." action-check-corners: Act: " dup action-get-inst-id dec. cr
+
+    dup action-get-defining-regions     \ act0 df-lst
+    list-get-links                      \ act0 df-link
+    begin
+        ?dup
+    while
+        dup link-get-data               \ act0 df-link df-reg
+        \ cr 4 spaces ." check df reg " dup .region cr
+
+        #2 pick                         \ act0 df-link df-reg act0
+        action-check-group-corner       \ act0 df-link
+
+        link-get-next
+    repeat
+
+    drop
+;
