@@ -1,7 +1,7 @@
-\ Implement a Action struct and functions.
+\ Implement an Action struct and functions.
 
 #29717 constant action-id
-    #8 constant action-struct-number-cells
+    #9 constant action-struct-number-cells
 
 \ Struct fields
 0                                     constant action-header-disp               \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits).
@@ -12,6 +12,7 @@ action-incompatible-pairs-disp  cell+ constant action-logical-structure-disp    
 action-logical-structure-disp   cell+ constant action-groups-disp               \ A group-list.
 action-groups-disp              cell+ constant action-function-disp             \ An xt to run to get a sample.
 action-function-disp            cell+ constant action-defining-regions-disp     \ Defining regions, region-list, from action-logical-structure.
+action-defining-regions-disp    cell+ constant action-corners-disp              \ A corner list.
 
 0 value action-mma \ Storage for action mma instance.
 
@@ -448,6 +449,41 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ cr ."  _action-update-logical-structure: end" cr
 ;
 
+\ Return action-corners list.
+: action-get-corners ( act0 -- crn-lst )
+    \ Check arg.
+    assert-tos-is-action
+
+    action-corners-disp +   \ Add offset.
+    @                       \ Fetch the field.
+;
+
+\ Set action-corners list.
+: _action-set-corners ( crn-lst1 act0 -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-list
+
+    action-corners-disp +  \ Add offset.
+    !struct                 \ Set the field.
+;
+
+\ Update the action-corners list.
+: _action-update-corners ( crn-lst1 act0 -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-list
+
+    dup action-get-corners -rot    \ prev-lst crn-lst1 act0
+
+    \ Set the field.
+    action-corners-disp +
+    !struct                         \ prev-lst
+
+    dup struct-dec-use-count
+    corner-list-deallocate
+;
+
 \ End accessors.
 
 \ Create an action, given an xt to get a sample.
@@ -514,6 +550,239 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ Set group list.
     list-new                            \ act lst
     over _action-set-groups             \ act
+
+    \ Init corner list.
+    list-new
+    over _action-set-corners            \ act
+;
+
+\ Return a square given a state.
+: action-find-square ( sta1 act0 -- sqr true | false )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+
+    action-get-squares          \ sta1 sqr-lst
+    square-list-find
+;
+
+\ Return a list of action corners.
+: action-calc-corners ( act0 -- crs-lst )
+    \ Check arg.
+    assert-tos-is-action
+
+    \ Init return list.
+    list-new                                    \ act0 ret-lst
+    over action-get-incompatible-pairs          \ act0 ret-lst inc-lst
+    dup region-list-states                      \ act0 ret-lst inc-lst sta-lst'
+    cr ." action-calc-corners: ip lst: " over .region-list space ." states: " dup .value-list cr
+
+    \ Prep for each state loop.
+    dup list-get-links                          \ act0 ret-lst inc-lst sta-lst' sta-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ act0 ret-lst inc-lst sta-lst' sta-link stax
+        #3 pick                                 \ act0 ret-lst inc-lst sta-lst' sta-link stax inc-lst
+        region-list-uses-state                  \ act0 ret-lst inc-lst sta-lst' sta-link reg-lst'
+        dup list-get-length                     \ act0 ret-lst inc-lst sta-lst' sta-link reg-lst' len
+        1 >                                     \ act0 ret-lst inc-lst sta-lst' sta-link reg-lst' bool
+        if
+            over link-get-data swap             \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst'
+
+            \ Init square list.
+            list-new                            \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst
+
+            \ Prep for loop.
+            over list-get-links                 \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link
+
+            begin
+                ?dup
+            while
+                \ Find state in region that is not eq stax.
+                dup link-get-data               \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link regx
+                region-get-states dup           \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link s1 s0 s0
+                #6 pick                         \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link s1 s0 s0 stax
+                =                               \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link s1 s0 bool
+                if
+                    \ s0 = stax, so use s1.
+                    drop
+                else
+                    \ s0 <> stax, so use s0.
+                    nip
+                then
+                \ Find square.
+                                                \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link sx
+                #9 pick                         \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link sx act0
+                action-find-square              \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link, sqrx t | f
+                is-false abort" square not found?"
+
+                \ Add to square list.
+                #2 pick                         \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link sqrx sqr-lst
+                square-list-push                \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link
+
+                link-get-next
+            repeat
+                                                \ act0 ret-lst inc-lst sta-lst' sta-link stax reg-lst' sqr-lst
+            swap region-list-deallocate         \ act0 ret-lst inc-lst sta-lst' sta-link stax sqr-lst
+            \ Make new corner.
+            swap                                \ act0 ret-lst inc-lst sta-lst' sta-link sqr-lst stax
+            #6 pick                             \ act0 ret-lst inc-lst sta-lst' sta-link sqr-lst stax act0
+            action-find-square                  \ act0 ret-lst inc-lst sta-lst' sta-link sqr-lst, sqr t | f
+            is-false abort" square not found?"
+            
+            corner-new                          \ act0 ret-lst inc-lst sta-lst' sta-link crnx
+            \ Store corner.
+            #4 pick                             \ act0 ret-lst inc-lst sta-lst' sta-link crnx ret-lst
+            corner-list-push                    \ act0 ret-lst inc-lst sta-lst' sta-link
+        else                                    \ act0 ret-lst inc-lst sta-lst' sta-link reg-lst'
+            region-list-deallocate              \ act0 ret-lst inc-lst sta-lst' sta-link
+        then
+
+        link-get-next
+    repeat
+                                        \ act0 ret-lst inc-lst sta-lst'
+    list-deallocate                     \ act0 ret-lst inc-lst
+    drop nip                            \ ret-lst
+;
+
+\ Check each incompatible squrare pair, remove any invalid pairs.
+\ Ruturn true if no pairs are removed.
+: action-validate-incompatible-pairs ( act0 -- bool )
+    \ Check args
+    assert-tos-is-action
+
+    \ Init remove list.
+    list-new                            \ act0 rem-lst'
+    over action-get-incompatible-pairs  \ act0 rem-lst' inc-lst
+    list-get-links                      \ act0 rem-lst' inc-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ act0 rem-lst' inc-link regx
+        region-get-states               \ act0 rem-lst' inc-link s1 s0
+        #4 pick                         \ act0 rem-lst' inc-link s1 s0 act0
+        action-find-square              \ act0 rem-lst' inc-link s1, sqr0 t | f
+        if                              \ act0 rem-lst' inc-link s1 sqr0
+            swap                        \ act0 rem-lst' inc-link sqr0 s1
+            #4 pick                     \ act0 rem-lst' inc-link sqr0 s1 act0
+            action-find-square          \ act0 rem-lst' inc-link sqr0, sqr1 t | f
+            if                          \ act0 rem-lst' inc-link sqr0 sqr1
+                square-incompatible     \ act0 rem-lst' inc-link bool
+                if
+                else
+                    dup link-get-data   \ act0 rem-lst' inc-link regx
+                    cr ." Removing pair " dup .region space ." no longer incompatible" cr
+                    #2 pick             \ act0 rem-lst' inc-link regx rem-lst'
+                    region-list-push    \ act0 rem-lst' inc-link
+                then
+            else                        \ act0 rem-lst' inc-link sqr0
+                drop
+                dup link-get-data       \ act0 rem-lst' inc-link regx
+                cr ." Removing pair " dup .region space ." square not found?" cr
+                #2 pick                 \ act0 rem-lst' inc-link regx rem-lst'
+                region-list-push        \ act0 rem-lst' inc-link
+            then
+        else                            \ act0 rem-lst' inc-link s1
+            drop
+            dup link-get-data           \ act0 rem-lst' inc-link regx
+            cr ." Removing pair " dup .region space ." square not found?" cr
+            #3 pick                     \ act0 rem-lst' inc-link regx rem-lst'
+            region-list-push            \ act0 rem-lst' inc-link
+        then
+
+        link-get-next
+    repeat
+
+    \ Check if there are any invalid pairs. \ act0 rem-lst'
+    dup list-is-empty
+    if
+        list-deallocate
+        drop
+        true
+        exit
+    then
+
+    \ Remove invalid pairs.
+    over action-get-incompatible-pairs      \ act0 rem-lst' inc-lstsqrs NOT incompat
+    over                                    \ act0 rem-lst' inc-lst rem-lst'
+    list-get-links                          \ act0 rem-lst' inc-lst rem-link
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ act0 rem-lst' inc-lst rem-link regx
+        #2 pick                             \ act0 rem-lst' inc-lst rem-link regx rem-lst'
+        region-list-remove                  \ act0 rem-lst' inc-lst rem-link bool
+        is-false abort" region not found?"
+
+        link-get-next
+    repeat
+                                            \ act0 rem-lst' inc-lst
+    drop
+    region-list-deallocate
+    drop
+    false
+;
+
+: .action-corners ( act0 -- )
+    \ Check arg.
+    assert-tos-is-action
+
+    cr ." corners: "
+
+    \ Init list of region lists to determine if a corner in unneeded.
+    list-new swap                       \ reg-lol' act0
+
+    \ Init a list of needed corners .
+    list-new swap                       \ reg-lol' ned-crn' act0
+
+    dup action-get-logical-structure    \ reg-lol' ned-crn' act0 ls-lst
+    over action-get-corners             \ reg-lol' ned-crn' act0 ls-lst crn-lst
+    list-get-links                      \ reg-lol' ned-crn' act0 ls-lst crn-link
+
+    begin
+        ?dup
+    while
+        \ Print corner.
+        dup link-get-data               \ reg-lol' ned-crn' act0 ls-lst crn-link crnx
+        dup .corner
+        \ Get corner anchor state.
+        dup corner-get-anchor-square    \ reg-lol' ned-crn' act0 ls-lst crn-link crnx anc-sqr
+        square-get-state                \ reg-lol' ned-crn' act0 ls-lst crn-link crnx anc-sta
+        \ Print LS regions the corner anchor state is in.
+        #3 pick                         \ reg-lol' ned-crn' act0 ls-lst crn-link crnx anc-sta ls-lst
+        region-list-regions-state-in    \ reg-lol' ned-crn' act0 ls-lst crn-link crnx reg-lst'
+        space dup .region-list          \ reg-lol' ned-crn' act0 ls-lst crn-link crnx reg-lst'
+
+        \ Check if a subset exists in reg-lol
+        [ ' region-list-subset-of ] literal \ reg-lol' ned-crn' act0 ls-lst crn-link crnx reg-lst' xt
+        over                                \ reg-lol' ned-crn' act0 ls-lst crn-link crnx reg-lst' xt reg-lst'
+        #8 pick                             \ reg-lol' ned-crn' act0 ls-lst crn-link crnx reg-lst' xt reg-lst' reg-lol'
+        list-member                         \ reg-lol' ned-crn' act0 ls-lst crn-link crnx reg-lst' bool
+        if
+            region-list-deallocate          \ reg-lol' ned-crn' act0 ls-lst crn-link crnx
+            space ." unneeded"
+        else
+            #6 pick                         \ reg-lol' ned-crn' act0 ls-lst crn-link crnx reg-lst' reg-lol'
+            list-push-struct                \ reg-lol' ned-crn' act0 ls-lst crn-link crnx
+            dup                             \ reg-lol' ned-crn' act0 ls-lst crn-link crnx crnx
+            #5 pick                         \ reg-lol' ned-crn' act0 ls-lst crn-link crnx crnx ned-crn
+            list-push-struct                \ reg-lol' ned-crn' act0 ls-lst crn-link crnx
+        then
+        cr
+        drop                            \ reg-lol' ned-crn' act0 ls-lst crn-link
+
+        link-get-next
+        dup 0<> if #9 spaces then
+    repeat
+                                        \ reg-lol' ned-crn' act0 ls-lst
+    2drop
+    cr ." Needed corners: " dup .corner-list cr
+    corner-list-deallocate              \ reg-lol'
+    region-list-lol-deallocate          \
+    cr
 ;
 
 \ Print a action.
@@ -534,8 +803,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     dup action-get-defining-regions cr #7 spaces ." DF: " .region-list
 
     \ cr ." Groups: "
-    \ Print each group.
-    action-get-groups list-get-links
+    \ Print each group.sqrs NOT incompat
+    dup  action-get-groups list-get-links
     begin
         ?dup
     while
@@ -544,6 +813,19 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         link-get-next
     repeat
     cr
+
+    \ Calc corners.
+
+    dup action-validate-incompatible-pairs  \ act0 bool
+    drop
+
+    dup action-calc-corners
+    over _action-update-corners
+
+    dup .action-corners
+    \ cr ." corners: " dup action-get-corners .corner-list cr
+
+    drop
 ;
 
 : .action-id ( act0 -- )
@@ -569,6 +851,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         dup action-get-logical-structure region-list-deallocate
         dup action-get-defining-regions region-list-deallocate
         dup action-get-groups group-list-deallocate
+        dup action-get-corners corner-list-deallocate
 
         \ Deallocate instance.
         action-mma mma-deallocate
@@ -719,19 +1002,9 @@ action-function-disp            cell+ constant action-defining-regions-disp     
     \ cr ." _action-check-square: end" cr
 ;
 
-\ Return a square given a state.
-: action-find-square ( sta1 act0 -- sqr true | false )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
-
-    action-get-squares          \ sta1 sqr-lst
-    square-list-find
-;
-
 \ Check a given region-list, where the region states represent incompatible pairs,
 \ returning regions where the represented squares are no longer incompatible.
-: _action-not-incompatible-pairs ( reg-lst1 act0 -- reg-lst2 )
+: _action-pairs-no-longer-incompatible ( reg-lst1 act0 -- reg-lst2 )
     \ cr ." _action-not-incompatible-pairs: start" cr
     \ Check args.
     assert-tos-is-action
@@ -860,8 +1133,8 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         exit
     then
 
-    \ Check each region.
-    dup list-get-links                          \ sqr1 act0 | reg-in-lst link
+    \ Check each incompatble pair region.
+    dup list-get-links                      \ sqr1 act0 | reg-in-lst link
     begin
         ?dup
     while
@@ -874,7 +1147,6 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         square-compare                      \ sqr1 act0 | reg-in-lst link char
         [char] I =                          \ sqr1 act0 | reg-in-lst link flag
         if                                  \ sqr1 act0 | reg-in-lst link
-            cr ." sqrs incompat 0" cr
             \ Add new incompatible pair.
             #3 pick square-get-state        \ sqr1 act0 | reg-in-lst link sta1
             over link-get-data              \ sqr1 act0 | reg-in-lst link sta1 regx
@@ -884,12 +1156,15 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new reg-new ip-lst
             region-list-push-nosups         \ sqr1 act0 | reg-in-lst link reg-new flag
             if
+                cr
+                ." Dom: " current-domain-id dec.
+                ." Act: " current-action-id dec.
+                space ." New incompatible pair: " dup .region
+                cr
                 drop
             else
                 region-deallocate
             then
-        else
-            cr ." sqrs NOT incompat 0" cr
         then
 
         \ Check sqr1 against region state 1.
@@ -901,7 +1176,6 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         square-compare                      \ sqr1 act0 | reg-in-lst link char
         [char] I =                          \ sqr1 act0 | reg-in-lst link flag
         if                                  \ sqr1 act0 | reg-in-lst link
-            cr ." sqrs incompat 1" cr
             \ Add new incompatible pair.
             #3 pick square-get-state        \ sqr1 act0 | reg-in-lst link sta1
             over link-get-data              \ sqr1 act0 | reg-in-lst link sta1 regx
@@ -911,12 +1185,15 @@ action-function-disp            cell+ constant action-defining-regions-disp     
             action-get-incompatible-pairs   \ sqr1 act0 | reg-in-lst link reg-new reg-new ip-lst
             region-list-push-nosups         \ sqr1 act0 | reg-in-lst link reg-new flag
             if
+                cr
+                ." Dom: " current-domain-id dec.
+                ." Act: " current-action-id dec.
+                space ." New incompatible pair: " dup .region
+                cr
                 drop
             else
                 region-deallocate
             then
-        else
-            cr ." sqrs NOT incompat 1" cr
         then
 
         link-get-next
@@ -951,10 +1228,10 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         rot drop                        \ act0 reg-lst-in
     then
 
-    \ Some regions found, check them.   \ act0 reg-lst-in
-    2dup swap                           \ act0 reg-lst-in reg-lst-in act0
-    _action-not-incompatible-pairs      \ act0 reg-lst-in reg-lst-not-i
-    dup list-is-empty                   \ act0 reg-lst-in reg-lst-not-i flag
+    \ Some regions found, check them.       \ act0 reg-lst-in
+    2dup swap                               \ act0 reg-lst-in reg-lst-in act0
+    _action-pairs-no-longer-incompatible    \ act0 reg-lst-in reg-lst-not-i
+    dup list-is-empty                       \ act0 reg-lst-in reg-lst-not-i flag
     if
         \ No not-incomptible pairs found.
         list-deallocate
@@ -964,7 +1241,7 @@ action-function-disp            cell+ constant action-defining-regions-disp     
         exit
     then
 
-    \ Some not-incomptible pairs found.
+    \ Some not-incompatible pairs found.
                                         \ act0 reg-lst-in reg-lst-not-i
     swap region-list-deallocate         \ act0 reg-lst-not-i
 

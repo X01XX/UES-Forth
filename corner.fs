@@ -105,6 +105,7 @@ corner-anchor-square-disp   cell+   constant corner-dissimilar-squares-disp \ Sq
    \ Check args.
     assert-tos-is-square
     assert-nos-is-square-list
+    \ cr ." corner-new: start: " dup .square space over .square-list cr
 
     \ Check no square-list square eq anchor square.
     dup square-get-state #2 pick    \ sqr-lst1 sqr0 sta0 sqr-lst1
@@ -130,11 +131,11 @@ corner-anchor-square-disp   cell+   constant corner-dissimilar-squares-disp \ Sq
 
         2dup
         region-list-any-subset-of   \ sqr-lst1 sqr0 reg-lst sta0 link regx reg-lst bool
-        abort" corner-new: subset found?"
+        if cr ." corner-new: subset found? " dup .region-list space over .region cr then
 
         2dup
         region-list-any-superset-of \ sqr-lst1 sqr0 reg-lst sta0 link regx reg-lst bool
-        abort" corner-new: superset found?"
+        if cr ." corner-new: superset found?" dup .region-list space over .region cr then
 
         list-push-struct            \ sqr-lst1 sqr0 reg-lst sta0 link
 
@@ -152,7 +153,7 @@ corner-anchor-square-disp   cell+   constant corner-dissimilar-squares-disp \ Sq
         dup link-get-data           \ sqr-lst1 sqr0 link sqrx
         #2 pick                     \ sqr-lst1 sqr0 link sqrx sqr0
         square-incompatible         \ sqr-lst1 sqr0 link bool
-        is-false abort" square in list is compatible?"
+        is-false if cr ." corner-new: square in list is compatible? " space dup link-get-data .square space over .square then
 
         link-get-next
     repeat

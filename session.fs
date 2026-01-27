@@ -1,7 +1,7 @@
 \ Implement a Session struct and functions.
 
 #31319 constant session-id
-   #10 constant session-struct-number-cells
+    #9 constant session-struct-number-cells
 
 \ Struct fields
 0                                               constant session-header-disp                        \ 16-bits [0] struct id [1] use count:w
@@ -18,7 +18,6 @@ session-regioncorrrate-nq-disp          cell+   constant session-regioncorr-lol-
                                                                                                     \ Within an regioncorr list, GT one item, there are intersections,
                                                                                                     \ so there is a path from one regc, to another, through an intersection.
 session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by-rate-disp          \ A list of pathstep lists, corresponding to session-regioncorrrate-nq items.
-session-pathstep-lol-by-rate-disp       cell+   constant session-corners-disp                       \ A corner list.
 
 
 0 value session-mma     \ Storage for session mma instance.
@@ -279,26 +278,6 @@ session-pathstep-lol-by-rate-disp       cell+   constant session-corners-disp   
     pathstep-lol-deallocate
 ;
 
-
-\ Return session-corners list.
-: session-get-corners ( sess0 -- crn-lst )
-    \ Check arg.
-    assert-tos-is-session
-
-    session-corners-disp +  \ Add offset.
-    @                       \ Fetch the field.
-;
-
-\ Set session-corners list.
-: _session-set-corners ( crn-lst1 sess0 -- )
-    \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
-
-    session-corners-disp +  \ Add offset.
-    !struct                 \ Set the field.
-;
-
 \ End accessors.
 
 \ Return an regc of max domain regions.
@@ -379,10 +358,6 @@ session-pathstep-lol-by-rate-disp       cell+   constant session-corners-disp   
     list-new
     over _session-set-pathstep-lol-by-rate              \ sess
 
-    \ Init corner list.
-    list-new
-    over _session-set-corners                           \ sess
-
     \ cr ." current-session-new: end " .s cr
     dup to current-session-store
 ;
@@ -453,8 +428,6 @@ session-pathstep-lol-by-rate-disp       cell+   constant session-corners-disp   
                                         \ sess0 rullstcorrlist-link rcllist-link
     2drop                               \ sess0
 
-    cr ." corners: " dup session-get-corners .corner-list cr
-
     drop
 ;
 
@@ -479,8 +452,6 @@ session-pathstep-lol-by-rate-disp       cell+   constant session-corners-disp   
     \ Deallocate a list of rulcorrlst list.
     dup session-get-pathstep-lol-by-rate   \ ses ruls-lst
     pathstep-lol-deallocate                \ ses
-
-    dup session-get-corners corner-list-deallocate
 
     \ Deallocate session.
     session-mma mma-deallocate

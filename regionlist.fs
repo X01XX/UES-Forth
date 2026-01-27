@@ -1225,3 +1225,49 @@
                                         \ reg1 ret-lst
     nip
 ;
+
+\ Deallocate a list of region lists.
+: region-list-lol-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ lst0 uc
+    #2 < if
+        \ Deallocate region-list instances in the list.
+        [ ' region-list-deallocate ] literal over   \ lst0 xt lst0
+        list-apply                                  \ lst0
+
+        \ Deallocate the list.
+        list-deallocate                             \
+    else
+        struct-dec-use-count
+    then
+;
+
+\ Return true if a (tos) region-list is a subset of another (nos) list.
+: region-list-subset-of ( reg-sup-lst reg-sub-lst -- bool )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-region-list
+
+    list-get-links          \ reg-sup-lst sub-link
+    begin
+        ?dup
+    while
+        dup link-get-data   \ reg-sup-lst sub-link sub-reg
+        #2 pick             \ reg-sup-lst sub-link sub-reg reg-sup-lst
+        region-list-member  \ reg-sup-lst sub-link bool
+        if
+        else
+            2drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                            \ reg-sup-lst
+    drop
+    true
+;
