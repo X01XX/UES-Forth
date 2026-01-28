@@ -71,6 +71,8 @@
 
 ' xtabort value action-get-parent-domain-xt
 
+' xtabort value action-get-logical-structure-xt
+
 
 ' xtabort value memory-use-xt
 

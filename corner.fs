@@ -234,3 +234,29 @@ corner-anchor-square-disp   cell+   constant corner-dissimilar-squares-disp \ Sq
     then
 ;
 
+\ Return true if nos corner anchor state is in more Logical structure regions than tos corner anchor state.
+: corner-compare-number-ls-regions-in  ( crn1 crn0 -- flag )
+    current-action                      \ | act0
+    dup action-get-logical-structure-xt \ | act0  xt
+    execute                             \ | act0 ls-lst
+
+    \ Get the number of LS regions crn1 anchor is in.
+    #3 pick                             \ | act0  ls-lst crn1
+    corner-get-anchor-square            \ | act0  ls-lst crn1-a-sqr
+    square-get-state                    \ | act0  ls-lst crn1-a-sta
+    over                                \ | act0  ls-lst crn1-a ls-lst
+    region-list-number-regions-state-in \ | act0  ls-lst u1
+    
+    \ Get the number of LS regions crn0 anchor is in.
+    #3 pick                             \ | act0  ls-lst u1 crn0
+    corner-get-anchor-square            \ | act0  ls-lst u1 crn0-a-sqr
+    square-get-state                    \ | act0  ls-lst u1 crn0-a-sta
+    #2 pick                             \ | act0  ls-lst u1 crn0-a ls-lst
+    region-list-number-regions-state-in \ | act0  ls-lst u1 u0
+
+    >                                   \ | act0  ls-lst bool
+
+    \ Clean up.
+    2nip                                \ crn1 ls-lst bool
+    nip nip                             \ bool
+;
