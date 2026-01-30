@@ -446,6 +446,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     repeat
     cr
                                         \ act0
+
     \ Clean up.
     drop                                \
     \ cr ."  _action-update-logical-structure: end" cr
@@ -609,6 +610,87 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     2drop
 ;
 
+\ Return true if a square is a possible anchor for a given region.
+: action-square-possible-anchor-region ( reg2 sqr1 act0 -- bool )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-square
+    assert-3os-is-region
+    cr
+    ." Dom: " current-domain-id dec. space
+    ." Act: " current-action-id dec. space
+    ." square: " over .square space
+    ." region: " #2 pick .region
+    cr
+
+    rot region-edge-mask        \ sqr1 act0 edg-msk
+    value-split                 \ sqr1 act0 edg-lst'
+    #2 pick square-get-state    \ sqr1 act0 edg-lst' sta
+    over list-get-links         \ sqr1 act0 edg-lst' sta edg-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ sqr1 act0 edg-lst' sta edg-link mskx
+        #2 pick                 \ sqr1 act0 edg-lst' sta edg-link mskx sta
+        xor                     \ sqr1 act0 edg-lst' sta edg-link sta2
+        #4 pick                 \ sqr1 act0 edg-lst' sta edg-link sta2 act0
+        action-find-square      \ sqr1 act0 edg-lst' sta edg-link, sqrx t | f
+        if
+            cr 4 spaces ." check " dup .square
+            #5 pick             \ sqr1 act0 edg-lst' sta edg-link sqrx sqr1
+            square-compatible   \ sqr1 act0 edg-lst' sta edg-link bool
+            if
+                space ." compat" cr
+                2drop
+                list-deallocate
+                2drop
+                false
+                exit
+            else
+                space ." not compat" cr
+            then
+        then
+
+        link-get-next
+    repeat
+                                \ sqr1 act0 edg-lst' sta
+    drop
+    list-deallocate
+    2drop
+    true
+;
+
+\ Return true if a square may be a possible anchor.
+\ If the square is a possible anchor for any region in the given list.
+: action-square-possible-anchor ( reg-lst2 sqr1 act0 -- bool )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-square
+    assert-3os-is-region-list
+
+    rot                                         \ sqr1 act0 reg-lst
+    list-get-links                              \ sqr1 act0 reg-link
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ sqr1 act0 reg-link regx
+        #3 pick                                 \ sqr1 act0 reg-link regx sqr1
+        #3 pick                                 \ sqr1 act0 reg-link regx sqr1 act0
+        action-square-possible-anchor-region    \ sqr1 act0 reg-link bool
+        if
+            3drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                                \ sqr1 act0
+    2drop
+    false
+;
+
 \ Calc corners and set action-corners field.
 \ Find all corners, and states with only one disimilar, near by,  square.
 \ Sort by the number of Logical Structure regions the achor square is in, lowest first.
@@ -621,72 +703,92 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Init corner list.
     list-new                                \ act0 crn-lst'
     over action-get-incompatible-pairs      \ act0 crn-lst' inc-lst
-    dup region-list-states                  \ act0 crn-lst' inc-lst sta-lst'
+    #2 pick action-get-logical-structure    \ act0 crn-lst' inc-lst ls-lst
+    over region-list-states                 \ act0 crn-lst' inc-lst ls-lst inc-stas'
 
     \ Prep for each state loop.
-    dup list-get-links                      \ act0 crn-lst' inc-lst sta-lst' sta-link
+    dup list-get-links                      \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link
 
     begin
         ?dup
     while
-        dup link-get-data                   \ act0 crn-lst' inc-lst sta-lst' sta-link stax
-        #3 pick                             \ act0 crn-lst' inc-lst sta-lst' sta-link stax inc-lst
-        region-list-uses-state              \ act0 crn-lst' inc-lst sta-lst' sta-link reg-lst'
+        \ Get target state, stax.
+        dup link-get-data dup               \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax stax
 
-        over link-get-data swap             \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst'
+        \ Get incompatible pairs that use stax.
+        #5 pick                             \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax stax inc-lst
+        region-list-uses-state              \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax inc-lst2'
 
-        \ Init square list.
-        list-new                            \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst
+        \ Get a list of states in the incompatible pairs regions that use stax.
+        dup region-list-states              \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax inc-lst2' sta-lst2'
+        swap region-list-deallocate         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2'
+
+        \ Remove stax from sta-lst2'.
+        [ ' = ] literal                     \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' xt
+        #2 pick #2 pick                     \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' xt stax sta-lst2'
+        list-remove                         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2', stax t | f
+        is-false abort" stax not found?"    \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' stax
+        drop                                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2'
+
+        \ Init corner square list.
+        list-new                            \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' crn-sqrs
 
         \ Prep for loop.
-        over list-get-links                 \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link
+        over list-get-links                 \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' crn-sqrs sta2-link
 
         begin
             ?dup
         while
-            \ Find state in region that is not eq stax.
-            dup link-get-data               \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link regx
-            region-get-states dup           \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link s1 s0 s0
-            #6 pick                         \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link s1 s0 s0 stax
-            =                               \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link s1 s0 bool
-            if
-                \ s0 = stax, so use s1.
-                drop
-            else
-                \ s0 <> stax, so use s0.
-                nip
-            then
+            \ Get state to check.
+            dup link-get-data               \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' crn-sqrs sta2-link sta2x
+
             \ Find square.
-                                            \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link sx
-            #9 pick                         \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link sx act0
-            action-find-square              \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link, sqrx t | f
-            is-false abort" square not found?"
+            #10 pick                        \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' crn-sqrs sta2-link sta2x act0
+            action-find-square              \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' crn-sqrs sta2-link, sqr2x t | f
+            is-false abort" sqr2x not found?"
 
             \ Add to square list.
-            #2 pick                         \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link sqrx sqr-lst
-            square-list-push                \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst reg-link
+            #2 pick                         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' crn-sqrs sta2-link sqr2x crn-sqrs
+            square-list-push                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax sta-lst2' crn-sqrs sta2-link
 
             link-get-next
         repeat
-                                            \ act0 crn-lst' inc-lst sta-lst' sta-link stax reg-lst' sqr-lst
-        swap region-list-deallocate         \ act0 crn-lst' inc-lst sta-lst' sta-link stax sqr-lst
-        \ Make new corner.
-        swap                                \ act0 crn-lst' inc-lst sta-lst' sta-link sqr-lst stax
-        #6 pick                             \ act0 crn-lst' inc-lst sta-lst' sta-link sqr-lst stax act0
-        action-find-square                  \ act0 crn-lst' inc-lst sta-lst' sta-link sqr-lst, sqr t | f
+        swap list-deallocate                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax crn-sqrs
+
+        \ Check if the square is a posible anchor, for at least one region in the list.
+        over                                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax crn-sqrs stax
+        #8 pick                             \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax crn-sqrs stax act0
+        action-find-square                  \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link stax crn-sqrs, sqrx t | f
         is-false abort" square not found?"
 
-        corner-new                          \ act0 crn-lst' inc-lst sta-lst' sta-link crnx
-        \ Store corner.
-        #4 pick                             \ act0 crn-lst' inc-lst sta-lst' sta-link crnx crn-lst'
-        corner-list-push                    \ act0 crn-lst' inc-lst sta-lst' sta-link
+        \ Get the Logical Structure regions stax is in.
+        rot                                 \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx stax
+        #5 pick                             \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx stax ls-lst
+        region-list-regions-state-in        \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2'
+
+        \ Check if stax is a possible anchor to one of the LS regions its in.
+        2dup swap                           \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2' ls-lst2' sqrx
+        #10 pick                            \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2' ls-lst2' sqrx act0
+        action-square-possible-anchor       \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2' bool
+        swap region-list-deallocate         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx bool
+        if
+            \ Make new corner.
+            corner-new                      \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crnx
+            
+            \ Store corner.
+            #5 pick                         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crnx crn-lst'
+            corner-list-push                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link
+        else                                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx
+            drop
+            square-list-deallocate          \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link
+        then
 
         link-get-next
     repeat
 
-                                            \ act0 crn-lst' inc-lst sta-lst'
-    list-deallocate                         \ act0 crn-lst' inc-lst
-    drop                                    \ act0 crn-lst'
+                                            \ act0 crn-lst' inc-lst ls-lst inc-stas'
+    list-deallocate                         \ act0 crn-lst' inc-lst ls-lst
+    2drop                                   \ act0 crn-lst'
 
     [ ' corner-compare-number-ls-regions-in ] literal over list-sort    \ act0 crn-lst'
 
@@ -1145,7 +1247,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Store new LS.
     over                                    \ act0 ls-new act0
     _action-update-logical-structure        \ act0
-    action-calc-corners                     \
+    dup action-calc-corners                 \ act0
+    drop
     \ cr ." _action-recalc-logical-structure: end" cr
 ;
 
