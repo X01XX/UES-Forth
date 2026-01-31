@@ -1625,25 +1625,3 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 ' domain-state-pair-complement to domain-state-pair-complement-xt
-
-\ Testing.
-: domain-check-corners ( dom0 -- )
-    \ Check arg.
-    assert-tos-is-domain
-
-    dup domain-get-actions          \ dom0 act-lst
-    list-get-links                  \ dom0 act-link
-    begin
-        ?dup
-    while
-        dup link-get-data           \ dom0 act-link actx
-        dup                         \ dom0 act-link actx actx
-        #3 pick                     \ dom0 act-link actx actx dom0
-        domain-set-current-action   \ dom0 act-link actx
-        action-check-corners        \ dom0 act-link
-
-        link-get-next
-    repeat
-                                    \ dom0
-    drop
-;

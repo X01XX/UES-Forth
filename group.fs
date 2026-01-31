@@ -461,109 +461,59 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     rulestore-calc-for-plansteps-by-changes \ rul-lst
 ;
 
-\ Return a fill need state, if any.
-: group-get-fill-need-state ( reg1 grp0 -- sta t | f )
+\ Return a need to confirm a group.
+: group-get-confirm-need-state ( reg1 grp0 -- sta t | f )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-region
+    \ cr ." group " dup group-get-region .region space ." reg1 " over .region cr
 
-    \ cr ." group: " dup group-get-region .region
-    \ space ." r-reg: " dup group-get-r-region .region
-    \ space ." reachable: " over .region
-
-    \ Get group region.
-    dup group-get-region        \ reg1 grp0 grp-reg
-    rot                         \ grp0 grp-reg reg1
-
-    \ Get group region intersection reachable region.
-    2dup                        \ grp0 grp-reg reg1 grp-reg reg1
-    region-intersection         \ grp0 grp-reg reg1, reg-int t | false
-    if
-        nip nip                 \ grp0 reg-int
+    0 over group-get-squares    \ reg1 grp0 | 0 sqr-lst
+    list-get-item               \ reg1 grp0 | sqr-0
+    dup square-get-pnc          \ reg1 grp0 | sqr-0 pnc
+    if                          \ reg1 grp0 | sqr-0
     else
-        cr ." region " .region space ." does not intersect " .region cr
-        abort
-    then
-
-                                \ grp0 reg-int
-    swap group-get-r-region     \ reg-int grp-r-reg
-
-    2dup region-eq              \ reg-int grp-r-reg flag
-    if
-        drop
-        region-deallocate
-        false
-        exit
-    then
-
-                                \ reg-int grp-r-reg
-    dup region-get-state-0 swap \ reg-int r-reg-sta0 grp-r-reg
-    region-edge-mask            \ reg-int sta0 edg-msk
-    #2 pick region-x-mask       \ reg-int sta0 edg-msk x-msk
-    and                         \ reg-int sta0 cng-msk
-    rot region-deallocate       \ sta0 cng-msk
-    \ space ." cng-msk: " dup .value cr
-    ?dup
-    if
-        \ Return altered state.
-        xor                     \ sta0'
-        true
-    else
-        drop
-        false
-    then
-;
-
-\ Return a need to confirm a group.
-: group-get-confirm-need-state ( grp0 -- sta t | f )
-    \ Check arg.
-    assert-tos-is-group
-
-    0 over group-get-squares    \ grp0 | 0 sqr-lst
-    list-get-item               \ grp0 | sqr-0
-    dup square-get-pnc          \ grp0 | sqr-0 pnc
-    0= if                       \ grp0 | sqr-0
         \ Return square state.
-        nip
-        square-get-state        \ sta-0
+        square-get-state        \ reg1 act0 | sta-0
+        nip nip                 \ sta-0
         true
         exit
-    else
-        drop                    \ grp0
     then
+                                \ reg1 grp0 | sqr-0
 
-    \ Check group squares.
-    dup group-get-r-region      \ grp0 g-r-reg
-    over group-get-squares      \ grp0 g-r-reg sqr-lst
-    list-get-links              \ grp0 g-r-reg link
+    square-get-state            \ reg1 grp0 | sta-0
 
-    begin
-        ?dup
-    while
-        dup link-get-data               \ grp0 g-r-reg link sqrx
-        dup square-get-pnc              \ grp0 g-r-reg link sqrx pnc
-        0= if                           \ grp0 g-r-reg link sqrx
-            dup square-get-state        \ grp0 g-r-reg link sqrx s-sta
-            #3 pick                     \ grp0 g-r-reg link sqrx s-sta g-r-reg
-            region-superset-of-state    \ grp0 g-r-reg link sqrx flag
-            0= if                       \ grp0 g-r-reg link sqrx
-                \ Return square state.
-                square-get-state        \ | s-sta
-                2nip nip                \ s-sta
-                true
-                exit
-            else                        \ grp0 g-r-reg link sqrx
-                drop                    \ grp0 g-r-reg link
-            then
-        else                            \ grp0 g-r-reg link sqrx
-            drop                        \ grp0 g-r-reg link
+    \ Get group region intersection with the reachable region.
+    #2 pick                     \ reg1 grp0 | sta-0 reg1
+    #2 pick group-get-region    \ reg1 grp0 | sta-0 reg1 grp-reg
+    region-intersection         \ reg1 grp0 | sta-0, reg1' t | f
+    is-false abort" group-get-confirm-need-state: intersection failed?"
+
+    \ Get far state.
+    tuck                        \ reg1 grp0 | reg1' sta-0 reg1'
+
+    \ Check for initial small reachable region.
+    2dup region-superset-of-state
+    is-false if 2drop region-deallocate 2drop false exit then
+
+    region-far-from-state       \ reg1 grp0 | reg1' sta-f
+    swap region-deallocate      \ reg1 grp0 | sta-f
+
+    \ Find square.
+    dup                          \ reg1 grp0 | sta-f sta-f
+    #2 pick group-get-squares    \ reg1 grp0 | sta-f sta-f grp-sqrs
+    square-list-find             \ reg1 grp0 | sta-f, sqr-f t | f
+    if
+        square-get-pnc           \ reg1 grp0 | sta-f pnc
+        if
+            3drop
+            false
+        else
+            nip nip true
         then
-
-        link-get-next           \ grp0 g-r-reg link
-    repeat
-                                \ grp0 g-r-reg
-    2drop
-    false
+    else
+        nip nip true
+    then
 ;
 
 \ Return true if a group has at least one needed change.

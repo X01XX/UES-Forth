@@ -11,6 +11,22 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 0 value need-mma \ Storage for need mma instance.
 
+\ Need type values and names.
+ 1 value need-type-min
+ 1 value need-type-snig     \ State not in group
+#2 value need-type-cls      \ Confirm logical structure
+#3 value need-type-ils      \ Improve logical structure
+#4 value need-type-cg       \ Confirm group
+#5 value need-type-tpc      \ Test possible corner
+#5 value need-type-max
+
+\ Return true if tos is a valid need type.
+: is-need-type ( u -- bool )
+    dup  need-type-min >=    \ u bool
+    swap need-type-max <=   \ bool bool
+    and
+;
+
 \ Init need mma, return the addr of allocated memory.
 : need-mma-init ( num-items -- ) \ sets need-mma.
     dup 1 <
@@ -58,8 +74,9 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check tos for valid need number.
 : assert-tos-is-need-number ( tos -- tos )
-    dup 1 < over #6 > or
+    dup is-need-type
     if
+    else
         s" tos invalid need number?"
        .abort-xt execute
     then
@@ -67,11 +84,9 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check nos for valid need number.
 : assert-nos-is-need-number ( nos tos -- nos tos )
-    over dup                     \ u1 arg0 u1 u1
-    1 < swap                     \ u1 arg0 b1 u1
-    #6 >                         \ u1 arg0 b1 b2
-    or
+    over is-need-type 
     if
+    else
         s" nos invalid need number?"
        .abort-xt execute
     then
@@ -79,11 +94,9 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check 3os for valid need number.
 : assert-3os-is-need-number ( 3os nos tos -- 3os nos tos )
-    #2 pick dup                  \ u2 arg1 arg0 u2 u2
-    1 < swap                     \ u2 arg1 arg0 b1 u2
-    #6 >                         \ u2 arg1 arg0 b1 b2
-    or
+    #2 pick is-need-type
     if
+    else
         s" 3os invalid need number?"
        .abort-xt execute
     then
@@ -91,11 +104,9 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check 4os for valid need number.
 : assert-4os-is-need-number ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick dup                  \ u2 arg1 arg0 u2 u2
-    1 < swap                     \ u2 arg1 arg0 b1 u2
-    #6 >                         \ u2 arg1 arg0 b1 b2
-    or
+    #3 pick is-need-type
     if
+    else
         s" 3os invalid need number?"
        .abort-xt execute
     then
@@ -224,12 +235,11 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
     need-get-type
     case
-        1 of space ." State not in group" endof
-       #2 of space ." Confirm logical structure" endof
-       #3 of space ." Improve logical structure" endof
-       #4 of space ." Fill group" endof
-       #5 of space ." Confirm group" endof
-       #6 of space ." Test possible corner" endof
+        need-type-snig  of space ." State not in group" endof
+        need-type-cls   of space ." Confirm logical structure" endof
+        need-type-ils   of space ." Improve logical structure" endof
+        need-type-cg    of space ." Confirm group" endof
+        need-type-tpc   of space ." Test possible corner" endof
         ." Unrecognized type value" abort
     endcase
 ;

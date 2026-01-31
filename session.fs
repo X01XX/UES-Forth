@@ -1758,25 +1758,3 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 ;
 
 ' session-get-number-domains to session-get-number-domains-xt
-
-\ Testing.
-: session-check-corners ( ses0 -- )
-    \ Check arg.
-    assert-tos-is-session
-
-    dup session-get-domains         \ ses0 dom-lst
-    list-get-links                  \ ses0 dom-link
-    begin
-        ?dup
-    while
-        dup link-get-data           \ ses0 dom-link domx
-        dup                         \ ses0 dom-link domx domx
-        #3 pick                     \ ses0 dom-link domx domx ses0
-        session-set-current-domain  \ ses0 dom-link domx
-        domain-check-corners        \ ses0 dom-link
-
-        link-get-next
-    repeat
-                                    \ ses0
-    drop
-;

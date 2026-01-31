@@ -168,7 +168,6 @@
 ;
 
 : plan-test-link-step-to-initial-region ( act0 -- )
-    cr ." at 1: " .stack-structs-xt execute cr
      \ Init plan.
      dup action-get-parent-domain       \ act0 dom
      plan-new                           \ act0 pln
