@@ -162,7 +162,7 @@
 
     cr dup .action cr
 
-    action-possible-corner-needs                    \ sess dom0 act0 ned-lst'
+                        \ sess dom0 act0 ned-lst'
 
     cr ." needs: " dup .need-list cr
 
@@ -187,54 +187,6 @@
     cr ." action-test-possible-corner-needs: Ok" cr
 ;
 
-: action-test-possible-corner-needs
-    \ Init session.
-    current-session-new                             \ ses
-
-    \ Init domain 0.
-    #4 over domain-new                              \ ses dom0
-    2dup swap                                       \ ses dom0 dom0 sess
-    session-add-domain                              \ ses dom0
-
-    \ Get act0.
-    0 over domain-find-action                       \ ses dom0, act0 t | f
-    is-false abort" act0 not found?"
-
-    \ Add arbitrary samples
-
-    \ Square 0.
-    #8 #0 sample-new                                \ ses dom0 act0 smpl0
-    2dup swap action-add-sample                     \ ses dom0 act0 smpl0
-    sample-deallocate                               \ ses dom0 act0
-
-    \ Square 8.
-    #0 #8 sample-new                                \ ses dom0 act0 smpl8
-    2dup swap action-add-sample                     \ ses dom0 act0 smpl8
-    sample-deallocate                               \ ses dom0 act0
-
-    \ Square 7.
-    #7 #7 sample-new                                \ ses dom0 act0 smpl7
-    2dup swap action-add-sample                     \ ses dom0 act0 smpl7
-    sample-deallocate                               \ ses dom0 act0
-
-    \ Square B.
-    $B $B sample-new                                \ ses dom0 act0 smplB
-    2dup swap action-add-sample                     \ ses dom0 act0 smplB
-    sample-deallocate                               \ ses dom0 act0
-
-    dup action-calc-corners                         \ ses dom0 act0
-
-    dup .action-corners
-
-    \ Clean up.
-    3drop
-
-    current-session-deallocate
-
-    cr ." action-test-possible-corner-needs: Ok" cr
-;
-
 : action-tests
     action-test-add-sample
-    action-test-possible-corner-needs
 ;

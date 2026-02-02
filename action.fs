@@ -1794,70 +1794,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
    \  cr ." action-states-in-fewest-ls-regions: returns: " dup .value-list cr
 ;
 
-\ Look for states, in the incompatible pair list, that are not in a defining region.
-\ Generate corner needs for those states that are in the fewest number of left-over
-\ regions.
-\ Some corners will grow into multiple corners.
-: action-possible-corner-needs ( act0 -- ned-lst )
-    \ Check arg.
-    assert-tos-is-action
-    \ cr ." action-possible-corner-needs: act: " dup action-get-inst-id . cr
-
-    \ Get states that may define a corner, not yet understood.
-    dup action-incompatible-pair-states-not-in-defining-regions \ act0 sta-lst'
-    dup list-is-empty
-    if
-        nip
-        exit
-    then
-
-    \ Get states in the least logical structure regions.
-    dup #2 pick                                 \ act0 sta-lst' sta-lst' act0
-    action-states-in-fewest-ls-regions          \ act0 sta-lst' sta-lst''
-    swap list-deallocate                        \ act0 sta-lst''
-
-    \ Prep for loop.
-    list-new swap                               \ act0 ned-lst sta-lst''
-    #2 pick action-get-logical-structure swap   \ act0 ned-lst ls-lst sta-lst''
-    dup list-get-links                          \ act0 ned-lst ls-lst sta-lst'' sta-link
-
-    \ For each state in fewest non-defining regions.
-    begin
-        ?dup
-    while
-        dup link-get-data dup                   \ act0 ned-lst ls-lst sta-lst'' sta-link stax stax
-        #4 pick                                 \ act0 ned-lst ls-lst sta-lst'' sta-link stax stax ls-lst
-        region-list-regions-state-in            \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst'
-
-        \ Prep for loop.
-        dup list-get-links                      \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link
-        begin
-            ?dup
-        while
-            #2 pick                             \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link stax
-            over link-get-data                  \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link stax regx
-        \ cr ." eval " dup .region space ." and " over .value
-            #9 pick                             \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link stax regx act0
-            action-get-adjacent-state-needs     \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst'
-        \ space ." adj needs: " dup .need-list cr
-            dup                                 \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst' ned-lst'
-            #8 pick                             \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst' ned-lst' ned-lst
-            need-list-append                    \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link ned-lst'
-            need-list-deallocate                \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst' reg-link
-
-            link-get-next
-        repeat
-                                                \ act0 ned-lst ls-lst sta-lst'' sta-link stax reg-lst'
-        region-list-deallocate drop             \ act0 ned-lst ls-lst sta-lst'' sta-link
-
-        link-get-next
-    repeat
-                                                \ act0 ned-lst ls-lst sta-lst''
-    list-deallocate                             \ act0 ned-lst ls-lst
-    drop                                        \ act0 ned-lst
-    nip
-;
-
 \ Return needs for confirming an incompatible pair, represented as two region states.
 : action-region-confirm-needs ( reg1 act0 -- ned-lst )
     \ Check args.
@@ -2308,16 +2244,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     #2 pick                                         \ reg2 sta1 act0 | ret-lst crn-neds' crn-neds' ret-lst
     need-list-append                                \ reg2 sta1 act0 | ret-lst crn-neds'
     need-list-deallocate                            \ reg2 sta1 act0 | ret-lst
-
-\    dup list-is-empty
-\    if
-\        #3 pick #3 pick #3 pick                     \ reg2 sta1 act0 | ret-lst reg2 sta1 act0
-\        action-calc-incompatible-pair-needs         \ reg2 sta1 act0 | ret-lst inc-neds'
-\        dup                                         \ reg2 sta1 act0 | ret-lst inc-neds' inc-neds'
-\        #2 pick                                     \ reg2 sta1 act0 | ret-lst inc-neds' inc-neds' ret-lst
-\        need-list-append                            \ reg2 sta1 act0 | ret-lst inc-neds'
-\        need-list-deallocate                        \ reg2 sta1 act0 | ret-lst
-\    then
 
     \ Check if the current state is not in a group, and is not represented by a pnc square.
     #2 pick #2 pick                                 \ reg2 sta1 act0 | ret-lst sta1 act
