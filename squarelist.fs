@@ -22,6 +22,17 @@
     then
 ;
 
+\ Check if 3os is an empty list, or has a square instance as its first item.
+: assert-3os-is-square-list ( nos tos -- nos tos )
+    assert-3os-is-list
+    #2 pick list-is-not-empty
+    if
+        #2 pick list-get-links link-get-data
+        assert-tos-is-square
+        drop
+    then
+;
+
 \ Deallocate a square list.
 : square-list-deallocate ( lst0 -- )
     \ Check arg.

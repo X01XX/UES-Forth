@@ -45,3 +45,39 @@
     list-push-struct
 ;
 
+\ Return a list of corner find/confirm needs,
+\ given a probable reachable region.
+: corner-list-calc-needs ( reg1 crn-lst0 - ned-lst )
+    \ Check args.
+    assert-tos-is-corner-list
+    assert-nos-is-region
+
+    \ Init return list.
+    list-new                            \ reg1 crn-lst0 | ret-lst
+    
+    \ Prep for loop.
+    over                                \ reg1 crn-lst0 | ret-lst crn-lst0
+    list-get-links                      \ reg1 crn-lst0 | ret-lst crn-link
+
+    begin
+        ?dup
+    while
+        \ Get needs for one corner.
+        #3 pick                         \ reg1 crn-lst0 | ret-lst crn-link reg1
+        over link-get-data              \ reg1 crn-lst0 | ret-lst crn-link reg1 crnx
+        corner-calc-needs               \ reg1 crn-lst0 | ret-lst crn-link ned-lst'
+
+        \ Aggregate needs.
+        dup                             \ reg1 crn-lst0 | ret-lst crn-link ned-lst' ned-lst'
+        #3 pick                         \ reg1 crn-lst0 | ret-lst crn-link ned-lst' ned-lst' ret-lst
+        need-list-append                \ reg1 crn-lst0 | ret-lst crn-link ned-lst'
+        need-list-deallocate            \ reg1 crn-lst0 | ret-lst crn-link
+
+        link-get-next
+    repeat
+                                        \ reg1 crn-lst0 | ret-lst
+
+    \ Clean up.
+    nip nip                             \ ret-lst
+;
+

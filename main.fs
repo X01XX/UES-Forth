@@ -78,11 +78,11 @@ include square.fs
 
 include squarelist.fs
 
-include corner.fs
-include cornerlist.fs
-
 include need.fs
 include needlist.fs
+
+include corner.fs
+include cornerlist.fs
 
 include planstep.fs
 include plansteplist.fs

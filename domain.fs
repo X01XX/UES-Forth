@@ -67,6 +67,24 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Start accessors.
 
+\ Return the parent session of the domain.
+: domain-get-parent-session ( act0 -- dom )
+    \ Check arg.
+    assert-tos-is-domain
+
+    domain-parent-session-disp + \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the parent session of an domain.
+: _domain-set-parent-session ( dom act0 -- )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-parent-session-disp +    \ Add offset.
+    !                               \ Set the field.
+;
+
 \ Return the action-list from an domain instance.
 : domain-get-actions ( dom0 -- lst )
     \ Check arg.
@@ -182,24 +200,6 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ Set inst id.
     domain-current-action-disp +
     !
-;
-
-\ Return the parent session of the domain.
-: domain-get-parent-session ( act0 -- dom )
-    \ Check arg.
-    assert-tos-is-domain
-
-    domain-parent-session-disp + \ Add offset.
-    @                           \ Fetch the field.
-;
-
-\ Set the parent session of an domain.
-: _domain-set-parent-session ( dom act0 -- )
-    \ Check args.
-    assert-tos-is-domain
-
-    domain-parent-session-disp +    \ Add offset.
-    !                               \ Set the field.
 ;
 
 \ Return the max-region of the domain.

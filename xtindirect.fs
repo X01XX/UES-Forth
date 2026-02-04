@@ -73,6 +73,10 @@
 
 ' xtabort value action-get-logical-structure-xt
 
+' xtabort value action-find-square-xt
+
+' xtabort value action-get-corners-xt
+
 
 ' xtabort value memory-use-xt
 
