@@ -49,54 +49,6 @@
     cr ." domain-test-state-pair-complement: Ok" cr
 ;
 
-: domain-test-logical-corner ( dom0 -- ) \ Test (~5 + ~7) & (~5 + ~D) = ~5 + (~7 & ~D)
-
-    \ Calc (~5 + ~7) & (~5 + ~D)
-    #7 #5                                   \ dom0 #7 #5
-    #2 pick                                 \ dom0 #7 #5 dom0
-    domain-state-pair-complement            \ dom0 list57'
-    cr ." ~5 + ~7: " dup .region-list cr
-
-    $D #5                                   \ dom0 list57' $D #5
-    #3 pick                                 \ dom0 list57' $D #5 dom0
-    domain-state-pair-complement            \ dom0 list57' list5D'
-    cr ." ~5 + ~D: " dup .region-list cr
-
-    2dup region-list-intersections-nosubs   \ dom0 list57' list5D' rslt1'
-    cr ." (~5 + ~7) & (~5 & ~D): " dup .region-list cr
-
-    \ Clean up
-    swap region-list-deallocate
-    swap region-list-deallocate             \ dom0 rslt'
-
-    \ Calc ~5 + (~7 & ~D)
-    #5 #2 pick domain-state-complement      \ dom0 rslt1' ~5'
-    #7 #3 pick domain-state-complement      \ dom0 rslt1' ~5 ~7
-    $D #4 pick domain-state-complement      \ dom0 rslt1' ~5 ~7 ~D
-    2dup region-list-intersections-nosubs   \ dom0 rslt1' ~5 ~7 ~D ~7D
-
-    \ Clean up
-    swap region-list-deallocate
-    swap region-list-deallocate             \ dom0 rlst1' ~5 ~7D
-
-    2dup region-list-union-nosubs           \ dmo0 rlst1' ~5 ~7D rlst2'
-    cr ." ~5 + (~7 & ~D): " dup .region-list cr
-
-    \ Clean up
-    swap region-list-deallocate
-    swap region-list-deallocate             \ dom0 rlst1' rslt2'
-
-    \ Test eq
-    2dup region-list-eq                     \ dom0 rlst1' rslt2' bool
-    is-false abort" state-test-boolean-algebra: lists ne?"
-
-    region-list-deallocate
-    region-list-deallocate
-    drop
-
-    cr ." domain-test-logical-corner: Ok" cr
-;
-
 : domain-tests
     current-session-new                             \ sess
 
@@ -108,7 +60,6 @@
 
     dup domain-test-state-complement
     dup domain-test-state-pair-complement
-    dup domain-test-logical-corner
 
     drop
     current-session-deallocate

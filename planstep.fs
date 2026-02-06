@@ -361,16 +361,6 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     tuck planstep-set-number-unwanted-changes   \ plnstp
 ;
 
-\ Return a result from applying a planstep rule to a state, going forward.
-: planstep-apply-to-state-f ( sta1 plnstp0 -- sta )
-    \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-value
-
-    planstep-get-rule       \ sta1 rul
-    rule-apply-to-state-fc  \ sta
-;
-
 \ Return true if two plansteps can be linked plnstp1 result region to plnstp0 initial region.
 : planstep-can-be-linked ( plnstp1 plnstp0 -- bool )
     \ Check args.

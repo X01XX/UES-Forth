@@ -23,11 +23,22 @@
 ;
 
 \ Check if 3os is a list, if non-empty, with the first item being a region.
-: assert-3os-is-region-list ( nos tos -- nos tos )
+: assert-3os-is-region-list ( 3os nos tos -- 3os nos tos )
     assert-3os-is-list
     #2 pick list-is-not-empty
     if
         #2 pick list-get-links link-get-data
+        assert-tos-is-region
+        drop
+    then
+;
+
+\ Check if 4os is a list, if non-empty, with the first item being a region.
+: assert-4os-is-region-list ( 4os 3os nos tos -- 4os 3os nos tos )
+    assert-4os-is-list
+    #3 pick list-is-not-empty
+    if
+        #3 pick list-get-links link-get-data
         assert-tos-is-region
         drop
     then

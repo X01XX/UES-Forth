@@ -1,3 +1,6 @@
+\ Implement a rule struct and functions.
+\
+\ Represent how a rule changes bits.
 
 #23131 constant rule-id
     #5 constant rule-struct-number-cells
@@ -121,36 +124,36 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0 over struct-set-use-count \ addr
 ;
 
-: rule-new ( u-result u-initial -- addr)    \ Create a rule from two numbers on the stack.
+: rule-new ( u-result u-initial -- rul )    \ Create a rule from two numbers on the stack.
     \ Check args.
     assert-tos-is-value
     assert-nos-is-value
 
-    _rule-allocate          \ u-r u-i addr
+    _rule-allocate          \ u-r u-i rul
 
     \ Store fields.
-    over !not               \ u-r u-i addr u-i-not
-    #3 pick !not            \ u-r u-i addr u-i-not u-r-not
-    and over                \ u-r u-i addr m00 addr
-    _rule-set-m00           \ u-r u-i addr
+    over !not               \ u-r u-i rul u-i-not
+    #3 pick !not            \ u-r u-i rul u-i-not u-r-not
+    and                     \ u-r u-i rul m00
+    over _rule-set-m00      \ u-r u-i rul
 
-    over !not               \ u-r u-i addr u-i-not
-    #3 pick                 \ u-r u-i addr u-i-not u-r
-    and over                \ u-r u-i addr m01 addr
-    _rule-set-m01           \ u-r u-i addr
+    over !not               \ u-r u-i rul u-i-not
+    #3 pick                 \ u-r u-i rul u-i-not u-r
+    and                     \ u-r u-i rul m01
+    over _rule-set-m01      \ u-r u-i rul
 
-    over                    \ u-r u-i addr u-i
-    #3 pick                 \ u-r u-i addr u-i u-r
-    and over                \ u-r u-i addr m11 addr
-    _rule-set-m11           \ u-r u-i addr
+    over                    \ u-r u-i rul u-i
+    #3 pick                 \ u-r u-i rul u-i u-r
+    and                     \ u-r u-i rul m11
+    over _rule-set-m11      \ u-r u-i rul
 
-    over                    \ u-r u-i addr u-i
-    #3 pick !not            \ u-r u-i addr u-i u-r-not
-    and over                \ u-r u-i addr m10 addr
-    _rule-set-m10           \ u-r u-i addr
+    over                    \ u-r u-i rul u-i
+    #3 pick !not            \ u-r u-i rul u-i u-r-not
+    and                     \ u-r u-i rul m10
+    over _rule-set-m10      \ u-r u-i rul
 
     \ Return result.
-    nip nip                 \ addr
+    nip nip                 \ rul
 ;
 
 : rule-get-masks ( rul0 -- m00 m01 m11 m10 )    \ Push all four masks onto stack.
@@ -312,27 +315,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     rule-get-masks      \ m00 m01 m11 m10
     -rot                \ m00 m10 m01 m11
-    or -rot             \ most-ones m00 m01
+    or -rot             \ most-ones m00 m10
     or !not             \ most-ones most-zeros
     region-new
-;
-
-: rule-intersects ( rul1 rul0 -- flag ) \ Return true if two rules intersect.
-    \ Check arg.
-    assert-tos-is-rule
-    assert-nos-is-rule
-
-    \ Get rules initial regions.
-    rule-calc-initial-region swap   \ initial-0 rul1
-    rule-calc-initial-region        \ initial-0 initial-1
-    2dup                            \ initial-0 initial-1 initial-0 initial-1
-
-    \ Calc result.
-    region-intersects           \ initial-0 initial-1 flag
-
-    \ Cleanup.
-    swap region-deallocate      \ initial-0  flag
-    swap region-deallocate      \ flag
 ;
 
 : rule-intersects-changes ( csgs1 rul0 -- flag )    \ Return true if a rule's change intersects a changes' changes.
@@ -392,14 +377,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-tos-is-rule
     assert-nos-is-rule
 
-    \ Check for non-intersection of initial regions.
-    2dup rule-intersects    \ rul1 rul0 flag
-    0= if
-        2drop
-        false
-        exit
-    then
-
     \ Intersect m00         \ rul1 rul0
     dup rule-get-m00        \ rul1 rul0 | 0m00
     #2 pick rule-get-m00    \ rul1 rul0 | 0m00 1m00
@@ -433,52 +410,14 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     tuck _rule-set-m00      \ rul
 
     \ Check rule.
-    dup rule-all-bits-set       \ rul flag
+    dup rule-all-bits-set   \ rul flag
 
     if
-        true                    \ rul flag
+        true                \ rul flag
     else
         rule-deallocate
         false
     then
-;
-
-: rule-or ( rul1 rul0 -- rul )  \ Or the masks of two rules, not checking if the result is valid.
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
-
-    \ Combine m00           \ rul1 rul0
-    over rule-get-m00       \ rul1 rul0 | 1m00
-    over rule-get-m00       \ rul1 rul0 | 1m00 0m00
-    or                      \ rul1 rul0 | m00
-    -rot                    \ m00 | rul1 rul0
-
-    \ Combine m01           \ m00 | rul1 rul0
-    over rule-get-m01       \ m00 | rul1 rul0 | 1m01
-    over rule-get-m01       \ m00 | rul1 rul0 | 1m01 0m01
-    or                      \ m00 | rul1 rul0 | m01
-    -rot                    \ m00 m01 | rul1 rul0
-
-    \ Combine m11           \ m00 m01 | rul1 rul0
-    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11
-    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11 0m11
-    or                      \ m00 m01 | rul1 rul0 | m11
-    -rot                    \ m00 m01 m11 | rul1 rul0
-
-    \ Combine m10           \ m00 m01 m11 | rul1 rul0
-    rule-get-m10            \ m00 m01 m11 | rul1 0m10
-    swap rule-get-m10       \ m00 m01 m11 | 0m10 1m10
-    or                      \ m00 m01 m11 m10
-
-    \ Start new rule.
-    _rule-allocate          \ m00 m01 m11 m10 rul
-
-    \ Set each field.
-    tuck _rule-set-m10      \ m00 m01 m11 rul
-    tuck _rule-set-m11      \ m00 m01 rul
-    tuck _rule-set-m01      \ m00 rul
-    tuck _rule-set-m00      \ rul
 ;
 
 : rule-change-mask ( rul0 -- mask ) \ Return a rule's change mask.
@@ -488,25 +427,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     dup rule-get-m01        \ rul0 m01
     swap rule-get-m10       \ m01 m10
     or                      \ mask
-;
-
-: rule-union-by-changes ( rul1 rul0 -- result true | false )    \ If two rule changes (m01, m10) are equal, form a union.
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
-
-    \ Check if a union can be made.
-    over rule-change-mask       \ rul1 rul0 rcm1
-    over rule-change-mask       \ rul1 rul0 rcm1 rcm0
-    <> if
-        2drop
-        false
-        exit
-    then
-
-    \ Make union.
-    rule-or                     \ rul
-    true
 ;
 
 : rule-union ( rul1 rul0 -- result true | false )   \ Return the result of a rule union, if valid.
@@ -566,6 +486,24 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     else
         true
     then
+;
+
+: rule-union-by-changes ( rul1 rul0 -- result true | false )    \ If two rule changes (m01, m10) are equal, form a union.
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-rule
+
+    \ Check if a union can be made.
+    over rule-change-mask       \ rul1 rul0 rcm1
+    over rule-change-mask       \ rul1 rul0 rcm1 rcm0
+    <> if
+        2drop
+        false
+        exit
+    then
+
+    \ Make union.
+    rule-union
 ;
 
 \ 0->X becomes 0->0, 1->X becomes 1->1, by the principle of Least Change.
@@ -853,35 +791,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     changes-new
 ;
 
-: rule-apply-to-state-fc ( sta1 rul0 -- smpl true | false )  \ Apply a rule to a given state, forward-chaining, returning a sample.
-    \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-value
-
-    \ Check if the state is not in the rule initial region.
-    2dup                            \ sta1 rul0 | sta1 rul0
-    rule-calc-initial-region        \ sta1 rul0 | sta1 regx
-    tuck                            \ sta1 rul0 | regx sta1 regx
-    region-superset-of-state        \ sta1 rul0 | regx flag
-    swap region-deallocate          \ sta1 rul0 | flag
-    0= if
-        2drop false exit
-    then
-
-    \ Get m10 mask that affects the given state.
-                                    \ sta1 rul0
-    over swap                       \ sta1 sta1 rul0
-    2dup rule-get-m10 and           \ sta1 sta1 rul0 m10
-    -rot                            \ sta1 m10 sta1 rul0
-    rule-get-m01                    \ sta1 m10 sta1 r-m01
-    swap invert and                 \ sta1 m10 m01
-    or                              \ sta1 change-msk
-    over xor                        \ sta1 sta2
-    swap                            \ sta2 sta1
-    sample-new                      \ smpl
-    true
-;
-
 : rule-makes-change ( rul0 -- flag )    \ Return true if a rule changes at least one bit.
     \ Check arg.
     assert-tos-is-rule
@@ -1056,7 +965,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap changes-deallocate         \ u
 ;
 
-: rule-calc-for-planstep-by-changes ( cngs1 rul0 -- rul t | f )    \ Return a rule cantaining needed changes for a step for a step.
+: rule-calc-for-planstep-by-changes ( cngs1 rul0 -- rul t | f )    \ Return a rule containing needed changes for a step for a step.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-changes

@@ -654,34 +654,46 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     true
 ;
 
-\ Return true if a square may be a possible anchor.
-\ If the square is a possible anchor for any region in the given list.
-: action-square-possible-anchor ( reg-lst2 sqr1 act0 -- bool )
+\  Given a list of Locical Structure regions a square is in,
+\ return a list of regions where it may be a corner of one ofe the regions.
+: action-square-possible-anchor ( reg-lst2 sqr1 act0 -- reg-lst t | f )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
     assert-3os-is-region-list
 
-    rot                                         \ sqr1 act0 reg-lst
-    list-get-links                              \ sqr1 act0 reg-link
+    \ Init return list.
+    list-new                                    \ reg-lst2 sqr1 act0 | ret-lst
+    #3 pick                                     \ reg-lst2 sqr1 act0 | ret-lst reg-lst2
+    list-get-links                              \ reg-lst2 sqr1 act0 | ret-lst reg-link
     begin
         ?dup
     while
-        dup link-get-data                       \ sqr1 act0 reg-link regx
-        #3 pick                                 \ sqr1 act0 reg-link regx sqr1
-        #3 pick                                 \ sqr1 act0 reg-link regx sqr1 act0
-        action-square-possible-anchor-region    \ sqr1 act0 reg-link bool
+        dup link-get-data                       \ reg-lst2 sqr1 act0 | ret-lst reg-link regx
+        #4 pick                                 \ reg-lst2 sqr1 act0 | ret-lst reg-link regx sqr1
+        #4 pick                                 \ reg-lst2 sqr1 act0 | ret-lst reg-link regx sqr1 act0
+        action-square-possible-anchor-region    \ reg-lst2 sqr1 act0 | ret-lst reg-link bool
         if
-            3drop
-            true
-            exit
+            dup link-get-data                   \ reg-lst2 sqr1 act0 | ret-lst reg-link regx
+            #2 pick                             \ reg-lst2 sqr1 act0 | ret-lst reg-link regx ret-lst
+            region-list-push                    \ reg-lst2 sqr1 act0 | ret-lst reg-link
         then
 
         link-get-next
     repeat
-                                                \ sqr1 act0
-    2drop
-    false
+                                                \ reg-lst2 sqr1 act0 | ret-lst
+    \ Clean up.
+    2nip                                        \ act0 ret-lst
+    nip                                         \ ret-lst
+
+    \ Return.
+    dup list-is-empty
+    if
+        list-deallocate
+        false
+    else
+        true
+    then
 ;
 
 \ Calc corners and set action-corners field.
@@ -762,17 +774,20 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ Check if stax is a possible anchor to one of the LS regions its in.
         2dup swap                           \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2' ls-lst2' sqrx
         #10 pick                            \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2' ls-lst2' sqrx act0
-        action-square-possible-anchor       \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2' bool
-        swap region-list-deallocate         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx bool
+        action-square-possible-anchor       \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx ls-lst2', reg-lst t | f
         if
+            swap region-list-deallocate     \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx reg-lst
+
             \ Make new corner.
-            #7 pick                         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx act0
+            -rot                            \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link reg-lst crn-sqrs sqrx
+            #8 pick                         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link reg-lst crn-sqrs sqrx act0
             corner-new                      \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crnx
             
             \ Store corner.
             #5 pick                         \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crnx crn-lst'
             corner-list-push                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link
-        else                                \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx
+        else
+            region-list-deallocate          \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link crn-sqrs sqrx
             drop
             square-list-deallocate          \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link
         then
@@ -784,7 +799,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     list-deallocate                         \ act0 crn-lst' inc-lst ls-lst
     2drop                                   \ act0 crn-lst'
 
-    [ ' corner-compare-number-ls-regions-in ] literal over list-sort    \ act0 crn-lst'
+    [ ' corner-compare-number-regions ] literal over list-sort    \ act0 crn-lst'
 
     \ Select corners to keep.
     swap                                    \ crn-lst' act0
@@ -1514,108 +1529,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 ' action-make-need to action-make-need-xt
-
-\ Given a state and a region, get samples of adjacent, external states,
-\ unless one turns out to be compatible.
-: action-get-adjacent-state-needs ( sta2 reg1 act0 -- ned-lst )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-    assert-3os-is-value
-
-    \ Set up second frame.
-
-    \ Init return list.
-    list-new                                \ sta2 reg1 act0 | ret-lst
-
-    \ Get square from sta2.
-    #3 pick                                 \ sta2 reg1 act0 | ret-lst sta2
-    #2 pick                                 \ sta2 reg1 act0 | ret-lst sta2 act0
-    action-find-square                      \ sta2 reg1 act0 | ret-lst, sqr2 t | f
-    is-false abort" sta2 not found?"
-
-    \ Get bits to change.
-    #3 pick region-edge-mask                \ sta2 reg1 act0 | ret-lst sqr2 edg-msk
-
-    \ Check for all-X region.
-    dup 0=
-    if
-        2drop
-        2nip nip
-        exit
-    then
-
-    value-split                             \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' |
-
-    \ Check current external, adjacent, squares.
-    dup list-get-links                      \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link msk
-        #7 pick                             \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link msk sta2
-        xor                                 \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax
-        #5 pick                             \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax act0
-        action-find-square                  \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link, sqrx t | f
-        if
-            #3 pick                         \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link sqrx sqr2
-            square-compatible               \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link bool
-            if
-                \ External, adjacent, square is compatible, sta2 cannot be an anchor for reg1.
-                drop                        \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' |
-                list-deallocate drop        \ sta2 reg1 act0 | ret-lst
-                2nip nip                    \ ret-lst
-                exit
-            then
-        then
-
-        link-get-next
-    repeat
-                                            \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' |
-
-    \ Check eternal, adjacent, states for first sample, or additional samples.
-
-    dup list-get-links                      \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link mskx
-        #7 pick                             \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link mskx sta2
-        xor                                 \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax
-
-        dup                                 \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax stax
-        #6 pick                             \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax stax act0
-        action-find-square                  \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax, sqrx t | f
-        if
-            square-get-pnc                  \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax pnc
-            if
-                false                       \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax false
-            else
-                true                        \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax true
-            then
-        else
-            true                            \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link stax true
-        then
-
-        if
-            \ Add need for sample.
-            need-type-tpc swap              \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link ned-type stax
-            #6 pick                         \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link ned-type stax act0
-            action-make-need                \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link nedx
-            #4 pick                         \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link nedx ret-lst
-            list-push-struct                \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link
-        else
-            drop                            \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' | msk-link
-        then
-
-        link-get-next
-    repeat
-                                            \ sta2 reg1 act0 | ret-lst sqr2 msk-lst1' |
-    list-deallocate drop                    \ sta2 reg1 act0 | ret-lst
-    2nip nip                                \ ned-lst
-;
 
 \ Return group confirm needs.
 \ The first square in the group's square list, or the farthest state

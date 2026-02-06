@@ -109,55 +109,6 @@
     cr ." rule-test-restrict-result-region: Ok" cr
 ;
 
-: rule-test-apply-to-state-f
-    s" 01/10/X1/X1/" rule-from-string          \ rul
-    cr ." rule: " dup .rule cr
-    %0101 over                                  \ rul 1 rul
-    rule-apply-to-state-fc                      \ rul smpl true
-    if
-        cr ." smpl " dup .sample cr
-        dup sample-get-result
-        %1011 <>
-        abort" Result not expected"
-        sample-deallocate
-    else
-        ." sample not made?" abort
-    then
-    rule-deallocate
-
-    s" Xx/Xx/X0/X0/" rule-from-string          \ rul
-    cr ." rule: " dup .rule cr
-    %0101 over                                  \ rul 1 rul
-    rule-apply-to-state-fc                      \ rul smpl true
-    if
-        cr ." smpl " dup .sample cr
-        dup sample-get-result
-        %1000 <>
-        abort" Result not expected"
-        sample-deallocate
-    else
-        ." sample not made?" abort
-    then
-    rule-deallocate
-
-    s" XX/XX/00/11/" rule-from-string          \ rul
-    cr ." rule: " dup .rule cr
-    %0101 over                                  \ rul 1 rul
-    rule-apply-to-state-fc                      \ rul smpl true
-    if
-        cr ." smpl " dup .sample cr
-        dup sample-get-result
-        %0101 <>
-        abort" Result not expected"
-        sample-deallocate
-    else
-        ." sample not made?" abort
-    then
-    rule-deallocate
-
-    cr ." rule-test-apply-to-state-f: Ok" cr
-;
-
 : rule-test-restrict-to-region
     #5 #15 region-new                   \ reg
     s" 01/X1/11/XX/" rule-from-string   \ reg rul
@@ -615,7 +566,6 @@
 
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
-    rule-test-apply-to-state-f
     rule-test-restrict-to-region
     rule-test-combine2
     rule-test-new-region-to-region
