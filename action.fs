@@ -586,21 +586,18 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     cr ."           corners: "
 
-    over action-get-logical-structure   \ act0 crn-lst ls-lst
-    swap                                \ act0 ls-lst crn-lst
-
-    list-get-links                      \ act0 ls-lst crn-link
+    list-get-links                      \ act0 crn-link
     begin
         ?dup
     while
-        dup link-get-data               \ act0 ls-lst crn-link crnx
+        dup link-get-data               \ act0 crn-link crnx
         .corner
 
         link-get-next
         dup 0<> if cr #19 spaces then
     repeat
-                                        \ act0 ls-lst
-    2drop
+                                        \ act0
+    drop
 ;
 
 \ Return true if a square is a possible anchor for a given region.
@@ -1617,6 +1614,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-value
     assert-3os-is-region
+
+    dup action-calc-corners
 
     \ cr
     \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
