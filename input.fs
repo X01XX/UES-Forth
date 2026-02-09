@@ -296,7 +296,7 @@
     2dup s" mu" str=
     if
         2drop
-        memory-use-xt execute
+        struct-info-list-store struct-info-list-print-memory-use-xt execute
         true
         exit
     then

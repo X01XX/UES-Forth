@@ -81,3 +81,30 @@
     nip nip                             \ ret-lst
 ;
 
+: corner-list-find-corner ( sta1 crn0 -- crn t | f )
+    \ Check args.
+    assert-tos-is-corner-list
+    assert-nos-is-value
+
+    list-get-links                  \ sta1 crn-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ sta1 crn-link crn
+        corner-get-anchor-square    \ sta1 crn-link crn-sqr
+        square-get-state            \ sta1 crn-link crn-sta
+        #2 pick =                   \ sta1 crn-link bool
+        if
+            dup link-get-data       \ sta1 crn-link crn
+            nip nip                 \ crn
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                    \ sta1
+    drop
+    false
+;

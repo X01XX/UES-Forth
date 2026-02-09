@@ -129,6 +129,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 \ Split from region-new to allow adding an act0 in domain-new.
 \ The order of the values will determine how an X bit is displayed, 1 0 = x, 0 1 = X.
 : region-new2 ( u1 u0 -- reg )
+    depth 2 < abort" Too few argements"
 
     \ Allocate space.
     region-mma mma-allocate     \ u1 u0 reg

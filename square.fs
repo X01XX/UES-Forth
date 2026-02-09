@@ -313,7 +313,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     dup square-get-rules
     .rulestore
 
-    \ sqr0
+                            \ sqr0
     ."  rc "
     square-get-result-count .
 ;

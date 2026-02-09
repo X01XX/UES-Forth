@@ -78,8 +78,6 @@
 ' xtabort value action-get-corners-xt
 
 
-' xtabort value memory-use-xt
-
 ' xtabort value planstep-list-push-xt
 
 ' xtabort value planstep-new-xt
@@ -109,5 +107,8 @@
 
 ' xtabort value regioncorr-get-list-xt
 
-' xtabort value test-none-in-use-xt
+
+' xtabort value struct-info-list-project-deallocated-xt
+
+' xtabort value struct-info-list-print-memory-use-xt
 

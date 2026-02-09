@@ -217,7 +217,6 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     \ Set squares
     tuck                        \ addr s addr
     _group-set-squares          \ addr
-    \ cr ." group-new: " dup hex . decimal cr
 ;
 
 : group-deallocate ( grp0 -- )
@@ -334,11 +333,11 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-r-region     \ sqr1 grp0 sta sreg
     region-superset-of-state    \ sqr1 grp0 flag
-    0= if
+    if
+        2drop
+    else
         nip                     \ grp0
         group-recalc            \
-    else
-        2drop
     then
 ;
 
@@ -421,6 +420,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-region
     assert-3os-is-region
     \ cr ." group-calc-for-plansteps-fc:" cr
+
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
     abort" group-calc-for-plansteps-fc: region subset?"
@@ -436,6 +436,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-region
     assert-3os-is-region
     \ cr ." group-calc-for-steps-bc:" cr
+
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
     abort" group-calc-for-steps-bc: region subset?"
@@ -450,6 +451,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-tos-is-group
     assert-nos-is-changes
      \ cr ." group-calc-for-plansteps-by-changes:" cr
+
     over changes-null
     if
         2drop

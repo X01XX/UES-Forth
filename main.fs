@@ -25,11 +25,11 @@
 \ PlanStep   Plan   Group  Rate   RegionCorrRate  RegionCorr
 \ 37171,     37379, 43717, 41719, 41737,          47317
 \
-\ RuleCorr  Changescorr PathStep Plancorr Corner
-\ 53171,    53173,      53197,   53717,   53719
+\ RuleCorr  Changescorr PathStep Plancorr Corner Stack-info
+\ 53171,    53173,      53197,   53717,   53719, 53731
 \
 \ Struct ids not yet used:
-\ 53731, 59797, 61379, 61717, 61979.
+\ 59797, 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
 cr ." Starting vocabulary UES," cr
@@ -40,6 +40,10 @@ UES definitions
 
 decimal
 \ #2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
+
+0 value struct-info-list-store  \ Storage for a list containing info on all structs.
+                                \ Currently used for memory use print, and memory leak checking,
+                                \ freeing heap.
 
 include xtindirect.fs
 include bool.fs
@@ -118,73 +122,9 @@ include session.fs
 include input.fs
 
 include stackprint.fs
-
+include structinfo.fs
+include structinfolist.fs
 cs
-
-: memory-use
-    cr ." Memory use:"
-    cr #4 spaces ." Link mma:           " link-mma .mma-usage
-    cr #4 spaces ." List mma:           " list-mma .mma-usage
-    cr #4 spaces ." Region mma:         " region-mma .mma-usage
-    cr #4 spaces ." RegionCorr mma:     " regioncorr-mma .mma-usage
-    cr #4 spaces ." Rule mma:           " rule-mma .mma-usage
-    cr #4 spaces ." RuleStore mma:      " rulestore-mma .mma-usage
-    cr #4 spaces ." RuleCorr mma:       " rulecorr-mma .mma-usage
-    cr #4 spaces ." Square mma:         " square-mma .mma-usage
-    cr #4 spaces ." Corner mma:         " corner-mma .mma-usage
-    cr #4 spaces ." Sample mma:         " sample-mma .mma-usage
-    cr #4 spaces ." Changes mma:        " changes-mma .mma-usage
-    cr #4 spaces ." ChangesCorr mma:    " changescorr-mma .mma-usage
-    cr #4 spaces ." Group mma:          " group-mma .mma-usage
-    cr #4 spaces ." Need mma:           " need-mma .mma-usage
-    cr #4 spaces ." PlanStep mma:       " planstep-mma .mma-usage
-    cr #4 spaces ." PlanCorr mma:       " plancorr-mma .mma-usage
-    cr #4 spaces ." PathStep mma:       " pathstep-mma .mma-usage
-    cr #4 spaces ." Plan mma:           " plan-mma .mma-usage
-    cr #4 spaces ." Rate mma:           " rate-mma .mma-usage
-    cr #4 spaces ." RegionCorrRate mma: " regioncorrrate-mma .mma-usage
-    cr #4 spaces ." Action mma:         " action-mma .mma-usage
-    cr #4 spaces ." Domain mma:         " domain-mma .mma-usage
-    cr #4 spaces ." Session mma:        " session-mma .mma-usage
-    cr #4 spaces ." dstack: " .s
-;
-
-' memory-use to memory-use-xt
-
-\ Check that no struct instances are in use, stack is clear.
-: test-none-in-use
-    assert-link-mma-none-in-use
-    assert-list-mma-none-in-use
-    assert-region-mma-none-in-use
-    assert-regioncorr-mma-none-in-use
-    assert-rule-mma-none-in-use
-    assert-rulestore-mma-none-in-use
-    assert-rulecorr-mma-none-in-use
-    assert-square-mma-none-in-use
-    assert-corner-mma-none-in-use
-    assert-sample-mma-none-in-use
-    assert-changes-mma-none-in-use
-    assert-changescorr-mma-none-in-use
-    assert-group-mma-none-in-use
-    assert-need-mma-none-in-use
-    assert-planstep-mma-none-in-use
-    assert-pathstep-mma-none-in-use
-    assert-plan-mma-none-in-use
-    assert-plancorr-mma-none-in-use
-    assert-rate-mma-none-in-use
-    assert-regioncorrrate-mma-none-in-use
-    assert-action-mma-none-in-use
-    assert-domain-mma-none-in-use
-    assert-session-mma-none-in-use
-
-    depth 0<>
-    if
-        cr ." stack not empty " .s cr
-        abort
-    then
-;
-
-' test-none-in-use to test-none-in-use-xt
 
 \ Test files.
 include square_t.fs
@@ -207,56 +147,75 @@ cr ." main.fs"
 \ Init array-stacks.
 #3500 link-mma-init
 #1902 list-mma-init
-#3003 region-mma-init
-#0600 regioncorr-mma-init
-#0904 rule-mma-init
-#0505 rulestore-mma-init
-#0404 rulecorr-mma-init
-#0406 square-mma-init
-#0200 corner-mma-init
-#0250 sample-mma-init
-#0650 changes-mma-init
-#0450 changescorr-mma-init
-#0100 group-mma-init
-#0200 need-mma-init
-#0150 planstep-mma-init
-#0370 pathstep-mma-init
-#0150 plan-mma-init
-#0040 plancorr-mma-init
-#0100 rate-mma-init
-#0100 regioncorrrate-mma-init
-#0050 action-mma-init
-#0025 domain-mma-init
-#0001 session-mma-init
-cr
+list-new to struct-info-list-store
 
-\ Free heap memory before exiting.
-: free-heap ( -- )
-    cr ." Freeing heap memory"
-    list-mma mma-free
-    link-mma mma-free
-    region-mma mma-free
-    regioncorr-mma mma-free
-    rule-mma mma-free
-    rulestore-mma mma-free
-    rulecorr-mma mma-free
-    square-mma mma-free
-    corner-mma mma-free
-    sample-mma mma-free
-    changes-mma mma-free
-    changescorr-mma mma-free
-    group-mma mma-free
-    need-mma mma-free
-    planstep-mma mma-free
-    pathstep-mma mma-free
-    plan-mma mma-free
-    plancorr-mma mma-free
-    rate-mma mma-free
-    regioncorrrate-mma mma-free
-    action-mma mma-free
-    domain-mma mma-free
-    session-mma mma-free
-;
+#0030 struct-info-mma-init
+s" Link" link-mma link-id struct-info-new struct-info-list-store list-push-struct
+s" List" list-mma list-id struct-info-new struct-info-list-store list-push-end-struct
+s" Struct-info" struct-info-mma struct-info-id struct-info-new struct-info-list-store list-push-end-struct
+
+#3003 region-mma-init
+s" Region" region-mma region-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0600 regioncorr-mma-init
+s" RegionCorr" regioncorr-mma regioncorr-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0904 rule-mma-init
+s" Rule" rule-mma rule-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0505 rulestore-mma-init
+s" RuleStore" rulestore-mma rulestore-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0404 rulecorr-mma-init
+s" RuleCorr" rulecorr-mma rulecorr-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0406 square-mma-init
+s" Square" square-mma square-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0200 corner-mma-init
+s" Corner" corner-mma corner-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0250 sample-mma-init
+s" Sample" sample-mma sample-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0650 changes-mma-init
+s" Changes" changes-mma changes-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0450 changescorr-mma-init
+s" ChangesCorr" changescorr-mma changescorr-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0100 group-mma-init
+s" Group" group-mma group-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0200 need-mma-init
+s" Need" need-mma need-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0150 planstep-mma-init
+s" PlanStep" planstep-mma planstep-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0370 pathstep-mma-init
+s" PathStep" pathstep-mma pathstep-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0150 plan-mma-init
+s" Plan" plan-mma plan-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0040 plancorr-mma-init
+s" PlanCorr" plancorr-mma plancorr-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0100 rate-mma-init
+s" Rate" rate-mma rate-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0100 regioncorrrate-mma-init
+s" RegionCorrRate" regioncorrrate-mma regioncorrrate-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0050 action-mma-init
+s" Action" action-mma action-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0025 domain-mma-init
+s" Domain" domain-mma domain-id struct-info-new struct-info-list-store list-push-end-struct
+
+#0001 session-mma-init
+s" Session" session-mma session-id struct-info-new struct-info-list-store list-push-end-struct
 
 : init-main ( -- )
     \ Set up session.
@@ -391,15 +350,25 @@ cr
     repeat
 
     \ Clean up
-    memory-use
-    cr cr ." Deallocating ..." cr
+
+    \ Print memory use before deallocating.
+    cr struct-info-list-store struct-info-list-print-memory-use
+
+    cr ." Deallocating ..." cr
     current-session-deallocate
-    memory-use
-    test-none-in-use
+
+    \ Print memory use after deallocating.
+    cr struct-info-list-store struct-info-list-print-memory-use
+
+    \ Check for memory leak, or something on the Forth stack.
+    struct-info-list-store struct-info-list-project-deallocated-xt execute
+
+    \ Free heap.
+    \ struct-info-list-store struct-info-list-free-heap
 ;
 
 : all-tests
-    test-none-in-use
+    struct-info-list-store struct-info-list-project-deallocated-xt execute
 
     square-tests
     square-list-tests
@@ -416,5 +385,5 @@ cr
     plan-tests
     domain-tests
 
-    test-none-in-use
+    struct-info-list-store struct-info-list-project-deallocated-xt execute
 ;

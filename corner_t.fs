@@ -110,6 +110,10 @@
     need-list-deallocate
     over cr .domain cr
 
+    %0001 over action-find-corner               \ sess dom0 act0 | crn t | f
+    is-false abort" Corner 1 not found?"
+    cr .corner cr
+
     3drop
 
     current-session-deallocate

@@ -317,7 +317,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
 \ Create an session, given an instance ID.
 : current-session-new ( -- sess ) \ new session pushed onto session stack.
-    test-none-in-use-xt execute
+
+    struct-info-list-store struct-info-list-project-deallocated-xt execute
     
     \ cr ." current-session-new: start " .s cr
     \ Allocate space.
@@ -457,8 +458,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     session-mma mma-deallocate
 
     0 to current-session-store
-    
-    test-none-in-use-xt execute
+
+    struct-info-list-store struct-info-list-project-deallocated-xt execute
 ;
 
 : session-get-sample ( act2 dom1 sess0 -- sample )  \ Get a sample from an action in a domain.

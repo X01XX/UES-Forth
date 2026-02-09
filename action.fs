@@ -1049,8 +1049,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
             \ Set new action-logical-structure.
             #5 pick                                 \ act0 inc-lst link reg-lst lsl-lst new-reg-lst act0
-            tuck _action-update-logical-structure   \ act0 inc-lst link reg-lst lsl-lst act0
-            action-calc-corners                     \ act0 inc-lst link reg-lst lsl-lst
+            _action-update-logical-structure        \ act0 inc-lst link reg-lst lsl-lst
             drop                                    \ act0 inc-lst link reg-lst
             region-list-deallocate                  \ act0 inc-lst link
         else
@@ -1174,7 +1173,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Store new LS.
     over                                    \ act0 ls-new act0
     _action-update-logical-structure        \ act0
-    dup action-calc-corners                 \ act0
     drop
     \ cr ." _action-recalc-logical-structure: end" cr
 ;
@@ -1937,3 +1935,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip                                     \ ret-lst
 ;
 
+\ Return a corner matching a given anchor state.
+: action-find-corner ( sta1 act0 -- crn t | f )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+
+    action-get-corners          \ sta1 crn-lst
+    corner-list-find-corner
+;

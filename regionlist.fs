@@ -131,7 +131,7 @@
     then
                                             \ reg1 list0
 
-    \ reg1 list0
+    \ Add region to list.
     region-list-push
     true
 ;
@@ -178,7 +178,6 @@
 
     list-remove                         \ reg2 true | false
     if
-        \ cr ." sub reg removed: " dup .region cr
         region-deallocate
         true
     else
@@ -199,7 +198,6 @@
 
     list-remove                         \ reg2 true | false
     if
-        \ cr ." sup reg removed: " dup .region cr
         region-deallocate
         true
     else
@@ -227,13 +225,14 @@
     then
                                             \ reg1 list0
 
+    \ Remove all subsets.
     begin
         2dup                                \ reg1 list0 reg1 list0
         region-list-remove-subset           \ reg1 list0 | flag
     while
     repeat
 
-    \ reg1 list0
+    \ Add region to list.                   \ reg1 list0
     region-list-push
     true
 ;
@@ -257,14 +256,14 @@
         exit
     then
                                             \ reg1 list0
-
+    \ Remove all supersets.
     begin
         2dup                                \ reg1 list0 reg1 list0
         region-list-remove-superset         \ reg1 list0 | flag
     while
     repeat
 
-    \ reg1 list0
+    \ Store region in list.                 \ reg1 list0
     region-list-push
     true
 ;
@@ -279,7 +278,7 @@
     list-get-links          \ lst-n link
 
     begin
-        dup
+        ?dup
     while
         dup link-get-data       \ lst-n link region
         #2 pick                 \ lst-n link region lst-n
@@ -287,8 +286,7 @@
 
         link-get-next       \ lst-n link
     repeat
-    \ lst-n 0
-    drop
+                            \ lst-n
 ;
 
 \ Return a TOS region-list minus the NOS region.
@@ -305,35 +303,37 @@
     \ Scan through the given list.
     list-get-links                  \ ret-lst reg1 link
     begin
-        dup
+        ?dup
     while
         over                        \ ret-lst reg1 link reg1
         over link-get-data          \ ret-lst reg1 link reg1 reg2
 
         \ Test if equal
-        2dup region-eq              \ ret-lst reg1 link reg1 reg2 flag
+        2dup region-subset-of       \ ret-lst reg1 link reg1 reg2 flag
         if
-           2drop
             \ Skip, region does not appear in the result.
+            2drop
         else
             \ Check if they intersect
-            2dup region-intersects  \ ret-lst reg1 link reg1 reg2 flag
+            2dup region-intersects          \ ret-lst reg1 link reg1 reg2 flag
             if
-                \ They intersect, there will be same remainder.
-                region-subtract     \ ret-lst reg1 link remainder-lst
+                \ They intersect, there will be some remainder.
+                region-subtract             \ ret-lst reg1 link remainder-lst
+
                 \ Add remainders to the return list
-                dup list-get-links  \ ret-lst reg1 link r-lst link
+                dup list-get-links          \ ret-lst reg1 link r-lst link
                 begin
-                    dup
+                    ?dup
                 while
                     dup link-get-data       \ ret-lst reg1 link r-lst link reg2
                     #5 pick                 \ ret-lst reg1 link r-lst link reg2 ret-lst
                     region-list-push-nosubs \ ret-lst reg1 link r-lst link flag
                     drop                    \ ret-lst reg1 link r-lst link
+
                     link-get-next
                 repeat
-                                            \ ret-lst reg1 link r-lst 0
-                drop region-list-deallocate \ ret-lst reg1 link
+                                            \ ret-lst reg1 link r-lst
+                region-list-deallocate      \ ret-lst reg1 link
             else
                 \ Add whole region to the result.
                 nip                         \ ret-lst reg1 link reg2
@@ -343,10 +343,10 @@
             then
         then
 
-        link-get-next           \ ret-lst reg1 next-link-or-0
+        link-get-next
     repeat
-                                \ ret-lst reg1 0
-    2drop                       \ ret-lst
+                                \ ret-lst reg1
+    drop                        \ ret-lst
 ;
 
 \ ' region-list-subtract-region to region-list-subtract-region-xt
@@ -367,7 +367,7 @@
     \ Process each region in lst1.
     list-get-links                  \ lst0 link
     begin
-        dup
+        ?dup
     while
         dup link-get-data           \ lst0 link region
         rot                         \ link region lst0
@@ -378,8 +378,7 @@
         region-list-deallocate      \ lst0-new link
         link-get-next
     repeat
-    \ lst0-new link(0)
-    drop
+                                    \ lst0-new
 ;
 
 \ Return a region-list complement, that is max-region minus region-list.
@@ -423,20 +422,19 @@
     list-get-links                  \ list1 link0
     list-new -rot                   \ ret-list list1 link0
     begin
-        dup
+        ?dup
     while
                                     \ ret-list list1 link0
         dup link-get-data           \ ret-list list1 link0 data0
         #2 pick list-get-links      \ ret-list list1 link0 data0 link1
 
         begin
-            dup
+            ?dup
         while
             dup link-get-data       \ ret-list list1 link0 data0 link1 data1
             #2 pick                 \ ret-list list1 link0 data0 link1 data1 data0
             region-intersection     \ ret-list list1 link0 data0 link1, reg-int true | false
             if
-                \ cr ." reg int: " dup .region cr
                                         \ ret-list list1 link0 data0 link1 reg-int
                 dup                     \ ret-list list1 link0 data0 link1 reg-int reg-int
                 #6 pick                 \ ret-list list1 link0 data0 link1 reg-int reg-int ret-list
@@ -448,13 +446,14 @@
                 then
             then
                                     \ ret-list list1 link0 data0 link1
-            link-get-next           \ ret-list list1 link0 data0 link1-next
+            link-get-next
         repeat
-        2drop                       \ ret-list list1 link0
-        link-get-next               \ ret-list list1 link0-next
+        drop                        \ ret-list list1 link0
+
+        link-get-next
     repeat
-    \ ret-list list1 0
-    2drop                           \ ret-list
+                                    \ ret-list list1
+    drop
 ;
 
 \ Return true if a region is in a region-list.
@@ -633,7 +632,7 @@
     0<>                     \ flag
 ;
 
-\ Return true if to region-lists are equal.
+\ Return true if two region-lists are equal.
 : region-list-eq ( lst1 lst0 -- flag )
     \ Check args.
     assert-tos-is-region-list
@@ -668,7 +667,7 @@
             exit
         then
 
-        link-get-next                   \ lst1 link
+        link-get-next
     repeat
                                         \ lst1
     drop
@@ -715,28 +714,28 @@
     assert-nos-is-value
 
     \ Init count.
-    0 -rot                              \ cnt sta lst0
+    0 swap                              \ sta cnt lst0
 
     \ Prep for loop.
-    list-get-links                      \ cnt sta link
+    list-get-links                      \ sta cnt link
 
     \ Check each region.
     begin
         ?dup
     while
         \ Check the current region.
-        over                            \ cnt sta link sta1
-        over link-get-data              \ cnt sta link sta1 regx
-        region-superset-of-state        \ cnt sta link flag
-        if                              \ cnt sta link
+        #2 pick                         \ sta cnt link sta1
+        over link-get-data              \ sta cnt link sta1 regx
+        region-superset-of-state        \ sta cnt link flag
+        if                              \ sta cnt link
             \ Inc counter
-            rot 1 + -rot                \ cnt sta link
+            swap 1+ swap                \ sta cnt link
         then
 
         link-get-next
     repeat
 
-    drop                                \ cnt
+    nip                                 \ cnt
 ;
 
 \ Return true if a state is in any region.
@@ -826,7 +825,7 @@
 
         link-get-next
     repeat
-                        \ lst0
+                            \ lst0
     drop
 ;
 
@@ -1118,28 +1117,28 @@
     assert-nos-is-region
 
     \ Init count.
-    0 -rot                              \ cnt reg1 lst0
+    0 swap                              \ reg1 cnt lst0
 
     \ Prep for loop.
-    list-get-links                      \ cnt reg1 link
+    list-get-links                      \ reg1 cnt link
 
     \ Check each region.
     begin
         ?dup
     while
         \ Check the current region.
-        over                            \ cnt reg1 link reg1
-        over link-get-data              \ cnt reg1 link reg1 regx
-        region-intersects               \ cnt reg1 link flag
-        if                              \ cnt reg1 link
+        #2 pick                         \ reg1 cnt link reg1
+        over link-get-data              \ reg1 cnt link reg1 regx
+        region-intersects               \ reg1 cnt link flag
+        if                              \ reg1 cnt link
             \ Inc counter
-            rot 1 + -rot                \ cnt reg1 link
+            swap 1+ swap                \ reg1 cnt link
         then
 
         link-get-next
     repeat
 
-    drop                                \ cnt
+    nip                                 \ cnt
 ;
 
 \ Return a list of stats, from a given list, that are a subset of any region.
@@ -1172,7 +1171,6 @@
     repeat
                                         \ sta-lst1 reg-lst0 ret-lst
     nip nip
-    \ cr ." region-list-states-not-in: returns: " dup .value-list cr
 ;
 
 \ Return the union of all region x masks.
