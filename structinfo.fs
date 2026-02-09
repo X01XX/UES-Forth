@@ -63,6 +63,8 @@ struct-info-mma-disp        cell+   constant struct-info-name-disp      \ Up to 
     struct-info-mma-disp + @
 ;
 
+' struct-info-get-mma to struct-info-get-mma-xt
+
 \ Set struct-info mma cell.
 : _struct-info-set-mma ( mma struct-info -- )
     struct-info-mma-disp + !
@@ -72,6 +74,8 @@ struct-info-mma-disp        cell+   constant struct-info-name-disp      \ Up to 
 : struct-info-get-name ( struct-info -- c-addr u )
     struct-info-name-disp + string@
 ;
+
+' struct-info-get-name to struct-info-get-name-xt
 
 \ Set struct-info name cell.
 : _struct-info-set-name ( c-addr u si-addr -- )

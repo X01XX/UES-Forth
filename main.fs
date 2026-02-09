@@ -1,5 +1,7 @@
 
-\ For use outside of the GPL 3.0 license, except for stack.fs mm_array.fs link.fs list.fs tools.fs stackprint.fs, struct.fs, structlist.fs
+\ For use outside of the GPL 3.0 license,
+\ except for stack.fs, mm_array.fs, link.fs, list.fs, tools.fs, stackprint.fs, struct.fs,
+\            structlist.fs, structinfo.fs, and structinfolist.fs,
 \ contact the Wisconsin Alumni Research Foundation (WARF).
 
 \ The Linux command: alias words='grep "^: "'

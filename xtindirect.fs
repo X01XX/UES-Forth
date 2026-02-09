@@ -112,3 +112,8 @@
 
 ' xtabort value struct-info-list-print-memory-use-xt
 
+' xtabort value struct-info-get-mma-xt
+
+' xtabort value struct-info-get-name-xt
+
+
