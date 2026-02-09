@@ -45,7 +45,7 @@ decimal
 
 0 value struct-info-list-store  \ Storage for a list containing info on all structs.
                                 \ Currently used for memory use print, and memory leak checking,
-                                \ freeing heap.
+                                \ freeing heap, printing the Forth stack.
 
 include xtindirect.fs
 include bool.fs

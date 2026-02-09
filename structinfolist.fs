@@ -104,7 +104,7 @@
     swap spaces 
     116 spaces ." Total: " dup #8 dec.r
     cell / 8 spaces #6 dec.r
-    cr ."     Forth stack: <" depth dup abs 0 <# #S rot sign #> type ." > " .stack-structs cr
+    cr .stack-structs cr
 ;
 
 ' struct-info-list-print-memory-use to struct-info-list-print-memory-use-xt
@@ -146,7 +146,6 @@
             swap
             mma-in-use                      \ snf-lst0 snf-link u
             0<> if
-                cr ." at 1 " .stack-structs cr
                 over link-get-data
                 struct-info-get-name cr type space ." instances not fully deallocated" cr
                 abort

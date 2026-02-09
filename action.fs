@@ -1612,7 +1612,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-value
     assert-3os-is-region
-
     dup action-calc-corners
 
     \ cr
