@@ -15,7 +15,7 @@ To run:
 
 A program that can learn (at a low level), avoid negative states, seek positive states, and run
 on a Raspberry Pi class computer.
-
+<pre>
 Understanding = ~A + ~B.
 
 A is different from B in some way.
@@ -35,3 +35,4 @@ will be in only one region, a defining region, else it will not be a valid corne
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
 
 Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
+</pre>
