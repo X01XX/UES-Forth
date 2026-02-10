@@ -20,7 +20,8 @@ Understanding = ~A + ~B.
 
 A is different from B in some way.
   
-~A + ~B covers everything, with regions containing A, regions containing B, regions containing neither, NO regions containing A and B.
+~A + ~B covers everything, with regions containing A, regions containing B, regions containing neither,
+NO regions containing A and B.
 Similar calculations of other pairs, exhibiting the same difference, can be intersected for a finer understanding.
 Everything intersecting everything, is still everything. The arrangement of the underlying regions changes.
 
