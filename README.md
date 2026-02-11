@@ -16,7 +16,7 @@ To run:
 A program that can learn (at a low level), avoid negative states, seek positive states, and run
 on a Raspberry Pi class computer.
 <pre>
-Understanding = ~A + ~B.
+Understanding = ~A + ~B
 
 A is different from B in some way.
   
@@ -25,12 +25,12 @@ NO regions containing A and B.
 Similar calculations of other pairs, exhibiting the same difference, can be intersected for a finer understanding.
 Everything intersecting everything, is still everything. The arrangement of the underlying regions changes.
 
-The results are better with adjacent pairs, points on a logical <i>edge</i>.
-The results are even better with multiple adjacencies, like (~A + ~B) & (~A + ~C), a logical <i>corner</i>.
+The results are better with adjacent pairs, points on a logical <i>Edge</i>.
+The results are even better with multiple adjacencies, like (~A + ~B) & (~A + ~C), a logical <i>Corner</i>.
 The results are even better with a cluster of corners, like (~A + ~B) & (~A + ~C) & (~C + ~D).
-The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>anchors</i>.
+The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>Anchors</i>.
 
-In the results, regions not completely overlapped by other regions are <i>defining</i> regions, others are placeholders.
+In the results, regions not completely overlapped by other regions are <i>Defining</i> regions, others are placeholders.
 When well developed, all adjacent disimmilar samples tested, the anchor of a corner
 will be in only one region, a defining region, else it will not be a valid corner.
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
