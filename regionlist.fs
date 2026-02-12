@@ -1255,28 +1255,20 @@
 ;
 
 \ Return true if a (tos) region-list is a subset of another (nos) list.
-: region-list-subset-of ( reg-sup-lst reg-sub-lst -- bool )
+: region-list-set-subset ( reg-sup-lst reg-sub-lst -- bool )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    list-get-links          \ reg-sup-lst sub-link
-    begin
-        ?dup
-    while
-        dup link-get-data   \ reg-sup-lst sub-link sub-reg
-        #2 pick             \ reg-sup-lst sub-link sub-reg reg-sup-lst
-        region-list-member  \ reg-sup-lst sub-link bool
-        if
-        else
-            2drop
-            false
-            exit
-        then
-
-        link-get-next
-    repeat
-                            \ reg-sup-lst
-    drop
-    true
+    swap                        \  reg-sub-lst reg-sup-lst
+    \ Get sub-list minus sup-list.
+    region-list-set-difference  \ dif-lst
+    dup list-is-empty
+    if
+        list-deallocate
+        true
+    else
+        region-list-deallocate
+        false
+    then
 ;

@@ -22,18 +22,13 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     rule-struct-number-cells swap mma-new to rule-mma
 ;
 
-: assert-rule-mma-none-in-use ( -- )    \ Check all rule array items are unallocated.
-    rule-mma mma-in-use 0<>
-    abort" rule-mma use GT 0"
-;
-
 \ Check instance type.
 
 : is-allocated-rule ( addr -- flag )    \ Check if an address is within the rule array.
     \ Insure the given addr cannot be an invalid addr.
     dup rule-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         rule-id =
     else
         drop false

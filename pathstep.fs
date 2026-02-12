@@ -24,18 +24,12 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     pathstep-struct-number-cells swap mma-new to pathstep-mma
 ;
 
-\ Check pathstep mma usage.
-: assert-pathstep-mma-none-in-use ( -- )
-    pathstep-mma mma-in-use 0<>
-    abort" pathstep-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-pathstep ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup pathstep-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         pathstep-id =
     else
         drop false

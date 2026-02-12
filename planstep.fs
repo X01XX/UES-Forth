@@ -25,18 +25,12 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     planstep-struct-number-cells swap mma-new to planstep-mma
 ;
 
-\ Check planstep mma usage.
-: assert-planstep-mma-none-in-use ( -- )
-    planstep-mma mma-in-use 0<>
-    abort" planstep-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-planstep ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup planstep-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         planstep-id =
     else
         drop false

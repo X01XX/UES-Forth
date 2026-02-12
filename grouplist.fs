@@ -11,6 +11,17 @@
     then
 ;
 
+\ Check if nos is an empty list, or has a group instance as its first item.
+: assert-nos-is-group-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-group
+        drop
+    then
+;
+
 \ Deallocate a group list.
 : group-list-deallocate ( lst0 -- )
     \ Check arg.
@@ -74,15 +85,15 @@
     list-push-struct
 ;
 
-\ Remove a group from a group-list, and deallocate.
+\ Delete a group from a group-list, and deallocate.
 \ xt signature is ( item list-data -- flag )
 \ Return true if a group was removed.
-: group-list-remove ( reg list -- bool )
+: group-list-delete ( reg1 grp-list0 -- bool )
     \ Check args.
     assert-tos-is-group-list
     assert-nos-is-region
 
-    cr ." removing group " over .region cr
+    cr ." deleting group " over .region cr
     [ ' group-region-eq ] literal   \ reg list xt
     -rot                            \ xt reg list
 

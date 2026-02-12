@@ -19,18 +19,12 @@
     rate-struct-number-cells swap mma-new to rate-mma
 ;
 
-\ Check rate mma usage.
-: assert-rate-mma-none-in-use ( -- )
-    rate-mma mma-in-use 0<>
-    abort" rate-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-rate ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup rate-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         rate-id =
     else
         drop false

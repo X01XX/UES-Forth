@@ -24,18 +24,12 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
     sample-struct-number-cells swap mma-new to sample-mma
 ;
 
-\ Check sample mma usage.
-: assert-sample-mma-none-in-use ( -- )
-    sample-mma mma-in-use 0<>
-    abort" sample-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-sample ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup sample-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         sample-id =
     else
         drop false

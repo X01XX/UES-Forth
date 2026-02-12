@@ -31,18 +31,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     session-struct-number-cells swap mma-new to session-mma
 ;
 
-\ Check session mma usage.
-: assert-session-mma-none-in-use ( -- )
-    session-mma mma-in-use 0<>
-    abort" session-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-session ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup session-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         session-id =
     else
         drop false

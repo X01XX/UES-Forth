@@ -48,19 +48,13 @@ list-header-disp    cell+   constant list-links-disp
     list-struct-number-cells swap mma-new  to list-mma
 ;
 
-\ Check list mma usage.
-: assert-list-mma-none-in-use ( -- )
-    list-mma mma-in-use 0<>
-    abort" list-mma use GT 0"
-;
-
 \  Return true if TOS is an allocated list.
 : is-allocated-list ( list -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup list-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
-        list-id =       \ An unallocated instance should have an ID of zero.
+        struct-get-id
+        list-id =
     else
         drop false
     then

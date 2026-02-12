@@ -18,18 +18,12 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     rulecorr-struct-number-cells swap mma-new to rulecorr-mma
 ;
 
-\ Check rule mma usage.
-: assert-rulecorr-mma-none-in-use ( -- )
-    rulecorr-mma mma-in-use 0<>
-    abort" rulecorr-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-rulecorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup rulecorr-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         rulecorr-id =
     else
         drop false

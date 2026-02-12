@@ -24,21 +24,12 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     group-struct-number-cells swap mma-new to group-mma
 ;
 
-\ Check group mma usage.
-: assert-group-mma-none-in-use ( -- )
-    group-mma mma-in-use 0<>
-    if
-        ." group-mma use GT 0"
-        abort
-    then
-;
-
 \ Check instance type.
 : is-allocated-group ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup group-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         group-id =
     else
         drop false

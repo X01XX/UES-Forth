@@ -19,18 +19,12 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     regioncorr-struct-number-cells swap mma-new to regioncorr-mma
 ;
 
-\ Check region mma usage.
-: assert-regioncorr-mma-none-in-use ( -- )
-    regioncorr-mma mma-in-use 0<>
-    abort" regioncorr-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-regioncorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup regioncorr-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         regioncorr-id =
     else
         drop false

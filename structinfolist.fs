@@ -15,7 +15,7 @@
 \ Deallocate a struct-info list.
 : struct-info-list-deallocate ( struct-info-lst -- )
     dup struct-get-use-count                        \ struct-info-lst uc
-    2 < if
+    #2 < if
         [ ' struct-info-deallocate ] literal over   \ struct-info-lst xt struct-info-lst
         list-apply                                  \ Deallocate struct-info instances in the list.
     then
@@ -82,7 +82,7 @@
         dup                         \ max tot si-link six six
         struct-info-get-name        \ max tot si-link six c-addr u
         tuck                        \ max tot si-link six u c-addr u
-        cr 4 spaces type            \ max tot si-link six u
+        cr #4 spaces type           \ max tot si-link six u
         [char] : emit space
         #4 pick swap  - spaces      \ max tot si-link six
 
@@ -102,8 +102,8 @@
                                     \ max tot
     cr
     swap spaces 
-    116 spaces ." Total: " dup #8 dec.r
-    cell / 8 spaces #6 dec.r
+    #116 spaces ." Total: " dup #8 dec.r
+    cell / #9 spaces #6 dec.r
     cr .stack-structs cr
 ;
 
@@ -124,19 +124,19 @@
         swap struct-info-get-inst-id        \ snf-lst0 snf-link snf-mma snf-id
         case
             \ Handle links.
-            17137   of
+            #17137   of
                         mma-in-use          \ snf-lst0 snf-link in-use
                         #2 pick             \ snf-lst0 snf-link in-use snf-lst0
                         list-get-length     \ snf-lst0 snf-link in-use lst-len
                         <> abort" Links left over"
                     endof
             \ Handle lists.
-            17971   of
+            #17971   of
                         mma-in-use          \ snf-lst0 snf-link in-use
                         1 <> abort" Lists left over"
                     endof
             \ Handle struct-info.
-            53731   of
+            #53731   of
                         mma-in-use          \ snf-lst0 snf-link in-use
                         #2 pick             \ snf-lst0 snf-link in-use snf-lst0
                         list-get-length     \ snf-lst0 snf-link in-use lst-len

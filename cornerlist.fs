@@ -11,6 +11,17 @@
     then
 ;
 
+\ Check if nos is an empty list, or has a corner instance as its first item.
+: assert-nos-is-corner-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty
+    if
+        over list-get-links link-get-data
+        assert-tos-is-corner
+        drop
+    then
+;
+
 \ Deallocate a corner list.
 : corner-list-deallocate ( crn-lst0 -- )
     \ Check arg.

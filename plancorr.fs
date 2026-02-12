@@ -18,18 +18,12 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     plancorr-struct-number-cells swap mma-new to plancorr-mma
 ;
 
-\ Check plan mma usage.
-: assert-plancorr-mma-none-in-use ( -- )
-    plancorr-mma mma-in-use 0<>
-    abort" plancorr-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-plancorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup plancorr-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         plancorr-id =
     else
         drop false

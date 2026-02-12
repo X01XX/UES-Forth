@@ -44,8 +44,8 @@ decimal
 \ #2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
 
 0 value struct-info-list-store  \ Storage for a list containing info on all structs.
-                                \ Currently used for memory use print, and memory leak checking,
-                                \ freeing heap, printing the Forth stack.
+                                \ Used for memory use print, memory leak checking,
+                                \ freeing heap, struct-aware printing of the Forth stack.
 
 include xtindirect.fs
 include bool.fs
@@ -154,7 +154,7 @@ list-new to struct-info-list-store
 #0030 struct-info-mma-init
 s" Link" link-mma link-id struct-info-new struct-info-list-store list-push-struct
 s" List" list-mma list-id struct-info-new struct-info-list-store list-push-end-struct
-s" Struct-info" struct-info-mma struct-info-id struct-info-new struct-info-list-store list-push-end-struct
+s" StructInfo" struct-info-mma struct-info-id struct-info-new struct-info-list-store list-push-end-struct
 
 #3003 region-mma-init
 s" Region" region-mma region-id struct-info-new struct-info-list-store list-push-end-struct

@@ -279,7 +279,7 @@
     else
         cr ." reg NOT pushed"
         cr dup .region-list cr
-        dup list-get-length 2 <> abort" List not 2 in length?"
+        dup list-get-length #2 <> abort" List not 2 in length?"
     then
 
     region-list-deallocate

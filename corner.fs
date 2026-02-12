@@ -24,18 +24,12 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
     corner-struct-number-cells swap mma-new to corner-mma
 ;
 
-\ Check corner mma usage.
-: assert-corner-mma-none-in-use ( -- )
-    corner-mma mma-in-use 0<>
-    abort" corner-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-corner ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup corner-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         corner-id =
     else
         drop false
@@ -398,19 +392,9 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
 
         dup                                 \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax stax
         #4 pick                             \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax stax act0
-        action-find-square-xt execute       \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax, sqrx t | f
-        if
-            square-get-pnc                  \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax pnc
-            if
-                false                       \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax false
-            else
-                true                        \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax true
-            then
-        else
-            true                            \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax true
-        then
+        action-state-confirmed-xt execute   \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax bool
 
-        if
+        is-false if
             \ Add need for sample.
             need-type-cds swap              \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link ned-type stax
             #4 pick                         \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link ned-type stax act0

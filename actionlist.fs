@@ -31,6 +31,9 @@
 
 \ Deallocate an action list.
 : action-list-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-action-list
+
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
@@ -45,7 +48,7 @@
 
 : action-list-push-end ( actx act-lst -- )
     \ Check args.
-    assert-tos-is-list
+    assert-tos-is-action-list
     assert-nos-is-action
 
     list-push-end-struct
@@ -54,7 +57,7 @@
 \ Find a action in a list, by instance id, if any.
 : action-list-find ( id1 list0 -- dom true | false )
     \ Check arg.
-    assert-tos-is-list
+    assert-tos-is-action-list
 
     [ ' action-id-eq ] literal -rot list-find
 ;

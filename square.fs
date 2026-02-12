@@ -24,18 +24,12 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     square-struct-number-cells swap mma-new to square-mma
 ;
 
-\ Check square mma usage.
-: assert-square-mma-none-in-use ( -- )
-    square-mma mma-in-use 0<>
-    abort" square-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-square ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup square-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         square-id =
     else
         drop false

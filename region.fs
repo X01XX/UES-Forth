@@ -30,12 +30,6 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     region-struct-number-cells swap mma-new to region-mma
 ;
 
-\ Check region mma usage.
-: assert-region-mma-none-in-use ( -- )
-    region-mma mma-in-use 0<>
-    abort" region-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-region ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
@@ -129,7 +123,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 \ Split from region-new to allow adding an act0 in domain-new.
 \ The order of the values will determine how an X bit is displayed, 1 0 = x, 0 1 = X.
 : region-new2 ( u1 u0 -- reg )
-    depth 2 < abort" Too few argements"
+    depth #2 < abort" Too few argements"
 
     \ Allocate space.
     region-mma mma-allocate     \ u1 u0 reg

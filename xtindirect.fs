@@ -77,6 +77,8 @@
 
 ' xtabort value action-get-corners-xt
 
+' xtabort value action-state-confirmed-xt
+
 
 ' xtabort value planstep-list-push-xt
 

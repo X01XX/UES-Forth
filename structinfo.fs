@@ -30,7 +30,7 @@ struct-info-mma-disp        cell+   constant struct-info-name-disp      \ Up to 
         drop false exit
     then
     
-    struct-get-id   \ Here the fetch could abort on an invalid address, without the previous check.
+    struct-get-id
     struct-info-id =
 ;
 
@@ -38,12 +38,6 @@ struct-info-mma-disp        cell+   constant struct-info-name-disp      \ Up to 
 : assert-tos-is-struct-info ( arg0 --  arg0 )
     dup is-allocated-struct-info 0=
     abort" tos is not an allocated struct-info."
-;
-
-\ Check list mma usage.
-: assert-struct-info-mma-none-in-use ( -- )
-    struct-info-mma mma-in-use 0<>
-    abort" struct-info-mma use GT 0"
 ;
 
 \ Start accessors.
@@ -96,7 +90,7 @@ struct-info-mma-disp        cell+   constant struct-info-name-disp      \ Up to 
 
 \ Return a new struct-info struct instance address, with given data value.
 : struct-info-new ( c-addr u struct-mma struct-id -- si-addr )
-    depth 4 < abort" struct-info-new: too few items on stack"
+    depth #4 < abort" struct-info-new: too few items on stack"
 
     struct-info-mma mma-allocate    \ str-addr len si-addr
 

@@ -19,18 +19,12 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     changescorr-struct-number-cells swap mma-new to changescorr-mma
 ;
 
-\ Check changescorr mma usage.
-: assert-changescorr-mma-none-in-use ( -- )
-    changescorr-mma mma-in-use 0<>
-    abort" changescorr-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-changescorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup changescorr-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         changescorr-id =
     else
         drop false

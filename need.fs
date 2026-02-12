@@ -38,18 +38,12 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     need-struct-number-cells swap mma-new to need-mma
 ;
 
-\ Check need mma usage.
-: assert-need-mma-none-in-use ( -- )
-    need-mma mma-in-use 0<>
-    abort" need-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-need ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup need-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         need-id =
     else
         drop false

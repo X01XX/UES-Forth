@@ -25,18 +25,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     action-struct-number-cells swap mma-new to action-mma
 ;
 
-\ Check action mma usage.
-: assert-action-mma-none-in-use ( -- )
-    action-mma mma-in-use 0<>
-    abort" action-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-action ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup action-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         action-id =
     else
         drop false
@@ -88,7 +82,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ' action-get-inst-id to action-get-inst-id-xt
 
 \ Set the instance ID of an action instance, use only in this file.
-: action-set-inst-id ( u1 act0 -- )
+: _action-set-inst-id ( u1 act0 -- )
     \ Check args.
     assert-tos-is-action
     \ assert-nos-is-value
@@ -118,6 +112,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-set-parent-domain ( dom act0 -- )
     \ Check args.
     assert-tos-is-action
+    assert-nos-is-domain-xt execute
 
     action-parent-domain-disp + \ Add offset.
     !                           \ Set the field.
@@ -133,17 +128,17 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Set the square-list of an action instance, use only in this file.
-: _action-set-squares ( lst1 act0 -- )
+: _action-set-squares ( sqr-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-list
+    assert-nos-is-square-list
 
     action-squares-disp +   \ Add offset.
     !struct                 \ Set the field.
 ;
 
 \ Return the incompatible-pairs region-list from an action instance.
-: action-get-incompatible-pairs ( addr -- lst )
+: action-get-incompatible-pairs ( act0 -- reg-lst )
     \ Check arg.
     assert-tos-is-action
 
@@ -152,17 +147,17 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Set the incompatible-pairs region-list of an action instance, use only in this file.
-: _action-set-incompatible-pairs ( u1 addr -- )
+: _action-set-incompatible-pairs ( reg-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-list
+    assert-nos-is-region-list
 
     action-incompatible-pairs-disp +    \ Add offset.
     !struct                             \ Store it.
 ;
 
 \ Return the logical-structure region-list from an action instance.
-: action-get-logical-structure ( addr -- lst )
+: action-get-logical-structure ( act0 -- reg-lst )
     \ Check arg.
     assert-tos-is-action
 
@@ -173,10 +168,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ' action-get-logical-structure to action-get-logical-structure-xt
 
 \ Set the logical-structure region-list of an action instance, use only in this file.
-: _action-set-logical-structure ( new-ls addr -- )
+: _action-set-logical-structure ( reg-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-list
+    assert-nos-is-region-list
 
     \ Set new LS.
     action-logical-structure-disp + \ Add offset.
@@ -185,7 +180,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 
 \ Return the group-list from an action instance.
-: action-get-groups ( act0 -- lst )
+: action-get-groups ( act0 -- grp-lst )
     \ Check arg.
     assert-tos-is-action
 
@@ -194,10 +189,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Set the group-list of an action instance, use only in this file.
-: _action-set-groups ( lst1 act0 -- )
+: _action-set-groups ( grp-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-list
+    assert-nos-is-group-list
 
     action-groups-disp +    \ Add offset.
     !struct                 \ Set the field.
@@ -222,7 +217,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Return the defining-regions region-list from an action instance.
-: action-get-defining-regions ( addr -- lst )
+: action-get-defining-regions ( act0 -- reg-lst )
     \ Check arg.
     assert-tos-is-action
 
@@ -231,10 +226,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Set the defining-regions region-list of an action instance, use only in this file.
-: _action-set-defining-regions ( u1 addr -- )
+: _action-set-defining-regions ( reg-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-list
+    assert-nos-is-region-list
 
     action-defining-regions-disp +  \ Add offset.
     !struct                         \ Store it.
@@ -262,19 +257,21 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip
 ;
 
-: _action-delete-group-if-exists ( reg1 act0 -- flag )
+\ Remove a group with a given region.
+: _action-delete-group ( reg1 act0 -- flag )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
 
-    \ If group exists, delete it.
+    \ Check if group exists.
     2dup                                \ reg1 act0 reg1 act0
     action-get-groups                   \ reg1 act0 reg1 grp-lst
     group-list-member                   \ reg1 act0 flag
     if
+        \ Delete group.
         action-get-groups               \ reg1 grp-lst
-        group-list-remove               \ flag
-        0= abort" Group remove failed?"
+        group-list-delete               \ flag
+        0= abort" Group delete failed?"
         true
     else
         2drop
@@ -283,7 +280,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Update defining-regions.
-\ First calc-update logical-structure, then calc defining regions.
 : _action-update-defining-regions ( reg-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
@@ -327,7 +323,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Update the logical-structure region-list of an action instance, use only in this file.
-\ Deallocate the old list last, so the instance field is never invalid.
 : _action-update-logical-structure ( new-ls act0 -- )
     \ cr ." _action-update-logical-structure: start"  cr
     \ Check args.
@@ -368,7 +363,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
         \ If group exists, delete it.
         #5 pick                         \ act0 old-lst' new-lst old-gone' link old-ls-reg act0
-        _action-delete-group-if-exists  \ act0 old-lst' new-lst old-gone' link flag
+        _action-delete-group            \ act0 old-lst' new-lst old-gone' link flag
         if
             cr #4 spaces dup link-get-data .region
             space ." deleted group"
@@ -434,7 +429,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                     \ If group exists, delete it.
                     dup link-get-data               \ act0 link region
                     #2 pick                         \ act0 link region act0
-                    _action-delete-group-if-exists  \ act0 link flag
+                    _action-delete-group            \ act0 link flag
                     if                              \ act0 link
                         space ." deleted group"
                     then
@@ -467,7 +462,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-set-corners ( crn-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-list
+    assert-nos-is-corner-list
 
     action-corners-disp +  \ Add offset.
     !struct                 \ Set the field.
@@ -477,7 +472,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-update-corners ( crn-lst1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    assert-nos-is-list
+    assert-nos-is-corner-list
 
     dup action-get-corners -rot    \ prev-lst crn-lst1 act0
 
@@ -513,7 +508,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over                                \ xt1 dom0 act dom0
     domain-get-number-actions-xt        \ xt1 dom0 act dom0 xt
     execute                             \ xt1 dom0 act na
-    over action-set-inst-id             \ xt1 dom0 act
+    over _action-set-inst-id            \ xt1 dom0 act
 
     \ Set xt
     rot over                            \ dom0 act xt1 act
@@ -554,10 +549,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Set group list.
     list-new                            \ act lst
-    over _action-set-groups             \ act
+    over
+    _action-set-groups             \ act
 
     \ Init corner list.
-    list-new
+    list-new                            \ act lst
     over _action-set-corners            \ act
 ;
 
@@ -601,6 +597,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Return true if a square is a possible anchor for a given region.
+\ All external, adjacent, squares should be incompatible, or not yet sampled enough.
 : action-square-possible-anchor-region ( reg2 sqr1 act0 -- bool )
     \ Check args.
     assert-tos-is-action
@@ -651,8 +648,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     true
 ;
 
-\  Given a list of Locical Structure regions a square is in,
-\ return a list of regions where it may be a corner of one ofe the regions.
+\ Given a list of Locical Structure regions a square is in,
+\ return a list of regions where it may be a corner of one of the regions.
 : action-square-possible-anchor ( reg-lst2 sqr1 act0 -- reg-lst t | f )
     \ Check args.
     assert-tos-is-action
@@ -695,8 +692,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 \ Calc corners and set action-corners field.
 \ Find all corners, and states with only one disimilar, near by,  square.
-\ Sort by the number of Logical Structure regions the achor square is in, lowest first.
-\ Choose corners by order in list, and not having already chosen corners in a subset list of LS regions.
+\ Sort by the number of Logical Structure regions the anchor square is in, lowest first.
+\ Filter out possible corners that have an LS region list that is a set-superset of
+\ possible corners earlier in the list.
 : action-calc-corners ( act0 -- )
     \ Check arg.
     assert-tos-is-action
@@ -711,6 +709,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Prep for each state loop.
     dup list-get-links                      \ act0 crn-lst' inc-lst ls-lst inc-stas' inc-sta-link
 
+    \ Get list of possible corners.
     begin
         ?dup
     while
@@ -796,6 +795,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     list-deallocate                         \ act0 crn-lst' inc-lst ls-lst
     2drop                                   \ act0 crn-lst'
 
+    \ Sort possible corners, smallest number of LS regions first.
     [ ' corner-compare-number-regions ] literal over list-sort    \ act0 crn-lst'
 
     \ Select corners to keep.
@@ -822,12 +822,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         dup corner-get-anchor-square        \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx anc-sqr
         square-get-state                    \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx anc-sta
 
-        \ Getregions the corner anchor state is in.
+        \ Get regions the corner anchor state is in.
         #3 pick                             \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx anc-sta ls-lst
         region-list-regions-state-in        \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst'
 
-        \ Check if a subset exists in reg-lol
-        [ ' region-list-subset-of ] literal \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' xt
+        \ Check if a set-subset exists in reg-lol
+        [ ' region-list-set-subset ] literal \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' xt
         over                                \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' xt reg-lst'
         #8 pick                             \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' xt reg-lst' reg-lol'
         list-member                         \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' bool
@@ -848,11 +848,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                                             \ crn-lst' reg-lol' ned-crn act0 ls-lst
 
     drop                                    \ crn-lst' reg-lol' ned-crn act0
-    2dup                                    \ crn-lst' reg-lol' ned-crn act0 ned-crn act0
-    _action-update-corners                  \ crn-lst' reg-lol' ned-crn act0
+    _action-update-corners                  \ crn-lst' reg-lol'
 
     \ Clean up.
-    2drop                                   \ crn-lst' reg-lol'
     region-list-lol-deallocate              \ crn-lst'
     corner-list-deallocate                  \
 ;
@@ -923,17 +921,69 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
 ;
 
+\ Return squares in a given region list.
+: action-squares-in-region-list ( reg-lst1 act0 -- sqr-lst )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-region-list
+
+    \ Init return list.
+    list-new                            \ reg-lst1 act0 ret-lst
+
+    \ Prep for loop on action square list.
+    over action-get-squares             \ reg-lst1 act0 ret-lst sqr-lst
+    list-get-links                      \ reg-lst1 act0 ret-lst sqr-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ reg-lst1 act0 ret-lst sqr-link sqrx
+        square-get-state                \ reg-lst1 act0 ret-lst sqr-link stax
+        #4 pick                         \ reg-lst1 act0 ret-lst sqr-link stax reg-lst1
+        region-list-any-superset-state  \ reg-lst1 act0 ret-lst sqr-link bool
+        if
+            dup link-get-data           \ reg-lst1 act0 ret-lst sqr-link sqrx
+            #2 pick                     \ reg-lst1 act0 ret-lst sqr-link sqrx ret-lst
+            list-push-struct            \ reg-lst1 act0 ret-lst sqr-link
+        then
+
+        link-get-next
+    repeat
+                                        \ reg-lst1 act0 ret-lst
+    nip nip                             \ ret-lst
+;
+
 \ Get a list of incompatible pairs, as regions, no supersets, given a square.
-: action-find-incompatible-pairs-for-square ( sqr1 act0 -- square-list )
+\ In a set of pn > 1 squares, two squares of lesser pn should not be compared.
+: action-find-incompatible-pairs-for-square ( sqr1 act0 -- reg-list )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-square
 
+    \ Int return list.
     list-new -rot                               \ ret-lst sqr1 act0
-    2dup action-get-squares                     \ ret-lst sqr1 act0 sqr1 sqr-lst
-    [ ' square-incompatible ] literal -rot      \ ret-lst sqr1 act0 xt sqr1 sqr-lst
-    list-find-all                               \ ret-lst sqr1 act0 inc-lst
 
+    \ Get the LS regions a square is in.
+    over square-get-state                       \ ret-lst sqr1 act0 sta
+    over action-get-logical-structure           \ ret-lst sqr1 act0 sta ls-lst
+    region-list-regions-state-in                \ ret-lst sqr1 act0 reg-lst'
+    2dup swap                                   \ ret-lst sqr1 act0 reg-lst' reg-lst' act0
+    action-squares-in-region-list               \ ret-lst sqr1 act0 reg-lst' sqr-lst'
+
+    \ Get highest pn squares in the regions.
+    dup square-list-highest-pn                  \ ret-lst sqr1 act0 reg-lst' sqr-lst' pn
+    over square-list-eq-pn                      \ ret-lst sqr1 act0 reg-lst' sqr-lst' sqr-lst2'
+    swap square-list-deallocate                 \ ret-lst sqr1 act0 reg-lst' sqr-lst2'
+
+    \ Get squares that sqr1 is incompatible to.
+    #3 pick                                     \ ret-lst sqr1 act0 reg-lst' sqr-lst2' sqr1
+    over                                        \ ret-lst sqr1 act0 reg-lst' sqr-lst2' sqr1 sqr-lst2'
+    [ ' square-incompatible ] literal -rot      \ ret-lst sqr1 act0 reg-lst' sqr-lst2' xt sqr1 sqr-lst2'
+    list-find-all-struct                        \ ret-lst sqr1 act0 reg-lst' sqr-lst2' inc-sqr-lst'
+    swap square-list-deallocate                 \ ret-lst sqr1 act0 reg-lst' inc-sqr-lst'
+    swap region-list-deallocate                 \ ret-lst sqr1 act0 inc-sqr-lst'
+
+    \ Check for no incompatible squares.
     dup list-is-empty
     if
         list-deallocate                         \ ret-lst sqr1 act0
@@ -942,30 +992,31 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         exit
     then
 
-    #2 pick square-get-state                \ ret-lst sqr1 act0 inc-lst sta1
-    over list-get-links                     \ ret-lst sqr1 act0 inc-lst sta1 link
+    \ Create a list of incompatible pairs, represented by states in a region.
+    #2 pick square-get-state                \ ret-lst sqr1 act0 inc-lst' sta1
+    over list-get-links                     \ ret-lst sqr1 act0 inc-lst' sta1 link
     begin
         ?dup
     while
-        dup link-get-data square-get-state  \ ret-lst sqr1 act0 inc-lst sta1 link sta2
-        #2 pick                             \ ret-lst sqr1 act0 inc-lst sta1 link sta2 sta1
-        region-new                          \ ret-lst sqr1 act0 inc-lst sta1 link regx
+        dup link-get-data square-get-state  \ ret-lst sqr1 act0 inc-lst' sta1 link sta2
+        #2 pick                             \ ret-lst sqr1 act0 inc-lst' sta1 link sta2 sta1
+        region-new                          \ ret-lst sqr1 act0 inc-lst' sta1 link regx
 
-        dup                                 \ ret-lst sqr1 act0 inc-lst sta1 link regx regx
-        #7 pick                             \ ret-lst sqr1 act0 inc-lst sta1 link regx regx ret-lst
-        region-list-push-nosups             \ ret-lst sqr1 act0 inc-lst sta1 link regx flag
+        dup                                 \ ret-lst sqr1 act0 inc-lst' sta1 link regx regx
+        #7 pick                             \ ret-lst sqr1 act0 inc-lst' sta1 link regx regx ret-lst
+        region-list-push-nosups             \ ret-lst sqr1 act0 inc-lst' sta1 link regx flag
         if
             drop
         else
             region-deallocate
         then
-                                            \ ret-lst sqr1 act0 inc-lst sta1 link
+                                            \ ret-lst sqr1 act0 inc-lst' sta1 link
 
-        link-get-next                       \ ret-lst sqr1 act0 inc-lst sta1 link-next
+        link-get-next                       \ ret-lst sqr1 act0 inc-lst' sta1 link-next
     repeat
-                                            \ ret-lst sqr1 act0 inc-lst sta1
-    drop                                    \ ret-lst sqr1 act0 inc-lst
-    list-deallocate                         \ ret-lst sqr1 act0
+                                            \ ret-lst sqr1 act0 inc-lst' sta1
+    drop                                    \ ret-lst sqr1 act0 inc-lst'
+    square-list-deallocate                  \ ret-lst sqr1 act0
 
     drop                                    \ ret-lst sqr1
 \    over list-is-empty
@@ -1438,17 +1489,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
 ;
 
-\ Return true if two actions are equal.
-: action-eq ( act1 act0 -- flag )
-     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-action
-
-    action-get-inst-id
-    swap
-    action-get-inst-id
-    =
-;
+' action-state-confirmed to action-state-confirmed-xt
 
 \ Get a sample from an action.
 \ Call only from session-get-sample to domain-get-sample

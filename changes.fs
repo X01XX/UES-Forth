@@ -31,19 +31,13 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     changes-struct-number-cells swap mma-new to changes-mma
 ;
 
-\ Check changes mma usage.
-: assert-changes-mma-none-in-use ( -- )
-    changes-mma mma-in-use 0<>
-    abort" changes-mma use GT 0"
-;
-
 \ Check instance type.
 
 : is-allocated-changes ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup changes-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         changes-id =
     else
         drop false

@@ -19,18 +19,12 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     plan-struct-number-cells swap mma-new to plan-mma
 ;
 
-\ Check plan mma usage.
-: assert-plan-mma-none-in-use ( -- )
-    plan-mma mma-in-use 0<>
-    abort" plan-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-plan ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup plan-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         plan-id =
     else
         drop false

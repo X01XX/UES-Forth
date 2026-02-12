@@ -18,18 +18,12 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     rulestore-struct-number-cells swap mma-new to rulestore-mma
 ;
 
-\ Check rulestore mma usage.
-: assert-rulestore-mma-none-in-use ( -- )
-    rulestore-mma mma-in-use 0<>
-    abort" rulestore-mma use GT 0"
-;
-
 \ Check instance type.
 : is-allocated-rulestore ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
     dup rulestore-mma mma-within-array
     if
-        struct-get-id   \ Here the fetch could abort on an invalid address, like a random number.
+        struct-get-id
         rulestore-id =
     else
         drop false
