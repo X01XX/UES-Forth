@@ -1417,15 +1417,19 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         over                    \ act0 sqr smpl1 sqr
         square-add-sample       \ act0 sqr flag
         if
-            swap                \ sqr act0
-            2dup                \ sqr act0 sqr act0
+            swap                        \ sqr act0
+            2dup                        \ sqr act0 sqr act0
             _action-check-incompatible-pairs    \ sqr act0
             2dup                        \ sqr act0 sqr act0
             _action-check-square        \ sqr act0
-            action-get-groups           \ sqr grp-lst
-            group-list-check-square     \
+            tuck                        \ act0 sqr act0
+            action-get-groups           \ act0 sqr grp-lst
+            group-list-check-square     \ act0
+
+            \ Square changed, so calc corners.
+            action-calc-corners         \
         else
-            2drop
+            2drop                       \
         then
     else                        \ smpl1 act0
         \ Add new square.
@@ -1463,16 +1467,17 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                 group-new                   \ act0 grp-lst grp
                 swap                        \ act0 grp grp-lst
                 group-list-push             \ act0
-                drop
             else
-                3drop
+                drop nip                    \ act0
             then
         else
             #2 pick             \ sqr act0 grp-lst sqr
             swap                \ sqr act0 sqr grp-lst
             group-list-add-square
-            2drop
+            nip                 \ act0
         then
+        \ New square, so calc corners.
+        action-calc-corners     \
     then
     \ cr ." action-add-sample: end" cr
 ;
@@ -1531,7 +1536,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         over                    \ smpl act0 smpl act0
         action-add-sample       \ smpl act0
     then
-    action-calc-corners         \ smpl
+    drop                        \ smpl
     \ cr ." action-get-sample: end" cr
 ;
 
