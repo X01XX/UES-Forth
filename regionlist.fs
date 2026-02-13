@@ -293,7 +293,7 @@
 \ In many cases, you should run region-list-subtract-region-n instead.
 \ Or do intersections\subtractions, followed by region-list-normalize.
 : region-list-subtract-region ( reg1 lst0 -- lst )
-    \ Check args.
+    \ Check args.egion-list-state-in-region
     assert-tos-is-region-list
     assert-nos-is-region
 
@@ -318,7 +318,7 @@
             2dup region-intersects          \ ret-lst reg1 link reg1 reg2 flag
             if
                 \ They intersect, there will be some remainder.
-                region-subtract             \ ret-lst reg1 link remainder-lst
+                region-subtract             \ ret-lst reg1 link remainder-lstegion-list-state-in-region
 
                 \ Add remainders to the return list
                 dup list-get-links          \ ret-lst reg1 link r-lst link
@@ -1196,43 +1196,6 @@
 
         link-get-next
     repeat
-;
-
-\ Return a list of regions that have one state in a given region.
-: region-list-state-in-region ( reg1 reg-lst0 -- reg-lst )
-    \ Check args.
-    assert-tos-is-region-list
-    assert-nos-is-region
-
-    \ Init return list.
-    list-new swap                       \ reg1 ret-lst reg-lst0
-    list-get-links                      \ reg1 ret-lst reg-link
-    begin
-        ?dup
-    while
-        dup link-get-data               \ reg1 ret-lst reg-link regx
-        region-get-states               \ reg1 ret-lst reg-link s1 s0
-        #4 pick                         \ reg1 ret-lst reg-link s1 s0 reg1
-        region-superset-of-state        \ reg1 ret-lst reg-link s1 bool
-        if
-            drop                        \ reg1 ret-lst reg-link
-            dup link-get-data           \ reg1 ret-lst reg-link regx
-            #2 pick                     \ reg1 ret-lst reg-link regx ret-lst
-            list-push-struct            \ reg1 ret-lst reg-link
-        else                            \ reg1 ret-lst reg-link s1
-            #3 pick                     \ reg1 ret-lst reg-link s1 reg1
-            region-superset-of-state    \ reg1 ret-lst reg-link bool
-            if
-                dup link-get-data       \ reg1 ret-lst reg-link regx
-                #2 pick                 \ reg1 ret-lst reg-link regx ret-lst
-                list-push-struct        \ reg1 ret-lst reg-link
-            then
-        then
-
-        link-get-next
-    repeat
-                                        \ reg1 ret-lst
-    nip
 ;
 
 \ Deallocate a list of region lists.

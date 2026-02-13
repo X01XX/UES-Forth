@@ -502,7 +502,6 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
 
     \ Prep for loop.
     list-get-links                              \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link
-
     begin
         ?dup
     while
@@ -515,9 +514,9 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
             dup link-get-data square-get-state  \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta
             #2 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta sta1
             over xor                            \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta dif-msk
-            value-isolate-lsb                   \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta dif-msk2
+            value-isolate-lsb                   \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta val-left dif-msk2
+            nip                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta dif-msk2
             xor                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta2
-
             \ Make need.
             need-type-ccds swap                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned-type sta2
             #6 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned-type sta2 act0
