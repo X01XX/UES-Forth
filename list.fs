@@ -50,13 +50,11 @@ list-header-disp    cell+   constant list-links-disp
 
 \  Return true if TOS is an allocated list.
 : is-allocated-list ( list -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup list-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         list-id =
     else
-        drop false
+        false
     then
 ;
 

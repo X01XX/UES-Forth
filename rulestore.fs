@@ -20,13 +20,11 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 \ Check instance type.
 : is-allocated-rulestore ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup rulestore-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         rulestore-id =
     else
-        drop false
+        false
     then
 ;
 

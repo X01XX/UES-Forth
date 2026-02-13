@@ -43,7 +43,7 @@ UES definitions
 decimal
 \ #2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
 
-0 value struct-info-list-store  \ Storage for a list containing info on all structs.
+0 value structinfo-list-store   \ Storage for a list containing info on all structs.
                                 \ Used for memory use print, memory leak checking,
                                 \ freeing heap, struct-aware printing of the Forth stack.
 
@@ -149,75 +149,75 @@ cr ." main.fs"
 \ Init array-stacks.
 #3500 link-mma-init
 #1902 list-mma-init
-list-new to struct-info-list-store
+list-new to structinfo-list-store
 
-#0030 struct-info-mma-init
-s" Link" link-mma link-id struct-info-new struct-info-list-store list-push-struct
-s" List" list-mma list-id struct-info-new struct-info-list-store list-push-end-struct
-s" StructInfo" struct-info-mma struct-info-id struct-info-new struct-info-list-store list-push-end-struct
+#0030 structinfo-mma-init
+s" Link" link-mma link-id structinfo-new structinfo-list-store list-push-struct
+s" List" list-mma list-id structinfo-new structinfo-list-store list-push-end-struct
+s" StructInfo" structinfo-mma structinfo-id structinfo-new structinfo-list-store list-push-end-struct
 
 #3003 region-mma-init
-s" Region" region-mma region-id struct-info-new struct-info-list-store list-push-end-struct
+s" Region" region-mma region-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0600 regioncorr-mma-init
-s" RegionCorr" regioncorr-mma regioncorr-id struct-info-new struct-info-list-store list-push-end-struct
+s" RegionCorr" regioncorr-mma regioncorr-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0904 rule-mma-init
-s" Rule" rule-mma rule-id struct-info-new struct-info-list-store list-push-end-struct
+s" Rule" rule-mma rule-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0505 rulestore-mma-init
-s" RuleStore" rulestore-mma rulestore-id struct-info-new struct-info-list-store list-push-end-struct
+s" RuleStore" rulestore-mma rulestore-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0404 rulecorr-mma-init
-s" RuleCorr" rulecorr-mma rulecorr-id struct-info-new struct-info-list-store list-push-end-struct
+s" RuleCorr" rulecorr-mma rulecorr-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0406 square-mma-init
-s" Square" square-mma square-id struct-info-new struct-info-list-store list-push-end-struct
+s" Square" square-mma square-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0200 corner-mma-init
-s" Corner" corner-mma corner-id struct-info-new struct-info-list-store list-push-end-struct
+s" Corner" corner-mma corner-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0250 sample-mma-init
-s" Sample" sample-mma sample-id struct-info-new struct-info-list-store list-push-end-struct
+s" Sample" sample-mma sample-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0650 changes-mma-init
-s" Changes" changes-mma changes-id struct-info-new struct-info-list-store list-push-end-struct
+s" Changes" changes-mma changes-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0450 changescorr-mma-init
-s" ChangesCorr" changescorr-mma changescorr-id struct-info-new struct-info-list-store list-push-end-struct
+s" ChangesCorr" changescorr-mma changescorr-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0100 group-mma-init
-s" Group" group-mma group-id struct-info-new struct-info-list-store list-push-end-struct
+s" Group" group-mma group-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0200 need-mma-init
-s" Need" need-mma need-id struct-info-new struct-info-list-store list-push-end-struct
+s" Need" need-mma need-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0150 planstep-mma-init
-s" PlanStep" planstep-mma planstep-id struct-info-new struct-info-list-store list-push-end-struct
+s" PlanStep" planstep-mma planstep-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0370 pathstep-mma-init
-s" PathStep" pathstep-mma pathstep-id struct-info-new struct-info-list-store list-push-end-struct
+s" PathStep" pathstep-mma pathstep-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0150 plan-mma-init
-s" Plan" plan-mma plan-id struct-info-new struct-info-list-store list-push-end-struct
+s" Plan" plan-mma plan-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0040 plancorr-mma-init
-s" PlanCorr" plancorr-mma plancorr-id struct-info-new struct-info-list-store list-push-end-struct
+s" PlanCorr" plancorr-mma plancorr-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0100 rate-mma-init
-s" Rate" rate-mma rate-id struct-info-new struct-info-list-store list-push-end-struct
+s" Rate" rate-mma rate-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0100 regioncorrrate-mma-init
-s" RegionCorrRate" regioncorrrate-mma regioncorrrate-id struct-info-new struct-info-list-store list-push-end-struct
+s" RegionCorrRate" regioncorrrate-mma regioncorrrate-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0050 action-mma-init
-s" Action" action-mma action-id struct-info-new struct-info-list-store list-push-end-struct
+s" Action" action-mma action-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0025 domain-mma-init
-s" Domain" domain-mma domain-id struct-info-new struct-info-list-store list-push-end-struct
+s" Domain" domain-mma domain-id structinfo-new structinfo-list-store list-push-end-struct
 
 #0001 session-mma-init
-s" Session" session-mma session-id struct-info-new struct-info-list-store list-push-end-struct
+s" Session" session-mma session-id structinfo-new structinfo-list-store list-push-end-struct
 
 : init-main ( -- )
     \ Set up session.
@@ -354,23 +354,23 @@ s" Session" session-mma session-id struct-info-new struct-info-list-store list-p
     \ Clean up
 
     \ Print memory use before deallocating.
-    cr struct-info-list-store struct-info-list-print-memory-use
+    cr structinfo-list-store structinfo-list-print-memory-use
 
     cr ." Deallocating ..." cr
     current-session-deallocate
 
     \ Print memory use after deallocating.
-    cr struct-info-list-store struct-info-list-print-memory-use
+    cr structinfo-list-store structinfo-list-print-memory-use
 
     \ Check for memory leak, or something on the Forth stack.
-    struct-info-list-store struct-info-list-project-deallocated-xt execute
+    structinfo-list-store structinfo-list-project-deallocated-xt execute
 
     \ Free heap.
-    \ struct-info-list-store struct-info-list-free-heap
+    \ structinfo-list-store structinfo-list-free-heap
 ;
 
 : all-tests
-    struct-info-list-store struct-info-list-project-deallocated-xt execute
+    structinfo-list-store structinfo-list-project-deallocated-xt execute
 
     square-tests
     square-list-tests
@@ -387,5 +387,5 @@ s" Session" session-mma session-id struct-info-new struct-info-list-store list-p
     plan-tests
     domain-tests
 
-    struct-info-list-store struct-info-list-project-deallocated-xt execute
+    structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;

@@ -40,13 +40,11 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check instance type.
 : is-allocated-need ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup need-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         need-id =
     else
-        drop false
+        false
     then
 ;
 

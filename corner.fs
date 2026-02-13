@@ -26,13 +26,11 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
 
 \ Check instance type.
 : is-allocated-corner ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup corner-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         corner-id =
     else
-        drop false
+        false
     then
 ;
 

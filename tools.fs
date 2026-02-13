@@ -362,3 +362,14 @@
 : assert-forth-stack-empty ( -- )                                                                                                           
     depth 0<> abort" Forth stack is not empty"
 ;
+
+\ Get the first word, 16 bits, of a, possibly invalid, address.
+: get-first-word ( addr -- w | w t | f )
+    ['] 0w@ catch           \ addr exception-number (-9) | word 0
+    if                      \ addr
+        drop
+        false
+    else                    \ word
+        true
+    then
+;

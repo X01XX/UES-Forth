@@ -26,13 +26,11 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 
 \ Check instance type.
 : is-allocated-sample ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup sample-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         sample-id =
     else
-        drop false
+        false
     then
 ;
 

@@ -21,13 +21,11 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
 \ Check instance type.
 : is-allocated-plan ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup plan-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         plan-id =
     else
-        drop false
+        false
     then
 ;
 

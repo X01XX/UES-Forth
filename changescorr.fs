@@ -22,12 +22,11 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Check instance type.
 : is-allocated-changescorr ( addr -- flag )
     \ Insure the given addr cannot be an invalid addr.
-    dup changescorr-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         changescorr-id =
     else
-        drop false
+        false
     then
 ;
 

@@ -110,12 +110,13 @@
 ' xtabort value regioncorr-get-list-xt
 
 
-' xtabort value struct-info-list-project-deallocated-xt
+' xtabort value structinfo-list-project-deallocated-xt
 
-' xtabort value struct-info-list-print-memory-use-xt
+' xtabort value structinfo-list-print-memory-use-xt
 
-' xtabort value struct-info-get-mma-xt
+' xtabort value structinfo-get-mma-xt
 
-' xtabort value struct-info-get-name-xt
+' xtabort value structinfo-get-name-xt
 
+' xtabort value structinfo-list-find-xt
 

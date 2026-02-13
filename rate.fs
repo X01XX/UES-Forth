@@ -21,13 +21,11 @@
 
 \ Check instance type.
 : is-allocated-rate ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup rate-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         rate-id =
     else
-        drop false
+        false
     then
 ;
 

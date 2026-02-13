@@ -32,13 +32,11 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
 \ Check instance type.
 : is-allocated-region ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup region-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         region-id =
     else
-        drop false
+        false
     then
 ;
 

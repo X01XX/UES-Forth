@@ -20,13 +20,11 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 
 \ Check instance type.
 : is-allocated-plancorr ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup plancorr-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         plancorr-id =
     else
-        drop false
+        false
     then
 ;
 

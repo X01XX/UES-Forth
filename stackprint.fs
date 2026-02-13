@@ -1,35 +1,59 @@
 \ Print a stack, giving information about structs on the stack.
 
 \ Print the type of one value.
-: .stack-structs2 ( addr -- )
-    struct-info-list-store                  \ addr snf-lst
-    list-get-links                          \ addr snf-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ addr snf-link snf
-        #2 pick swap                        \ addr snf-link addr snf
-        struct-info-get-mma-xt execute      \ addr snf-link addr mma
-        mma-within-array                    \ addr snf-link bool
+: .stack-struct ( addr -- )
+    dup get-first-word                                  \ addr, w t | f
+    if
+        \                                               \ addr w
+        dup
         if
-            dup  link-get-data              \ addr snf-link snf
-            struct-info-get-name-xt execute \ addr snf-link c-addr u
-            type                            \ addr snf-link
-            drop                            \ addr
-            struct-get-id                   \ id
-            0= if
-                ." -u"
+                                                        \ addr w-not-0
+            \ Look up struct by id.
+            structinfo-list-store                       \ addr w snf-lst
+            structinfo-list-find-xt execute             \ addr, snf t | f
+            if
+                                                        \ addr snf
+                structinfo-get-name-xt execute          \ addr c-addc u
+                type                                    \ addr
+                drop                                    \
+            else
+                \ Default                               \ addr
+                dup abs 0 <# #S rot sign #> type        \
             then
+        else
+                                                        \ addr 0
+            \ Look up possible unallocated struct.
+            drop                                        \ addr
+            structinfo-list-store                       \ addr snf-lst
+            list-get-links                              \ addr snf-link
 
-            exit
+            begin
+                ?dup
+            while
+                dup link-get-data                       \ addr snf-link snf
+                #2 pick swap                            \ addr snf-link addr snf
+                structinfo-get-mma-xt execute           \ addr snf-link addr mma
+                mma-within-array                        \ addr snf-link bool
+                if
+                    dup  link-get-data                  \ addr snf-link snf
+                    structinfo-get-name-xt execute      \ addr snf-link c-addr u
+                    type                                \ addr snf-link
+                    2drop                               \
+                    ." -u"
+                    exit
+                then
+
+                link-get-next
+            repeat
+                                                        \ addr
+            \ Default
+            dup abs 0 <# #S rot sign #> type            \
         then
-
-        link-get-next
-    repeat
-                                            \ addr
-    \ Default
-    dup abs 0 <# #S rot sign #> type
+    else
+        \                                               \ addr
+        \ Invalid memmory address, just print it.
+        dup abs 0 <# #S rot sign #> type                \ addr
+    then
 ;
 
 \ Cycle through each stack item, displaying its struct type.
@@ -54,14 +78,14 @@
                 0<> if
                         ." -"
                         dup list-get-links link-get-data
-                        .stack-structs2
+                        .stack-struct
                     else
                         space
                     then
             then
             drop
         else
-            .stack-structs2
+            .stack-struct
         then
         space
     loop

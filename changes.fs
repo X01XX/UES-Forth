@@ -34,13 +34,11 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check instance type.
 
 : is-allocated-changes ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup changes-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         changes-id =
     else
-        drop false
+        false
     then
 ;
 

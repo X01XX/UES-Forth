@@ -33,13 +33,11 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
 \ Check instance type.
 : is-allocated-session ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup session-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         session-id =
     else
-        drop false
+        false
     then
 ;
 
@@ -312,7 +310,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 \ Create an session, given an instance ID.
 : current-session-new ( -- sess ) \ new session pushed onto session stack.
 
-    struct-info-list-store struct-info-list-project-deallocated-xt execute
+    structinfo-list-store structinfo-list-project-deallocated-xt execute
     
     \ cr ." current-session-new: start " .s cr
     \ Allocate space.
@@ -453,7 +451,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     0 to current-session-store
 
-    struct-info-list-store struct-info-list-project-deallocated-xt execute
+    structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;
 
 : session-get-sample ( act2 dom1 sess0 -- sample )  \ Get a sample from an action in a domain.

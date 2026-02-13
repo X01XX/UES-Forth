@@ -27,13 +27,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 \ Check instance type.
 : is-allocated-action ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup action-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         action-id =
     else
-        drop false
+        false
     then
 ;
 

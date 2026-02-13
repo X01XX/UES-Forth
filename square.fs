@@ -26,13 +26,11 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 \ Check instance type.
 : is-allocated-square ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup square-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         square-id =
     else
-        drop false
+        false
     then
 ;
 

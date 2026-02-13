@@ -27,13 +27,11 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
 \ Check instance type.
 : is-allocated-planstep ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup planstep-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         planstep-id =
     else
-        drop false
+        false
     then
 ;
 
