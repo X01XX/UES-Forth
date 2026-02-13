@@ -32,7 +32,7 @@ The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>Anc
 The number of adjacent, dissimilar, terms used for a corner, equals the number of edges of the region the anchor is in.  
 
 In the results, regions not completely overlapped by other regions are <i>Defining</i> regions, others are placeholders.
-When well developed, all adjacent disimmilar samples tested, the anchor of a corner
+When well developed, all adjacent dissimilar samples tested, the anchor of a corner
 will be in only one region, a defining region, else it will not be a valid corner.
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
 
