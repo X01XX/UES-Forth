@@ -228,7 +228,7 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
     \ Store anchor square.
     tuck _corner-set-anchor-square      \ reg-lst3 sqr-lst2 crn
 
-    \ Store close, disimmilar, squares.
+    \ Store close, dissimilar, squares.
     tuck _corner-set-dissimilar-squares \ reg-lst3 crn
 
     \ Store regions list.

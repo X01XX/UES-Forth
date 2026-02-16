@@ -20,13 +20,11 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 \ Check instance type.
 : is-allocated-rulecorr ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup rulecorr-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         rulecorr-id =
     else
-        drop false
+        false
     then
 ;
 

@@ -60,7 +60,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Start accessors.
 
 \ Return the parent session of the domain.
-: domain-get-parent-session ( act0 -- dom )
+: domain-get-parent-session ( dom0 -- ses )
     \ Check arg.
     assert-tos-is-domain
 
@@ -69,7 +69,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 \ Set the parent session of an domain.
-: _domain-set-parent-session ( dom act0 -- )
+: _domain-set-parent-session ( ses1 dom0 -- )
     \ Check args.
     assert-tos-is-domain
 
@@ -141,7 +141,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     over 1 <
     abort" Invalid number of bits."
 
-    over #64 >
+    over cell #8 * >
     abort" Invalid number of bits."
 
     \ Set inst id.
@@ -195,7 +195,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 \ Return the max-region of the domain.
-: domain-get-max-region ( dom0 -- reg-max )
+: domain-get-max-region ( dom0 -- reg )
     \ Check arg.
     assert-tos-is-domain
 
@@ -206,7 +206,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ' domain-get-max-region to domain-get-max-region-xt
 
 \ Set the max region of the domain.
-: _domain-set-max-region ( reg-max dom0 -- )
+: _domain-set-max-region ( reg1 dom0 -- )
     \ Check args.
     assert-tos-is-domain
 
@@ -215,7 +215,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 \ Return the all-bits-mask of the domain.
-: domain-get-all-bits-mask ( dom0 -- mask )
+: domain-get-all-bits-mask ( dom0 -- msk )
     \ Check arg.
     assert-tos-is-domain
 
@@ -226,7 +226,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ' domain-get-all-bits-mask to domain-get-all-bits-mask-xt
 
 \ Set the max region of the domain.
-: _domain-set-all-bits-mask ( mask1 dom0 -- )
+: _domain-set-all-bits-mask ( msk1 dom0 -- )
     \ Check args.
     assert-tos-is-domain
 
@@ -235,7 +235,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 \ Return the ms-bit-mask of the domain.
-: domain-get-ms-bit-mask ( dom0 -- mask )
+: domain-get-ms-bit-mask ( dom0 -- msk )
     \ Check arg.
     assert-tos-is-domain
 
@@ -246,7 +246,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ' domain-get-ms-bit-mask to domain-get-ms-bit-mask-xt
 
 \ Set the max region of the domain.
-: _domain-set-ms-bit-mask ( mask1 dom0 -- )
+: _domain-set-ms-bit-mask ( msk1 dom0 -- )
     \ Check args.
     assert-tos-is-domain
 
@@ -347,7 +347,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 \ Deallocate a domain.
-: domain-deallocate ( act0 -- )
+: domain-deallocate ( dom0 -- )
     \ Check arg.
     assert-tos-is-domain
 
@@ -382,19 +382,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     domain-set-current-action   \
 ;
 
-\ Return true if two domains are equal.
-: domain-eq ( grp1 grp0 -- flag )
-     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-group
-
-    domain-get-inst-id
-    swap
-    domain-get-inst-id
-    =
-;
-
-\ Get a sample fram an action in a domain.
+\ Get a sample from an action in a domain.
 \ Call only from session-get-sample, since current-domain in set there.
 : domain-get-sample ( act1 dom0 -- sample )
      \ Check args.
@@ -423,7 +411,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ' domain-get-sample to domain-get-sample-xt
 
 \ Return true if a domain id matches a number.
-: domain-id-eq ( id1 sqr0 -- flag )
+: domain-id-eq ( id1 dom0 -- flag )
     \ Check args.
     assert-tos-is-domain
 
@@ -531,12 +519,6 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #2 pick #2 pick swap                        \ | reg-from reg-to
     region-superset-of                          \ | bool
     abort" domain-calc-step-fc: region subset?" \ |
-
-
-\    2dup region-superset-of                     \ | reg-to reg-from bool
-\    abort" domain-calc-step-fc: region subset?" \ | reg-to reg-from
-\    swap region-superset-of                     \ | bool
-\    abort" domain-calc-step-fc: region subset?" \ |
 
     \ Init aggregate step list.
     list-new                        \ reg-to reg-from dom0 | stp-lst
@@ -1298,7 +1280,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         \ Try backward-chaining first.
         #3                          \ reg-to reg-from dom0 | 3
         #3 pick #3 pick #3 pick     \ reg-to reg-from dom0 | 3 reg-to reg-from dom0
-        domain-get-plan-bc         \ reg-to reg-from dom0 | pln t | f
+        domain-get-plan-bc          \ reg-to reg-from dom0 | pln t | f
         if
             2nip nip
             cr ." plan found (bc) " dup .plan cr

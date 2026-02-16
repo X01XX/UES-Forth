@@ -26,13 +26,11 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 
 \ Check instance type.
 : is-allocated-regioncorrrate ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    dup regioncorrrate-mma mma-within-array
+    get-first-word          \ w t | f
     if
-        struct-get-id
         regioncorrrate-id =
     else
-        drop false
+        false
     then
 ;
 

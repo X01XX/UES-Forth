@@ -1522,8 +1522,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         action-get-function     \ act0 rslt true sta1 xt
         execute                 \ act0 smpl
         tuck                    \ smpl act0 smpl
-        over                    \ smpl act0 smpl act0
-        action-add-sample       \ smpl act0
+        swap                    \ smpl smpl act0
+        action-add-sample       \ smpl
     else                        \ act0 sta1 act0
                                 \ act0 sta1 act0
         0 -rot                  \ act0 0 sta1 act0
@@ -1531,10 +1531,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         action-get-function     \ act0 0 0 sta1 xt
         execute                 \ act0 smpl
         tuck                    \ smpl act0 smpl
-        over                    \ smpl act0 smpl act0
-        action-add-sample       \ smpl act0
+        swap                    \ smpl smpl act0
+        action-add-sample       \ smpl
     then
-    drop                        \ smpl
     \ cr ." action-get-sample: end" cr
 ;
 
@@ -1671,6 +1670,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Init return need list.
     list-new                                        \ reg2 sta1 act0 | ret-lst
+
     \ Check for corner needs.
     #3 pick                                         \ reg2 sta1 act0 | ret-lst reg2
     #2 pick                                         \ reg2 sta1 act0 | ret-lst reg2 act0
@@ -1700,6 +1700,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     2nip nip                                        \ ret-lst
 ;
 
+\ Return the aggregate changes of all groups.
 : action-calc-changes ( act0 -- cngs )
     \ Check arg.
     assert-tos-is-action
@@ -1757,7 +1758,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip nip                                 \ stp
 ;
 
-\ Return a step list, given reg-to, reg-from, and a rule list.
+\ Return a planstep list, given reg-to, reg-from, and a rule list.
 : action-planstep-list-from-rule-list ( reg-to reg-from rul-lst1 act0 -- plnstp-lst )
     \ Check args.
     assert-tos-is-action

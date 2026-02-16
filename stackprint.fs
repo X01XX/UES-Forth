@@ -93,6 +93,8 @@
 
 ' .stack-structs to .stack-structs-xt
 
+\ Abort with a message and printing the Forth stack.
+\ Used mostly by argument checking code.
 : .abort ( c-addr u -- )
     cr type cr
     cr .s cr
