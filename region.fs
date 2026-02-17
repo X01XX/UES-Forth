@@ -266,6 +266,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
+    \ cr ." region-intersects: reg1: " over .region space ." reg0: " dup .region cr
 
     \ Get different bits mask of any pair states from reg1 and reg0.
     over region-get-state-0     \ reg1 reg0 reg1-sta0
@@ -283,7 +284,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     and                         \ sta-dif-msk edge-msk
 
     \ Get different edge bit mask.
-    and                         \ edge-dif-msk 
+    and                         \ edge-dif-msk
 
     \ Return result
     0=

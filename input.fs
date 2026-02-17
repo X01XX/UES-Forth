@@ -1,3 +1,112 @@
+\ Return true if the domain current state satisfies the need.
+: need-current-state-satisfies ( ned -- bool )
+    \ Check arg.
+    assert-tos-is-need
+
+    dup need-get-domain         \ ned dom
+
+    \ Set cur domain.
+    dup                         \ ned dom dom
+    current-session             \ ned dom dom sess
+    session-set-current-domain  \ ned dom
+
+    \ See if a plan is needed.
+    domain-get-current-state    \ ned d-sta
+    swap need-get-target        \ d-sta n-sta
+    =
+;
+
+\ Take a sample for a need, the current state matches the need.
+: need-take-sample ( ned -- )
+    \ Check arg.
+    assert-tos-is-need
+
+    dup need-get-action             \ ned act
+    over need-get-domain            \ ned act dom
+
+    \ Set cur domain.
+    dup                             \ ned act dom dom
+    current-session                 \ ned act dom dom sess
+    session-set-current-domain      \ ned act dom
+
+    \ See if a plan is needed.
+    dup domain-get-current-state    \ ned act dom d-sta
+    #3 pick need-get-target         \ ned act dom d-sta n-sta
+    =                               \ ned act dom flag
+    if
+        \ No plan needed, get sample.
+        2dup                        \ ned act dom act dom
+        domain-get-sample           \ ned act dom sample
+        sample-deallocate           \ ned act dom
+        domain-get-inst-id
+        cr ." Dom: " dec.           \ ned act
+        .action cr                  \ ned
+        drop                        \
+    else
+        cr ." current state does not match need" cr
+        abort
+    then
+;
+
+\ Return a plan for a need.
+: need-get-plan ( ned -- pln t | f )
+    \ Check arg.
+    assert-tos-is-need
+
+    dup need-get-action             \ ned act
+    over need-get-domain            \ ned act dom
+
+    \ Set cur domain.
+    dup                             \ ned act dom dom
+    current-session                 \ ned act dom dom sess
+    session-set-current-domain      \ ned act dom
+
+    \ See if a plan is needed.
+    dup domain-get-current-state    \ ned act dom d-sta
+    #3 pick need-get-target         \ ned act dom d-sta n-sta
+    =                               \ ned act dom flag
+    abort" no plan needed?"
+                                    \ ned act dom
+    #2 pick need-get-target         \ ned act dom t-sta
+    over domain-get-current-state   \ ned act dom t-sta c-state
+    sample-new                      \ ned act dom smpl'
+
+    \ Create from/to regions.
+    dup sample-get-result           \ ned act dom smpl' rslt
+    dup region-new                  \ ned act dom smpl' reg-to'
+    over sample-get-initial         \ ned act dom smpl' reg-to' initial
+    dup region-new                  \ ned act dom smpl' reg-to' reg-from'
+    2dup                            \ ned act dom smpl' reg-to' reg-from' reg-to' reg-from'
+    #5 pick                         \ ned act dom smpl' reg-to' reg-from' reg-to' reg-from' dom
+
+    domain-get-plan                 \ ned act dom smpl' reg-to' reg-from', plan t | f
+    if                              \ ned act dom smpl' reg-to' reg-from' plan
+        swap region-deallocate      \ ned act dom smpl' reg-to' plan
+        swap region-deallocate      \ ned act dom smpl' plan
+        swap sample-deallocate      \ ned act dom plan
+        2nip                        \ dom plan
+        nip                         \ plan
+        true
+    else                            \ ned act dom smpl' reg-to' reg-from'
+        region-deallocate           \ ned act dom smpl' reg-to'
+        region-deallocate           \ ned act dom smpl'
+        sample-deallocate           \ ned act dom
+        3drop                       \
+        false
+    then
+;
+
+\ Run a plan for a need.
+: need-run-plan ( plan1 ned0 -- bool )
+    \ Check arg.
+    assert-tos-is-need
+    assert-nos-is-plan
+
+    swap                        \ ned0 plan1
+    plan-run                    \ ned0 flag
+    nip                         \ flag
+;
+
 \ Do a need.  Return true if the need has been satisfied.
 : do-need ( ned -- bool )
     \ Check arg.
@@ -208,29 +317,45 @@
     \ Fill in easy to understand action/responses, as a foundation
     \ to finding the corners in more complex action/responses.
                                 \ ned-lst
-    dup list-get-links          \ ned-lst link
+\    dup list-get-links          \ ned-lst link
+\
+\    begin
+\        ?dup
+\    while
+\        dup link-get-data           \ ned-lst link nedx
+\        dup need-get-domain         \ ned-lst link nedx n-dom
+\        domain-get-current-state    \ ned-lst link nedx dom-sta
+\        over need-get-target        \ ned-lst link nedx dom-sta ned-sta
+\        = if                        \ ned-lst link nedx
+\            cr ." Need chosen: " space dup .need cr
+\            do-need                 \ ned-lst link bool
+\            if
+\                2drop               \
+\                true
+\                exit
+\            then
+\        else                        \ ned-lst link nedx
+\            drop                    \ ned-lst link
+\        then
+\
+\        link-get-next
+\    repeat                          \ ned-lst
 
-    begin
-        ?dup
-    while
-        dup link-get-data           \ ned-lst link nedx
-        dup need-get-domain         \ ned-lst link nedx n-dom
-        domain-get-current-state    \ ned-lst link nedx dom-sta
-        over need-get-target        \ ned-lst link nedx dom-sta ned-sta
-        = if                        \ ned-lst link nedx
-            cr ." Need chosen: " space dup .need cr
-            do-need                 \ ned-lst link bool
-            if
-                2drop               \
-                true
-                exit
-            then
-        else                        \ ned-lst link nedx
-            drop                    \ ned-lst link
-        then
-
-        link-get-next
-    repeat                          \ ned-lst
+    \ Randomly select a need.
+    \
+    \ If the current state of the need domain satisfies the need
+    \   take a sample
+    \   exit
+    \ then
+    \
+    \ Try to find a plan for the need.
+    \
+    \ if plan found
+    \   run plan
+    \   exit
+    \ else
+    \   try another need.
+    \ then
 
     \ Init index list for need list.
     dup list-get-length             \ ned-lst len
@@ -239,39 +364,77 @@
     begin
         \ cr ." inx list: 1 " dup .value-list cr
 
-        dup list-get-length             \ ned-lst inx-lst len
-        random                          \ ned-lst inx-lst inx
-        dup                             \ ned-lst inx-lst inx inx
-        #2 pick                         \ ned-lst inx-lst inx inx inx-lst
-        list-get-item                   \ ned-lst inx-lst inx inx2
+        dup list-get-length             \ ned-lst inx-lst' len
+        random                          \ ned-lst inx-lst' rnd-inx
+        dup                             \ ned-lst inx-lst' rnd-inx rnd-inx
+        #2 pick                         \ ned-lst inx-lst' rnd-inx rnd-inx inx-lst'
+        list-get-item                   \ ned-lst inx-lst' rnd-inx ned-inx
 
-        #3 pick list-get-item           \ ned-lst inx-lst inx nedx
+        #3 pick list-get-item           \ ned-lst inx-lst' rnd-inx nedx
         cr ." Need chosen: " space dup .need cr
-        do-need                         \ ned-lst inx-lst inx bool
+
+        \ Check if no plan needed.
+        \ cr ." at 1 " .stack-gbl cr
+        dup need-current-state-satisfies    \ ned-lst inx-lst' rnd-inx nedx bool
         if
+            need-take-sample                \ ned-lst inx-lst' rnd-inx
             \ Need satisfied, done.
             drop
             list-deallocate
             drop
             true
             exit
+        else                                \ ned-lst inx-lst' rnd-inx nedx
+       \ cr ." at 2 " .stack-gbl cr
+            dup need-get-plan               \ ned-lst inx-lst' rnd-inx nedx, pln t | f
+        \ cr ." at 3 " .stack-gbl cr
+            if                              \ ned-lst inx-lst' rnd-inx nedx pln'
+                2dup swap                   \ ned-lst inx-lst' rnd-inx nedx pln' pln' nedx
+                need-run-plan               \ ned-lst inx-lst' rnd-inx nedx pln' bool
+                if
+                    cr ." plan suceeded" cr
+                    plan-deallocate             \ ned-lst inx-lst' rnd-inx nedx
+                    \ TODO check if need requires final sample?
+                    need-take-sample            \ ned-lst inx-lst' rnd-inx
+                    drop                        \ ned-lst inx-lst'
+                    list-deallocate             \ ned-lst
+                    drop
+                    true
+                    exit
+                else
+                    cr ." plan failed" cr
+                    plan-deallocate             \ ned-lst inx-lst' rnd-inx nedx
+                    2drop                       \ ned-lst inx-lst'
+                    list-deallocate             \ ned-lst
+                    drop
+                    true
+                    exit
+                then
+            else                            \ ned-lst inx-lst' rnd-inx nedx
+            \ cr ." at 5 " .stack-gbl cr
+                drop                        \ ned-lst inx-lst' rnd-inx
+            then
         then
+        \ cr ." at 6 " .stack-gbl cr
+
         \ Need not satisfied, try another, if any.
-                                        \ ned-lst inx-lst inx
+                                        \ ned-lst inx-lst' rnd-inx
 
         \ Remove the index, avoiding random picking the same need to try again.
-        over                            \ ned-lst inx-lst inx inx-lst
-        list-remove-item                \ ned-lst inx-lst, u t | f
+        over                            \ ned-lst inx-lst' rnd-inx inx-lst'
+        list-remove-item                \ ned-lst inx-lst', u t | f
         is-false abort" Item not removed?"
-                                        \ ned-lst inx-lst u
-        drop                            \ ned-lst inx-lst
-        \ cr ." inx list: 2 " dup .value-list cr
+                                        \ ned-lst inx-lst' u
+        drop                            \ ned-lst inx-lst'
+
+        \ Check if index list is empty.
         dup list-get-length 0=
     until
 
-    list-deallocate                 \ ned-lst
+    \ Return.
+                                        \ ned-lst inx-lst'
+    list-deallocate                     \ ned-lst
     drop
-
     true
 ;
 

@@ -511,7 +511,6 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ If more than one step is found, randomly choose one,
 \ to support a random depth-first strategy.
 : domain-calc-step-fc ( reg-to reg-from dom0 -- step true | false )
-    \ cr ." domain-calc-step-fc: start: from " over .region space ." to: " #2 pick .region cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -519,6 +518,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #2 pick #2 pick swap                        \ | reg-from reg-to
     region-superset-of                          \ | bool
     abort" domain-calc-step-fc: region subset?" \ |
+    \ cr ." domain-calc-step-fc: start: from " over .region space ." to: " #2 pick .region cr
 
     \ Init aggregate step list.
     list-new                        \ reg-to reg-from dom0 | stp-lst
@@ -640,11 +640,11 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Form a plan by getting successive steps closer, between
 \ a from-region (tos) and a to-region (nos).
 : domain-get-plan2-fc ( depth reg-to reg-from dom0 -- plan true | false )
-    \ cr ." domain-get-plan2-fc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
+    \ cr ." domain-get-plan2-fc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
     #3 pick 0 #5 within is-false abort" invalid depth?"
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
@@ -853,7 +853,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-nos-is-region
     assert-3os-is-region
     #3 pick 0 #5 within is-false abort" invalid depth?"
-\    cr ." domain-get-plan-fc: " .stack-structs-xt execute cr
+\    cr ." domain-get-plan-fc: " .stack-gbl execute cr
 
     \ Check depth.
     #3 pick 1 < if
@@ -886,11 +886,11 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ' domain-get-plan-fc to domain-get-plan-fc-xt
 
 : domain-calc-step-bc ( reg-to reg-from dom0 -- step true | false )
-    \ cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
+    \ cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
     if
@@ -903,8 +903,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         true
         exit
     then
-    \ abort" domain-calc-step-bc: 2 region subset?" \ |
-    \ cr ." at 1: " .stack-structs-xt execute cr
+    
 
     \ Init aggregate step list.
     list-new                                    \ | stp-lst
@@ -1000,10 +999,10 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Form a plan by getting successive steps closer, between
 \ a sample result state to a sample initial state.
 : domain-get-plan2-bc ( depth reg-to reg-from dom0 -- plan true | false )
-    \ cr ." domain-get-plan2-bc: start: depth: " #3 pick . space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
     \ Check args.
     assert-tos-is-domain
     assert-3os-is-region
+    \ cr ." domain-get-plan2-bc: start: depth: " #3 pick . space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
     #3 pick 0 #5 within is-false abort" invalid depth?"
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
@@ -1252,6 +1251,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
+    \ cr ." domain-get-plan-fb: reg-to: " #2 pick .region space ." reg-from: " over .region cr
 
     #2 random
     if
@@ -1338,8 +1338,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 \ Asymmetric chaining.
-\ Get rules for each required single bit change.
-\ Find steps that change a single bit and contain no rules that intersect a from-region or goal-region.
+\ Find steps that provide at least one needed change and do not intersect a from-region or goal-region.
 \ Randomly choose one of those steps.
 \ Try making a plan that goes from the from-region to the step initial-region.
 \ Restrict the steps initial-region.
@@ -1361,65 +1360,43 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         false
         exit
     then
+    \ cr ." all steps found: " dup .planstep-list cr
+    \ Prep for loop.                        \ reg-to reg-from dom0 | plnstp-lst'
 
-    \ Prep for loop by single-bit change.   \ reg-to reg-from dom0 | plnstp-lst'
-    #3 pick #3 pick                         \ reg-to reg-from dom0 | plnstp-lst' reg-to reg-from
-    changes-new-region-to-region            \ reg-to reg-from dom0 | plnstp-lst' cngs'
-    
-    dup changes-split                       \ reg-to reg-from dom0 | plnstp-lst' cngs' cng-lst'
-    swap changes-deallocate                 \ reg-to reg-from dom0 | plnstp-lst' cng-lst'
+    list-new swap                           \ reg-to reg-from dom0 | asym-lst' plnstp-lst'
+    dup list-get-links                      \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link
 
-    list-new swap                           \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst'
-    dup list-get-links                      \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link
-
-    \ For each single-bit change, find steps that do not contain the sample initial states
-    \ without any alternate steps that do.
+    \ Find steps that do not intersect reg-to or reg-from.
     begin
         ?dup
-    while                                   \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link
+    while                                   \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link
+        dup link-get-data                   \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx
 
-        \ Find steps that provide the one-bit change, but possibly others.
-        dup link-get-data                   \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link cngx
-        #4 pick                             \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link cngx plnstp-lst'
-        planstep-list-intersects-changes    \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link plnstp-cng-lst'
-
-        \ Check if the one-bit change is possible, else done.
-        dup list-is-empty                   \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link plnstp-cng-lst' bool
-        if                                  \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link plnstp-cng-lst'
-        cr ." exit 2" cr
-            planstep-list-deallocate        \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst' cng-link
-            drop                            \ reg-to reg-from dom0 | plnstp-lst' asym-lst cng-lst'
-            changes-list-deallocate         \ reg-to reg-from dom0 | plnstp-lst' asym-lst
-            planstep-list-deallocate        \ reg-to reg-from dom0 | plnstp-lst'
-            planstep-list-deallocate        \ reg-to reg-from dom0 |
-            3drop
-            false
-            exit
-        then
-
-        \ Check if there are only steps that do not match the reg-to reg-from initial state.
-        #7 pick                                 \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link plnstp-cng-lst' reg-to
-        #7 pick                                 \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link plnstp-cng-lst' reg-to reg-from
-        #2 pick                                 \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link plnstp-cng-lst' reg-to reg-from plnstp-cng-lst'
-        planstep-list-any-from-to-intersections \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link plnstp-cng-lst' bool
+        dup planstep-get-initial-region     \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx initial
+        #6 pick                             \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx initial reg-from
+        region-intersects                   \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx bool
         if
-            planstep-list-deallocate            \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link
+            drop                            \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link
         else
-            \ Save the steps.
-            dup #4 pick                         \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link plnstp-cng-lst' plnstp-cng-lst' asym-lst
-            planstep-list-append                \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link plnstp-cng-lst'
-            planstep-list-deallocate            \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link
+            dup planstep-get-result-region  \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx result
+            #7 pick                         \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx result reg-to
+            region-intersects               \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx bool
+            if
+                drop
+            else
+                #3 pick                     \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link plnstpx asym-lst'
+                planstep-list-push          \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link
+            then
         then
 
-        link-get-next                       \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst cng-link
+        link-get-next                       \ reg-to reg-from dom0 | asym-lst' plnstp-lst' plnstp-link
     repeat
 
-    \ Clean up.                             \ reg-to reg-from dom0 | plnstp-lst asym-lst cng-lst
-    changes-list-deallocate                 \ reg-to reg-from dom0 | plnstp-lst asym-lst
-    swap planstep-list-deallocate           \ reg-to reg-from dom0 | asym-lst
+    \ Clean up.                             \ reg-to reg-from dom0 | asym-lst' plnstp-lst'
+    planstep-list-deallocate                \ reg-to reg-from dom0 | asym-lst'
 
     \ Check list len.
-    dup list-is-empty                     \ reg-to reg-from dom0 | asym-lst bool
+    dup list-is-empty                     \ reg-to reg-from dom0 | asym-lst' bool
     if
         planstep-list-deallocate            \ reg-to reg-from dom0 |
         3drop
@@ -1428,16 +1405,16 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     then
 
     \ Randomly choose a step.
-    dup list-get-length                     \ reg-to reg-from dom0 | asym-lst len
-    random                                  \ reg-to reg-from dom0 | asym-lst inx
-    over list-get-item                      \ reg-to reg-from dom0 | asym-lst stpx
+    dup list-get-length                     \ reg-to reg-from dom0 | asym-lst' len
+    random                                  \ reg-to reg-from dom0 | asym-lst' inx
+    over list-get-item                      \ reg-to reg-from dom0 | asym-lst' stpx
 
     \ Get plan1 reg-from to step initial region.
-    dup planstep-get-initial-region         \ reg-to reg-from dom0 | asym-lst stpx plnstp-i
-    #4 pick                                 \ reg-to reg-from dom0 | asym-lst stpx plnstp-i reg-from
-    #4 pick                                 \ reg-to reg-from dom0 | asym-lst stpx plnstp-i reg-from dom0
-    domain-get-plan-fb                      \ reg-to reg-from dom0 | asym-lst stpx, plan1' t | f
-    is-false if                             \ reg-to reg-from dom0 | asym-lst stpx
+    dup planstep-get-initial-region         \ reg-to reg-from dom0 | asym-lst' stpx plnstp-i
+    #4 pick                                 \ reg-to reg-from dom0 | asym-lst' stpx plnstp-i reg-from
+    #4 pick                                 \ reg-to reg-from dom0 | asym-lst' stpx plnstp-i reg-from dom0
+    domain-get-plan-fb                      \ reg-to reg-from dom0 | asym-lst' stpx, plan1' t | f
+    is-false if                             \ reg-to reg-from dom0 | asym-lst' stpx
         drop
         planstep-list-deallocate
         3drop
@@ -1456,7 +1433,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         exit
     then
 
-    \ Clean up.                         \ reg-to reg-from dom0 | asym-lst plan1' plan2'
+    \ Clean up.                         \ reg-to reg-from dom0 | asym-lst' plan1' plan2'
     swap plan-deallocate
     swap planstep-list-deallocate       \ reg-to reg-from dom0 | plan2'
 
@@ -1490,11 +1467,11 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 \ Get a plan for going between an initial region and a non-intersecting result region.
 : domain-get-plan ( reg-to reg-from dom0 -- plan true | false )
-    \ cr ." domain-get-plan: start: from " over .region space ." to " #2 pick .region cr 
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
+    \ cr ." domain-get-plan: start: from " over .region space ." to " #2 pick .region cr 
     
     #2 pick #2 pick swap                        \ | reg-from reg-to
     region-superset-of                          \ | bool
@@ -1517,10 +1494,10 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #3 pick #3 pick                             \ | cngs' reg-to reg-from
     #3 pick                                     \ | cngs' reg-to reg-from dom0
     domain-calc-steps-by-changes                \ | cngs' plnstp-lst'
-    cr ." steps: " dup .planstep-list cr
+    \ cr ." steps: " dup .planstep-list cr
     dup planstep-list-union-changes             \ | cngs' plnstp-lst' plnstp-cngs'
     swap planstep-list-deallocate               \ | cngs' plnstp-cngs'
-    cr ." cngs: " over .changes space ." planstep-list cngs: " dup .changes cr
+    \ cr ." cngs: " over .changes space ." planstep-list cngs: " dup .changes cr
     2dup                                        \ | cngs' plnstp-cngs' cngs' plnstp-cngs'
     changes-superset-of                         \ | cngs' plnstp-cngs' bool
     swap changes-deallocate                     \ | cngs' bool
