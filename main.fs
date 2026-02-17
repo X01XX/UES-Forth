@@ -155,7 +155,7 @@ list-new to structinfo-list-store
 cr ." at 1: " .stack-gbl cr
 ' link-deallocate ' .link s" Link" link-mma link-id structinfo-new structinfo-list-store structinfo-list-push
 
-' list-deallocate ' .list s" List" list-mma list-id structinfo-new structinfo-list-store structinfo-list-push-end
+' structinfo-list-deallocate-struct-list ' structinfo-list-print-struct-list s" List" list-mma list-id structinfo-new structinfo-list-store structinfo-list-push-end
 ' structinfo-deallocate ' .structinfo s" StructInfo" structinfo-mma structinfo-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #3003 region-mma-init
