@@ -152,72 +152,74 @@ cr ." main.fs"
 list-new to structinfo-list-store
 
 #0030 structinfo-mma-init
-s" Link" link-mma link-id structinfo-new structinfo-list-store list-push-struct
-s" List" list-mma list-id structinfo-new structinfo-list-store list-push-end-struct
-s" StructInfo" structinfo-mma structinfo-id structinfo-new structinfo-list-store list-push-end-struct
+cr ." at 1: " .stack-gbl cr
+' link-deallocate ' .link s" Link" link-mma link-id structinfo-new structinfo-list-store structinfo-list-push
+
+' list-deallocate ' .list s" List" list-mma list-id structinfo-new structinfo-list-store structinfo-list-push-end
+' structinfo-deallocate ' .structinfo s" StructInfo" structinfo-mma structinfo-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #3003 region-mma-init
-s" Region" region-mma region-id structinfo-new structinfo-list-store list-push-end-struct
+' region-deallocate ' .region s" Region" region-mma region-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0600 regioncorr-mma-init
-s" RegionCorr" regioncorr-mma regioncorr-id structinfo-new structinfo-list-store list-push-end-struct
+' regioncorr-deallocate ' .regioncorr s" RegionCorr" regioncorr-mma regioncorr-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0904 rule-mma-init
-s" Rule" rule-mma rule-id structinfo-new structinfo-list-store list-push-end-struct
+' rule-deallocate ' .rule s" Rule" rule-mma rule-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0505 rulestore-mma-init
-s" RuleStore" rulestore-mma rulestore-id structinfo-new structinfo-list-store list-push-end-struct
+' rulestore-deallocate ' .rulestore s" RuleStore" rulestore-mma rulestore-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0404 rulecorr-mma-init
-s" RuleCorr" rulecorr-mma rulecorr-id structinfo-new structinfo-list-store list-push-end-struct
+' rulecorr-deallocate ' .rulecorr s" RuleCorr" rulecorr-mma rulecorr-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0406 square-mma-init
-s" Square" square-mma square-id structinfo-new structinfo-list-store list-push-end-struct
+' square-deallocate ' .square s" Square" square-mma square-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0200 corner-mma-init
-s" Corner" corner-mma corner-id structinfo-new structinfo-list-store list-push-end-struct
+' corner-deallocate ' .corner s" Corner" corner-mma corner-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0250 sample-mma-init
-s" Sample" sample-mma sample-id structinfo-new structinfo-list-store list-push-end-struct
+' sample-deallocate ' .sample s" Sample" sample-mma sample-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0650 changes-mma-init
-s" Changes" changes-mma changes-id structinfo-new structinfo-list-store list-push-end-struct
+' changes-deallocate ' .changes s" Changes" changes-mma changes-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0450 changescorr-mma-init
-s" ChangesCorr" changescorr-mma changescorr-id structinfo-new structinfo-list-store list-push-end-struct
+' changescorr-deallocate ' .changescorr s" ChangesCorr" changescorr-mma changescorr-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0100 group-mma-init
-s" Group" group-mma group-id structinfo-new structinfo-list-store list-push-end-struct
+' group-deallocate ' .group s" Group" group-mma group-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0200 need-mma-init
-s" Need" need-mma need-id structinfo-new structinfo-list-store list-push-end-struct
+' need-deallocate ' .need s" Need" need-mma need-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0150 planstep-mma-init
-s" PlanStep" planstep-mma planstep-id structinfo-new structinfo-list-store list-push-end-struct
+' planstep-deallocate ' .planstep s" PlanStep" planstep-mma planstep-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0370 pathstep-mma-init
-s" PathStep" pathstep-mma pathstep-id structinfo-new structinfo-list-store list-push-end-struct
+' pathstep-deallocate ' .pathstep s" PathStep" pathstep-mma pathstep-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0150 plan-mma-init
-s" Plan" plan-mma plan-id structinfo-new structinfo-list-store list-push-end-struct
+' plan-deallocate ' .plan s" Plan" plan-mma plan-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0040 plancorr-mma-init
-s" PlanCorr" plancorr-mma plancorr-id structinfo-new structinfo-list-store list-push-end-struct
+' plancorr-deallocate ' .plancorr s" PlanCorr" plancorr-mma plancorr-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0100 rate-mma-init
-s" Rate" rate-mma rate-id structinfo-new structinfo-list-store list-push-end-struct
+' rate-deallocate ' .rate s" Rate" rate-mma rate-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0100 regioncorrrate-mma-init
-s" RegionCorrRate" regioncorrrate-mma regioncorrrate-id structinfo-new structinfo-list-store list-push-end-struct
+' regioncorrrate-deallocate ' .regioncorrrate s" RegionCorrRate" regioncorrrate-mma regioncorrrate-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0050 action-mma-init
-s" Action" action-mma action-id structinfo-new structinfo-list-store list-push-end-struct
+' action-deallocate ' .action s" Action" action-mma action-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0025 domain-mma-init
-s" Domain" domain-mma domain-id structinfo-new structinfo-list-store list-push-end-struct
+' domain-deallocate ' .domain s" Domain" domain-mma domain-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0001 session-mma-init
-s" Session" session-mma session-id structinfo-new structinfo-list-store list-push-end-struct
+' session-deallocate ' .session s" Session" session-mma session-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 : init-main ( -- )
     \ Set up session.

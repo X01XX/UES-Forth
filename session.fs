@@ -424,8 +424,9 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     drop
 ;
 
-: current-session-deallocate ( -- ) \ Deallocate the session.
-    current-session             \ sess
+: session-deallocate ( sess0 -- ) \ Deallocate a session.
+    \ Check arg.
+    assert-tos-is-session
 
     \ Clear fields.
     dup session-get-domains domain-list-deallocate
@@ -448,6 +449,12 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     \ Deallocate session.
     session-mma mma-deallocate
+;
+
+: current-session-deallocate ( -- ) \ Deallocate the current session.
+    current-session             \ sess
+
+    session-deallocate
 
     0 to current-session-store
 

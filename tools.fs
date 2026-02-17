@@ -374,7 +374,7 @@
         exit
     then
 
-    dup -9 =
+    dup #-9 =
     if
         \ Invalid address.
         2drop
