@@ -143,6 +143,7 @@ include regioncorrlist_t.fs
 include session_t.fs
 include plan_t.fs
 include domain_t.fs
+include structinfolist_t.fs
 
 cr ." main.fs"
 
@@ -152,7 +153,6 @@ cr ." main.fs"
 list-new to structinfo-list-store
 
 #0030 structinfo-mma-init
-cr ." at 1: " .stack-gbl cr
 ' link-deallocate ' .link s" Link" link-mma link-id structinfo-new structinfo-list-store structinfo-list-push
 
 ' structinfo-list-deallocate-struct-list ' structinfo-list-print-struct-list s" List" list-mma list-id structinfo-new structinfo-list-store structinfo-list-push-end
@@ -388,6 +388,7 @@ cr ." at 1: " .stack-gbl cr
     session-tests
     plan-tests
     domain-tests
+    structinfolist-tests
 
     structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;
