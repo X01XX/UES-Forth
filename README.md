@@ -35,6 +35,7 @@ In the results, regions not completely overlapped by other regions are <i>Defini
 When well developed, all adjacent dissimilar samples tested, the anchor of a corner
 will be in only one region, a defining region, else it will not be a valid corner.
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
+One of a region's corners may be better than another, to be part of a corner cluster.
 
 Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
 </pre>
