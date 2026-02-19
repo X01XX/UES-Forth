@@ -644,24 +644,17 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
+    #3 pick 0 < abort" invalid depth?"
     \ cr ." domain-get-plan2-fc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
-    #3 pick 0 #5 within is-false abort" invalid depth?"
-    #2 pick #2 pick                             \ | reg-to reg-from
-    swap region-superset-of                     \ | bool
+
+    \ Check depth.
+    #3 pick 0=
     if
-        over dup rule-new-region-to-region      \ | rul
-        0 #2 pick                               \ | rul 0 dom
-        domain-find-action                      \ | rul, act0 t | f
-        is-false abort" Action 0 not found?"
-        planstep-new                            \ | plnstp
-        over plan-new                           \ | plnstp pln
-        tuck plan-push                          \ | pln
-        2nip nip nip
-        true
-        \ cr ." domain-get-plan2-fc: true exit 1" cr
+        \ cr ." Depth exceeded." cr
+        2drop 2drop
+        false
         exit
     then
-    \ abort" domain-get-plan2-fc: 2 region subset?" \ |
 
     \ Put read-only arguments at the bottom of the function's logical stack frame.
     over                            \ depth reg-to reg-from dom0 | reg-from
@@ -753,7 +746,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             #3 pick                             \ depth reg-to reg-from dom0 | pln reg-from | stpx | depth stp-i reg-from
             #6 pick                             \ depth reg-to reg-from dom0 | pln reg-from | stpx | depth stp-i reg-from dom
             \ cr ." calling domain-get-plan-fc depth " #3 pick . cr
-            domain-get-plan-fc-xt execute       \ depth reg-to reg-from dom0 | pln reg-from | stpx | pln2 t | f
+            recurse
+\            domain-get-plan-fc-xt execute       \ depth reg-to reg-from dom0 | pln reg-from | stpx | pln2 t | f
             if                                  \ depth reg-to reg-from dom0 | pln reg-from | stpx | pln2
                 \ cr ." returned from domain-get-plan-fc: t " dup .plan space ." depth: " #6 pick . space ." continuing" cr
                 swap planstep-deallocate        \ depth reg-to reg-from dom0 | pln reg-from | pln2
@@ -852,16 +846,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 #5 within is-false abort" invalid depth?"
-\    cr ." domain-get-plan-fc: " .stack-gbl execute cr
-
-    \ Check depth.
-    #3 pick 1 < if
-        cr ." domain-get-plan-fc: Depth exceeded." cr
-        2drop 2drop
-        false
-        exit
-    then
+    #3 pick 0 < abort" Invalid depth?"
+    \ cr ." domain-get-plan-fc:  start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     #3 0 do
         #3 pick #3 pick #3 pick #3 pick
@@ -891,19 +877,6 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-nos-is-region
     assert-3os-is-region
     \ cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
-    #2 pick #2 pick                             \ | reg-to reg-from
-    swap region-superset-of                     \ | bool
-    if
-        over dup rule-new-region-to-region      \ | rul
-        0 #2 pick                               \ | rul 0 dom
-        domain-find-action                      \ | rul, act0 t | f
-        is-false abort" Action 0 not found?"
-        planstep-new                            \ | plnstp
-        2nip nip                                \ plnstp
-        true
-        exit
-    then
-    
 
     \ Init aggregate step list.
     list-new                                    \ | stp-lst
@@ -1002,11 +975,21 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ Check args.
     assert-tos-is-domain
     assert-3os-is-region
-    \ cr ." domain-get-plan2-bc: start: depth: " #3 pick . space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
-    #3 pick 0 #5 within is-false abort" invalid depth?"
+    \ cr ." domain-get-plan2-bc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
+
+    #3 pick 0 < abort" invalid depth?"
     #2 pick #2 pick                             \ | reg-to reg-from
     swap region-superset-of                     \ | bool
     abort" domain-get-plan2-bc: 2 region subset?" \ |
+
+    \ Check depth.
+    #3 pick 0=
+    if
+        \ cr ." Depth exceeded." cr
+        2drop 2drop
+        false
+        exit
+    then
 
     \ Put read-only arguments at the bottom of the function's logical stack frame.
     #2 pick                         \ depth reg-to reg-from dom0 | reg-to
@@ -1103,7 +1086,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             swap                                    \ depth reg-to reg-from dom0 | pln reg-to | stpx | depth reg-to stp-r
             #6 pick                                 \ depth reg-to reg-from dom0 | pln reg-to | stpx | depth reg-to stp-r dom
             \ cr ." calling domain-get-plan-bc depth " #3 pick . cr
-            domain-get-plan-bc-xt execute           \ depth reg-to reg-from dom0 | pln reg-to | stpx | pln2 t | f
+            recurse
+\            domain-get-plan-bc-xt execute           \ depth reg-to reg-from dom0 | pln reg-to | stpx | pln2 t | f
             if                                      \ depth reg-to reg-from dom0 | pln reg-to | stpx | pln2
                 \ cr ." domain-get-plan2-bc: 3.1 returned t " dup .plan space ." depth: " #6 pick . space ." continuing" cr
                 swap planstep-deallocate            \ depth reg-to reg-from dom0 | pln reg-to | pln2
@@ -1207,20 +1191,12 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Using a random depth-first backward-chaining strategy. Try a number
 \ of times to find a plan to accomplish a desired sample.
 : domain-get-plan-bc ( depth reg-to reg-from dom0 -- plan true | false )
-    \ cr ." domain-get-plan-bc: " .stack-structs-xt execute cr
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 #5 within is-false abort" invalid depth?"
-
-    \ Check depth.
-    #3 pick 1 < if
-        cr ." domain-get-plan-bc: Depth exceeded." cr
-        2drop 2drop
-        false
-        exit
-    then
+    #3 pick 0 < abort" Invalid depth?"
+    \ cr ." domain-get-plan-bc:  start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     #3 0 do
         #3 pick #3 pick #3 pick #3 pick         \ depth reg-to reg-from dom0 |
@@ -1251,7 +1227,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    \ cr ." domain-get-plan-fb: reg-to: " #2 pick .region space ." reg-from: " over .region cr
+    \ cr ." domain-get-plan-fb:  start:           from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     #2 random
     if
@@ -1262,7 +1238,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         \ cr ." todo chng back to fc" cr
         if
             2nip nip
-            cr ." plan found (fc) " dup .plan cr
+            \ cr ." plan found (fc) " dup .plan cr
             true
             exit
         then
@@ -1272,7 +1248,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         domain-get-plan-bc          \ reg-to reg-from dom0 | pln t | f
         if
             2nip nip
-            cr ." plan found (bc*) " dup .plan cr
+            \ cr ." plan found (bc*) " dup .plan cr
             true
             exit
         then
@@ -1283,7 +1259,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         domain-get-plan-bc          \ reg-to reg-from dom0 | pln t | f
         if
             2nip nip
-            cr ." plan found (bc) " dup .plan cr
+            \ cr ." plan found (bc) " dup .plan cr
             true
             exit
         then
@@ -1294,7 +1270,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         \ cr ." todo chng back to fc" cr
         if
             2nip nip
-            cr ." plan found (fc*) " dup .plan cr
+            \ cr ." plan found (fc*) " dup .plan cr
             true
             exit
         then
@@ -1348,7 +1324,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    \ cr ." domain-asymmetric-chaining: reg-to: " #2 pick .region space ." reg-from: " over .region cr
+    \ cr ." domain-asymmetric-chaining: start:    from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     \ Find an asymmetric rule.
     #2 pick #2 pick                         \ reg-to reg-from dom0 | reg-to reg-from
@@ -1471,8 +1447,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    \ cr ." domain-get-plan: start: from " over .region space ." to " #2 pick .region cr 
-    
+    \ cr ." domain-get-plan:     start:           from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
+
+    \ Check for no plan needed.
     #2 pick #2 pick swap                        \ | reg-from reg-to
     region-superset-of                          \ | bool
     if
@@ -1515,7 +1492,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     else
         domain-asymmetric-chaining      \ plan t | f
         if
-            cr ." plan found (asm) " dup .plan cr
+            \ cr ." plan found (asm) " dup .plan cr
             true
         else
             false

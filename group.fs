@@ -480,11 +480,9 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     region-intersection         \ reg1 grp0 | sta-0, reg1' t | f
     if
     else
-        #2 pick                     \ reg1 grp0 | sta-0 reg1
-        #2 pick group-get-region    \ reg1 grp0 | sta-0 reg1 grp-reg
-        cr ." grp-reg: " .region space ." passed reg: " .region cr
-        cr ." group-get-confirm-need-state: intersection failed?" cr
-        abort
+        3drop
+        false
+        exit
     then
 
     \ Get far state.

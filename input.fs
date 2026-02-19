@@ -371,12 +371,13 @@
         list-get-item                   \ ned-lst inx-lst' rnd-inx ned-inx
 
         #3 pick list-get-item           \ ned-lst inx-lst' rnd-inx nedx
-        cr ." Need chosen: " space dup .need cr
+        cr ." Need chosen: " space dup .need
 
         \ Check if no plan needed.
         \ cr ." at 1 " .stack-gbl cr
         dup need-current-state-satisfies    \ ned-lst inx-lst' rnd-inx nedx bool
         if
+            cr
             need-take-sample                \ ned-lst inx-lst' rnd-inx
             \ Need satisfied, done.
             drop
@@ -389,6 +390,7 @@
             dup need-get-plan               \ ned-lst inx-lst' rnd-inx nedx, pln t | f
         \ cr ." at 3 " .stack-gbl cr
             if                              \ ned-lst inx-lst' rnd-inx nedx pln'
+                cr
                 2dup swap                   \ ned-lst inx-lst' rnd-inx nedx pln' pln' nedx
                 need-run-plan               \ ned-lst inx-lst' rnd-inx nedx pln' bool
                 if
@@ -411,6 +413,8 @@
                     exit
                 then
             else                            \ ned-lst inx-lst' rnd-inx nedx
+
+                ." , no plan found."
             \ cr ." at 5 " .stack-gbl cr
                 drop                        \ ned-lst inx-lst' rnd-inx
             then
