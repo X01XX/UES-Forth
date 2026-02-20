@@ -299,63 +299,13 @@
     drop
 ;
 
-: do-zero-token-command ( -- true ) \ Zero-token logic, get/show/act-on needs.
-    current-session             \ sess
-    session-get-needs           \ ned-lst
-
-    dup list-get-length         \ ned-lst len
-    0=
-    if
-        behavior
-        \ ." No needs found" cr
-        drop
-        true
-        exit
-    then
-
-    \ Look for a need that is satisfied by the current state.
-    \ Fill in easy to understand action/responses, as a foundation
-    \ to finding the corners in more complex action/responses.
-                                \ ned-lst
-\    dup list-get-links          \ ned-lst link
-\
-\    begin
-\        ?dup
-\    while
-\        dup link-get-data           \ ned-lst link nedx
-\        dup need-get-domain         \ ned-lst link nedx n-dom
-\        domain-get-current-state    \ ned-lst link nedx dom-sta
-\        over need-get-target        \ ned-lst link nedx dom-sta ned-sta
-\        = if                        \ ned-lst link nedx
-\            cr ." Need chosen: " space dup .need cr
-\            do-need                 \ ned-lst link bool
-\            if
-\                2drop               \
-\                true
-\                exit
-\            then
-\        else                        \ ned-lst link nedx
-\            drop                    \ ned-lst link
-\        then
-\
-\        link-get-next
-\    repeat                          \ ned-lst
-
-    \ Randomly select a need.
-    \
-    \ If the current state of the need domain satisfies the need
-    \   take a sample
-    \   exit
-    \ then
-    \
-    \ Try to find a plan for the need.
-    \
-    \ if plan found
-    \   run plan
-    \   exit
-    \ else
-    \   try another need.
-    \ then
+\ Process a list of needs.
+\ Return true if any need was processed,
+\ false if no need matched the domain current state and/or
+\ no plan was was found for any need.
+: process-need-list ( ned-lst0 -- bool )
+    \ Check arg.
+    assert-tos-is-need-list
 
     \ Init index list for need list.
     dup list-get-length             \ ned-lst len
@@ -434,10 +384,95 @@
         \ Check if index list is empty.
         dup list-get-length 0=
     until
-
-    \ Return.
                                         \ ned-lst inx-lst'
     list-deallocate                     \ ned-lst
+    drop
+    false
+;
+
+: do-zero-token-command ( -- true ) \ Zero-token logic, get/show/act-on needs.
+    current-session             \ sess
+    session-get-needs           \ ned-lst
+
+    dup list-get-length         \ ned-lst len
+    0=
+    if
+        behavior
+        \ ." No needs found" cr
+        drop
+        true
+        exit
+    then
+
+    \ Check for Confirm Logical structure needs.
+    need-type-cls over              \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
+
+    \ Check for Improve Logical Structure needs.
+    need-type-ils over              \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
+
+    \ Check for Corner anchor square needs.
+    need-type-cas over              \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
+
+    \ Check for Corner dissimilar square needs.
+    need-type-cds over              \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
+
+    \ Check for Corner closer dissimilar square needs.
+    need-type-ccds over             \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
+
+    \ Go fish.
+    process-need-list               \ bool
+
+    \ Return.
     drop
     true
 ;

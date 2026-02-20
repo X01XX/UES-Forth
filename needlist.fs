@@ -137,3 +137,41 @@
     drop                    \
     false
 ;
+
+\ Find all needs matching a given type.
+: need-list-find-all-match-type ( typ1 ned-lst0 -- ned-lst t | f )
+    \ Check args.
+    assert-tos-is-need-list
+    assert-nos-is-need-number
+
+    \ Init return list.
+    list-new -rot               \ ret-lst typ1 ned-lst0
+
+    \ Prep for loop.
+    list-get-links              \ ret-lst typ1 ned-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret-lst typ1 ned-link nedx
+        need-get-type           \ ret-lst typ1 ned-link typx
+        #2 pick                 \ ret-lst typ1 ned-link typx typ1
+        =                       \ ret-lst typ1 ned-link bool
+        if
+            dup link-get-data   \ ret-lst typ1 ned-link nedx
+            #3 pick             \ ret-lst typ1 ned-link nedx ret-lst
+            need-list-push      \ ret-lst typ1 ned-link
+        then
+
+        link-get-next
+    repeat
+                                \ ret-lst typ1
+    drop                        \ ret-lst
+    dup list-is-empty           \ ret-lst bool
+    if
+        list-deallocate
+        false
+    else
+        true
+    then
+;

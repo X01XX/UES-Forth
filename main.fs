@@ -220,6 +220,7 @@ list-new to structinfo-list-store
 
 #0001 session-mma-init
 ' session-deallocate ' .session s" Session" session-mma session-id structinfo-new structinfo-list-store structinfo-list-push-end
+cr
 
 : init-main ( -- )
     \ Set up session.

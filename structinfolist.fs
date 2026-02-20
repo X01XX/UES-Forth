@@ -306,3 +306,21 @@
         struct-dec-use-count
     then
 ;
+
+\ Return true if an number/address refers to a strcut.
+: is-struct? ( addr -- bool )
+    get-first-word              \ w t | f
+    if
+        structinfo-list-store   \ w snf-lst
+        structinfo-list-find    \ snf t | f
+        if
+            drop
+            true
+        else
+            false
+        then
+    else
+        false
+    then
+;
+
