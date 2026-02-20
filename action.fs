@@ -688,6 +688,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
 ;
 
+\ Minimize the total number of states used by all corners by sharing
+\ states, that is forming corner clusters.
+: action-calc-corner-clusters ( ned-crns1 act0 -- )
+    2drop
+;
+
 \ Calc corners and set action-corners field.
 \ Find all corners, and states with only one disimilar, near by,  square.
 \ Sort by the number of Logical Structure regions the anchor square is in, lowest first.
@@ -846,6 +852,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                                             \ crn-lst' reg-lol' ned-crn act0 ls-lst
 
     drop                                    \ crn-lst' reg-lol' ned-crn act0
+
+    2dup action-calc-corner-clusters        \ crn-lst' reg-lol' ned-crn act0
+
     _action-update-corners                  \ crn-lst' reg-lol'
 
     \ Clean up.
