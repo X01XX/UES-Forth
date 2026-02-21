@@ -729,6 +729,15 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     value-num-bits          \ nb
 ;
 
+: region-adjacent ( reg1 reg0 -- bool )
+    \ Check args.
+    assert-tos-is-region
+    assert-nos-is-region
+
+    region-distance     \ num
+    1 =
+;
+
 \ Return the state far from a given state, within a region.
 : region-far-from-state ( sta1 reg0 - sta-far )
     \ Check args.
@@ -790,4 +799,13 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
     region-get-states   \ sta1 sta0
     region-new
+;
+
+\ Return the number of edges in a region.
+: region-get-number-edges ( reg0 -- u )
+    \ Check arg.
+    assert-tos-is-region
+
+    region-edge-mask    \ msk
+    value-num-bits      \ u
 ;

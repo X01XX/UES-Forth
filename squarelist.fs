@@ -395,3 +395,30 @@
     repeat
     nip nip                     \ ret-lst
 ;
+
+\ Return true if all squares are squares.
+: square-list-all-pnc ( sqr-lst0 -- bool )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Prep for loop.
+    list-get-links              \ sqr-link
+
+    \ Scan square list.
+    begin
+        ?dup
+    while
+        dup link-get-data       \ sqr-link square
+        square-get-pnc          \ sqr-link sqr-pnc
+        if                      \ sqr-link
+        else
+            drop
+            false
+            exit
+        then
+
+        link-get-next           \ sqr-link
+    repeat
+                                \
+    true
+;

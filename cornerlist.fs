@@ -92,7 +92,7 @@
     nip nip                             \ ret-lst
 ;
 
-: corner-list-find-corner ( sta1 crn0 -- crn t | f )
+: corner-list-find-corner ( sta1 crn-lst0 -- crn t | f )
     \ Check args.
     assert-tos-is-corner-list
     assert-nos-is-value
@@ -118,4 +118,77 @@
                                     \ sta1
     drop
     false
+;
+
+\ Return the states used in a corner list.
+\ Can be a measure of the amount of state sharing between
+\ corners in clusters.
+\ A different arrangement of corners, could be measured as
+\ better (lower number), equal, or worse (higher number),
+: corner-list-states ( crn-lst0 -- sta-lst )
+    \ Check args.
+    assert-tos-is-corner-list
+
+    \ Init state list.
+    list-new swap                       \ sta-lst crn-lst0
+    list-get-links                      \ sta-lst crn-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ sta-lst crn-link crnx
+
+        \ Add corner anchor state.
+        dup                             \ sta-lst crn-link crnx crnx
+        corner-get-anchor-square        \ sta-lst crn-link crnx sqr
+        square-get-state                \ sta-lst crn-link crnx sta
+        #3 pick                         \ sta-lst crn-link crnx sta sta-lst
+        value-list-push-nodups          \ sta-lst crn-link crnx bool
+        drop                            \ sta-lst crn-link crnx
+
+        \ Add each dissimilar square state.
+        corner-get-dissimilar-squares   \ sta-lst crn-link sqr-lst
+        list-get-links                  \ sta-lst crn-link sqr-link
+
+        begin
+            ?dup
+        while
+            dup link-get-data           \ sta-lst crn-link sqr-link sqr
+            square-get-state            \ sta-lst crn-link sqr-link sta
+            #3 pick                     \ sta-lst crn-link sqr-link sta sta-lst
+            value-list-push-nodups      \ sta-lst crn-link sqr-link bool
+            drop                        \ sta-lst crn-link sqr-link
+
+            link-get-next
+        repeat
+
+        link-get-next
+    repeat
+
+                                        \ sta-lst
+;
+
+\ Return true if all corners in a list are confirmed.
+: corner-list-confirmed ( crn-lst1 -- bool )
+    \ Check args.
+    assert-tos-is-corner-list
+
+    list-get-links              \ crn-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ crn-link crnx
+        corner-confirmed        \ crn-link bool
+        if
+        else
+            drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \
+    true
 ;

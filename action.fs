@@ -688,14 +688,136 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
 ;
 
+\ Look for a corner-list to replace a given list, using fewer states,
+\ that is, sharing more states through state-sharing of corner clusters.
+: action-improve-corners ( crn-lst1 act0 -- crn-lst t | f )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-corner-list
+
+\    cr
+\    ." action-improve-corners: Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute dec. space
+\    ." Act: " dup action-get-inst-id dec. space
+\    over .corner-list
+
+    \ Get base-line states.
+    over                                \ crn-lst1 act0 crn-lst1
+    corner-list-states                  \ crn-lst1 act0 sta-lst'
+\    space ." crn-lst states: " dup .value-list
+\    space ." num states: " dup list-get-length .
+\    cr
+
+    \ Look for all adjacent pairs of corner regions.
+    #2 pick                             \ crn-lst1 act0 sta-lst' crn-lst
+    list-get-links                      \ crn-lst1 act0 sta-lst' crn-link-x
+
+    begin
+        ?dup
+    while
+        \ Get crn-x, reg-x
+        dup link-get-data               \ crn-lst1 act0 sta-lst' crn-link-x crn-x
+        dup corner-get-regions          \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-lst
+        0 swap list-get-item            \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x
+
+        \ Scan all next corners.
+        #2 pick link-get-next           \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y
+        begin
+            ?dup
+        while
+            \ Get crn-y, reg-y.
+            dup link-get-data           \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y
+            dup corner-get-regions      \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-lst
+            0 swap list-get-item        \ crn-lst1 act0 sta-lst' crn-link-x cn-x reg-x crn-link-y crn-y reg-y
+
+            \ Check if reg-x and reg-y are adjacent.
+            #3 pick                     \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x
+            2dup                        \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x reg-y reg-x
+            region-adjacent             \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x bool
+            if
+                cr ." corner reg " over .region space ." is adjacent " dup .region cr
+                \ Check if the anchors are adjacent.
+                #5 pick                 \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x crn-x
+                corner-get-anchor-square    \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sqr-x
+                square-get-state            \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x
+                #3 pick                     \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x crn-y
+                corner-get-anchor-square    \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x anc-sqr-y
+                square-get-state            \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x anc-sta-y
+                2dup value-adjacent         \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x anc-sta-y bool
+                if
+                    cr ." anc-x: " over . space ." adj anc-y: " dup . cr
+                else
+                    cr ." anc-x: " over . space ." not adj anc-y: " dup . cr
+                then
+                                            \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x anc-sta-y
+                2drop                       \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x
+                3drop                       \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y
+            else
+                3drop                       \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y
+            then
+
+            link-get-next
+        repeat
+                                        \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x
+        2drop                           \ crn-lst1 act0 sta-lst' crn-link-x
+
+        link-get-next
+    repeat
+
+    list-deallocate         \ crn-lst1 act0
+    2drop                   \
+    false
+;
+
 \ Minimize the total number of states used by all corners by sharing
 \ states, that is forming corner clusters.
-: action-calc-corner-clusters ( ned-crns1 act0 -- )
+\ A holistic solution seems too hard.
+\ A one-step-better solution seems doable.
+: action-calc-corner-clusters ( crn-lst1 act0 -- crn-lst t | f)
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-corner-list
+
+    \ Check for empty list.
+    over list-is-empty
+    if
+      \ cr ." Dom: " current-domain-id dec. space
+      \    ." Act: " current-action-id dec. space
+      \    ." corners confirmed not 0" cr
+        2drop
+        false
+        exit
+    then
+
+    \ Check if corners need more work?
+    over                            \ crn-lst1 act0 crn-lst1
+    corner-list-confirmed           \ crn-lst1 act0 bool
+    if
+        cr ." Dom: " current-domain-id dec. space
+           ." Act: " current-action-id dec. space
+           ." corners confirmed"
+        over                     \ crn-lst1 act0 crn-lst1
+        space dup .corner-list
+
+        over                     \ crn-lst1 act0 crn-lst1 act0
+        action-improve-corners   \ crn-lst act0, crn-lst2 t | f
+
+        drop
+        \ if
+        \ else
+        \ then
+    else
+        \ cr ." Dom: " current-domain-id dec. space
+        \   ." Act: " current-action-id dec. space
+        \   ." corners confirmed not" cr
+    then
+
+    \ Return, no improvement.
     2drop
+    false
 ;
 
 \ Calc corners and set action-corners field.
-\ Find all corners, and states with only one disimilar, near by,  square.
+\ Find all corners, and states with only one dissimilar, near by,  square.
 \ Sort by the number of Logical Structure regions the anchor square is in, lowest first.
 \ Filter out possible corners that have an LS region list that is a set-superset of
 \ possible corners earlier in the list.
@@ -853,7 +975,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     drop                                    \ crn-lst' reg-lol' ned-crn act0
 
-    2dup action-calc-corner-clusters        \ crn-lst' reg-lol' ned-crn act0
+    2dup action-calc-corner-clusters        \ crn-lst' reg-lol' ned-crn act0, crn-lst' t | f
+    if
+        \ Improved corner list found.
+        rot corner-list-deallocate swap     \ crn-lst' reg-lol' ned-crn act0
+    then
 
     _action-update-corners                  \ crn-lst' reg-lol'
 

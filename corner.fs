@@ -284,6 +284,51 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
     3drop
 ;
 
+\ Return the number of dissimilar squares.
+: corner-get-number-dissimilar-squares ( crn0 -- u )
+    \ Check arg.
+    assert-tos-is-corner
+
+    corner-get-dissimilar-squares       \ sqr-lst
+    list-get-length                     \ u
+;
+
+\ Return true if all dissimilar squares are adjacent.
+: corner-all-dissimilar-squares-adjacent ( crn0 -- bool )
+    \ Check arg.
+    assert-tos-is-corner
+
+    dup corner-get-anchor-square    \ crn0 sqr
+    square-get-state                \ crn0 sta
+
+    over                            \ crn0 sta crn0
+    corner-get-dissimilar-squares   \ crn0 sta dis-lst
+    list-get-links                  \ crn0 sta dis-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ crn0 sta dis-link dis-sqr
+
+        square-get-state            \ crn0 sta dis-link dis-sta
+
+        \ Check if square is adjacent.
+        #2 pick                     \ crn0 sta dis-link dis-sta sta
+        value-adjacent              \ crn0 sta dis-link bool
+        if
+        else
+            2drop drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                                    \ crn0 sta
+    2drop
+    true
+;
+
 \ Deallocate a corner.
 : corner-deallocate ( crn0 -- )
     \ Check arg.
@@ -575,4 +620,111 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
     region-list-deallocate                      \ reg1 crn0 | act0 ret-lst ls-lst sta1
     2drop                                       \ reg1 crn0 | act0 ret-lst
     2nip nip                                    \ ret-lst
+;
+
+\ Return true if the corner anchor square in dissimilar to each dissimilar squares.
+: corner-all-dissimilar-squares-still-dissimilar ( crn0 -- bool )
+    \ Check args.
+    assert-tos-is-corner
+
+    dup corner-get-anchor-square        \ crn0 crn-sqr
+    swap corner-get-dissimilar-squares  \ crn-sqr sqr-lst
+    list-get-links                      \ crn-sqr sqr-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ crn-sqr sqr-link dis-sqr
+        #2 pick                         \ crn-sqr sqr-link dis-sqr crn-sqr
+        square-incompatible             \ crn-sqr sqr-link bool
+        if
+        else
+            2drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                                        \ crn-sqr
+    drop
+    true
+;
+
+\ Return true if a corner is confirmed.
+: corner-confirmed (  crn1 -- bool )
+    \ Check args.
+    assert-tos-is-corner
+
+    \ Check the anchor is in exactly one region.
+    dup corner-get-regions                  \ crn1 reg-lst
+    dup list-get-length                     \ crn1 reg-lst len
+    1 <>
+    if
+        2drop
+        false
+        exit
+    then
+    \ Region number edges should equal the number of dissimilar squares.
+                                            \ crn1 reg-lst
+    0 swap list-get-item                    \ crn1, crn-reg
+    tuck                                    \ crn-reg crn1 crn-reg
+    region-get-number-edges                 \ crn-reg crn1 num-edgs
+    over                                    \ crn-reg crn1 num-edges crn1
+    corner-get-dissimilar-squares           \ crn-reg crn1 num-edgs crn-dis-lst
+    list-get-length                         \ crn-reg crn1 num-edgs crn-num-dis
+    =                                       \ crn-reg crn1 bool
+    if
+    else
+    \ cr ." Dom: " current-domain-id dec. space
+    \    ." Act: " current-action-id dec. space
+    \   ." corners confirmed not 4" cr
+        2drop
+        false
+        exit
+    then
+
+    \ Check if all dissimilar squares are adjacent.
+    dup                                     \ crn-reg crn1 crn1
+    corner-all-dissimilar-squares-adjacent  \ crn-reg crn1 bool
+    if
+    else
+    \ cr ." Dom: " current-domain-id dec. space
+    \    ." Act: " current-action-id dec. space
+    \    ." corners confirmed not 1" cr
+        2drop
+        false
+        exit
+    then
+
+    \ Check all dissimilar squares are still dissimilar.
+    dup                                             \ crn-reg crn1 crn1
+    corner-all-dissimilar-squares-still-dissimilar  \ crn-reg crn1 bool
+    if
+    else
+    \ cr ." Dom: " current-domain-id dec. space
+    \    ." Act: " current-action-id dec. space
+    \    ." corners confirmed not 1" cr
+        2drop
+        false
+        exit
+    then
+
+    \ Check if anchor needs more samples.
+    dup corner-get-anchor-square        \ crn-reg crn1 sqrx
+    square-get-pnc                      \ crn-reg crn1 pnc
+    if
+    else
+    \ cr ." Dom: " current-domain-id dec. space
+    \    ." Act: " current-action-id dec. space
+    \    ." corners confirmed not 2" cr
+        2drop
+        false
+        exit
+    then
+
+    \ Check if each dissimilar, adjacent, square in pnc.
+    dup corner-get-dissimilar-squares       \ crn-reg crn1 sqr-lst
+    square-list-all-pnc                     \ crn-reg crn1 bool
+    nip nip                                 \ bool
 ;
