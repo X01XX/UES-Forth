@@ -104,3 +104,15 @@
                                     \ new-item2 lst-new index1
     drop nip
 ;
+
+\ Return a copy of a list of structs.
+: list-copy-struct ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-copy                           \ ret-lst
+
+    [ ' struct-inc-use-count ] literal  \ ret-lst xt
+    over list-apply                     \ ret-lst
+;
+

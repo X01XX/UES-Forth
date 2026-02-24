@@ -736,7 +736,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             if
                 cr ." corner reg " over .region space ." is adjacent " dup .region cr
                 \ Check if the anchors are adjacent.
-                #5 pick                 \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x crn-x
+                #5 pick                     \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x crn-x
                 corner-get-anchor-square    \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sqr-x
                 square-get-state            \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x
                 #3 pick                     \ crn-lst1 act0 sta-lst' crn-link-x crn-x reg-x crn-link-y crn-y reg-y reg-x anc-sta-x crn-y
@@ -953,10 +953,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         region-list-regions-state-in        \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst'
 
         \ Check if a set-subset exists in reg-lol
-        [ ' region-list-set-subset ] literal \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' xt
-        over                                \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' xt reg-lst'
-        #8 pick                             \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' xt reg-lst' reg-lol'
-        list-member                         \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' bool
+        dup                                 \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' reg-lst'
+        #7 pick                             \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' reg-lst' reg-lol'
+        region-list-lol-any-subset?         \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx reg-lst' bool
         if
             region-list-deallocate          \ crn-lst' reg-lol' ned-crn act0 ls-lst crn-link crnx
         else

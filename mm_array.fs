@@ -362,3 +362,21 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
     \ Clear stack
     2drop 2drop                     \
 ;
+
+\ Check if an address is an item of the array,
+\ on an exact item boundary.
+: mma-is-item ( addr mma0 -- bool )
+    2dup mma-within-array       \ addr mma0 bool
+    if
+        swap                    \ mma0 addr
+        over _mma-get-array     \ mma0 addr array
+        -                       \ mma0 disp-in-array
+        swap                    \ disp-is-array mma0
+        mma-get-item-size       \ disp-in-array size
+        mod                     \ 0 if on item boundary
+        0=
+    else
+        2drop
+        false
+    then
+;

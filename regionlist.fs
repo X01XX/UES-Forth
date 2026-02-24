@@ -1198,25 +1198,6 @@
     repeat
 ;
 
-\ Deallocate a list of region lists.
-: region-list-lol-deallocate ( lst0 -- )
-    \ Check arg.
-    assert-tos-is-list
-
-    \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                        \ lst0 uc
-    #2 < if
-        \ Deallocate region-list instances in the list.
-        [ ' region-list-deallocate ] literal over   \ lst0 xt lst0
-        list-apply                                  \ lst0
-
-        \ Deallocate the list.
-        list-deallocate                             \
-    else
-        struct-dec-use-count
-    then
-;
-
 \ Return true if a (tos) region-list is a subset of another (nos) list.
 : region-list-set-subset ( reg-sup-lst reg-sub-lst -- bool )
     \ Check args.
@@ -1234,4 +1215,61 @@
         region-list-deallocate
         false
     then
+;
+
+\ Return true if tos is a region-list lol.
+: assert-tos-is-region-lol ( lst0 -- bool )
+    assert-tos-is-list
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-region-list
+        drop
+    then
+;
+
+\ Deallocate a list of region lists.
+: region-list-lol-deallocate ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-region-lol
+
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                    \ lst0 uc
+    #2 < if
+        \ Deallocate region-list instances in the list.
+        [ ' region-deallocate ] literal over    \ lst0 xt lst0
+        list-apply                              \ lst0
+
+        \ Deallocate the list.
+        list-deallocate                         \
+    else
+        struct-dec-use-count
+    then
+;
+
+\ Return true if a region-list in a list is a subset of a given region-list.
+: region-list-lol-any-subset? ( reg-lst1 reg-lol0 -- bool )
+    \ Check arg.
+    assert-tos-is-region-lol
+    assert-nos-is-region-list
+
+    list-get-links              \ reg-lst1 link
+
+    begin
+        ?dup
+    while
+        over                    \ reg-lst1 link reg-lst1
+        over link-get-data      \ reg-lst1 link reg-lst1 reg-lst
+        region-list-set-subset  \ reg-lst1 link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ reg-lst1
+    drop
+    false
 ;

@@ -32,11 +32,17 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
 \ Check instance type.
 : is-allocated-region ( addr -- flag )
-    get-first-word          \ w t | f
+    dup region-mma mma-is-item  \ addr bool
     if
-        region-id =
+        get-first-word          \ w t | f
+        if
+            region-id =         \ bool
+        else
+            false               \ f
+        then
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 

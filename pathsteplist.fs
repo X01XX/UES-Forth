@@ -60,7 +60,7 @@
     dup struct-get-use-count                        \ plnstp-lol0 uc
     #2 < if
         \ Deallocate pathstep instances in the list.
-        [ ' pathstep-list-deallocate ] literal over \ plnstp-lol0 xt plnstp-lol0
+        [ ' pathstep-deallocate ] literal over      \ plnstp-lol0 xt plnstp-lol0
         list-apply                                  \ plnstp-lol0
 
         \ Deallocate the list.

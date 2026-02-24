@@ -144,6 +144,7 @@ include session_t.fs
 include plan_t.fs
 include domain_t.fs
 include structinfolist_t.fs
+include list_t.fs
 
 cr ." main.fs"
 
@@ -390,6 +391,7 @@ cr
     plan-tests
     domain-tests
     structinfolist-tests
+    list-tests
 
     structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;
