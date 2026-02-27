@@ -419,91 +419,45 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     =
 ;
 
-: domain-get-needs ( reg1 dom0 -- ned-lst )
+: domain-get-needs ( dom0 -- ned-lst )
     \ Check args.
     assert-tos-is-domain
-    assert-nos-is-region
 
     \ dup domain-get-inst-id cr ." domain-get-needs: Dom: " .
-    \ space ." reachable region: " over .region cr
 
-    dup domain-get-current-state    \ reg1 dom0 sta
-    swap                            \ reg1 sta dom0
+    dup domain-get-current-state    \ dom0 sta
+    swap                            \ sta dom0
 
-    dup domain-get-actions          \ reg1 sta dom0 act-lst
+    dup domain-get-actions          \ sta dom0 act-lst
 
     \ Init list to start appending action need lists to.
-    list-new swap                   \ reg1 sta dom0 ret-lst act-lst
+    list-new swap                   \ sta dom0 ret-lst act-lst
 
     \ Scan action-list, getting needs from each action.
-    list-get-links                  \ reg1 sta dom0 ret-lst link
+    list-get-links                  \ sta dom0 ret-lst link
+
     begin
         ?dup
     while
         \ Set current action.
-        dup link-get-data           \ reg1 sta dom0 ret-lst link actx
-        #3 pick                     \ reg1 sta dom0 ret-lst link actx dom
-        domain-set-current-action   \ reg1 sta dom0 ret-lst link
+        dup link-get-data           \ sta dom0 ret-lst link actx
+        #3 pick                     \ sta dom0 ret-lst link actx dom
+        domain-set-current-action   \ sta dom0 ret-lst link
 
         \ Get action needs.
-        #4 pick                     \ reg1 sta dom0 ret-lst link reg1
-        #4 pick                     \ reg1 sta dom0 ret-lst link reg1 sta
-        #2 pick link-get-data       \ reg1 sta dom0 ret-lst link reg1 sta actx
-        action-get-needs            \ reg1 sta dom0 ret-lst link act-neds
+        #3 pick                     \ sta dom0 ret-lst link sta
+        over link-get-data          \ sta dom0 ret-lst link sta actx
+        action-get-needs            \ sta dom0 ret-lst link act-neds'
 
         \ Add needs to return list.
-        dup #3 pick                 \ reg1 sta dom0 ret-lst link act-neds act-neds ret-lst
-        need-list-append            \ reg1 sta dom0 link act-neds
-        need-list-deallocate        \ reg1 sta dom0 link
+        dup #3 pick                 \ sta dom0 ret-lst link act-neds' act-neds' ret-lst
+        need-list-append            \ sta dom0 ret-lst link act-neds'
+        need-list-deallocate        \ sta dom0 ret-lst link
 
         link-get-next
     repeat
-                                    \ reg1 sta dom0 ret-lst
-    2nip nip                        \ ret-lst
-;
-
-\ Return a maximum region that might be reached, given the
-\ current state and the aggregate changes of all action group rules.
-: domain-calc-reachable-region ( dom0 -- r-reg )
-    \ Check args.
-    assert-tos-is-domain
-
-    dup domain-get-actions          \ dom0 act-lst
-
-    \ Init changes to start appending action changes to.
-    0 0 changes-new swap            \ dom0 cng-agg act-lst
-
-    \ Scan action-list, getting changes from each action.
-    list-get-links                  \ dom0 cng-agg link
-    begin
-        ?dup
-    while
-        dup link-get-data          \ dom0 cng-agg link actx
-
-        \ Set current action.
-        dup #4 pick                 \ dom0 cng-agg link actx actx dom
-        domain-set-current-action   \ dom0 cng-agg link actx
-
-        \ Get aggregate action changes.
-        action-calc-changes         \ dom0 cng-agg link act-cngs
-
-        \ Aggregate changes.
-        rot                         \ dom0 link act-cngs cng-agg
-        2dup changes-calc-union     \ dom0 link act-cngs cng-agg cng-agg'
-
-        \ Clean up.
-        swap changes-deallocate     \ dom0 link act-cngs cng-agg'
-        swap changes-deallocate     \ dom0 link cng-agg'
-        swap                        \ dom0 cng-agg' link
-
-        link-get-next
-    repeat
-                                    \ dom0 cng-agg
-    swap domain-get-current-state   \ cng-agg sta
-    2dup swap                       \ cng-agg sta sta cng-agg
-    changes-apply-to-state          \ cng-agg sta sta'
-    region-new                      \ cng-agg reg
-    swap changes-deallocate         \ reg
+                                    \ sta dom0 ret-lst
+    nip nip                         \ ret-lst
 ;
 
 \ Return a step forward, from an initial region,

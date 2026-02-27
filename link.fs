@@ -82,10 +82,16 @@ link-next-disp      cell+   constant link-data-disp
 
     ." Link: "
     dup hex.
-    ." next: "
-    dup link-get-next hex.
+    ." uc: " dup struct-get-use-count dec.
     ." data: "
-    link-get-data hex.
+    link-get-data dup hex.
+    dup get-first-word
+    if
+        swap ." uc: " struct-get-use-count dec.
+        ." id: " dec.
+    else
+        drop
+    then
 ;
 
 \ Deallocate a link.

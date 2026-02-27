@@ -47,6 +47,14 @@
     [ ' .corner ] literal swap .list
 ;
 
+\ Print a corner-list of lists.
+: .corner-lol ( list0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
+    [ ' .corner ] literal swap .list
+;
+
 \ Push a corner to a corner-list.
 : corner-list-push ( reg1 list0 -- )
     \ Check args.
@@ -56,40 +64,37 @@
     list-push-struct
 ;
 
-\ Return a list of corner find/confirm needs,
-\ given a probable reachable region.
-: corner-list-calc-needs ( reg1 crn-lst0 - ned-lst )
+\ Return a list of corner find/confirm needs.
+: corner-list-calc-needs ( crn-lst0 - ned-lst )
     \ Check args.
     assert-tos-is-corner-list
-    assert-nos-is-region
 
     \ Init return list.
-    list-new                            \ reg1 crn-lst0 | ret-lst
+    list-new                            \ crn-lst0 | ret-lst
     
     \ Prep for loop.
-    over                                \ reg1 crn-lst0 | ret-lst crn-lst0
-    list-get-links                      \ reg1 crn-lst0 | ret-lst crn-link
+    over                                \ crn-lst0 | ret-lst crn-lst0
+    list-get-links                      \ crn-lst0 | ret-lst crn-link
 
     begin
         ?dup
     while
         \ Get needs for one corner.
-        #3 pick                         \ reg1 crn-lst0 | ret-lst crn-link reg1
-        over link-get-data              \ reg1 crn-lst0 | ret-lst crn-link reg1 crnx
-        corner-calc-needs               \ reg1 crn-lst0 | ret-lst crn-link ned-lst'
+        dup link-get-data               \ crn-lst0 | ret-lst crn-link crnx
+        corner-calc-needs               \ crn-lst0 | ret-lst crn-link ned-lst'
 
         \ Aggregate needs.
-        dup                             \ reg1 crn-lst0 | ret-lst crn-link ned-lst' ned-lst'
-        #3 pick                         \ reg1 crn-lst0 | ret-lst crn-link ned-lst' ned-lst' ret-lst
-        need-list-append                \ reg1 crn-lst0 | ret-lst crn-link ned-lst'
-        need-list-deallocate            \ reg1 crn-lst0 | ret-lst crn-link
+        dup                             \ crn-lst0 | ret-lst crn-link ned-lst' ned-lst'
+        #3 pick                         \ crn-lst0 | ret-lst crn-link ned-lst' ned-lst' ret-lst
+        need-list-append                \ crn-lst0 | ret-lst crn-link ned-lst'
+        need-list-deallocate            \ crn-lst0 | ret-lst crn-link
 
         link-get-next
     repeat
-                                        \ reg1 crn-lst0 | ret-lst
+                                        \ crn-lst0 | ret-lst
 
     \ Clean up.
-    nip nip                             \ ret-lst
+    nip                                 \ ret-lst
 ;
 
 : corner-list-find-corner ( sta1 crn-lst0 -- crn t | f )
@@ -103,8 +108,7 @@
         ?dup
     while
         dup link-get-data           \ sta1 crn-link crn
-        corner-get-anchor-square    \ sta1 crn-link crn-sqr
-        square-get-state            \ sta1 crn-link crn-sta
+        corner-get-anchor-state     \ sta1 crn-link crn-sta
         #2 pick =                   \ sta1 crn-link bool
         if
             dup link-get-data       \ sta1 crn-link crn
@@ -126,7 +130,7 @@
 \ A different arrangement of corners, could be measured as
 \ better (lower number), equal, or worse (higher number),
 : corner-list-states ( crn-lst0 -- sta-lst )
-    \ Check args.
+    \ Check arg.
     assert-tos-is-corner-list
 
     \ Init state list.
@@ -140,24 +144,22 @@
 
         \ Add corner anchor state.
         dup                             \ sta-lst crn-link crnx crnx
-        corner-get-anchor-square        \ sta-lst crn-link crnx sqr
-        square-get-state                \ sta-lst crn-link crnx sta
+        corner-get-anchor-state         \ sta-lst crn-link crnx sta
         #3 pick                         \ sta-lst crn-link crnx sta sta-lst
         value-list-push-nodups          \ sta-lst crn-link crnx bool
         drop                            \ sta-lst crn-link crnx
 
         \ Add each dissimilar square state.
-        corner-get-dissimilar-squares   \ sta-lst crn-link sqr-lst
-        list-get-links                  \ sta-lst crn-link sqr-link
+        corner-get-external-states      \ sta-lst crn-link sta-lst
+        list-get-links                  \ sta-lst crn-link sta-link
 
         begin
             ?dup
         while
-            dup link-get-data           \ sta-lst crn-link sqr-link sqr
-            square-get-state            \ sta-lst crn-link sqr-link sta
-            #3 pick                     \ sta-lst crn-link sqr-link sta sta-lst
-            value-list-push-nodups      \ sta-lst crn-link sqr-link bool
-            drop                        \ sta-lst crn-link sqr-link
+            dup link-get-data           \ sta-lst crn-link sta-link sta
+            #3 pick                     \ sta-lst crn-link sta-link sta sta-lst
+            value-list-push-nodups      \ sta-lst crn-link sta-link bool
+            drop                        \ sta-lst crn-link sta-link
 
             link-get-next
         repeat
@@ -168,9 +170,19 @@
                                         \ sta-lst
 ;
 
+\ Return the number of states in a corner list.
+: corner-list-number-states ( crn-lst0 -- u )
+    \ Check arg.
+    assert-tos-is-corner-list
+
+    corner-list-states              \ sta-lst'
+    dup list-get-length             \ sta-lst' len
+    swap list-deallocate            \ len
+;
+
 \ Return true if all corners in a list are confirmed.
-: corner-list-confirmed ( crn-lst1 -- bool )
-    \ Check args.
+: corner-list-confirmed ( crn-lst0 -- bool )
+    \ Check arg.
     assert-tos-is-corner-list
 
     list-get-links              \ crn-link
@@ -191,4 +203,96 @@
     repeat
                                 \
     true
+;
+
+\ Return true if tos is a corner-lst lol.
+: assert-tos-is-corner-lol ( crn-lol0 -- bool )
+    \ Check arg.
+    assert-tos-is-list
+
+    dup list-is-not-empty
+    if
+        dup list-get-links link-get-data
+        assert-tos-is-corner-list
+        drop
+    then
+;
+
+\ Deallocate a list of corner lists.
+: corner-lol-deallocate ( crn-lol0 -- )
+    \ Check arg.
+    assert-tos-is-corner-lol
+
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                    \ crn-lol0 uc
+    #2 < if
+        dup list-get-links                      \ crn-lol0 crn-link
+        begin
+            ?dup
+        while
+            dup link-get-data                   \ crn-lol0 crn-link data
+            corner-list-deallocate              \ crn-lol0 crn-link
+
+            link-get-next
+        repeat
+
+        \ Deallocate the list.
+        list-deallocate                         \
+    else
+        struct-dec-use-count
+    then
+;
+
+\ Return true if a state is in any corner's region.
+: corner-list-state-in-any-corner-region ( sta1 crn-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-corner-list
+    assert-nos-is-value
+
+    list-get-links              \ sta1 crn-link
+
+    begin
+        ?dup
+    while
+        over                    \ sta1 crn-link sta1
+        over link-get-data      \ sta1 crn-link sta1 crnx
+        corner-state-in-region  \ sta1 crn-link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ sta1
+    drop                        \
+    false
+;
+
+\ Return true if any carner uses a given state.
+: corner-list-state-used-by-any-corner ( sta1 crn-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-corner-list
+    assert-nos-is-value
+
+    list-get-links              \ sta1 crn-link
+
+    begin
+        ?dup
+    while
+        over                    \ sta1 crn-link sta1
+        over link-get-data      \ sta1 crn-link sta1 crnx
+        corner-uses-state       \ sta1 crn-link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ sta1
+    drop                        \
+    false
 ;

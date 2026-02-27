@@ -116,3 +116,23 @@
     over list-apply                     \ ret-lst
 ;
 
+\ Return a flattened struct list.
+: list-flatten-struct ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-flatten                        \ ret-list
+
+    [ ' struct-inc-use-count ] literal  \ ret-lst xt
+    over list-apply                     \ ret-lst
+;
+
+: list-one-of-each-struct ( lst0 -- lol )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-one-of-each                    \ ret-list
+
+    [ ' struct-inc-use-count ] literal  \ ret-lst xt
+    over list-apply                     \ ret-lst
+;

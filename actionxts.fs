@@ -129,11 +129,7 @@
     sample-new
 ;
 
-\ An action that changes all bits, allowing the quick, arbitrary,
-\ establishment of a large reachable region, for testing purposes.
-\ Using the commands:
-\ sas 0 5 %0
-\ sas 0 5 %1111
+\ An action that changes all bits.
 : domain-0-act-5-get-sample ( res1 flag1 cur0 -- sample )
     \ Check args
     assert-tos-is-value
@@ -252,11 +248,7 @@
     sample-new
 ;
 
-\ An action that changes all bits, allowing the quick, arbitrary,
-\ establishment of a large reachable region, for testing purposes.
-\ Using the commands:
-\ sas 1 5 %0
-\ sas 1 5 %11111
+\ An action that changes all bits.
 : domain-1-act-5-get-sample ( res1 flag1 cur0 -- sample )
     \ Check args
     assert-tos-is-value

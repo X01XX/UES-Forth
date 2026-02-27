@@ -453,62 +453,47 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 ;
 
 \ Return a need to confirm a group.
-: group-get-confirm-need-state ( reg1 grp0 -- sta t | f )
+: group-get-confirm-need-state ( grp0 -- sta t | f )
     \ Check args.
     assert-tos-is-group
-    assert-nos-is-region
-    \ cr ." group " dup group-get-region .region space ." reg1 " over .region cr
+    \ cr ." group " dup group-get-region .region cr
 
-    0 over group-get-squares    \ reg1 grp0 | 0 sqr-lst
-    list-get-item               \ reg1 grp0 | sqr-0
-    dup square-get-pnc          \ reg1 grp0 | sqr-0 pnc
-    if                          \ reg1 grp0 | sqr-0
+    0 over group-get-squares    \ grp0 | 0 sqr-lst
+    list-get-item               \ grp0 | sqr-0
+    dup square-get-pnc          \ grp0 | sqr-0 pnc
+    if                          \ grp0 | sqr-0
     else
         \ Return square state.
-        square-get-state        \ reg1 act0 | sta-0
-        nip nip                 \ sta-0
+        square-get-state        \ act0 | sta-0
+        nip                     \ sta-0
         true
         exit
     then
-                                \ reg1 grp0 | sqr-0
+                                \ grp0 | sqr-0
 
-    square-get-state            \ reg1 grp0 | sta-0
-
-    \ Get group region intersection with the reachable region.
-    #2 pick                     \ reg1 grp0 | sta-0 reg1
-    #2 pick group-get-region    \ reg1 grp0 | sta-0 reg1 grp-reg
-    region-intersection         \ reg1 grp0 | sta-0, reg1' t | f
-    if
-    else
-        3drop
-        false
-        exit
-    then
+    square-get-state            \ grp0 | sta-0
 
     \ Get far state.
-    tuck                        \ reg1 grp0 | reg1' sta-0 reg1'
+    over group-get-region       \ grp0 | sta-0 g-reg
 
-    \ Check for initial small reachable region.
-    2dup region-superset-of-state
-    is-false if 2drop region-deallocate 2drop false exit then
+    \ Get state far from sta-0,
 
-    region-far-from-state       \ reg1 grp0 | reg1' sta-f
-    swap region-deallocate      \ reg1 grp0 | sta-f
+    region-far-from-state       \ grp0 | sta-f
 
     \ Find square.
-    dup                          \ reg1 grp0 | sta-f sta-f
-    #2 pick group-get-squares    \ reg1 grp0 | sta-f sta-f grp-sqrs
-    square-list-find             \ reg1 grp0 | sta-f, sqr-f t | f
+    dup                         \ grp0 | sta-f sta-f
+    #2 pick group-get-squares   \ grp0 | sta-f sta-f grp-sqrs
+    square-list-find            \ grp0 | sta-f, sqr-f t | f
     if
-        square-get-pnc           \ reg1 grp0 | sta-f pnc
+        square-get-pnc          \ grp0 | sta-f pnc
         if
-            3drop
+            2drop
             false
         else
-            nip nip true
+            nip true
         then
     else
-        nip nip true
+        nip true
     then
 ;
 

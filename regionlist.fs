@@ -1228,17 +1228,17 @@
     then
 ;
 
-\ Deallocate a list of region lists.
-: region-list-lol-deallocate ( lst0 -- )
+\ Deallocate a list of region-list lol.
+: region-lol-deallocate ( reg-lo0 -- )
     \ Check arg.
     assert-tos-is-region-lol
 
     \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                    \ lst0 uc
+    dup struct-get-use-count                    \ reg-lol0 uc
     #2 < if
         \ Deallocate region-list instances in the list.
-        [ ' region-deallocate ] literal over    \ lst0 xt lst0
-        list-apply                              \ lst0
+        [ ' region-deallocate ] literal over    \ reg-lol0 xt reg-lol0
+        list-apply                              \ reg-lol0
 
         \ Deallocate the list.
         list-deallocate                         \
@@ -1272,4 +1272,35 @@
                                 \ reg-lst1
     drop
     false
+;
+
+\ Return a list of states in only one region of a region-list.
+: region-list-states-in-one-region ( sta-lst1 reg-lst0 -- sta-lst )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-value-list
+
+    \ Init return list.
+    list-new                                \ sta-lst1 reg-lst0 ret-lst
+
+    #2 pick                                 \ sta-lst1 reg-lst0 ret-lst sta-lst1
+    list-get-links                          \ sta-lst1 reg-lst0 ret-lst sta-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ sta-lst1 reg-lst0 ret-lst sta-link sta
+        #3 pick                             \ sta-lst1 reg-lst0 ret-lst sta-link sta reg-lst0
+        region-list-number-regions-state-in \ sta-lst1 reg-lst0 ret-lst sta-link u
+        1 =
+        if
+            dup link-get-data               \ sta-lst1 reg-lst0 ret-lst sta-link sta
+            #2 pick                         \ sta-lst1 reg-lst0 ret-lst sta-link sta ret-lst
+            list-push                       \ sta-lst1 reg-lst0 ret-lst sta-link
+        then
+
+        link-get-next
+    repeat
+                                            \ sta-lst1 reg-lst0 ret-lst
+    nip nip                                 \ ret-lst
 ;

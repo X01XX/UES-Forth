@@ -7,11 +7,11 @@
     #5 constant corner-struct-number-cells
 
 \ Struct fields
-0                                       constant corner-header-disp             \ 16-bits, [0] struct id, [1] use count.
-corner-header-disp              cell+   constant corner-parent-action-disp      \ An action.
-corner-parent-action-disp       cell+   constant corner-anchor-square-disp      \ The anchor square, only one Logical Structure region.
-corner-anchor-square-disp       cell+   constant corner-dissimilar-squares-disp \ Squares, limiting the region A is in.  Adjacent squares are best.
-corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            \ A region-list. Regions the corner could define.
+0                                   constant corner-header-disp             \ 16-bits, [0] struct id, [1] use count.
+corner-header-disp          cell+   constant corner-parent-action-disp      \ An action.
+corner-parent-action-disp   cell+   constant corner-anchor-state-disp       \ The anchor state.
+corner-anchor-state-disp    cell+   constant corner-external-states-disp    \ State, limiting the region A is in.
+corner-external-states-disp cell+   constant corner-region-disp             \ A region.
 
 0 value corner-mma \ Storage for corner mma instance.
 
@@ -74,165 +74,130 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
 ;
 
 
-\ Return the anchor-square field from a corner instance.
-: corner-get-anchor-square ( crn0 -- sqr)
+\ Return the anchor-state field from a corner instance.
+: corner-get-anchor-state ( crn0 -- sta )
     \ Check arg.
     assert-tos-is-corner
 
-    corner-anchor-square-disp + \ Add offset.
+    corner-anchor-state-disp +  \ Add offset.
     @                           \ Fetch the field.
 ;
 
-\ Return the dissimilar-squares list field from a corner instance.
-: corner-get-dissimilar-squares ( crn0 -- sqr-lst )
+\ Return the external-states list field from a corner instance.
+: corner-get-external-states ( crn0 -- sta-lst )
     \ Check arg.
     assert-tos-is-corner
 
-    corner-dissimilar-squares-disp +    \ Add offset.
-    @                                   \ Fetch the field.
+    corner-external-states-disp +   \ Add offset.
+    @                               \ Fetch the field.
 ;
 
-\ Set the anchor-square field from a corner instance, use only in this file.
-: _corner-set-anchor-square ( sqr1 crn0 -- )
+\ Set the anchor-state field from a corner instance, use only in this file.
+: _corner-set-anchor-state ( sta1 crn0 -- )
     \ Check args.
     assert-tos-is-corner
-    assert-nos-is-square
+    assert-nos-is-value
 
-    corner-anchor-square-disp + \ Add offset.
-    !struct                     \ Set the field.
+    corner-anchor-state-disp +  \ Add offset.
+    !                           \ Set the field.
 ;
 
-\ Set the dissimilar-squares list field from a corner instance, use only in this file.
-: _corner-set-dissimilar-squares ( sqr-lst1 crn0 -- )
+\ Set the external-states list field from a corner instance, use only in this file.
+: _corner-set-external-states ( sta-lst1 crn0 -- )
     \ Check args.
     assert-tos-is-corner
-    assert-nos-is-square-list
+    assert-nos-is-value-list
 
-    corner-dissimilar-squares-disp +    \ Add offset.
+    corner-external-states-disp +      \ Add offset.
     !struct                             \ Set the field.
 ;
 
-\ Return the regions list field from a corner instance.
-: corner-get-regions ( crn0 -- reg-lst )
+\ Return the region field from a corner instance.
+: corner-get-region ( crn0 -- reg )
     \ Check arg.
     assert-tos-is-corner
 
-    corner-regions-disp +   \ Add offset.
+    corner-region-disp +    \ Add offset.
     @                       \ Fetch the field.
 ;
 
-\ Set the regions list field from a corner instance, use only in this file.
-: _corner-set-regions ( reg-lst1 crn0 -- )
+\ Set the region field from a corner instance, use only in this file.
+: _corner-set-region ( reg1 crn0 -- )
     \ Check args.
     assert-tos-is-corner
-    assert-nos-is-region-list
+    assert-nos-is-region
 
-    corner-regions-disp +   \ Add offset.
+    corner-region-disp +    \ Add offset.
     !struct                 \ Set the field.
 ;
 
 \ End accessors.
 
-\ Create a corner from an acnchor square and list of dissimilar squares.
-: corner-new ( reg-lst3 sqr-lst2 sqr1 act0 -- crn )
-    \ Check args (long).
-    assert-tos-is-action-xt execute
-    assert-nos-is-square
-    assert-3os-is-square-list
-    assert-4os-is-region-list
+\ Create a corner from an acnchor state and region.
+: corner-new ( reg2 sta1 act0 -- crn )
+    \ Check args.
 
-    \ Check for empty lists.
-    #2 pick list-is-empty abort" square list is empty?"
-    #3 pick list-is-empty abort" region list is empty?"
+        assert-tos-is-action-xt execute
+        assert-nos-is-value
+        assert-3os-is-region
 
-    \ Check that anchor square is in each region.
-    #3 pick list-get-length             \ reg-lst3 sqr-lst2 sqr1 act0 | num-reg1
-    #2 pick square-get-state            \ reg-lst3 sqr-lst2 sqr1 act0 | num-reg1 sta
-    #5 pick                             \ reg-lst3 sqr-lst2 sqr1 act0 | num-reg1 sta reg-lst3
-    region-list-number-regions-state-in \ reg-lst3 sqr-lst2 sqr1 act0 | num-reg1 num-reg2
-    =                                   \ reg-lst3 sqr-lst2 sqr1 act0 | bool
-    if
-    else
-        cr ." Anchor square not in all regions?" cr abort
-    then
+        \ cr ." Dom: " current-domain-id dec. space
+        \    ." Act: " current-action-id dec. space
+        \    ." corner-new: " over .state space #2 pick .value cr
 
-    \ cr ." corner-new: start: " dup .square space over .square-list cr
-
-    \ Check no square-list square eq anchor square.
-    over square-get-state #3 pick       \ sqr-lst2 sqr1 act0 sta1 sqr-lst2
-    square-list-member                  \ sqr-lst2 sqr1 act0 bool
-    if
-        cr ." duplicate square in list?" cr
-        abort
-    then
-
-    \ Check no dissimilar squares blocking each other.
-    list-new                            \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst
-    #2 pick square-get-state            \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1
-    #4 pick list-get-links              \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link
-
-    begin
-        ?dup
-    while
-        dup link-get-data               \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link sqr-l
-        square-get-state                \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link sta-l
-        #2 pick                         \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link sta-l sta1
-        region-new                      \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link regx
-        #3 pick                         \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link regx reg-lst
-
-        2dup
-        region-list-any-subset-of       \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link regx reg-lst bool
-        if cr ." corner-new: subset found? " dup .region-list space over .region cr then
-
-        2dup
-        region-list-any-superset-of     \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link regx reg-lst bool
-        if cr ." corner-new: superset found?" dup .region-list space over .region cr then
-
-        list-push-struct                \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link
-
-        link-get-next                   \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1 link
-    repeat
-                                        \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst sta1
-    drop                                \ reg-lst3 sqr-lst2 sqr1 act0 reg-lst
-    region-list-deallocate              \ reg-lst3 sqr-lst2 sqr1 act0
-
-    \ Check all squares in dissimilar squares list are dissimilar to the anchor square.
-    #2 pick list-get-links              \ reg-lst3 sqr-lst2 sqr1 act0 link
-    begin
-        ?dup
-    while
-        dup link-get-data               \ reg-lst3 sqr-lst2 sqr1 act0 link sqrx
-        #3 pick                         \ reg-lst3 sqr-lst2 sqr1 act0 link sqrx sqr1
-        square-incompatible             \ reg-lst3 sqr-lst2 sqr1 act0 link bool
-        if else cr ." corner-new: square in list is compatible? " space dup link-get-data .square space over .square then
-
-        link-get-next
-    repeat
-
-    \ End check args.
+        \ Check that anchor state is in region.
+        over                                \ reg2 sta1 act0 sta1
+        #3 pick                             \ reg2 sta1 act0 sta1 reg2
+        region-superset-of-state            \ reg2 sta1 act0 bool
+        is-false abort" Anchor square not in region?"
 
     \ Allocate space.
-    corner-mma mma-allocate             \ reg-lst3 sqr-lst2 sqr1 act0 crn
+    corner-mma mma-allocate             \ reg2 sta1 act0 crn
 
     \ Store id.
-    corner-id over                      \ reg-lst3 sqr-lst2 sqr1 act0 crn id crn
-    struct-set-id                       \ reg-lst3 sqr-lst2 sqr1 act0 crn
+    corner-id over                      \ reg2 sta1 act0 crn id crn
+    struct-set-id                       \ reg2 sta1 act0 crn
 
     \ Init use count.
-    0 over struct-set-use-count         \ reg-lst3 sqr-lst2 sqr1 act0 crn
+    0 over struct-set-use-count         \ reg2 sta1 act0 crn
 
     \ Set parent action.
-    tuck                                \ reg-lst3 sqr-lst2 sqr1 crn act0 crn
-    _corner-set-parent-action           \ reg-lst3 sqr-lst2 sqr1 crn
+    tuck                                \ reg2 sta1 crn act0 crn
+    _corner-set-parent-action           \ reg2 sta1 crn
 
-    \ Store anchor square.
-    tuck _corner-set-anchor-square      \ reg-lst3 sqr-lst2 crn
+    \ Generate external states list.
 
-    \ Store close, dissimilar, squares.
-    tuck _corner-set-dissimilar-squares \ reg-lst3 crn
+        \ Init external states list.
+        list-new                            \ reg2 sta1 crn ext-lst
 
-    \ Store regions list.
-    tuck _corner-set-regions            \ crn
+        \ Get single-bit edge masks.
+        #3 pick region-edge-mask            \ reg2 sta1 crn ext-lst msk'
+        value-split dup list-get-links      \ reg2 sta1 crn ext-lst msk-lst' msk-link
+
+        \ Generate a state external to sta1 for eack edge mask.
+        begin
+            ?dup
+        while
+            dup link-get-data               \ reg2 sta1 crn ext-lst msk' msk-link mskx
+            #5 pick                         \ reg2 sta1 crn ext-lst msk' msk-link mskx sta1
+            xor                             \ reg2 sta1 crn ext-lst msk' msk-link ext-sta
+            #3 pick                         \ reg2 sta1 crn ext-lst msk' msk-link ext-sta ext-lst
+            list-push                       \ reg2 sta1 crn ext-lst msk' msk-link
+
+            link-get-next
+        repeat                              \ reg2 sta1 crn ext-lst msk'
+
+        \ Clean up.
+        list-deallocate                     \ reg2 sta1 crn ext-lst
+
+    \ Store external state list.
+    over _corner-set-external-states    \ reg2 sta1 crn
+
+    \ Store anchor state.
+    tuck _corner-set-anchor-state       \ reg2 crn
+
+    \ Store region.
+    tuck _corner-set-region             \ crn
 ;
 
 \ Print a corner.
@@ -241,92 +206,20 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
     assert-tos-is-corner
 
     ." ("
-    dup corner-get-anchor-square    \ crn0 sqr
-    dup square-get-state            \ crn0 sqr sta
-    dup .value                      \ crn0 sqr sta
+    dup corner-get-anchor-state     \ crn0 sta
+    .value                          \ crn0
 
     ."  limited by:  "
 
-    #2 pick                         \ crn0 sqr sta crn0
-    corner-get-dissimilar-squares   \ crn0 sqr sta dis-lst
-    list-get-links                  \ crn0 sqr sta dis-link
+    dup corner-get-external-states  \ crn0 ext-sta-lst
+    .value-list                     \ crn0
 
-    begin
-        ?dup
-    while
-        dup link-get-data           \ crn0 sqr sta dis-link dis-sqr
+    space ." in "
 
-        \ Print square state.
-        dup square-get-state        \ crn0 sqr sta dis-link dis-sqr dis-sta
-        dup .value                  \ crn0 sqr sta dis-link dis-sqr dis-sta
-
-        \ Check if square is adjacent.
-        #3 pick                     \ crn0 sqr sta dis-link dis-sqr dis-sta sta
-        value-adjacent              \ crn0 sqr sta dis-link dis-sqr bool
-        is-false if ." +" then
-
-        \ Check if square is incompatible.
-        #3 pick                     \ crn0 sqr sta dis-link dis-sqr sqr
-        square-incompatible         \ crn0 sqr sta dis-link bool
-        is-false if ." ?" then
-
-        link-get-next
-        dup 0<> if space then
-    repeat
-                                        \ crn0 sqr sta
-
-    ." ) in "
-
-    \ Print LS regions the corner may define.
-    #2 pick corner-get-regions          \ crn0 sqr sta reg-lst
-    .region-list                        \ crn0 sqr sta
-
-    3drop
-;
-
-\ Return the number of dissimilar squares.
-: corner-get-number-dissimilar-squares ( crn0 -- u )
-    \ Check arg.
-    assert-tos-is-corner
-
-    corner-get-dissimilar-squares       \ sqr-lst
-    list-get-length                     \ u
-;
-
-\ Return true if all dissimilar squares are adjacent.
-: corner-all-dissimilar-squares-adjacent ( crn0 -- bool )
-    \ Check arg.
-    assert-tos-is-corner
-
-    dup corner-get-anchor-square    \ crn0 sqr
-    square-get-state                \ crn0 sta
-
-    over                            \ crn0 sta crn0
-    corner-get-dissimilar-squares   \ crn0 sta dis-lst
-    list-get-links                  \ crn0 sta dis-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data           \ crn0 sta dis-link dis-sqr
-
-        square-get-state            \ crn0 sta dis-link dis-sta
-
-        \ Check if square is adjacent.
-        #2 pick                     \ crn0 sta dis-link dis-sta sta
-        value-adjacent              \ crn0 sta dis-link bool
-        if
-        else
-            2drop drop
-            false
-            exit
-        then
-
-        link-get-next
-    repeat
-                                    \ crn0 sta
-    2drop
-    true
+    \ Print regions.
+    corner-get-region               \ reg
+    .region                         \
+    ." )"
 ;
 
 \ Deallocate a corner.
@@ -339,9 +232,8 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
     #2 <
     if
         \ Clear fields.
-        dup corner-get-anchor-square square-deallocate
-        dup corner-get-dissimilar-squares square-list-deallocate
-        dup corner-get-regions region-list-deallocate
+        dup corner-get-external-states list-deallocate
+        dup corner-get-region region-deallocate
 
         \ Deallocate instance.
         corner-mma mma-deallocate
@@ -350,381 +242,114 @@ corner-dissimilar-squares-disp  cell+   constant corner-regions-disp            
     then
 ;
 
-\ Return true if nos corner has more regions than tos corner.
-: corner-compare-number-regions ( crn1 crn0 -- flag )
-    \ Check args.
-    assert-tos-is-corner
-    assert-nos-is-corner
-
-    \ Get the number of crn1 regions.
-    over corner-get-regions list-get-length \ crn1 crn0 len1
-    
-    \ Get the number of crn0 regions.
-    over corner-get-regions list-get-length \ crn1 crn0 len1 lon0
-
-    >                                       \ crn1 crn0 bool
-
-    \ Clean up.
-    nip nip                             \ bool
-;
-
 \ Given a region, get samples of adjacent, external states,
 \ unless one turns out to be compatible.
-: corner-get-adjacent-state-needs ( reg1 crn0 -- ned-lst )
-    \ Check args.
+: corner-get-adjacent-state-needs ( crn0 -- ned-lst )
+    \ Check arg.
     assert-tos-is-corner
 
-    \ Set up second frame.
-    list-new                                \ reg1 crn0 | ret-lst
-    over corner-get-anchor-square           \ reg1 crn0 | ret-lst anc-sqr
-    dup square-get-state                    \ reg1 crn0 | ret-lst anc-sqr anc-sta
-    #3 pick corner-get-parent-action        \ reg1 crn0 | ret-lst anc-sqr anc-sta act0
-
-
-    \ Get bits to change.
-    #5 pick region-edge-mask                \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 edg-msk
-
-    \ Check for all-X region.
-    dup 0=
-    if
-        2drop 2drop                         \ reg1 crn0 | ret-lst
-        nip nip
-        exit
-    then
-
-    value-split                             \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' |
-
-    \ Check current external, adjacent, squares.
-    dup list-get-links                      \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link msk
-        #4 pick                             \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link msk anc-sta
-        xor                                 \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax
-        #3 pick                             \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax act0
-        action-find-square-xt execute       \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link, sqrx t | f
-        if
-            #5 pick                         \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link sqrx anc-sqr
-            square-compatible               \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link bool
-            if
-                \ External, adjacent, square is compatible, sta2 cannot be an anchor for reg1.
-                drop                        \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' |
-                list-deallocate             \ reg1 crn0 | ret-lst anc-sqr anc-sta act0
-                3drop                       \ reg1 crn0 | ret-lst
-                nip nip
-                exit
-            then
-        then
-
-        link-get-next
-    repeat
-                                            \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' |
+    \ Init return need list.
+    list-new                                \ crn0 ret-lst
+    over corner-get-parent-action           \ crn0 ret-lst act0
 
     \ Check eternal, adjacent, states for first sample, or additional samples.
-
-    dup list-get-links                      \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link
+    #2 pick corner-get-external-states      \ crn0 ret-lst act0 ext-sta-lst
+    list-get-links                          \ crn0 ret-lst act0 ext-sta-link
 
     begin
         ?dup
     while
-        dup link-get-data                   \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link mskx
-        #4 pick                             \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link mskx anc-sta
-        xor                                 \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax
+        dup link-get-data                   \ crn0 ret-lst act0 ext-sta-link ext-sta
+        #2 pick                             \ crn0 ret-lst act0 ext-sta-link ext-sta act0
+        action-state-confirmed-xt execute   \ crn0 ret-lst act0 ext-sta-link bool
 
-        dup                                 \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax stax
-        #4 pick                             \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax stax act0
-        action-state-confirmed-xt execute   \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link stax bool
-
-        is-false if
-            \ Add need for sample.
-            need-type-cds swap              \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link ned-type stax
-            #4 pick                         \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link ned-type stax act0
-            action-make-need-xt execute     \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link nedx
-            #6 pick                         \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link nedx ret-lst
-            list-push-struct                \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link
+        if
         else
-            drop                            \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' | msk-link
+            \ Add need for sample.
+            need-type-cds                   \ crn0 ret-lst act0 ext-sta-link ned-type
+            over link-get-data              \ crn0 ret-lst act0 ext-sta-link ned-type ext-sta
+            #3 pick                         \ crn0 ret-lst act0 ext-sta-link ned-type ext-sta act0
+            action-make-need-xt execute     \ crn0 ret-lst act0 ext-sta-link nedx
+            #3 pick                         \ crn0 ret-lst act0 ext-sta-link nedx ret-lst
+            list-push-struct                \ crn0 ret-lst act0 ext-sta-link
         then
 
         link-get-next
     repeat
-                                            \ reg1 crn0 | ret-lst anc-sqr anc-sta act0 msk-lst1' |
-    list-deallocate                         \ reg1 crn0 | ret-lst anc-sqr anc-sta act0
-    3drop                                   \ reg1 crn0 | ret-lst
-    nip nip
+
+    \ Clean up.
+                                            \ crn0 ret-lst act0
+    drop                                    \ crn0 ret-lst
+    nip                                     \ ret-lst
 ;
 
-\ Return a list of find/confirm needs for one corner,
-\ given a probable reachable region.
-: corner-calc-needs ( reg1 crn0 -- ned-lst )
+\ Return a list of find/confirm needs for one corner.
+: corner-calc-needs ( crn0 -- ned-lst )
     \ Check args.
     assert-tos-is-corner
-    assert-nos-is-region
 
-    \ Set up second frame.
-    dup corner-get-parent-action                \ reg1 crn0 | act0
-    list-new                                    \ reg1 crn0 | act0 ret-lst
-    over                                        \ reg1 crn0 | act0 ret-lst act0
-    action-get-logical-structure-xt execute     \ reg1 crn0 | act0 ret-lst ls-lst
-    #3 pick                                     \ reg1 crn0 | act0 ret-lst ls-lst crn0
-    corner-get-anchor-square                    \ reg1 crn0 | act0 ret-lst ls-lst sqr
-    square-get-state                            \ reg1 crn0 | act0 ret-lst ls-lst sta1 |
+    \ Check anchor square needs.
+    dup corner-get-anchor-state             \ crn sta
+    over corner-get-parent-action           \ crn0 sta act0
 
-    \ Check anchor square pnc needs.
-    dup                                         \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sta1
-    #4 pick                                     \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sta1 act0
-    action-find-square-xt execute               \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr t | f
-    is-false abort" anchor square not found?"
+    action-state-confirmed-xt execute       \ crn0 bool
 
-    square-get-pnc                              \ reg1 crn0 | act0 ret-lst ls-lst sta1 | pnc
     if
     else
-        \ Need more samples of anchor square.
-
-        \ Make need.
-        need-type-cas                           \ reg1 crn0 | act0 ret-lst ls-lst sta1 | ned-type
-        over                                    \ reg1 crn0 | act0 ret-lst ls-lst sta1 | ned-type sta1
-        #5 pick                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | ned-type sta1 act0
-        action-make-need-xt execute             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | ned
-
-        \ Store need.
-        #3 pick                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | ned ret-lst
-        list-push-struct                        \ reg1 crn0 | act0 ret-lst ls-lst sta1 |
-
-        \ Clean up, return.
-        2drop                                   \ reg1 crn0 | act0 ret-lst
-        2nip nip                                \ ret-lst
+        \ Add need for sample.
+        need-type-cds                   \ crn0 ned-type
+        over corner-get-anchor-state    \ crn0 ned-type sta
+        #2 pick                         \ crn0 ned-type sta crn0
+        corner-get-parent-action        \ crn0 ned-type sta act0
+        action-make-need-xt execute     \ crn0 nedx
+        nip                             \ nedx
+        list-new tuck                   \ ned-lst nedx ned-lst
+        list-push-struct                \ ned-lst
         exit
     then
 
-    \ Check for dissimilar square pnc needs.
-    #4 pick                                     \ reg1 crn0 | act0 ret-lst ls-lst sta1 | crn0
-    corner-get-dissimilar-squares               \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-lst
-
-    \ Prep for loop.
-    list-get-links                              \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link
-
-    \ For each dissimilar square, check pnc.
-    begin
-        ?dup
-    while
-        dup link-get-data                       \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sqr
-        square-get-pnc
-        if
-        else
-            \ Need more samples of dissimilar square.
-
-            \ Make need.
-            need-type-cds                       \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned-type
-            over link-get-data square-get-state \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned-type sta1
-            #6 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned-type sta1 act0
-            action-make-need-xt execute         \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned
-
-            \ Store need.
-            #4 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned ret-lst
-            list-push-struct                    \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link
-        then
-
-        link-get-next
-    repeat
-
-    \ If there are any needs, return.
-                                                \ reg1 crn0 | act0 ret-lst ls-lst sta1 |
-    #2 pick list-is-not-empty                   \ reg1 crn0 | act0 ret-lst ls-lst sta1 | bool
-    if
-        2drop                                   \ reg1 crn0 | act0 ret-lst
-        2nip nip                                \ ret-lst
-        exit
-    then
-    
-    \ Check for dissimilar square closer needs.
-    #4 pick                                     \ reg1 crn0 | act0 ret-lst ls-lst sta1 | crn0
-    corner-get-dissimilar-squares               \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-lst
-
-    \ Prep for loop.
-    list-get-links                              \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link
-    begin
-        ?dup
-    while
-        dup link-get-data square-get-state      \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta
-        #2 pick                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta sta1
-        value-adjacent                          \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link bool
-        if
-        else
-            \ Calculate an arbitrary state between.
-            dup link-get-data square-get-state  \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta
-            #2 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta sta1
-            over xor                            \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta dif-msk
-            value-isolate-lsb                   \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta val-left dif-msk2
-            nip                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta dif-msk2
-            xor                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link sta2
-            \ Make need.
-            need-type-ccds swap                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned-type sta2
-            #6 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned-type sta2 act0
-            action-make-need-xt execute         \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned
-
-            \ Store need.
-            #4 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link ned ret-lst
-            list-push-struct                    \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sqr-link
-        then
-
-        link-get-next
-    repeat
-
-    \ If there are any needs, return.
-                                                \ reg1 crn0 | act0 ret-lst ls-lst sta1 |
-    #2 pick list-is-not-empty                   \ reg1 crn0 | act0 ret-lst ls-lst sta1 | bool
-    if
-        2drop                                   \ reg1 crn0 | act0 ret-lst
-        2nip nip                                \ ret-lst
-        exit
-    then
-
-    \ Check for external square test needs.
-    dup                                         \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sta1
-    #2 pick                                     \ reg1 crn0 | act0 ret-lst ls-lst sta1 | sta1 ls-lst
-    region-list-regions-state-in                \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst'
-
-\    dup list-get-length 1 >
-\    if
-\        cr ." possible corner in multiple regions" cr
-\    then
-
-    \ Prep for loop.
-    dup list-get-links                          \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link
-    begin
-        ?dup
-    while
-        \ Restrict LS region, if needed.
-        #7 pick                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link reg1
-        over link-get-data                      \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link reg1 regx
-        region-intersection                     \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link, reg3' t | f
-        if
-            dup                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link reg3' reg3'
-            \ cr ." eval " dup .region space ." and " over .value
-            #8 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link reg3' reg3' crn0
-            corner-get-adjacent-state-needs     \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link reg3' ned-lst'
-            swap region-deallocate              \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link ned-lst'
-            \ space ." adj needs: " dup .need-list cr
-            dup                                 \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link ned-lst' ned-lst'
-            #6 pick                             \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link ned-lst' ned-lst' ret-lst
-            need-list-append                    \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link ned-lst'
-            need-list-deallocate                \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst' reg-link
-        then
-
-        link-get-next
-    repeat
-                                                \ reg1 crn0 | act0 ret-lst ls-lst sta1 | reg-lst'
-    region-list-deallocate                      \ reg1 crn0 | act0 ret-lst ls-lst sta1
-    2drop                                       \ reg1 crn0 | act0 ret-lst
-    2nip nip                                    \ ret-lst
-;
-
-\ Return true if the corner anchor square in dissimilar to each dissimilar squares.
-: corner-all-dissimilar-squares-still-dissimilar ( crn0 -- bool )
-    \ Check args.
-    assert-tos-is-corner
-
-    dup corner-get-anchor-square        \ crn0 crn-sqr
-    swap corner-get-dissimilar-squares  \ crn-sqr sqr-lst
-    list-get-links                      \ crn-sqr sqr-link
-
-    begin
-        ?dup
-    while
-        dup link-get-data               \ crn-sqr sqr-link dis-sqr
-        #2 pick                         \ crn-sqr sqr-link dis-sqr crn-sqr
-        square-incompatible             \ crn-sqr sqr-link bool
-        if
-        else
-            2drop
-            false
-            exit
-        then
-
-        link-get-next
-    repeat
-                                        \ crn-sqr
-    drop
-    true
+                                        \ crn0
+    corner-get-adjacent-state-needs     \ ned-lst
 ;
 
 \ Return true if a corner is confirmed.
-: corner-confirmed (  crn1 -- bool )
+: corner-confirmed (  crn0 -- bool )
     \ Check args.
     assert-tos-is-corner
 
-    \ Check the anchor is in exactly one region.
-    dup corner-get-regions                  \ crn1 reg-lst
-    dup list-get-length                     \ crn1 reg-lst len
-    1 <>
+    corner-calc-needs       \ ned-lst'
+    dup list-is-empty       \ ned-lst' bool
+    swap                    \ bool ned-lst'
+    need-list-deallocate    \ bool
+;
+
+\ Return true if a given state is in a corner's region.
+: corner-state-in-region ( sta1 crn0 -- bool )
+    \ Check args.
+    assert-tos-is-corner
+    assert-nos-is-value
+
+    corner-get-region           \ sta1 crn0
+    region-superset-of-state    \ bool
+;
+
+\ Return true if a corner uses a given state.
+: corner-uses-state ( sta1 crn0 -- bool )
+    \ Check args.
+    assert-tos-is-corner
+    assert-nos-is-value
+
+    2dup                            \ sta1 crn0 sta1 crn0
+    corner-get-anchor-state         \ sta1 crn0 sta1 a-sta
+    =                               \ sta1 crn0 bool
     if
         2drop
-        false
-        exit
-    then
-    \ Region number edges should equal the number of dissimilar squares.
-                                            \ crn1 reg-lst
-    0 swap list-get-item                    \ crn1, crn-reg
-    tuck                                    \ crn-reg crn1 crn-reg
-    region-get-number-edges                 \ crn-reg crn1 num-edgs
-    over                                    \ crn-reg crn1 num-edges crn1
-    corner-get-dissimilar-squares           \ crn-reg crn1 num-edgs crn-dis-lst
-    list-get-length                         \ crn-reg crn1 num-edgs crn-num-dis
-    =                                       \ crn-reg crn1 bool
-    if
-    else
-    \ cr ." Dom: " current-domain-id dec. space
-    \    ." Act: " current-action-id dec. space
-    \   ." corners confirmed not 4" cr
-        2drop
-        false
+        true
         exit
     then
 
-    \ Check if all dissimilar squares are adjacent.
-    dup                                     \ crn-reg crn1 crn1
-    corner-all-dissimilar-squares-adjacent  \ crn-reg crn1 bool
-    if
-    else
-    \ cr ." Dom: " current-domain-id dec. space
-    \    ." Act: " current-action-id dec. space
-    \    ." corners confirmed not 1" cr
-        2drop
-        false
-        exit
-    then
-
-    \ Check all dissimilar squares are still dissimilar.
-    dup                                             \ crn-reg crn1 crn1
-    corner-all-dissimilar-squares-still-dissimilar  \ crn-reg crn1 bool
-    if
-    else
-    \ cr ." Dom: " current-domain-id dec. space
-    \    ." Act: " current-action-id dec. space
-    \    ." corners confirmed not 1" cr
-        2drop
-        false
-        exit
-    then
-
-    \ Check if anchor needs more samples.
-    dup corner-get-anchor-square        \ crn-reg crn1 sqrx
-    square-get-pnc                      \ crn-reg crn1 pnc
-    if
-    else
-    \ cr ." Dom: " current-domain-id dec. space
-    \    ." Act: " current-action-id dec. space
-    \    ." corners confirmed not 2" cr
-        2drop
-        false
-        exit
-    then
-
-    \ Check if each dissimilar, adjacent, square in pnc.
-    dup corner-get-dissimilar-squares       \ crn-reg crn1 sqr-lst
-    square-list-all-pnc                     \ crn-reg crn1 bool
-    nip nip                                 \ bool
+    corner-get-external-states      \ sta1 ext-sta-lst
+    [ ' = ] literal                 \ sta1 ext-sta-lst xt
+    -rot                            \ xt sta1 ext-sta-lst
+    list-member                     \ bool
 ;

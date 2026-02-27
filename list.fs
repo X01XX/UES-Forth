@@ -243,24 +243,23 @@ list-header-disp    cell+   constant list-links-disp
     \ Check arg.
     assert-tos-is-list
 
-    ." (List: " dup hex.
+    ." (List: " dup hex. ." uc: " dup struct-get-use-count dec.
 
     list-get-links              \ lst-link
     begin
         ?dup
     while
-        dup .link               \ lst-link
-
         \ Check for sub-list.
-        dup link-get-data       \ lst-lisk link-data
+        dup link-get-data       \ lst-link link-data
         is-allocated-list       \ lst-link bool
         if
             \ Process sub-list.
-            dup link-get-data   \ lst-link lst-data
+            dup link-get-data   \ lst-link link-data
             recurse             \ lst-link
             link-get-next       \ lst-link
             dup 0<> if space then
         else
+            dup .link           \ lst-link
             link-get-next       \ link-next
         then
     repeat
@@ -1026,7 +1025,7 @@ list-header-disp    cell+   constant list-links-disp
                                 \ ret-lst
 ;
 
-\ Given a list of lists of options, return a list of
+\ Given a list of lists of options, none empty, return a list of
 \ lists containing all possible combinations of one option
 \ from each list.
 \ So ((0) (1 2) (3 4)) would return
@@ -1052,6 +1051,8 @@ list-header-disp    cell+   constant list-links-disp
 
         \ Init templat link next.
         list-new swap               \ tmp-lst link lst-next sub-lst
+
+        dup list-is-empty abort" empty list?"
 
         \ Prep for loop.
         list-get-links              \ tmp-lst link lst-next sub-link
@@ -1079,6 +1080,7 @@ list-header-disp    cell+   constant list-links-disp
                 list-push-end       \ tmp-lst link lst-next sub-link cur-itm tmp-link new-lst
 
                 \ Add new template list to the new template lol.
+                dup struct-inc-use-count
                 #4 pick             \ tmp-lst link lst-next sub-link cur-itm tmp-link new-lst lst-next
                 list-push-end       \ tmp-lst link lst-next sub-link cur-itm tmp-link
 
@@ -1101,4 +1103,37 @@ list-header-disp    cell+   constant list-links-disp
                                     \ tmp-lst
 ;
 
+\ Take all items from a list that may have sub-lists,
+\ return a list with no sub-lists.
+: list-flatten ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
 
+    [ ' 2drop-true ] literal    \ lst0 xt
+    0                           \ lst0 xt 0
+    rot                         \ xt 0 lst0
+    list-find-all               \ lst
+;
+
+\ Return a product of each sublist's length.
+: list-number-permutations ( lst0 -- u )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Init product.
+    1                       \ lst0 prd
+    swap list-get-links     \ prd link
+
+    begin
+        ?dup
+    while
+        dup link-get-data   \ prd link lstx
+        list-get-length     \ prd link lenx
+        rot                 \ link lenx prd
+        *                   \ link prd-next
+        swap                \ prd link
+
+        link-get-next
+    repeat
+                            \ prd
+;

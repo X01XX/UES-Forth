@@ -311,9 +311,6 @@ cr
         cr ." Step: " step-num .
         space ." Current state: "
         current-session dup .session-current-states     \ sess
-        space ." Reachable "
-        dup .session-reachable-regions                  \ sess
-        space
 
         dup session-get-current-rate                    \ sess rate
 
@@ -378,7 +375,6 @@ cr
 
     square-tests
     square-list-tests
-    corner-tests
     region-tests
     region-list-tests
     rule-tests
@@ -392,6 +388,7 @@ cr
     domain-tests
     structinfolist-tests
     list-tests
+    corner-tests
 
     structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;
