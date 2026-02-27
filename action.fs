@@ -1678,6 +1678,188 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip nip                                         \ ret-lst
 ;
 
+\ Return a need for a incompatible pair state in a region.
+: action-get-ip-state-region-need ( reg2 sta1 act0 -- ned t | f )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+    assert-3os-is-region
+
+    \ Get list of all adjacent, external, states.
+    rot                         \ sta1 act0 reg2
+
+    \ Init external state list.
+    list-new swap               \ sta1 act0 ext-lst' reg2
+    region-edge-mask            \ sta1 act0 ext-lst' e-msk
+    value-split                 \ sta1 act0 ext-lst' msk-lst'
+
+    dup list-get-links          \ sta1 act0 ext-lst' msk-lst' msk-link
+
+    begin
+        ?dup
+    while
+        \ Calc external state.
+        dup link-get-data       \ sta1 act0 ext-lst' msk-lst' msk-link msk
+        #5 pick                 \ sta1 act0 ext-lst' msk-lst' msk-link msk sta1
+        xor                     \ sta1 act0 ext-lst' msk-lst' msk-link sta-ext
+        \ Store external state.
+        #3 pick                 \ sta1 act0 ext-lst' msk-lst' msk-link sta-ext ext-lst'
+        list-push               \ sta1 act0 ext-lst' msk-lst' msk-link
+
+        link-get-next
+    repeat
+                                \ sta1 act0 ext-lst' msk-lst'
+    \ Clean up.
+    list-deallocate             \ sta1 act0 ext-lst'
+
+    \ Get square for ip state.
+    #2 pick #2 pick             \ sta1 act0 ext-lst' sta1 act0
+    action-find-square          \ sta1 act0 ext-lst', sqr t | f
+    is-false abort" square not found?"
+
+    \ Check for even one compatible external square.
+    \ If any found, return false.
+    swap                        \ sta1 act0 sqr1 ext-lst'
+
+    dup list-get-links          \ sta1 act0 sqr1 ext-lst' ext-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ sta1 act0 sqr1 ext-lst' ext-link ext-sta
+        #4 pick                 \ sta1 act0 sqr1 ext-lst' ext-link ext-sta act0
+        action-find-square      \ sta1 act0 sqr1 ext-lst' ext-link, ext-sqr t | f
+        if
+            #3 pick             \ sta1 act0 sqr1 ext-lst' ext-link ext-sqr sqr1
+            square-compatible   \ sta1 act0 sqr1 ext-lst' ext-link bool
+            if
+                drop            \ sta1 act0 sqr1 ext-lst'
+                list-deallocate \ sta1 act0 sqr1
+                3drop           \
+                false
+                exit
+            then
+        then
+
+        link-get-next
+    repeat
+                                \ sta1 act0 sqr1 ext-lst'
+    \ Check for squares that need more samples.
+    dup list-get-links          \ sta1 act0 sqr1 ext-lst' ext-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ sta1 act0 sqr1 ext-lst' ext-link ext-sta
+        #4 pick                 \ sta1 act0 sqr1 ext-lst' ext-link ext-sta act0
+        action-find-square      \ sta1 act0 sqr1 ext-lst' ext-link, ext-sqr t | f
+        if
+            #3 pick             \ sta1 act0 sqr1 ext-lst' ext-link ext-sqr sqr1
+            square-incompatible \ sta1 act0 sqr1 ext-lst' ext-link bool
+            if
+            else
+                \ Must need more samples.
+                \ Make need.
+                need-type-ils                   \ sta1 act0 sqr1 ext-lst' ext-link typ
+                over link-get-data              \ sta1 act0 sqr1 ext-lst' ext-link typ ext-sta
+                #5 pick                         \ sta1 act0 sqr1 ext-lst' ext-link typ ext-sta act0
+                dup action-get-parent-domain    \ sta1 act0 sqr1 ext-lst' ext-link typ ext-sta act0 dom
+                need-new                        \ sta1 act0 sqr1 ext-lst' ext-link ned
+                \ Return need.
+                nip                             \ sta1 act0 sqr1 ext-lst' ned
+                swap list-deallocate            \ sta1 act0 sqr1 ned
+                2nip                            \ sqr1 ned
+                nip                             \ ned
+                true                            \ ned t
+                exit
+            then
+        then
+
+        link-get-next
+    repeat
+                                            \ sta1 act0 sqr1 ext-lst'
+    \ Get need for the first sample of an external state. 
+    dup list-get-links                      \ sta1 act0 sqr1 ext-lst' ext-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ sta1 act0 sqr1 ext-lst' ext-link ext-sta
+        #4 pick                             \ sta1 act0 sqr1 ext-lst' ext-link ext-sta act0
+        action-find-square                  \ sta1 act0 sqr1 ext-lst' ext-link, ext-sqr t | f
+        if
+            drop                            \ sta1 act0 sqr1 ext-lst' ext-link
+        else
+            \ Make need.
+            link-get-data                   \ sta1 act0 sqr1 ext-lst' ext-sta
+            need-type-ils swap              \ sta1 act0 sqr1 ext-lst' typ ext-sta
+            #4 pick                         \ sta1 act0 sqr1 ext-lst' typ ext-sta act0
+            dup action-get-parent-domain    \ sta1 act0 sqr1 ext-lst' typ ext-sta act0 dom
+            need-new                        \ sta1 act0 sqr1 ext-lst'  ned
+            \ Return need.
+            swap list-deallocate            \ sta1 act0 sqr1 ned
+            2nip                            \ sqr1 ned
+            nip                             \ ned
+            true                            \ ned t
+            exit
+        then
+
+        link-get-next
+    repeat
+                            \ sta1 act0 sqr1 ext-lst'
+    list-deallocate         \ sta1 act0 sqr1
+    3drop                   \
+    false
+;
+
+\ Return a need for a state in a incompatible pair, if it is in
+\ more than one Logical Structure region.
+\ As if it is a possible anchor, no yet proven.
+: action-get-ip-state-multi-region-need ( sta1 act0 -- ned t | f )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+
+    \ Get LS regions the state is in.
+    over                                \ sta1 act0 sta1
+    over action-get-logical-structure   \ sta1 act0 sta1 ls-lst
+    region-list-regions-state-in        \ sta1 act0 reg-lst'
+
+    \ Check number region, needs to be > 1.
+    dup list-get-length                 \ sta1 act0 reg-lst' len
+    2 <
+    if
+        region-list-deallocate
+        2drop
+        false
+        exit
+    then
+
+    dup list-get-links                      \ sta1 act0 reg-lst' reg-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ sta1 act0 reg-lst' reg-link reg
+        #4 pick #4 pick                     \ sta1 act0 reg-lst' reg-link reg sta1 act0
+        action-get-ip-state-region-need     \ sta1 act0 reg-lst' reg-link, ned t | f
+        if                                  \ sta1 act0 reg-lst' reg-link ned
+            nip                             \ sta1 act0 reg-lst' ned
+            swap region-list-deallocate     \ sta1 act0 ned
+            nip nip                         \ ned
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                            \ sta1 act0 reg-lst'
+
+    region-list-deallocate
+    2drop
+    false
+;
+
 \ Return incompatible pair needs.
 : action-calc-incompatible-pair-needs ( act0 -- ned-lst )
     \ Check arg.
@@ -1765,6 +1947,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         link-get-next
     repeat
                                         \ act0 ret-lst
+    \ Check for any needs, so far.
     dup list-is-not-empty
     if
         nip                             \ ret-lst
@@ -1810,7 +1993,42 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         link-get-next
     repeat
                                         \ act0 ret-lst
-    nip                                 \ ret-lst
+
+    \ Check for any needs, so far.
+    dup list-is-not-empty
+    if
+        nip                             \ ret-lst
+        exit
+    then
+                                        \ act0 ret-lst
+    \ Get incompatible pair, multi-region needs.
+    over action-get-incompatible-pairs  \ act0 ret-lst ip-lst
+    list-get-links                      \ act0 ret-lst ip-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ act0 ret-lst ip-link ip-reg
+        region-get-states                       \ act0 ret-lst ip-link s1 s0
+        #4 pick                                 \ act0 ret-lst ip-link s1 s0 act0
+        action-get-ip-state-multi-region-need   \ act0 ret-lst ip-link s1, ned t | f
+        if
+            #3 pick                             \ act0 ret-lst ip-link s1 ned ret-lst
+            list-push-struct                    \ act0 ret-lst ip-link s1
+        then
+                                                \ act0 ret-lst ip-link s1
+        #3 pick                                 \ act0 ret-lst ip-link s1 act0
+        action-get-ip-state-multi-region-need   \ act0 ret-lst ip-link, ned t | f
+        if
+            #2 pick                             \ act0 ret-lst ip-link ned ret-lst
+            list-push-struct                    \ act0 ret-lst ip-link
+        then
+        
+
+        link-get-next
+    repeat
+                                    \ act0 ret-lst
+    nip                             \ ret-lst
 ;
 
 \ Return a list of needs for an action, given the current state.
