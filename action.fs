@@ -1678,6 +1678,141 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip nip                                         \ ret-lst
 ;
 
+\ Return incompatible pair needs.
+: action-calc-incompatible-pair-needs ( act0 -- ned-lst )
+    \ Check arg.
+    assert-tos-is-action
+
+    \ Init return list.
+    list-new                            \ act0 ret-lst
+
+    \ Check for states that need more samples.
+    over action-get-incompatible-pairs  \ act0 ret-lst ip-lst
+    list-get-links                      \ act0 ret-lst ip-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ act0 ret-lst ip-link ip-reg
+
+        \ Check region state 0.
+        dup region-get-state-0          \ act0 ret-lst ip-link ip-reg sta-0
+        #4 pick                         \ act0 ret-lst ip-link ip-reg sta-0 act0
+        action-find-square              \ act0 ret-lst ip-link ip-reg, sqr t | f
+        if
+            square-get-pnc
+            if
+                \ No more samples needed.
+            else
+                \ Make need.
+                need-type-cls                   \ act0 ret-lst ip-link ip-reg typ
+                over region-get-state-0         \ act0 ret-lst ip-link ip-reg typ sta0
+                #5 pick                         \ act0 ret-lst ip-link ip-reg typ sta0 act0
+                dup action-get-parent-domain    \ act0 ret-lst ip-link ip-reg typ act0 dom
+                need-new                        \ act0 ret-lst ip-link ip-reg ned
+
+                \ Store need.
+                #3 pick                         \ act0 ret-lst ip-link ip-reg ned ret-lst
+                list-push-struct                \ act0 ret-lst ip-link ip-reg
+            then
+        else
+            \ Make need.
+            need-type-cls                       \ act0 ret-lst ip-link ip-reg typ
+            over region-get-state-0             \ act0 ret-lst ip-link ip-reg typ sta0
+            #5 pick                             \ act0 ret-lst ip-link ip-reg typ sta0 act0
+            dup action-get-parent-domain        \ act0 ret-lst ip-link ip-reg typ act0 dom
+            need-new                            \ act0 ret-lst ip-link ip-reg ned
+
+            \ Store need.
+            #3 pick                             \ act0 ret-lst ip-link ip-reg ned ret-lst
+            list-push-struct                    \ act0 ret-lst ip-link ip-reg
+        then
+
+        \ Check region state 1.
+        dup region-get-state-1          \ act0 ret-lst ip-link ip-reg sta-1
+        #4 pick                         \ act0 ret-lst ip-link ip-reg sta-1 act0
+        action-find-square              \ act0 ret-lst ip-link ip-reg, sqr t | f
+        if
+            square-get-pnc
+            if
+                \ No more samples needed.
+            else
+                \ Make need.
+                need-type-cls                   \ act0 ret-lst ip-link ip-reg typ
+                over region-get-state-1         \ act0 ret-lst ip-link ip-reg typ sta1
+                #5 pick                         \ act0 ret-lst ip-link ip-reg typ sta1 act0
+                dup action-get-parent-domain    \ act0 ret-lst ip-link ip-reg typ act0 dom
+                need-new                        \ act0 ret-lst ip-link ip-reg ned
+
+                \ Store need.
+                #3 pick                         \ act0 ret-lst ip-link ip-reg ned ret-lst
+                list-push-struct                \ act0 ret-lst ip-link ip-reg
+            then
+        else
+            \ Make need.
+            need-type-cls                       \ act0 ret-lst ip-link ip-reg typ
+            over region-get-state-1             \ act0 ret-lst ip-link ip-reg typ sta1
+            #5 pick                             \ act0 ret-lst ip-link ip-reg typ sta1 act0
+            dup action-get-parent-domain        \ act0 ret-lst ip-link ip-reg typ act0 dom
+            need-new                            \ act0 ret-lst ip-link ip-reg ned
+
+            \ Store need.
+            #3 pick                             \ act0 ret-lst ip-link ip-reg ned ret-lst
+            list-push-struct                    \ act0 ret-lst ip-link ip-reg
+        then
+                                                \ act0 ret-lst ip-link ip-reg
+        drop                                    \ act0 ret-lst ip-link
+        link-get-next
+    repeat
+                                        \ act0 ret-lst
+    dup list-is-not-empty
+    if
+        nip                             \ ret-lst
+        exit
+    then
+
+    \ Check for pair not adjacent needs.
+    over action-get-incompatible-pairs  \ act0 ret-lst ip-lst
+    list-get-links                      \ act0 ret-lst ip-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                   \ act0 ret-lst ip-link ip-reg
+        region-get-states                   \ act0 ret-lst ip-link sta1 sta0
+        value-adjacent                      \ act0 ret-lst ip-link bool
+        if
+            \ No need.
+        else
+            \ Get states difference mask.
+            dup link-get-data            \ act0 ret-lst ip-link ip-reg
+            region-get-states               \ act0 ret-lst ip-link sta1 sta0
+            over xor                        \ act0 ret-lst ip-link sta1 dif-msk
+
+            \ Select lsb, arbitrary.
+            value-isolate-lsb               \ act0 ret-lst ip-link sta1 remainder dif-bit
+            nip                             \ act0 ret-lst ip-link sta1 dif-bit
+
+            \ Get state between the region's two states.
+            xor                             \ act0 ret-lst ip-link sta-between
+
+            \ Make need.
+            need-type-ils swap              \ act0 ret-lst ip-link typ sta-b
+            #4 pick                         \ act0 ret-lst ip-link typ sta-b act0
+            dup action-get-parent-domain    \ act0 ret-lst ip-link typ act0 dom
+            need-new                        \ act0 ret-lst ip-link ned
+
+            \ Store need.
+            #2 pick                         \ act0 ret-lst ip-link ned ret-lst
+            list-push-struct                \ act0 ret-lst ip-link
+        then
+
+        link-get-next
+    repeat
+                                        \ act0 ret-lst
+    nip                                 \ ret-lst
+;
+
 \ Return a list of needs for an action, given the current state.
 : action-get-needs ( sta1 act0 -- ned-lst )
     \ Check args.
@@ -1691,6 +1826,14 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Init return need list.
     list-new                                        \ sta1 act0 | ret-lst
+
+    \ Check for incompatible-pair needs.
+    over                                            \ sta1 act0 | ret-lst act0
+    action-calc-incompatible-pair-needs             \ sta1 act0 | ret-lst ip-neds'
+    dup                                             \ sta1 act0 | ret-lst ip-neds' ip-neds'
+    #2 pick                                         \ sta1 act0 | ret-lst ip-neds' ip-neds' ret-lst
+    need-list-append                                \ sta1 act0 | ret-lst ip-neds'
+    need-list-deallocate                            \ sta1 act0 | ret-lst
 
     \ Check for corner needs.
     over                                            \ sta1 act0 | ret-lst act0
