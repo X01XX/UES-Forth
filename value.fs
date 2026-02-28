@@ -171,3 +171,25 @@
     xor             \ dif-msk
     value-1-bit-set \ bool
 ;
+
+\ Return, roughly, one half of a values least significant bits.
+: value-half-lsbs ( val0 - val )
+    \ Check args.
+    assert-tos-is-value
+
+    \ Init return value.
+    0 swap                  \ ret val
+    dup value-num-bits      \ ret val0 nb
+    dup 0= abort" no bits?"
+
+    \ If the number of bits is GT 1, divide by 2.
+    dup 1 <> if 2 / then
+
+    0 do
+        value-isolate-lsb   \ ret val' lsb
+        rot or              \ val' ret
+        swap                \ ret val'
+    loop
+                            \ ret val'
+    drop
+;

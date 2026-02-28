@@ -675,6 +675,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
 ;
 
+\ Return true if an incompatible pair should be kept.
 : action-incompatible-pair-needed ( reg1 act0 -- bool )
     \ Check args.
     assert-tos-is-action
@@ -868,7 +869,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         ?dup
     while
         dup link-get-data                   \ act0 crn-lol' max crn-link crn-lst
-        dup list-get-length .
+        \ dup list-get-length .
         list-get-length                     \ act0 crn-lol' max crn-link len
         rot                                 \ act0 crn-lol' crn-link len max
         max                                 \ act0 crn-lol' crn-link max
@@ -1996,9 +1997,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             region-get-states               \ act0 ret-lst ip-link sta1 sta0
             over xor                        \ act0 ret-lst ip-link sta1 dif-msk
 
-            \ Select lsb, arbitrary.
-            value-isolate-lsb               \ act0 ret-lst ip-link sta1 remainder dif-bit
-            nip                             \ act0 ret-lst ip-link sta1 dif-bit
+            \ Select lsbs, arbitrary.
+            value-half-lsbs                 \ act0 ret-lst ip-link sta1 dif-msk2
 
             \ Get state between the region's two states.
             xor                             \ act0 ret-lst ip-link sta-between
