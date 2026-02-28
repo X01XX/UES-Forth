@@ -764,6 +764,16 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     _action-update-incompatible-pairs   \
 ;
 
+\ Return the number of defining regions.
+: action-number-defining-regions ( act0 -- u )
+    \ Check arg.
+    assert-tos-is-action
+
+    action-get-defining-regions \ df-lst
+    list-get-length
+;
+
+\ Return the number af de
 \ Calc corners and set action-corners field.
 \ Find all corners, and states with only one dissimilar, near by,  square.
 \ Sort by the number of Logical Structure regions the anchor square is in, lowest first.
@@ -884,9 +894,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         tuck _action-update-corners         \ act0
     else
                                             \ act0 crn-lol'
+        \ Avoid too many corner permutations.
         dup list-number-permutations        \ act0 crn-lol' u
+        #2 pick                             \ act0 crn-lol' u act0
+        action-number-defining-regions      \ act0 crn-lol' u num-df
+        #20 *                               \ act0 crn-lol' u num-df
         \ cr ." permutations: " dup .
-        #40 <
+        <
         if
             \ Init min number states and corner-list.
             dup list-one-of-each-struct         \ act0 crn-lol' crn-lol2'
@@ -936,9 +950,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             drop                                \ act0 crn-lol' crn-lol2'
             corner-lol-deallocate               \ act0 crn-lol'
         then
+        \ Avoid too many corner permutations.
                                                 \ act0 crn-lol'
         dup list-number-permutations            \ act0 crn-lol' u
-        #20 > if
+        #2 pick                                 \ act0 crn-lol' u act0
+        action-number-defining-regions          \ act0 crn-lol' u num-df
+        #5 *                                    \ act0 crn-lol' u num-df
+        > if
             over                                \ act0 crn-lol' act0
             action-cull-incompatible-pairs      \ act0 crn-lol'
         then
@@ -1833,7 +1851,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Check number region, needs to be > 1.
     dup list-get-length                 \ sta1 act0 reg-lst' len
-    2 <
+    #2 <
     if
         region-list-deallocate
         2drop
