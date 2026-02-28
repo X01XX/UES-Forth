@@ -17,10 +17,8 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 #2 value need-type-cls      \ Confirm logical structure
 #3 value need-type-ils      \ Improve logical structure
 #4 value need-type-cg       \ Confirm group
-#5 value need-type-cas      \ Corner anchor square
-#6 value need-type-cds      \ Corner dissimilar square
-#7 value need-type-ccds     \ Corner closer dissimilar square
-#7 value need-type-max
+#5 value need-type-cds      \ Corner dissimilar square
+#5 value need-type-max
 
 \ Return true if tos is a valid need type.
 : is-need-type ( u -- bool )
@@ -233,9 +231,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
         need-type-cls   of space ." Confirm logical structure" endof
         need-type-ils   of space ." Improve logical structure" endof
         need-type-cg    of space ." Confirm group" endof
-        need-type-cas   of space ." Corner confirm anchor square" endof
         need-type-cds   of space ." Corner confirm dissimilar square" endof
-        need-type-ccds  of space ." Corner closer dissimilar square" endof
         ." Unrecognized type value" abort
     endcase
 ;

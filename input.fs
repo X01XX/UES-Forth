@@ -430,19 +430,6 @@
         then
     then
 
-    \ Check for Corner anchor square needs.
-    need-type-cas over              \ ned-lst ned-typ ned-lst
-    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
-    if
-        dup process-need-list       \ ned-lst ned-lst' bool
-        swap need-list-deallocate   \ ned-lst bool
-        if
-            drop
-            true
-            exit
-        then
-    then
-
     \ Check for Corner dissimilar square needs.
     need-type-cds over              \ ned-lst ned-typ ned-lst
     need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
@@ -456,8 +443,8 @@
         then
     then
 
-    \ Check for Corner closer dissimilar square needs.
-    need-type-ccds over             \ ned-lst ned-typ ned-lst
+    \ Check for Confirm group.
+    need-type-cg over               \ ned-lst ned-typ ned-lst
     need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
     if
         dup process-need-list       \ ned-lst ned-lst' bool
@@ -469,8 +456,18 @@
         then
     then
 
-    \ Go fish.
-    process-need-list               \ bool
+    \ Check for State not in group.
+    need-type-snig over             \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
 
     \ Return.
     drop

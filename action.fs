@@ -886,7 +886,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                                             \ act0 crn-lol'
         dup list-number-permutations        \ act0 crn-lol' u
         \ cr ." permutations: " dup .
-        #20 <
+        #40 <
         if
             \ Init min number states and corner-list.
             dup list-one-of-each-struct         \ act0 crn-lol' crn-lol2'
@@ -937,11 +937,17 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             corner-lol-deallocate               \ act0 crn-lol'
         then
                                                 \ act0 crn-lol'
+        dup list-number-permutations            \ act0 crn-lol' u
+        #20 > if
+            over                                \ act0 crn-lol' act0
+            action-cull-incompatible-pairs      \ act0 crn-lol'
+        then
+
         corner-lol-deallocate                   \ act0
     then
 
                                                 \ act0
-    action-cull-incompatible-pairs              \
+    drop
 ;
 
 \ Return squares in a given region list.
