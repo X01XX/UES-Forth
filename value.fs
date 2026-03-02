@@ -176,11 +176,12 @@
 : value-half-lsbs ( val0 - val )
     \ Check args.
     assert-tos-is-value
+    dup 0= abort" no bits?"
 
     \ Init return value.
-    0 swap                  \ ret val
+    0 swap                  \ ret val0
+
     dup value-num-bits      \ ret val0 nb
-    dup 0= abort" no bits?"
 
     \ If the number of bits is GT 1, divide by 2.
     dup 1 <> if 2 / then
