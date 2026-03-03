@@ -404,6 +404,32 @@
         exit
     then
 
+    \ Check for Corner anchor square needs.
+    need-type-cas over              \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
+
+    \ Check for Corner dissimilar square needs.
+    need-type-cds over              \ ned-lst ned-typ ned-lst
+    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
+    if
+        dup process-need-list       \ ned-lst ned-lst' bool
+        swap need-list-deallocate   \ ned-lst bool
+        if
+            drop
+            true
+            exit
+        then
+    then
+
     \ Check for Confirm Logical structure needs.
     need-type-cls over              \ ned-lst ned-typ ned-lst
     need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
@@ -419,19 +445,6 @@
 
     \ Check for Improve Logical Structure needs.
     need-type-ils over              \ ned-lst ned-typ ned-lst
-    need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
-    if
-        dup process-need-list       \ ned-lst ned-lst' bool
-        swap need-list-deallocate   \ ned-lst bool
-        if
-            drop
-            true
-            exit
-        then
-    then
-
-    \ Check for Corner dissimilar square needs.
-    need-type-cds over              \ ned-lst ned-typ ned-lst
     need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
     if
         dup process-need-list       \ ned-lst ned-lst' bool

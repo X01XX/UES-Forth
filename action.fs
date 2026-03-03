@@ -83,12 +83,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-set-inst-id ( u1 act0 -- )
     \ Check args.
     assert-tos-is-action
-    \ assert-nos-is-value
 
     over 0<
-    abort" Invalid instance id"
-
-    over #255 >
     abort" Invalid instance id"
 
     \ Set inst id.
@@ -606,6 +602,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         dup 0<> if cr #19 spaces then
     repeat
                                         \ act0
+    space ." number states: "
+    dup action-get-corners corner-list-number-states dec.
+
     drop
 ;
 

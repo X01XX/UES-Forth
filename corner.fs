@@ -297,7 +297,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
     if
     else
         \ Add need for sample.
-        need-type-cds                   \ crn0 ned-type
+        need-type-cas                   \ crn0 ned-type
         over corner-get-anchor-state    \ crn0 ned-type sta
         #2 pick                         \ crn0 ned-type sta crn0
         corner-get-parent-action        \ crn0 ned-type sta act0

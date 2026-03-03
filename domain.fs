@@ -115,9 +115,6 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     over 0<
     abort" Invalid instance id"
 
-    over #255 >
-    abort" Invalid instance id"
-
     \ Set inst id.
     4c!
 ;
