@@ -304,7 +304,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     current-session                 \ pln0 dom dom sess
     session-set-current-domain-xt
     execute                         \ pln0 dom
-    cr ." plan-run: " over .plan
+    cr ." plan-run: " over .plan cr
 
     dup domain-get-current-state-xt
     execute                         \ pln0 dom cur-sta

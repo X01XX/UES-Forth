@@ -214,10 +214,8 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     \ Check arg.
     assert-tos-is-need
 
-    ." Dom: "
-    dup need-get-domain domain-get-inst-id-xt execute #3 dec.r space
-    ." Act: "
-    dup need-get-action action-get-inst-id-xt execute #3 dec.r space
+    ." Dom: " dup need-get-domain domain-get-inst-id-xt execute #3 dec.r space
+    ." Act: " dup need-get-action action-get-inst-id-xt execute #3 dec.r space
 
     \ Set up for value print.
     dup need-get-domain

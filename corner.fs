@@ -141,8 +141,8 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
         assert-nos-is-value
         assert-3os-is-region
 
-        \ cr ." Dom: " current-domain-id dec. space
-        \    ." Act: " current-action-id dec. space
+        \ cr ." Dom: " current-domain-id #3 dec.r space
+        \    ." Act: " current-action-id #3 dec.r space
         \    ." corner-new: " over .state space #2 pick .value cr
 
         \ Check that anchor state is in region.

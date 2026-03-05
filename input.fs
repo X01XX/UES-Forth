@@ -39,7 +39,7 @@
         domain-get-sample           \ ned act dom sample
         sample-deallocate           \ ned act dom
         domain-get-inst-id
-        cr ." Dom: " dec.           \ ned act
+        cr ." Dom: " #3 dec.r       \ ned act
         .action cr                  \ ned
         drop                        \
     else

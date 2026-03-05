@@ -336,7 +336,12 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-tos-is-group
     assert-nos-is-square
 
-    cr ." group " dup .group-region space ." adding square " over .square-state cr
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
+    space ." group " dup .group-region space ." adding square " over .square-state
+    cr
+    
     \ Check square belongs in group.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-region       \ sqr1 grp0 sta reg
@@ -357,7 +362,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     \ Add square to square list.
     over                        \ sqr1 grp0 sqr1
     over group-get-squares      \ sqr1 grp0 sqr1 sqr-lst
-    square-list-push            \ sqr1 grp0
+    square-list-push-end        \ sqr1 grp0
 
     group-check-square
 ;
@@ -512,4 +517,123 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
     group-get-rules             \ cngs1 rul-str
     rulestore-makes-change      \ flag
+;
+
+\ Return true if a group uses a square.
+: group-uses-square ( sta1 grp0 -- bool )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-value
+
+    \ Check if a square is in the group.
+    over                        \ sta1 grp0 sta1
+    over group-get-squares      \ sta1 grp0 sta1 sqr-lst
+    square-list-member          \ sta1 grp0 bool
+    if
+    else
+        2drop
+        false
+        exit
+    then
+
+    \ Check if the square is item 0 in the list.
+    0 over group-get-squares    \ sta1 grp0 0 sqr-lst
+    list-get-item               \ sta1 grp0 sqr0
+    square-get-state            \ sta1 grp0 sta0
+    #2 pick                     \ sta1 grp0 sqr0 sta1
+    =                           \ sta1 grp0 bool
+    if
+        2drop
+        true
+        exit
+    then
+    
+    \ Check if square state is equal to square far from square 0.
+    0 over group-get-squares    \ sta1 grp0 0 sqr-lst
+    list-get-item               \ sta1 grp0 sqr0
+    square-get-state            \ sta1 grp0 sta
+    over group-get-region       \ sta1 grp0 sta reg
+    region-far-from-state       \ sta1 grp0 sta-far
+    #2 pick                     \ sta1 grp0 sta-far sta1
+    =                           \ sta1 grp0 bool
+    if
+        2drop
+        true
+        exit
+    then
+
+    \ Check if far square exists.
+    \ If so, passed square is between the first ad far square, and is not needed.
+    0 over group-get-squares    \ sta1 grp0 0 sqr-lst
+    list-get-item               \ sta1 grp0 sqr0
+    square-get-state            \ sta1 grp0 sta
+    over group-get-region       \ sta1 grp0 sta reg
+    region-far-from-state       \ sta1 grp0 sta-far
+    over group-get-squares      \ sta1 grp0 sta-far sqr-lst
+    square-list-member          \ sta1 grp0 bool
+    nip nip                     \ bool
+    invert
+;
+
+\ Remove a square from a group.
+: group-remove-square ( sta1 grp0 -- )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-value
+
+    group-get-squares           \ sta1 sqr-lst
+
+    2dup square-list-member     \ sta1 sqr-lst bool
+    if
+        square-list-remove      \ bool
+        drop
+    else
+        2drop
+    then
+;
+
+\ If needed, change the first square in the square list.
+: group-set-first-square ( sta1 grp0 -- )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-value
+
+\    cr
+\    ." Dom: " current-domain-id #3 dec.r
+\    space ." Act: " current-action-id #3 dec.r
+\    space ." group-set-first-square: grp: " dup group-get-region .region
+\    space ." state: " over dec.
+\   cr
+
+    \ Check first square.
+    group-get-squares           \ sta1 sqr-lst
+    0 over list-get-item        \ sta1 sqr-lst sqr0
+    square-get-state            \ sta1 sqr-lst sta0
+    #2 pick                     \ sta1 sqr-lst sta0 sta1
+    =                           \ sta1 sqr-lst bool
+    if
+        2drop
+\ space ." already set" cr
+        exit
+    then
+
+\ space ." setting..." cr
+    \ Set square.
+    2dup                        \ sta1 sqr-lst sta1 sqr-lst
+    square-list-find            \ sta1 sqr-lst, sqr t | f
+    if
+        rot                         \ sqr-lst sqr sta1
+        #2 pick                     \ sqr-lst sqr sta1 sqr-lst
+        square-list-remove          \ sqr-lst sqr bool
+        if
+            swap                        \ sqr sqr-lst
+            square-list-push            \
+        else
+            cr ." square not removed?"
+            2drop
+        then
+    else
+        cr ." Square not found?" cr
+        2drop
+    then
 ;

@@ -500,8 +500,17 @@
     [ ' region-intersects ] literal -rot list-find-all-struct
 ;
 
+\ Return true if a region uses a given state.
+: region-list-uses-state ( sta1 reg-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-is-value
+
+   [ ' region-uses-state ] literal -rot list-member \ lst
+;
+
 \ Return a list of regions that use a given state.
-: region-list-uses-state ( sta1 reg-lst0 -- list )
+: region-list-regions-using-state ( sta1 reg-lst0 -- list )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-value

@@ -115,6 +115,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     over 0<
     abort" Invalid instance id"
 
+    over 255 >
+    abort" Invalid instance id"
+
     \ Set inst id.
     4c!
 ;
@@ -399,9 +402,12 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #2 pick                         \ act1 dom0 | smpl sta dom
     domain-set-current-state        \ act1 dom0 | smpl
 
-    over domain-get-inst-id cr ." Dom: " dec.      \ act1 dom0 | smpl
-    #2 pick action-get-inst-id ." Act: " dec.      \ smpl
-    dup .sample cr
+\    cr
+\    over domain-get-inst-id cr ." Dom: " #3 dec.r   \ act1 dom0 | smpl
+\    space #2 pick action-get-inst-id ." Act: " #3 dec.r   \ smpl
+\    space dup .sample
+\    cr
+
     nip nip
 ;
 

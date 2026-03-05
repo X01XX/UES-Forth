@@ -81,7 +81,11 @@
     assert-tos-is-group-list
     assert-nos-is-group
 
-    cr ." adding group " over .group-region cr
+    cr ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
+    space ." adding group " over .group-region
+    cr
+
     list-push-struct
 ;
 
@@ -210,4 +214,52 @@
                                 \ val0
     drop
     false
+;
+
+\ Return true if any group uses a given state.
+: group-list-uses-square ( sta1 grp-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-group-list
+    assert-nos-is-value
+
+    list-get-links              \ sta1 grp-link
+
+    begin
+        ?dup
+    while
+        over                    \ sta1 grp-link sta1
+        over link-get-data      \ sta1 grp-link sta1 grpx
+        group-uses-square       \ sta1 grp-link bool
+        if  
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ sta1
+    drop                        \   
+    false
+;
+
+\ Remove a square from a group list.
+: group-list-remove-square ( sta1 grp-lst0 -- )
+    \ Check args.
+    assert-tos-is-group-list
+    assert-nos-is-value
+
+    list-get-links          \ sta1 grp-link
+
+    begin
+        ?dup
+    while
+        over                \ sta1 grp-link sta1
+        over link-get-data  \ sta1 grp-link sta1 grp
+        group-remove-square \ sta1 grp-link
+
+        link-get-next
+    repeat
+                            \ sta1
+    drop
 ;

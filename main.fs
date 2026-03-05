@@ -253,44 +253,44 @@ cr
     over session-add-domain                     \ sess
 
     \ Add domain 1
-    #5 over domain-new                          \ sess dom1
+\    #5 over domain-new                          \ sess dom1
 
     \ Add actions to domain 1
-    [ ' domain-1-act-1-get-sample ] literal     \ sess dom1 xt
-    over domain-add-action                      \ sess dom1
+\    [ ' domain-1-act-1-get-sample ] literal     \ sess dom1 xt
+\    over domain-add-action                      \ sess dom1
 
-    [ ' domain-1-act-2-get-sample ] literal     \ sess dom1 xt
-    over domain-add-action                      \ sess dom1
+\    [ ' domain-1-act-2-get-sample ] literal     \ sess dom1 xt
+\    over domain-add-action                      \ sess dom1
 
-    [ ' domain-1-act-3-get-sample ] literal     \ sess dom1 xt
-    over domain-add-action                      \ sess dom1
+\    [ ' domain-1-act-3-get-sample ] literal     \ sess dom1 xt
+\    over domain-add-action                      \ sess dom1
 
-    [ ' domain-1-act-4-get-sample ] literal     \ sess dom1 xt
-    over domain-add-action                      \ sess dom1
+\    [ ' domain-1-act-4-get-sample ] literal     \ sess dom1 xt
+\    over domain-add-action                      \ sess dom1
 
-    [ ' domain-1-act-5-get-sample ] literal     \ sess dom1 xt
-    over domain-add-action                      \ sess dom1
+\    [ ' domain-1-act-5-get-sample ] literal     \ sess dom1 xt
+\    over domain-add-action                      \ sess dom1
 
-    [ ' domain-1-act-6-get-sample ] literal     \ sess dom1 xt
-    over domain-add-action                      \ sess dom1
+\    [ ' domain-1-act-6-get-sample ] literal     \ sess dom1 xt
+\    over domain-add-action                      \ sess dom1
 
     \ Add last domain
-    over session-add-domain                     \ sess dom1
+\    over session-add-domain                     \ sess dom1
 
-    s" (X1X1 01X1X)" regioncorr-from-string-a   \ sess regc
-    -1 #2 rate-new                              \ sess regc rt
-    regioncorrrate-new                          \ sess regc-rt
-    over session-add-regioncorrrate             \ sess
+\    s" (X1X1 01X1X)" regioncorr-from-string-a   \ sess regc
+\    -1 #2 rate-new                              \ sess regc rt
+\    regioncorrrate-new                          \ sess regc-rt
+\    over session-add-regioncorrrate             \ sess
 
-    s" (1XX1 01X1X)" regioncorr-from-string-a   \ sess regc
-    #-2 0 rate-new                              \ sess
-    regioncorrrate-new                          \ sess regc-rt
-    over session-add-regioncorrrate             \ sess
+\    s" (1XX1 01X1X)" regioncorr-from-string-a   \ sess regc
+\    #-2 0 rate-new                              \ sess
+\    regioncorrrate-new                          \ sess regc-rt
+\    over session-add-regioncorrrate             \ sess
 
-    s" (00X1 11XXX)" regioncorr-from-string-a   \ sess regc
-    0 #2 rate-new                               \ sess
-    regioncorrrate-new                          \ sess regc-rt
-    over session-add-regioncorrrate             \ sess
+\    s" (00X1 11XXX)" regioncorr-from-string-a   \ sess regc
+\    0 #2 rate-new                               \ sess
+\    regioncorrrate-new                          \ sess regc-rt
+\    over session-add-regioncorrrate             \ sess
 
     .session
 ;

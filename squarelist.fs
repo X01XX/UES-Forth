@@ -123,6 +123,15 @@
     list-push-struct
 ;
 
+\ Push a square to the end of a square-list.
+: square-list-push-end ( sqr1 list0 -- )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-square
+
+    list-push-end-struct
+;
+
 \ Remove the first square, idetified by xt, from a square-list, and deallocate.
 \ xt signature is ( item list-data -- flag )
 \ Return true if an square was removed.

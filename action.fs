@@ -4,7 +4,7 @@
     #9 constant action-struct-number-cells
 
 \ Struct fields
-0                                     constant action-header-disp               \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits).
+0                                     constant action-header-disp               \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits) Clean up trigger (8).
 action-header-disp              cell+ constant action-parent-domain-disp        \ Domain pointer.
 action-parent-domain-disp       cell+ constant action-squares-disp              \ A square-list
 action-squares-disp             cell+ constant action-incompatible-pairs-disp   \ A region-list
@@ -87,8 +87,44 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over 0<
     abort" Invalid instance id"
 
+    over 255 >
+    abort" Invalid instance id"
+
     \ Set inst id.
     4c!
+;
+
+\ Return the cull flag from an action instance.
+: action-get-cull-flag ( act0 -- bool)
+    \ Check arg.
+    assert-tos-is-action
+
+    \ Get cull flag.
+    5c@
+
+    0=
+    if
+        false
+    else
+        true
+    then
+;
+
+\ Set the cull flag of an action instance, use only in this file.
+: _action-set-cull-flag ( bool act0 -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-bool
+
+    swap                \ act0 bool
+    if
+        1 swap
+    else
+        0 swap
+    then
+
+    \ Set inst id.
+    5c!
 ;
 
 \ Return the parent domain of the action.
@@ -335,7 +371,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check args.
     assert-tos-is-action
     assert-nos-is-list
-    cr ." New LS regions: " over .region-list cr
+
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
+    space ." New LS region list: " over .region-list
+    cr
 
     \ Check the new list is different from the old list.
     over                                \ new-lst act0 new-lst
@@ -345,7 +386,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip                                 \ new-lst act0 old-lst'
 
     \ Get/save current LS.
-    cr ." old list " dup .region-list cr
+    \ cr ." old list " dup .region-list cr
 
     -rot                                \ old-lst' new-lst act0
 
@@ -359,7 +400,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Get old regions that are deleted.
     2dup                                \ act0 old-lst' new-lst old-lst' new-lst
     region-list-set-difference          \ act0 old-lst' new-lst old-gone'
-    cr ." Old LS regions deleted: " dup .region-list cr
+    \ cr ." Old LS regions deleted: " dup .region-list cr
 
     \ Scan deleted regions.
     dup list-get-links                   \ act0 old-lst' new-lst old-gone' link
@@ -373,7 +414,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         _action-delete-group            \ act0 old-lst' new-lst old-gone' link flag
         if
             cr #4 spaces dup link-get-data .region
-            space ." deleted group"
+            \ space ." deleted group"
         then
 
         link-get-next                   \ act0 old-lst' new-lst old-gone' link
@@ -387,7 +428,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     #2 pick                             \ act0 old-lst' new-lst new-lst old-lst'
 
     region-list-set-difference          \ act0 old-lst' new-lst new-added'
-    cr ." New LS regions added: " dup .region-list cr
+    \ cr ." New LS regions added: " dup .region-list cr
     region-list-deallocate              \ act0 old-lst' new-lst
     drop                                \ act0 old-lst'
     region-list-deallocate              \ act0
@@ -405,13 +446,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     while
         dup link-get-data                   \ act0 link region
 
-        cr #4 spaces ." defining region: " dup .region
+        \ cr #4 spaces ." defining region: " dup .region
 
         #2 pick                             \ act0 link reg act0
         action-get-groups                   \ act0 link reg grps
         group-list-member                   \ act0 link flag
         if                                  \ act0 link
-            space ." group already exists"
+            \ space ." group already exists"
         else
             dup link-get-data                   \ act0 link reg
             #2 pick                             \ act0 link reg act0
@@ -419,7 +460,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             square-list-in-region               \ act0 link sqr-lst2
             dup list-is-empty                   \ act0 link sqr-lst2 flag
             if                                  \ act0 link sqr-lst2
-                space ." no squares found "
+                \ space ." no squares found "
                 list-deallocate
             else
                 dup                             \ act0 link sqr-lst2 sqr-lst2
@@ -431,16 +472,17 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                     #2 pick action-get-groups   \ act0 link grp grp-lst
                     group-list-push             \ act0 link
                 else                            \ act0 link sqr-lst2
-                    space ." rules not found, must be a problem"
+                    \ space ." rules not found, must be a problem"
                     square-list-deallocate      \ act0 link
 
                     \ If group exists, delete it.
                     dup link-get-data               \ act0 link region
                     #2 pick                         \ act0 link region act0
                     _action-delete-group            \ act0 link flag
-                    if                              \ act0 link
-                        space ." deleted group"
-                    then
+                    drop
+                    \ if                              \ act0 link
+                    \     space ." deleted group"
+                    \ then
                 then
             then
         then
@@ -472,7 +514,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-corner-list
 
-    action-corners-disp +  \ Add offset.
+    action-corners-disp +   \ Add offset.
     !struct                 \ Set the field.
 ;
 
@@ -481,15 +523,47 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check args.
     assert-tos-is-action
     assert-nos-is-corner-list
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
+    space ." update-corners: " over .corner-list-short
+    cr
 
+    \ Get/save the previous corner list.
     dup action-get-corners -rot    \ prev-lst crn-lst1 act0
 
-    \ Set the field.
-    action-corners-disp +
-    !struct                         \ prev-lst
+    \ Set the new corners.
+    2dup                            \ prev-lst crn-lst1 act0 crn-lst act0
+    _action-set-corners             \ prev-lst crn-lst1 act0
 
-    dup struct-dec-use-count
-    corner-list-deallocate
+    \ Deallocate old list.
+    rot                             \ crn-lst act0 prev-lst
+    corner-list-deallocate          \ crn-lst act0
+    
+    \ Update groups first square, if needed.
+    action-get-groups               \ crn-lst1 grp-lst
+    swap                            \ grp-lst crn-lst1
+    list-get-links                  \ grp-lst crn-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ grp-lst crn-link crnx
+        dup corner-get-anchor-state \ grp-lst crn-link crnx a-sta
+        swap corner-get-region      \ grp-lst crn-link a-sta regx
+        #3 pick                     \ grp-lst crn-link a-sta regx grp-lst
+        group-list-find             \ grp-lst crn-link a-sta, grp t | f
+        if
+            group-set-first-square  \ grp-lst crn-link
+        else
+            cr ." Group not found?" cr
+            drop
+        then
+
+        link-get-next
+    repeat
+                                    \ grp-lst
+    drop
 ;
 
 \ End accessors.
@@ -558,11 +632,14 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Set group list.
     list-new                            \ act lst
     over
-    _action-set-groups             \ act
+    _action-set-groups                  \ act
 
     \ Init corner list.
     list-new                            \ act lst
     over _action-set-corners            \ act
+
+    false over                          \ act 0 act
+    _action-set-cull-flag               \ act
 ;
 
 \ Return a square given a state.
@@ -705,7 +782,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ If region state 0 is used by any corner, keep it.
     over region-get-state-0                     \ reg1 act0 sta0
     over action-get-corners                     \ reg1 act0 sta0 crn-lst
-    corner-list-state-used-by-any-corner        \ reg1 act0 bool
+    corner-list-uses-state                      \ reg1 act0 bool
     if
         \ Keep pair
         2drop
@@ -716,7 +793,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ If region state 1 is used by any corner, keep it.
     over region-get-state-1                     \ reg1 act0 sta1
     over action-get-corners                     \ reg1 act0 sta1 crn-lst
-    corner-list-state-used-by-any-corner        \ reg1 act0 bool
+    corner-list-uses-state                      \ reg1 act0 bool
     if
         \ Keep pair
         2drop
@@ -734,8 +811,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check arg.
     assert-tos-is-action
     \ cr
-    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute dec.
-    \ space ." Act: " dup action-get-inst-id dec.
+    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+    \ space ." Act: " dup action-get-inst-id #3 dec.r
     \ space ." action-cull-incompatible-pairs: start" cr
 
     \ Init new incompatible pairs list.
@@ -783,8 +860,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check arg.
     assert-tos-is-action
     \ cr
-    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute dec.
-    \ space ." Act: " dup action-get-inst-id dec.
+    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+    \ space ." Act: " dup action-get-inst-id #3 dec.r
     \ space ." action-calc-corners: start" cr
 
     dup action-get-defining-regions     \ act0 def-regs
@@ -1070,8 +1147,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \    over list-is-empty
 \    if
 \        cr
-\        ." Dom: " current-domain-id dec.
-\        space ." Act: " current-action-id dec.
+\        ." Dom: " current-domain-id #3 dec.r
+\        space ." Act: " current-action-id #3 dec.r
 \        space ." for square: " square-get-state .value
 \        space ." incompatible pairs: " dup .region-list
 \        cr
@@ -1112,8 +1189,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
         \ Add region to the action-incompatible-pairs  list.
         cr
-        ." Dom: " current-domain-id dec.
-        ." Act: " current-action-id dec.
+        ." Dom: " current-domain-id #3 dec.r
+        space ." Act: " current-action-id #3 dec.r
         space ." Adding incompatible pair: " dup region-get-states .value space .value
         cr
 
@@ -1314,8 +1391,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             region-list-push-nosups         \ sqr1 act0 | flag reg-in-lst' link reg-new flag
             if
                 cr
-                ." Dom: " current-domain-id dec.
-                ." Act: " current-action-id dec.
+                ." Dom: " current-domain-id #3 dec.r
+                ." Act: " current-action-id #3 dec.r
                 space ." New incompatible pair: " dup .region
                 cr
                 drop                        \ sqr1 act0 | flag reg-in-lst' link
@@ -1345,8 +1422,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             region-list-push-nosups         \ sqr1 act0 | flag reg-in-lst' link reg-new flag
             if
                 cr
-                ." Dom: " current-domain-id dec.
-                ." Act: " current-action-id dec.
+                ." Dom: " current-domain-id #3 dec.r
+                ." Act: " current-action-id #3 dec.r
                 space ." New incompatible pair: " dup .region
                 cr
                 drop                        \ sqr1 act0 | flag reg-in-lst' link
@@ -1382,7 +1459,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over square-get-state               \ sqr1 act0 sta
     over                                \ sqr1 act0 sta act0
     action-get-incompatible-pairs       \ sqr1 act0 sta ip-lst
-    region-list-uses-state              \ sqr1 act0 reg-lst-in'
+    region-list-regions-using-state     \ sqr1 act0 reg-lst-in'
 
     dup list-is-empty                   \ sqr1 act0 reg-lst-in' flag
     if
@@ -1454,7 +1531,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-sample
 
-    cr ." Act: " dup action-get-inst-id dec. space ." adding sample: " over .sample cr
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " dup action-get-inst-id #3 dec.r
+    space ." adding sample: " over .sample
+    cr
 
     over sample-get-initial     \ smpl1 act0 s-i
     over action-get-squares     \ smpl1 act0 s-i sqr-lst
@@ -2054,6 +2135,110 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip                             \ ret-lst
 ;
 
+\ Return true if a square/sttae is still needed.
+: action-square-needed? ( sta1 act0 -- bool )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+
+    \ Check incompatible pairs.
+    2dup                            \ sta1 act0 sta1 act0
+    action-get-incompatible-pairs   \ sta1 act0 sta1 ip-lst
+    region-list-uses-state          \ sta1 act0 bool
+    if
+        2drop
+        true
+        exit
+    then
+
+    \ Check corners.
+    2dup action-get-corners         \ sta1 act0 sta1 crn-lst
+    corner-list-uses-state          \ sta1 act0 bool
+    if
+        3drop
+        true
+        exit
+    then
+
+    \ Check groups.
+    over                            \ sta1 act0 sta1
+    over action-get-groups          \ sta1 act0 sta1 grp-lst
+    group-list-uses-square          \ sta1 act0 bool
+    if
+        2drop
+        true
+        exit
+    then
+
+    2drop
+    false
+;
+
+\ Remove unneeded squares.
+: action-cull-unneeded-squares ( act0 -- )
+    \ Check arg.
+    assert-tos-is-action
+
+    \ Init remove list.
+    list-new swap               \ rmv-lst' act0
+
+    \ Prep for loop.
+    dup action-get-squares      \ rmv-lst' act0 sqr-lst
+    list-get-links              \ rmv-lst' act0 sqr-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ rmv-lst' act0 sqr-link sqrx
+        square-get-state        \ rmv-lst' act0 sqr-link stax
+        #2 pick                 \ rmv-lst' act0 sqr-link stax act0
+        action-square-needed?   \ rmv-lst' act0 sqr-link bool
+        if
+        else
+            \ Add square state to remove list.
+            dup link-get-data   \ rmv-lst' act0 sqr-link sqrx
+            square-get-state    \ rmv-lst' act0 sqr-link sta
+            #3 pick             \ rmv-lst' act0 sqr-link sta rmv-lst'
+            list-push           \ rmv-lst' act0 sqr-link
+        then
+
+        link-get-next
+    repeat
+                                \ rmv-lst' act0
+    \ Remove selected squares.
+    dup action-get-groups       \ rmv-lst' act0 grp-lst
+    swap                        \ rmv-lst' grp-lst act0
+    action-get-squares          \ rmv-lst' grp-lst sqr-lst
+    #2 pick                     \ rmv-lst' grp-lst sqr-lst rmv-lst'
+    list-get-links              \ rmv-lst' grp-lst sqr-lst rmv-link
+
+    begin
+        ?dup
+    while
+        \ Remove square from action group list.
+        dup link-get-data           \ rmv-lst' grp-lst sqr-lst rmv-link stax
+        #3 pick                     \ rmv-lst' grp-lst sqr-lst rmv-link stax grp-lst
+        group-list-remove-square    \ rmv-lst' grp-lst sqr-lst rmv-link
+
+        \ Remove square from action square list.
+        dup link-get-data       \ rmv-lst' grp-lst sqr-lst rmv-link stax
+
+
+        cr ." Dom: " current-domain-id #3 dec.r
+        space ." Act: " current-action-id #3 dec.r
+        space ." culling square: " dup dec. cr
+    
+        #2 pick                 \ rmv-lst' grp-lst sqr-lst rmv-link stax sqr-lst
+        square-list-remove      \ rmv-lst' grp-lst sqr-lst rmv-link bool
+        drop                    \ rmv-lst' grp-lst sqr-lst rmv-link
+
+        link-get-next
+    repeat
+                                \ rmv-lst' grp-lst sqr-lst
+    2drop
+    list-deallocate
+;
+
 \ Return a list of needs for an action, given the current state.
 : action-get-needs ( sta1 act0 -- ned-lst )
     \ Check args.
@@ -2061,8 +2246,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-nos-is-value
 
     \ cr
-    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
-    \ space ." Act: " dup action-get-inst-id . space ." get-needs for " over .value space ." TODO"
+    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+    \ space ." Act: " dup action-get-inst-id . space ." get-needs for " over .value space #3 dec.r
+    \ space ." action-get-needs"
     \ cr
 
     \ Init return need list.
@@ -2098,6 +2284,19 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     #2 pick                                         \ sta1 act0 | ret-lst grp-neds' grp-neds' ret-lst
     need-list-append                                \ sta1 act0 | ret-lst grp-neds'
     need-list-deallocate                            \ sta1 act0 | ret-lst
+
+    \ Check for clean up.
+    dup list-is-empty                               \ sta1 act0 | ret-lst bool
+    if
+        over action-get-cull-flag                   \ sta1 act0 | ret-lst bool
+        if
+            over                                    \ sta1 act0 | ret-lst act0
+            action-cull-unneeded-squares            \ sta1 act0 | ret-lst
+            false #2 pick _action-set-cull-flag     \ sta1 act0 | ret-lst
+        then
+    else
+        true #2 pick _action-set-cull-flag          \ sta1 act0 | ret-lst
+    then
 
     \ Clean up.
     nip nip                                        \ ret-lst
@@ -2173,8 +2372,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     swap region-superset-of                         \ | bool
     abort" action-calc-plansteps-by-changes: region subset?"    \ |
 
-    \ cr ." action-calc-plansteps-by-changes: Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
-    \ space ." Act: " dup action-get-inst-id .
+    \ cr ." action-calc-plansteps-by-changes: Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+    \ space ." Act: " dup action-get-inst-id #3 dec.r
     \ space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
 
     \ Get needed changes.
@@ -2241,8 +2440,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     swap region-superset-of                         \ | bool
     abort" action-calc-plansteps-fc: region subset?"    \ |
 
-    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
-    \ space ." Act: " dup action-get-inst-id .
+    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+    \ space ." Act: " dup action-get-inst-id #3 dec.r
     \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
 
     \ Init return list.
@@ -2305,8 +2504,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     swap region-superset-of                             \ | bool
     abort" action-calc-plansteps-bc: region subset?"    \ |
 
-    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute .
-    \ space ." Act: " dup action-get-inst-id .
+    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+    \ space ." Act: " dup action-get-inst-id #3 dec.r
     \ space ." action-calc-steps-bc: " #2 pick .region space over .region cr
 
     \ Init return list.

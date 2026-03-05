@@ -47,6 +47,33 @@
     [ ' .corner ] literal swap .list
 ;
 
+\ Return a list of anchors states.
+: .corner-list-short ( crn-lst0 -- )
+    \ Check arg.
+    assert-tos-is-corner-list
+
+    ." ("
+
+    \ Prep for loop.
+    list-get-links                  \ crn-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ crn-link crnx
+        dup corner-get-region       \ crn-link crnx regx
+        .region
+        ." ="
+        corner-get-anchor-state     \ crn-link stax
+        .value                      \ crn-link
+
+        link-get-next
+        dup 0<> if space then
+    repeat
+
+    ." )"
+;
+
 \ Print a corner-list of lists.
 : .corner-lol ( list0 -- )
     \ Check arg.
@@ -271,7 +298,7 @@
 ;
 
 \ Return true if any carner uses a given state.
-: corner-list-state-used-by-any-corner ( sta1 crn-lst0 -- bool )
+: corner-list-uses-state ( sta1 crn-lst0 -- bool )
     \ Check args.
     assert-tos-is-corner-list
     assert-nos-is-value

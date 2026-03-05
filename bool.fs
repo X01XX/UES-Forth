@@ -2,7 +2,7 @@
 
 \ Check TOS for bool, unconventional, leaves stack unchanged.
 : assert-tos-is-bool ( tos -- tos )
-    dup is-false
+    dup 0=
     over -1 =
     or
     is-false if
@@ -13,7 +13,7 @@
 
 \ Check NOS for bool, unconventional, leaves stack unchanged.
 : assert-nos-is-bool ( nos tos -- nos tos )
-    over dup is-false
+    over dup 0=
     swap -1 =
     or
     is-false if
