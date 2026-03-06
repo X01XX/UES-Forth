@@ -1626,16 +1626,15 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 ' action-state-confirmed to action-state-confirmed-xt
 
+
 \ Get a sample from an action.
-\ Call only from session-get-sample to domain-get-sample
-\ since current-domain and current-action need to be set first.
-: action-get-sample ( sta1 act0 -- smpl )
-    \ cr ." action-get-sample: start" cr
+: _action-get-sample2 ( sta1 act0 -- smpl )
+    \ cr ." action-get-sample2: start" cr
      \ Check args.
     assert-tos-is-action
     assert-nos-is-value
 
-    \ cr ."action-get-sample: Act: " dup action-get-inst-id . cr
+    \ cr ."action-get-sample2: Act: " dup action-get-inst-id . cr
 
     tuck                        \ act0 sta1 act0
 
@@ -1651,20 +1650,80 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         true -rot               \ act0 rslt true sta1 act0
         action-get-function     \ act0 rslt true sta1 xt
         execute                 \ act0 smpl
-        tuck                    \ smpl act0 smpl
-        swap                    \ smpl smpl act0
-        action-add-sample       \ smpl
+        nip                     \ smpl
     else                        \ act0 sta1 act0
                                 \ act0 sta1 act0
         0 -rot                  \ act0 0 sta1 act0
         0 -rot                  \ act0 0 0 sta1 act0
         action-get-function     \ act0 0 0 sta1 xt
         execute                 \ act0 smpl
+        nip                     \ smpl
+    then
+    \ cr ." action-get-sample2: end" cr
+;
+
+\ Get a sample from an action.
+\ Depends on the current domain being set correctly.
+\ Add the sample to the action.
+: action-get-sample ( sta1 act0 -- smpl )
+    \ cr ." action-get-sample: start" cr
+     \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+
+    tuck                    \ act0 sta1 act0
+    _action-get-sample2     \ act0 smpl
+    tuck swap               \ smpl smpl act0
+    action-add-sample       \ smpl
+;
+
+: action-sample-expected? ( smpl1 act0 -- bool )
+     \ Check args.
+    assert-tos-is-action
+    assert-nos-is-sample
+
+    action-get-groups           \ smpl grp-lst
+    group-list-sample-expected? \ bool
+;
+
+\ Get a sample from an action, for a step.
+\ Depends on the current domain being set correctly.
+\ If the sample is for an existing square,
+\ or it cannot be predicted by the existing groups,
+\ add the sample to the action.
+: action-get-sample-step ( sta1 act0 -- smpl )
+    \ cr ." action-get-sample-step: start" cr
+     \ Check args.
+    assert-tos-is-action
+    assert-nos-is-value
+
+    tuck                        \ act0 sta1 act0
+    _action-get-sample2         \ act0 smpl
+
+    \ Check for existing square.
+    dup sample-get-initial      \ act0 smpl initial
+    #2 pick                     \ act0 smpl initial act0
+    action-find-square          \ act0 smpl, sqr t | f
+    if
+        \ Update an existing square with a sample.
+        drop                    \ act0 smpl
         tuck                    \ smpl act0 smpl
         swap                    \ smpl smpl act0
         action-add-sample       \ smpl
+        exit
     then
-    \ cr ." action-get-sample: end" cr
+                                \ act0 smpl
+
+    2dup swap                   \ act0 smpl smpl act0
+    action-sample-expected?     \ act0 smpl bool
+    if
+        \ Do not add the sample, to avoid creating an unneeded new square.
+        nip
+        exit
+    then
+                                \ act smpl
+    tuck swap                   \ smpl smpl act0
+    action-add-sample           \ smpl
 ;
 
 \ Return true if a action id matches a number.

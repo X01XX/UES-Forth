@@ -411,7 +411,37 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     nip nip
 ;
 
-' domain-get-sample to domain-get-sample-xt
+\ ' domain-get-sample to domain-get-sample-xt
+
+\ Get a sample from an action in a domain, for a step.
+: domain-get-sample-step ( act1 dom0 -- sample )
+     \ Check args.
+    assert-tos-is-domain
+    assert-nos-is-action
+
+    \ Set domain current action.
+    2dup domain-set-current-action  \ act1 dom0
+
+    \ Get action sample.
+    dup domain-get-current-state    \ act1 dom0 | d-sta
+    #2 pick                         \ act1 dom0 | d-sta act1
+    action-get-sample-step          \ act1 dom0 | smpl
+
+    \ Set domain current state.
+    dup sample-get-result           \ act1 dom0 | smpl sta
+    #2 pick                         \ act1 dom0 | smpl sta dom
+    domain-set-current-state        \ act1 dom0 | smpl
+
+\    cr
+\    over domain-get-inst-id cr ." Dom: " #3 dec.r   \ act1 dom0 | smpl
+\    space #2 pick action-get-inst-id ." Act: " #3 dec.r   \ smpl
+\    space dup .sample
+\    cr
+
+    nip nip
+;
+
+' domain-get-sample-step to domain-get-sample-step-xt
 
 \ Return true if a domain id matches a number.
 : domain-id-eq ( id1 dom0 -- flag )

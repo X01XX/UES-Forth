@@ -263,3 +263,30 @@
                             \ sta1
     drop
 ;
+
+: group-list-sample-expected? ( smpl1 grp-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-group-list
+    assert-nos-is-sample
+
+    \ Prep for loop.
+    list-get-links              \ smpl1 grp-link
+
+    begin
+        ?dup
+    while
+        2dup                    \ smpl1 grp-link smpl1 grp-link
+        link-get-data           \ smpl1 grp-link smpl1 grpx
+        group-sample-expected?  \ smpl1 grp-link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ smpl1
+    drop
+    false
+;

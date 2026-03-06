@@ -44,7 +44,7 @@
 
 ' xtabort value domain-get-current-action-xt
 
-' xtabort value domain-get-sample-xt
+' xtabort value domain-get-sample-step-xt
 
 ' xtabort value domain-get-plan-fc-xt
 

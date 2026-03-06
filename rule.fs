@@ -1272,7 +1272,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Restrict rule initial region.
     rule-restrict-initial-region    \ rul0' t | f
     if
-
         \ Get result region.
         dup rule-calc-result-region     \ rul0' reg
 
@@ -1283,4 +1282,55 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     else
         false
     then
+;
+
+\ Return the result from applying a rule to a state that is within the rule's
+\ initial region.
+: rule-apply-to-state ( sta1 rul0 - sta-result )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-value
+
+    2dup                            \ sta1 rul0 sta1 rul0
+    rule-calc-initial-region        \ sta1 rul0 sta1 i-reg'
+    tuck                            \ sta1 rul0 i-reg' sta1 i-reg'
+    region-superset-of-state        \ sta1 rul0 i-reg' bool
+    swap region-deallocate          \ sta1 rul0 bool
+    is-false abort" state not within rule initial region?"
+
+    rule-get-changes                \ sta1 cngs'
+    tuck                            \ cngs' sta1 cngs'
+    changes-apply-to-state          \ cngs' sta-result
+
+    \ Clean up.
+    swap changes-deallocate         \ sta-result
+;
+
+\ Return true if a sample's result is expected by applying a rule.
+: rule-sample-expected? ( smpl1 rul0 -- bool )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-sample
+
+    over sample-get-initial         \ smpl1 rul0 initial
+    over rule-calc-initial-region   \ smpl1 rul0 initial i-reg'
+    tuck                            \ smpl1 rul0 i-reg' initial i-reg'
+    region-superset-of-state        \ smpl1 rul0 i-reg' bool
+    swap region-deallocate          \ smpl1 rul0 bool
+    if
+    else
+        2drop
+        false
+        exit
+    then
+    
+    \ Get expected result.
+                                    \ smpl1 rul0
+    over sample-get-initial         \ smpl1 rul0 initial
+    swap                            \ smpl1 initial rul0
+    rule-apply-to-state             \ smpl1 rul-result
+
+    \ Check result.
+    swap sample-get-result          \ rul-result smp-result
+    =                               \ bool
 ;

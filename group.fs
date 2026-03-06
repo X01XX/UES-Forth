@@ -637,3 +637,13 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
         2drop
     then
 ;
+
+\ Return true if the rules of a group can predict a sample.
+: group-sample-expected? ( smpl1 grp0 -- bool )
+    \ Check args.
+    assert-tos-is-group
+    assert-nos-is-sample
+
+    group-get-rules             \ smpl1 ruls
+    rulestore-sample-expected?  \ bool
+;

@@ -322,7 +322,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         dup link-get-data           \ pln0 dom link step
         dup planstep-get-action     \ pln0 dom link step actx
         #3 pick                     \ pln0 dom link step actx dom
-        domain-get-sample-xt
+        domain-get-sample-step-xt
         execute                     \ pln0 dom link step d-smpl
 
         \ Check if action sample is as expected.

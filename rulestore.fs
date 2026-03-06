@@ -706,3 +706,38 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         false                   \ false
     then
 ;
+
+\ Return true if a sample can be predicted by the rules in a rule store.
+: rulestore-sample-expected? ( smpl1 rul-str0 -- bool )
+    \ Check args.
+    assert-tos-is-rulestore
+    assert-nos-is-sample
+
+    dup rulestore-number-rules      \ smpl1 rul-str0 u
+    dup 0=
+    if
+        2drop
+        false
+    then
+
+    \ Check first rule.
+    #2 pick                         \ smpl1 rul-str0 u smpl1
+    #2 pick rulestore-get-rule-0    \ smpl1 rul-str0 u smpl1 rul0
+    rule-sample-expected?           \ smpl1 rul-str0 u bool
+    if
+        3drop
+        true
+        exit
+    then
+                                    \ smpl1 rul-str0 u
+    1 =
+    if
+        2drop
+        false
+        exit
+    then
+
+    \ Check second rule.            \ smpl1 rul-str0
+    rulestore-get-rule-1            \ smpl1 rul1
+    rule-sample-expected?           \ bool
+;
