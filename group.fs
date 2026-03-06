@@ -598,12 +598,12 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-tos-is-group
     assert-nos-is-value
 
-\    cr
-\    ." Dom: " current-domain-id #3 dec.r
-\    space ." Act: " current-action-id #3 dec.r
-\    space ." group-set-first-square: grp: " dup group-get-region .region
-\    space ." state: " over dec.
-\   cr
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
+    space ." group-set-first-square: grp: " dup group-get-region .region
+    space ." state: " over dec.
+    cr
 
     \ Check first square.
     group-get-squares           \ sta1 sqr-lst

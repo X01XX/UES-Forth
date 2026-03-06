@@ -437,7 +437,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     dup action-calc-defining-regions        \ act0 df-lst
     2dup swap                               \ act0 df-lst df-lst act0
     _action-update-defining-regions         \ act0 df-lst
-   \  over action-calc-corners                \ act0 df-lst
 
     \ Scan for new regions.
     list-get-links                          \ act0 link
@@ -460,7 +459,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             square-list-in-region               \ act0 link sqr-lst2
             dup list-is-empty                   \ act0 link sqr-lst2 flag
             if                                  \ act0 link sqr-lst2
-                \ space ." no squares found "
+                space ." no squares found "
                 list-deallocate
             else
                 dup                             \ act0 link sqr-lst2 sqr-lst2
@@ -472,7 +471,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                     #2 pick action-get-groups   \ act0 link grp grp-lst
                     group-list-push             \ act0 link
                 else                            \ act0 link sqr-lst2
-                    \ space ." rules not found, must be a problem"
+                    space ." rules not found, must be a problem"
                     square-list-deallocate      \ act0 link
 
                     \ If group exists, delete it.
@@ -556,8 +555,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         if
             group-set-first-square  \ grp-lst crn-link
         else
-            cr ." Group not found?" cr
             drop
+            cr ." Group not found? " dup link-get-data corner-get-region .region cr
         then
 
         link-get-next
@@ -1181,11 +1180,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ To get a new LS.
 
                                                     \ act0 inc-lst'
-    dup list-get-links                              \ act0 inc-lst' inc-link
+    \ Set LS recalc flag.
+    false                                           \ act0 inc-lst' lsrc
+    over list-get-links                             \ act0 inc-lst' lsrc inc-link
     begin
-        ?dup                                        \ act0 inc-lst' inc-link
+        ?dup                                        \ act0 inc-lst' lsrc inc-link
     while
-        dup link-get-data                           \ act0 inc-lst' inc-link regx
+        dup link-get-data                           \ act0 inc-lst' lsrc inc-link regx
 
         \ Add region to the action-incompatible-pairs  list.
         cr
@@ -1194,38 +1195,44 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         space ." Adding incompatible pair: " dup region-get-states .value space .value
         cr
 
-        dup                                         \ act0 inc-lst link regx regx
-        #4 pick                                     \ act0 inc-lst link regx regx act0
-        action-get-incompatible-pairs               \ act0 inc-lst link regx regx inc-lst'
-        region-list-push-nosups                     \ act0 inc-lst link regx flag
+        dup                                         \ act0 inc-lst' lsrc link regx regx
+        #5 pick                                     \ act0 inc-lst' lsrc link regx regx act0
+        action-get-incompatible-pairs               \ act0 inc-lst' lsrc link regx regx inc-lst'
+        region-list-push-nosups                     \ act0 inc-lst' lsrc link regx flag
         if
+            \ Set LS recalc flag.
+            rot drop true -rot
 
             \ Calc regions possible for incompatible pair.
-            region-get-states                       \ act0 inc-lst' link s0 s1
-            #4 pick                                 \ act0 inc-lst' link s0 s1 act0
-            action-get-parent-domain                \ act0 inc-lst' link s0 s1 dom
-            domain-state-pair-complement-xt         \ act0 inc-lst' link s0 s1 dom xt
-            execute                                 \ act0 inc-lst' link reg-lst'
+            region-get-states                       \ act0 inc-lst' lsrc link s0 s1
+            #5 pick                                 \ act0 inc-lst' lsrc link s0 s1 act0
+            action-get-parent-domain                \ act0 inc-lst' lsrc link s0 s1 dom
+            domain-state-pair-complement-xt         \ act0 inc-lst' lsrc link s0 s1 dom xt
+            execute                                 \ act0 inc-lst' lsrc link reg-lst'
 
             \ Calc new action-logical-structure.
-            #3 pick action-get-logical-structure    \ act0 inc-lst' link reg-lst' lsl-lst
-            2dup                                    \ act0 inc-lst' link reg-lst' lsl-lst reg-lst lsl-lsn
-            region-list-intersections-nosubs        \ act0 inc-lst' link reg-lst' lsl-lst new-reg-lst
+            #4 pick action-get-logical-structure    \ act0 inc-lst' lsrc link reg-lst' lsl-lst
+            2dup                                    \ act0 inc-lst' lsrc link reg-lst' lsl-lst reg-lst lsl-lsn
+            region-list-intersections-nosubs        \ act0 inc-lst' lsrc link reg-lst' lsl-lst new-reg-lst
 
             \ Set new action-logical-structure.
-            #5 pick                                 \ act0 inc-lst' link reg-lst' lsl-lst new-reg-lst act0
-            _action-update-logical-structure        \ act0 inc-lst' link reg-lst' lsl-lst
-            #4 pick action-calc-corners             \ act0 inc-lst' link reg-lst' lsl-lst
-            drop                                    \ act0 inc-lst' link reg-lst'
-            region-list-deallocate                  \ act0 inc-lst' link
+            #6 pick                                 \ act0 inc-lst' lsrc link reg-lst' lsl-lst new-reg-lst act0
+            _action-update-logical-structure        \ act0 inc-lst' lsrc link reg-lst' lsl-lst
+            drop                                    \ act0 inc-lst' lsrc link reg-lst'
+            region-list-deallocate                  \ act0 inc-lst' lsrc link
         else
             cr ." subset region not added?"
             abort
         then
 
-        link-get-next                               \ act0 inc-lst' sta1 link-next
+        link-get-next                               \ act0 inc-lst' lsrc link-next
     repeat
-                                                    \ act0 inc-lst'
+                                                    \ act0 inc-lst' lsrc
+
+    \ Check if LS was recalculated.
+    if
+        over action-calc-corners                    \ act0 inc-lst'
+    then
 
     region-list-deallocate                          \ act0
     drop
@@ -1531,11 +1538,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-sample
 
-    cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " dup action-get-inst-id #3 dec.r
-    space ." adding sample: " over .sample
-    cr
+\    cr
+\    ." Dom: " current-domain-id #3 dec.r
+\    space ." Act: " dup action-get-inst-id #3 dec.r
+\    space ." adding sample: " over .sample
+\    cr
 
     over sample-get-initial     \ smpl1 act0 s-i
     over action-get-squares     \ smpl1 act0 s-i sqr-lst
@@ -1674,6 +1681,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     tuck                    \ act0 sta1 act0
     _action-get-sample2     \ act0 smpl
     tuck swap               \ smpl smpl act0
+
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " dup action-get-inst-id #3 dec.r
+    space ." adding sample: " over .sample
+    cr
+
     action-add-sample       \ smpl
 ;
 
@@ -1709,6 +1723,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         drop                    \ act0 smpl
         tuck                    \ smpl act0 smpl
         swap                    \ smpl smpl act0
+
+        cr
+        ." Dom: " current-domain-id #3 dec.r
+        space ." Act: " dup action-get-inst-id #3 dec.r
+        space ." update square with sample: " over .sample
+        cr
+
         action-add-sample       \ smpl
         exit
     then
@@ -1723,6 +1744,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
                                 \ act smpl
     tuck swap                   \ smpl smpl act0
+
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " dup action-get-inst-id #3 dec.r
+    space ." adding unexpected sample: " over .sample
+    cr
+
     action-add-sample           \ smpl
 ;
 
