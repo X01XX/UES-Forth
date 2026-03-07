@@ -602,7 +602,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     ." Dom: " current-domain-id #3 dec.r
     space ." Act: " current-action-id #3 dec.r
     space ." group-set-first-square: grp: " dup group-get-region .region
-    space ." state: " over dec.
+    space ." state: " over .value
     cr
 
     \ Check first square.

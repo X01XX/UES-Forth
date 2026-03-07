@@ -412,10 +412,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ If group exists, delete it.
         #5 pick                         \ act0 old-lst' new-lst old-gone' link old-ls-reg act0
         _action-delete-group            \ act0 old-lst' new-lst old-gone' link flag
-        if
-            cr #4 spaces dup link-get-data .region
-            \ space ." deleted group"
-        then
+        drop
+\        if
+\            cr #4 spaces dup link-get-data .region
+\            \ space ." deleted group"
+\        then
 
         link-get-next                   \ act0 old-lst' new-lst old-gone' link
     repeat
@@ -1157,8 +1158,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 \ Check a new, or changed square, for incompatible square pairs within
 \ the Logical Structure.
-\ If found, update action-incompatible-pairs and action-logical-structure.
-: _action-check-square ( sqr1 act0 -- )
+\ If found, update action-incompatible-pairs and action-logical-structure, return true.
+: _action-check-square ( sqr1 act0 -- bool )
     \ cr ." _action-check-square: start" cr
     \ Check args.
     assert-tos-is-action
@@ -1172,6 +1173,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ cr ." _action-check-square: list is empty" cr
         list-deallocate
         drop
+        false
         exit
     then
 
@@ -1229,13 +1231,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     repeat
                                                     \ act0 inc-lst' lsrc
 
-    \ Check if LS was recalculated.
-    if
-        over action-calc-corners                    \ act0 inc-lst'
-    then
 
-    region-list-deallocate                          \ act0
-    drop
+    swap region-list-deallocate                     \ act0 lsrc
+    nip                                             \ lsrc
     \ cr ." _action-check-square: end" cr
 ;
 
@@ -1558,11 +1556,17 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             2dup                        \ sqr act0 sqr act0
             _action-check-incompatible-pairs    \ sqr act0
             2dup                        \ sqr act0 sqr act0
-            _action-check-square        \ sqr act0
-            tuck                        \ act0 sqr act0
-            action-get-groups           \ act0 sqr grp-lst
-            group-list-check-square     \ act0
-            drop
+            _action-check-square        \ sqr act0 bool
+            -rot                        \ bool sqr act0
+            tuck                        \ bool act0 sqr act0
+            action-get-groups           \ bool act0 sqr grp-lst
+            group-list-check-square     \ bool act0
+            swap                        \ act0 bool
+            if
+                action-calc-corners     \
+            else
+                drop
+            then
         else
             2drop                       \
         then
@@ -1576,43 +1580,49 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
         2dup                    \ sqr act0 sqr act0
-        _action-check-square    \ sqr act0
-        dup action-get-groups   \ sqr act0 grp-lst
-        #2 pick                 \ sqr act0 grp-lst sqr
-        square-get-state        \ sqr act0 grp-lst sta
-        over                    \ sqr act0 grp-lst sta grp-lst
-        group-list-state-in-group   \ sqr act0 grp-lst flag
+        _action-check-square    \ sqr act0 bool
+        -rot                    \ bool sqr act0
+        dup action-get-groups   \ bool sqr act0 grp-lst
+        #2 pick                 \ bool sqr act0 grp-lst sqr
+        square-get-state        \ bool sqr act0 grp-lst sta
+        over                    \ bool sqr act0 grp-lst sta grp-lst
+        group-list-state-in-group   \ bool sqr act0 grp-lst flag
         0= if
             \ Check if this is the first square
-                                \ sqr act0 grp-lst
-            over action-get-squares list-get-length \ sqr act0 grp-lst len
-            1 =   \ sqr act0 grp-lst flag
+                                \ bool sqr act0 grp-lst
+            over action-get-squares list-get-length \ bool sqr act0 grp-lst len
+            1 =                 \ bool sqr act0 grp-lst flag
 
             if
                 \ Add max region with first square.
-                                            \ sqr act0 grp-lst
-                rot                         \ act0 grp-lst sqr
-                list-new                    \ act0 grp-lst sqr sqr-lst
-                tuck                        \ act0 grp-lst sqr-lst sqr sqr-lst
-                square-list-push            \ act0 grp-lst sqr-lst
-                #2 pick                     \ act0 grp-lst sqr-lst act0
-                action-get-parent-domain    \ act0 grp-lst sqr-lst dom
-                domain-get-max-region-xt    \ act0 grp-lst sqr-lst xt
-                execute                     \ act0 grp-lst sqr-lst mreg
-                group-new                   \ act0 grp-lst grp
-                swap                        \ act0 grp grp-lst
-                group-list-push             \ act0
+                                            \ bool sqr act0 grp-lst
+                rot                         \ bool act0 grp-lst sqr
+                list-new                    \ bool act0 grp-lst sqr sqr-lst
+                tuck                        \ bool act0 grp-lst sqr-lst sqr sqr-lst
+                square-list-push            \ bool act0 grp-lst sqr-lst
+                #2 pick                     \ bool act0 grp-lst sqr-lst act0
+                action-get-parent-domain    \ bool act0 grp-lst sqr-lst dom
+                domain-get-max-region-xt    \ bool act0 grp-lst sqr-lst xt
+                execute                     \ bool act0 grp-lst sqr-lst mreg
+                group-new                   \ bool act0 grp-lst grp
+                swap                        \ bool act0 grp grp-lst
+                group-list-push             \ bool act0
             else
-                drop nip                    \ act0
+                drop nip                    \ bool act0
             then
         else
-            #2 pick             \ sqr act0 grp-lst sqr
-            swap                \ sqr act0 sqr grp-lst
+            #2 pick             \ bool sqr act0 grp-lst sqr
+            swap                \ bool sqr act0 sqr grp-lst
             group-list-add-square
-            nip                 \ act0
+            nip                 \ bool act0
         then
-                                \ act0
-        drop
+                                \ bool act0
+        swap                    \ act0 bool
+        if
+            action-calc-corners \
+        else
+            drop                \
+        then
     then
     \ cr ." action-add-sample: end" cr
 ;

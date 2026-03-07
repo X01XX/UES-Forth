@@ -97,7 +97,11 @@
     assert-tos-is-group-list
     assert-nos-is-region
 
-    cr ." deleting group " over .region cr
+    cr ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
+    space ." deleting group " over .region
+    cr
+
     [ ' group-region-eq ] literal   \ reg list xt
     -rot                            \ xt reg list
 
