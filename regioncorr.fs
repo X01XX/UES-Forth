@@ -384,19 +384,21 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return a regioncorr from a parsed string.
-: regioncorr-from-parsed-string ( addr n -- regc t | f )
+: regioncorr-from-parsed-string ( ... c-addr u cnt -- regc t | f )
 
     \ Check number tokens.
+    dup                         \ c-addr u cnt cnt
     current-session
     session-get-number-domains-xt
-    execute                     \ addr0 cnt0 cnt2 domain-count
-    <> if                       \ addr0 cnt0
+    execute                     \ c-addr u cnt cnt domain-count
+    <> if                       \ c-addr u cnt
         0 do
             2drop
         loop
         false
         exit
     then
+    drop                        \ c-addr u
 
     \ Process each region, skip invalid regions.
                                             \ addr0 cnt0

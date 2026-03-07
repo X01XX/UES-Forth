@@ -884,26 +884,6 @@
         exit
     then
 
-    \ Change current regc to another.
-    2dup s" to" str=
-    if
-        \ Drop command string.
-        2drop                                       \ c-addr c-cnt c-addr c-cnt
-
-        \ Get goal regc.
-        #2                                          \ add new length, 2.
-        regioncorr-from-parsed-string               \ regc t | f
-
-        if
-            dup do-to-command
-            regioncorr-deallocate
-        else
-            cr ." to command: Did not understand the given regc string" cr
-        then
-        true
-        exit
-    then
-
     cr ." Three-token command not recognized" cr
     \ Clear tokens.
     2drop
@@ -1016,32 +996,57 @@
         exit
     then
 
-    \ Check the number of tokens.
-    dup
-    case
-        1 of
+    \ Check the "to" command.
+    #2 pick #2 pick
+    s" to" str=
+    if
+        \ Drop adjust token count and drop command command string.
+        1 -
+        nip nip                                     \ c-addr c-cnt c-addr c-cnt
+
+        dup 0=
+        if
             drop
-            do-one-token-commands
-        endof
-        #2 of
-            drop
-            do-two-token-commands
-        endof
-        #3 of
-            drop
-            do-three-token-commands
-        endof
-        #4 of
-            drop
-            do-four-token-commands
-        endof
-        \ Default.
-        cr ." Token count does not correspond to any allowable command" cr
-        \ Clear tokens.
-        0 do 2drop loop
-        \ Return continue loop flag.
+            cr ." to command: Did not understand the given regc string" cr
+        else
+            \ Get goal regc.
+            regioncorr-from-parsed-string               \ regc t | f
+            if
+                dup do-to-command
+                regioncorr-deallocate
+            else
+                cr ." to command: Did not understand the given regc string" cr
+            then
+        then
         true
-    endcase
+    else
+        \ Check the number of tokens.
+        dup
+        case
+            1 of
+                drop
+                do-one-token-commands
+            endof
+            #2 of
+                drop
+                do-two-token-commands
+            endof
+            #3 of
+                drop
+                do-three-token-commands
+            endof
+            #4 of
+                drop
+                do-four-token-commands
+            endof
+            \ Default.
+            cr ." Token count does not correspond to any allowable command" cr
+            \ Clear tokens.
+            0 do 2drop loop
+            \ Return continue loop flag.
+            true
+        endcase
+    then
 ;
 
 \ Get input of up to TOS characters from user, using the PAD area, up to a given number of characters.
