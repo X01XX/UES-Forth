@@ -254,7 +254,7 @@
         regioncorr-list-deallocate                 \ sess
     else                                            \ sess rate'
         cr ." current states are not negative, seek closest more-positive regioncorr fragment" cr
-        \ rate-deallocate                             \ sess 
+        \ rate-deallocate                             \ sess
 
         \ Find more-positive regioncorr fragments.
         dup                                             \ sess rate' rate'
@@ -274,7 +274,7 @@
         \ Convert regioncorrrate list to regioncorr-list.
         dup regioncorrrate-list-to-regioncorr-list      \ sess mrp-lst' mrp-lst''
         swap regioncorrrate-list-deallocate             \ sess mrp-lst''
-        
+
         \ Find closest regioncorr fragments of more positive regioncorr fragments.
         over session-get-current-regions dup            \ sess mrp-lst'' cur-regc' cur-regc'
         #2 pick                                         \ sess mrp-lst'' cur-regc' cur-regc' mrp-lst''
@@ -312,8 +312,6 @@
     value-list-0-to-n               \ ned-lst inx-lst'
 
     begin
-        \ cr ." inx list: 1 " dup .value-list cr
-
         dup list-get-length             \ ned-lst inx-lst' len
         random                          \ ned-lst inx-lst' rnd-inx
         dup                             \ ned-lst inx-lst' rnd-inx rnd-inx
@@ -324,7 +322,6 @@
         cr ." Need chosen: " space dup .need
 
         \ Check if no plan needed.
-        \ cr ." at 1 " .stack-gbl cr
         dup need-current-state-satisfies    \ ned-lst inx-lst' rnd-inx nedx bool
         if
             cr
@@ -336,9 +333,7 @@
             true
             exit
         else                                \ ned-lst inx-lst' rnd-inx nedx
-       \ cr ." at 2 " .stack-gbl cr
             dup need-get-plan               \ ned-lst inx-lst' rnd-inx nedx, pln t | f
-        \ cr ." at 3 " .stack-gbl cr
             if                              \ ned-lst inx-lst' rnd-inx nedx pln'
                 cr
                 2dup swap                   \ ned-lst inx-lst' rnd-inx nedx pln' pln' nedx
@@ -365,11 +360,9 @@
             else                            \ ned-lst inx-lst' rnd-inx nedx
 
                 ." , no plan found."
-            \ cr ." at 5 " .stack-gbl cr
                 drop                        \ ned-lst inx-lst' rnd-inx
             then
         then
-        \ cr ." at 6 " .stack-gbl cr
 
         \ Need not satisfied, try another, if any.
                                         \ ned-lst inx-lst' rnd-inx
@@ -377,7 +370,7 @@
         \ Remove the index, avoiding random picking the same need to try again.
         over                            \ ned-lst inx-lst' rnd-inx inx-lst'
         list-remove-item                \ ned-lst inx-lst', u t | f
-        is-false abort" Item not removed?"
+        is-false? abort" Item not removed?"
                                         \ ned-lst inx-lst' u
         drop                            \ ned-lst inx-lst'
 
@@ -456,8 +449,8 @@
         then
     then
 
-    \ Check for Confirm group.
-    need-type-cg over               \ ned-lst ned-typ ned-lst
+    \ Check for State not in group.
+    need-type-snig over             \ ned-lst ned-typ ned-lst
     need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
     if
         dup process-need-list       \ ned-lst ned-lst' bool
@@ -469,8 +462,8 @@
         then
     then
 
-    \ Check for State not in group.
-    need-type-snig over             \ ned-lst ned-typ ned-lst
+    \ Check for Confirm group.
+    need-type-cg over               \ ned-lst ned-typ ned-lst
     need-list-find-all-match-type   \ ned-lst, ned-lst' t | f
     if
         dup process-need-list       \ ned-lst ned-lst' bool

@@ -37,7 +37,7 @@
     s" (1XXX X11X XXX0 XXX1 X0XX)"
     region-list-from-string-a               \ dom0 list45' list36' list-int' list-test'
     2dup region-list-eq                     \ dom0 list45' list36' list-int' list-test' bool
-    is-false abort" domain-test-state-pair-complement: lists ne?"
+    is-false? abort" domain-test-state-pair-complement: lists ne?"
 
     \ Deallocate remaining struct instances.
     region-list-deallocate

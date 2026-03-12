@@ -23,7 +23,7 @@
 : region-list-test-subtract-n
 
     \ Make subtrahend list.
-    s" (1XX1 0XX1)" region-list-from-string-a   \ lst1 
+    s" (1XX1 0XX1)" region-list-from-string-a   \ lst1
 
     \ Make minuend list.
     s" (0000 X10X)" region-list-from-string-a   \ lst1 lst2
@@ -35,7 +35,7 @@
     s" (X100 0X00)" region-list-from-string-a   \ lst1 lst2 lst3 lst4
 
     2dup region-list-eq                         \ lst1 lst2 lst3 lst4 bool
-    is-false abort" region-list-test-subtract-n: region-lists invaid?"
+    is-false? abort" region-list-test-subtract-n: region-lists invaid?"
 
     region-list-deallocate
     region-list-deallocate
@@ -121,8 +121,8 @@
     \ Check.
     s" (1111 101x 1x10 0111 1101 0101 100x 1x00 0x10 001x)" region-list-from-string-a   \ lst1 lst2 lst3
     2dup region-list-eq                     \ lst1 lst2 lst3 bool
-    is-false abort" region-list-test-intersection-fragments: 1 region lists ne?"
-   
+    is-false? abort" region-list-test-intersection-fragments: 1 region lists ne?"
+
     region-list-deallocate
     region-list-deallocate
     region-list-deallocate
@@ -147,7 +147,7 @@
     s" (011X 1X1X X01X)" region-list-from-string-a  \ lst1 lst2 lst3
 
     2dup region-list-eq                             \ lst1 lst2 lst3
-    is-false abort" region-list-test-intersection-fragments: 2 region lists ne?"
+    is-false? abort" region-list-test-intersection-fragments: 2 region lists ne?"
 
     \ Clean up.
     region-list-deallocate
@@ -166,7 +166,7 @@
     \ Check results.
     s" (X10X 0XX1)" region-list-from-string-a   \ lst1 lst2 lst3
     2dup region-list-eq                         \ lst1 lst2 lst3 bool
-    is-false abort" region-list-test-normalize: 1 region lists ne?"
+    is-false? abort" region-list-test-normalize: 1 region lists ne?"
 
     \ Clean up.
     region-list-deallocate                  \ lst1 lst2
@@ -187,7 +187,7 @@
     \ Check results.
     s" (X100 X111 00X1)" region-list-from-string-a  \ lst1 lst2 lst3
     2dup region-list-eq                             \ lst1 lst2 lst3 bool
-    is-false abort" region-list-test-copy-except: region lists ne?"
+    is-false? abort" region-list-test-copy-except: region lists ne?"
 
     \ Clean up.
     region-list-deallocate

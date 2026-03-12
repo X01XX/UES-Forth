@@ -2,7 +2,7 @@
 
 
 : plan-test-restrict-initial-region ( act0 -- )
-
+ cr ." Test1:" cr
     \ Test 1.
 
     \ Init restriction region.
@@ -13,14 +13,16 @@
     plan-new                            \ act0 reg pln
 
     \ Add first step.
-    s" 00/XX/01/11/" rule-from-string   \ act0 reg pln rul
-    #3 pick                             \ act0 reg pln rul act0
+    0                                   \ act0 reg pln alt-rul
+    s" 00/XX/01/11/" rule-from-string   \ act0 reg pln alt-rul rul
+    #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
     \ Add second step.
-    s" 01/XX/11/11/" rule-from-string   \ act0 reg pln rul
-    #3 pick                             \ act0 reg pln rul ac0
+    0                                   \ act0 reg pln alt-rul
+    s" 01/XX/11/11/" rule-from-string   \ act0 reg pln alt-rul rul
+    #4 pick                             \ act0 reg pln alt-rul rul ac0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
@@ -62,14 +64,16 @@
     plan-new                            \ act0 reg pln
 
     \ Add first step.
-    s" 00/XX/01/X1/" rule-from-string   \ act0 reg pln rul
-    #3 pick                             \ act0 reg pln rul act0
+    0                                   \ act0 reg pln alt-rul
+    s" 00/XX/01/X1/" rule-from-string   \ act0 reg pln alt-rul rul
+    #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
     \ Add second step.
-    s" 01/XX/11/11/" rule-from-string   \ act0 reg pln rul
-    #3 pick                             \ act0 reg pln rul act0
+    0                                   \ act0 reg pln alt-rul
+    s" 01/XX/11/11/" rule-from-string   \ act0 reg pln alt-rul rul
+    #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
@@ -124,14 +128,16 @@
     plan-new                            \ act0 reg pln
 
     \ Add first step.
-    s" 00/XX/01/Xx/" rule-from-string   \ act0 reg pln rul
-    #3 pick                             \ act0 reg pln rul act0
+    0                                   \ act0 reg pls alt-rul
+    s" 00/XX/01/Xx/" rule-from-string   \ act0 reg pln alt-rul rul
+    #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
     \ Add second step.
-    s" 01/XX/11/X1/" rule-from-string   \ act0 reg pln rul
-    #3 pick                             \ act0 reg pln rul act0
+    0                                   \ act0 reg plsn alt-rul
+    s" 01/XX/11/X1/" rule-from-string   \ act0 reg pln alt-rul rul
+    #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
@@ -173,38 +179,40 @@
      plan-new                           \ act0 pln
 
     \ Add step to plan.
-    s" 00/11/01/XX/" rule-from-string   \ act0 pln rul'
-    #2 pick                             \ act0 pln rul' act0
+    0                                   \ act0 pln alt-rul
+    s" 00/11/01/XX/" rule-from-string   \ act0 pln alt-rul rul
+    #3 pick                             \ act0 pln alt-rul rul act0
     planstep-new                        \ act0 pln stp'
     over plan-push                      \ act0 pln
 
     \ create step to link.
-    s" 10/XX/00/00/" rule-from-string       \ act0 pln rul'
-    #2 pick                                 \ act0 pln rul' act0
+    0                                       \ act0 pln alt-rul
+    s" 10/XX/00/00/" rule-from-string       \ act0 pln alt-rul rul
+    #3 pick                                 \ act0 pln alt-rul rul act0
+
     planstep-new                            \ act0 pln stp'
 
-    swap                                    \ act0 stp pln'
-    2dup plan-link-step-to-initial-region   \ act0 stp pln', pln-l' t | f
-    if                                      \ act0 stp pln' pln-l'
-        cr ." linked plan " dup .plan cr
+    2dup swap                               \ act0 pln' stp' stp' pln'
+    plan-link-step-to-initial-region        \ act0 pln' stp', pln2' t | f
+    is-false? abort" link failed?"
 
-        \ Test results.
-        dup plan-get-initial-region         \ act0 stp pln' pln-l' initial
-        %1100 %1100 region-new tuck         \ act0 stp pln' pln-l' regt' initial regt'
-        region-neq abort" initial regions not eq?"
-        region-deallocate                   \ act0 stp pln' pln-l'
-                                                                                                                                                       
-        dup plan-get-result-region          \ act0 stp pln' pln-l' result
-        %0110 %0110 region-new tuck         \ act0 stp pln' pln-l' regt' result regt'
-        region-neq abort" result regions net eq?"
-        region-deallocate                   \ act0 stp pln' pln-l'
+    swap planstep-deallocate            \ act0 pln' pln2'
+    swap plan-deallocate                \ act pln2'
+    
+    cr ." linked plan " dup .plan cr
 
-        plan-deallocate                     \ act0 stp pln'
-    else
-        cr ." link failed"
-    then
-    plan-deallocate
-    planstep-deallocate
+    \ Test results.
+    dup plan-get-initial-region         \ act0 pln' initial
+    %1100 %1100 region-new tuck         \ act0 pln' regt' initial regt'
+    region-neq abort" initial regions not eq?"
+    region-deallocate                   \ act0 pln'
+
+    dup plan-get-result-region          \ act0 pln' result
+    %0110 %0110 region-new tuck         \ act0 pln' regt' result regt'
+    region-neq abort" result regions net eq?"
+    region-deallocate                   \ act0 pln'
+
+    plan-deallocate                     \ act0
     drop
 
     cr ." plan-test-link-step-to-initial-region: Ok" cr
@@ -216,38 +224,37 @@
     plan-new                           \ act0 pln'
 
     \ Add step to plan.
-    s" 00/11/01/XX/" rule-from-string   \ act0 pln' rul'
-    #2 pick                             \ act0 pln' rul' act0
-    planstep-new                        \ act0 pln stp'
+    0                                   \ act0 pln' alt-rul
+    s" 00/11/01/XX/" rule-from-string   \ act0 pln' alt-rul rul
+    #3 pick                             \ act0 pln' alt-rul rul' act0
+    planstep-new                        \ act0 pln' stp'
     over plan-push                      \ act0 pln
 
     \ create step to link.
-    s" 01/XX/11/00/" rule-from-string       \ act0 pln' rul'
-    #2 pick                                 \ act0 pln' rul' act0
+    0                                       \ act0 pln' alt-rul
+    s" 01/XX/11/00/" rule-from-string       \ act0 pln' alt-rul rul'
+    #3 pick                                 \ act0 pln' alt-rul rul' act0
     planstep-new                            \ act0 pln' stp'
 
     2dup swap                               \ act0 pln' stp' stp' pln'
-    plan-link-step-to-result-region         \ act0 pln' stp', pln-l t | f
-    if                                      \ act0 pln' stp' pln-l'
-        cr ." linked plan " dup .plan cr
+    plan-link-step-to-result-region         \ act0 pln' stp', pln2' t | f
+    is-false? abort" link failed?"
 
-        \ Test results.
-        dup plan-get-initial-region         \ act0 pln' stp' pln-l' initial
-        %0100 %0100 region-new tuck         \ act0 pln' stp' pln-l' regt' initial regt'
-        region-neq abort" initial regions not eq?"
-        region-deallocate                   \ act0 pln' stp' pln-l'
+    swap planstep-deallocate                \ act0 pln' pln2'
+    swap plan-deallocate                    \ act0 pln2'
+    
+    cr ." linked plan " dup .plan cr
 
-        dup plan-get-result-region          \ act0 pln' stp' pln-l' result
-        %1110 %1110 region-new tuck         \ act0 pln' stp' pln-l' regt' result regt'
-        region-neq abort" result regions net eq?"
-        region-deallocate                   \ act0 pln' stp' pln-l'
+    \ Test results.
+    dup plan-get-initial-region         \ act0 pln' initial
+    %0100 %0100 region-new tuck         \ act0 pln' regt' initial regt'
+    region-neq abort" initial regions not eq?"
+    region-deallocate                   \ act0 pln'
 
-        plan-deallocate                     \ act0 pln' stp'
-        planstep-deallocate                 \ act0 pln'
-    else
-        cr ." link failed"
-        abort
-    then
+    dup plan-get-result-region          \ act0 pln' result
+    %1110 %1110 region-new tuck         \ act0 pln' regt' result regt'
+    region-neq abort" result regions net eq?"
+    region-deallocate                   \ act0 pln'
 
     plan-deallocate                         \ act0
     drop
@@ -264,7 +271,7 @@
     session-add-domain                              \ dom0
 
     0 swap domain-find-action                       \ act0 t | f
-    is-false abort" act0 not found?"
+    is-false? abort" act0 not found?"
 
     dup plan-test-restrict-initial-region
     dup plan-test-restrict-result-region

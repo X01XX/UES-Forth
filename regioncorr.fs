@@ -32,7 +32,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Check TOS for regioncorr, unconventional, leaves stack unchanged.
 : assert-tos-is-regioncorr ( tos -- tos )
     dup is-allocated-regioncorr
-    is-false if
+    is-false? if
         s" TOS is not an allocated regioncorr"
         .abort-xt execute
     then
@@ -43,7 +43,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Check NOS for regioncorr, unconventional, leaves stack unchanged.
 : assert-nos-is-regioncorr ( nos tos -- nos tos )
     over is-allocated-regioncorr
-    is-false if
+    is-false? if
         s" NOS is not an allocated regioncorr"
         .abort-xt execute
     then
@@ -54,7 +54,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Check 3OS for regioncorr, unconventional, leaves stack unchanged.
 : assert-3os-is-regioncorr ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-regioncorr
-    is-false if
+    is-false? if
         s" 3OS is not an allocated regioncorr"
         .abort-xt execute
     then
@@ -63,7 +63,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Check 4OS for regioncorr, unconventional, leaves stack unchanged.
 : assert-4os-is-regioncorr ( 4os 3os nos tos -- 4os 3os nos tos )
     #3 pick is-allocated-regioncorr
-    is-false if
+    is-false? if
         s" 4OS is not an allocated regioncorr"
         .abort-xt execute
     then
@@ -257,7 +257,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         #2 pick link-get-data       \ link1 link0 d-link reg1
         #2 pick link-get-data       \ link1 link0 d-link reg1 reg0
         region-intersects           \ link1 link0 d-link bool
-        is-false if
+        is-false? if
             3drop
             false
             exit
@@ -450,7 +450,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Return a regioncorr from a string, or abort.
 : regioncorr-from-string-a ( str-addr str-n -- regc )
     regioncorr-from-string    \ regc t | f
-    is-false abort" regioncorr-from-string failed?"
+    is-false? abort" regioncorr-from-string failed?"
 ;
 
 \ Return true if two regioncorrs are equal.
@@ -469,7 +469,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         over link-get-data  \ link1 link0 reg1
         over link-get-data  \ link1 link0 reg1 reg0
         region-eq           \ link1 link0 bool
-        is-false if
+        is-false? if
             2drop
             false
             exit
@@ -492,7 +492,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     session-calc-max-regions-xt execute \ regc0 lst-max
     tuck                                \ lst-max regc0 lst-max
     regioncorr-subtract                 \ lst-max, lst t | f
-    is-false abort" subtract failed?"
+    is-false? abort" subtract failed?"
 
     swap                                \ lst lst-max
     regioncorr-deallocate               \ lst

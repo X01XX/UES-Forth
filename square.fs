@@ -37,7 +37,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Check TOS for square, unconventional, leaves stack unchanged.
 : assert-tos-is-square ( tos -- tos )
     dup is-allocated-square
-    is-false if
+    is-false? if
         s" TOS is not an allocated square"
         .abort-xt execute
     then
@@ -46,7 +46,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Check NOS for square, unconventional, leaves stack unchanged.
 : assert-nos-is-square ( nos tos -- nos tos )
     over is-allocated-square
-    is-false if
+    is-false? if
         s" NOS is not an allocated square"
         .abort-xt execute
     then
@@ -770,7 +770,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
     square-get-state
     swap
-    region-superset-of-state
+    region-superset-of-state?
 ;
 
 \ Return the last, that is most-recent, result.

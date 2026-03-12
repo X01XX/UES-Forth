@@ -1,6 +1,6 @@
 \ Functions for a list of structinfos.
 
-\ Check if tos is an empty list, or has a structinfo instance as its first item.                                             
+\ Check if tos is an empty list, or has a structinfo instance as its first item.
 : assert-tos-is-structinfo-list ( tos -- tos )
     assert-tos-is-list
     dup list-is-empty
@@ -98,12 +98,12 @@
         mma-get-total-memory-use    \ max si-link tot mem-use
         +                           \ max si-link tot
         swap                        \ max tot si-link
- 
+
         link-get-next
     repeat
                                     \ max tot
     cr
-    swap spaces 
+    swap spaces
     #116 spaces ." Total: " dup #8 dec.r
     cell / #9 spaces #6 dec.r
     cr .stack-structs cr
@@ -152,8 +152,8 @@
                 structinfo-get-name cr type space ." instances not fully deallocated" cr
                 abort
             then
-            
-        endcase            
+
+        endcase
 
         link-get-next
     repeat
@@ -249,7 +249,7 @@
     then
 ;
 
-\ Print a list of structures. 
+\ Print a list of structures.
 : structinfo-list-print-struct-list ( lst0 -- )
     \ Check args.
     assert-tos-is-list
@@ -280,7 +280,7 @@
     ." )"                               \
 ;
 
-\ Deallocate a list of structures. 
+\ Deallocate a list of structures.
 : structinfo-list-deallocate-struct-list ( lst0 -- )
     \ Check args.
     assert-tos-is-list
@@ -294,18 +294,18 @@
         begin
             ?dup
         while
-            dup link-get-data               \ lst0 lst-link link-data 
-    
+            dup link-get-data               \ lst0 lst-link link-data
+
             dup get-structinfo              \ lst0 lst-link link-data, snf t | f
             if
                 \ Deallocate struct instance.
                 structinfo-get-deallocate-xt    \ lst0 lst-link link-struct xt
-                execute                     \ lst0 lst-link 
+                execute                     \ lst0 lst-link
             else
                 \ Just a number.            \ lst0 lst-link u
                 drop
             then
-    
+
             link-get-next
         repeat
                                             \ lst0

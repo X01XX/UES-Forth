@@ -37,7 +37,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Check TOS for group, unconventional, leaves stack unchanged.
 : assert-tos-is-group ( tos -- tos )
     dup is-allocated-group
-    is-false if
+    is-false? if
         s" TOS is not an allocated group"
        .abort-xt execute
     then
@@ -46,11 +46,13 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Check NOS for group, unconventional, leaves stack unchanged.
 : assert-nos-is-group ( nos tos -- nos tos )
     over is-allocated-group
-    is-false if
+    is-false? if
         s" NOS is not an allocated group"
        .abort-xt execute
     then
 ;
+
+' assert-nos-is-group to assert-nos-is-group-xt
 
 \ Start accessors.
 
@@ -274,7 +276,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     #2 pick _group-update-r-region  \ grp0 sqr-lst'
 
     dup square-list-get-rules       \ grp0 sqr-lst', ruls t | f
-    is-false if
+    is-false? if
         rulestore-new-0
     then
 
@@ -294,7 +296,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     \ Check square belongs in group.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-region       \ sqr1 grp0 sta reg
-    region-superset-of-state    \ sqr1 grp0 flag
+    region-superset-of-state?   \ sqr1 grp0 flag
     0= abort" square not in group?"
 
     \ Check if square-pn is LT group-pn.
@@ -321,7 +323,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     \ Check if square is outside of the current rule region.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-r-region     \ sqr1 grp0 sta sreg
-    region-superset-of-state    \ sqr1 grp0 flag
+    region-superset-of-state?   \ sqr1 grp0 flag
     if
         2drop
     else
@@ -341,11 +343,11 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     space ." Act: " current-action-id #3 dec.r
     space ." group " dup .group-region space ." adding square " over .square-state
     cr
-    
+
     \ Check square belongs in group.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-region       \ sqr1 grp0 sta reg
-    region-superset-of-state    \ sqr1 grp0 flag
+    region-superset-of-state?   \ sqr1 grp0 flag
     0= abort" square not in group?"
 
     \ Check if square is already in the group.
@@ -386,7 +388,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-value
 
     group-get-region            \ sta1 reg
-    region-superset-of-state    \ flag
+    region-superset-of-state?   \ flag
 ;
 
 \ Return true, if a state is in a group r-region.
@@ -396,7 +398,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-value
 
     group-get-r-region          \ sta1 reg
-    region-superset-of-state    \ flag
+    region-superset-of-state?   \ flag
 ;
 
 : group-calc-changes ( grp0 -- cngs )
@@ -407,54 +409,27 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     rulestore-calc-changes  \ changes
 ;
 
-\ Return a list of possible rules, for forward-chaining steps, given a from-region (tos) and a to-region (nos).
-: group-calc-for-plansteps-fc ( reg-to reg-from grp0 -- rul-lst )
-    \ Check args.
-    assert-tos-is-group
-    assert-nos-is-region
-    assert-3os-is-region
-    \ cr ." group-calc-for-plansteps-fc:" cr
-
-    #2 pick #2 pick                             \ | reg-to reg-from
-    swap region-superset-of                     \ | bool
-    abort" group-calc-for-plansteps-fc: region subset?"
-
-    group-get-rules                             \ reg-to reg-from rul-str
-    rulestore-calc-for-plansteps-fc             \ rul-lst
-;
-
-\ Return a list of possible rules, for backward-chaining steps, given a from-region (tos) and a to-region (nos).
-: group-calc-for-plansteps-bc ( reg-to reg-from grp0 -- rul-lst )
-    \ Check args.
-    assert-tos-is-group
-    assert-nos-is-region
-    assert-3os-is-region
-    \ cr ." group-calc-for-steps-bc:" cr
-
-    #2 pick #2 pick                             \ | reg-to reg-from
-    swap region-superset-of                     \ | bool
-    abort" group-calc-for-steps-bc: region subset?"
-
-    group-get-rules                             \ reg-to reg-from rul-str
-    rulestore-calc-for-plansteps-bc             \ rul-lst
-;
-
-\ Return a list of rules having needed changes, given a group (tos) and needed changes (nos).
-: group-calc-for-plansteps-by-changes ( cngs1 grp0 -- rul-lst )
+\ return a list of rules, where at least one contains at least one change.
+: group-rules-for-changes ( cngs1 grp0 -- rul-lst )
     \ Check args.
     assert-tos-is-group
     assert-nos-is-changes
-     \ cr ." group-calc-for-plansteps-by-changes:" cr
 
-    over changes-null
-    if
-        2drop
-        false
-        exit
-    then
+    over                            \ cngs1 grp0 cngs1
+    over group-get-rules            \ cngs1 grp0 cngs1 ruls
+    rulestore-rules-with-changes    \ cngs1 grp0 rul-lst
 
-    group-get-rules                         \ cngs1 rul-str
-    rulestore-calc-for-plansteps-by-changes \ rul-lst
+\    dup list-is-not-empty
+\    if
+\        cr
+\        ." Dom: " current-domain-id #3 dec.r
+\        space ." Act: " current-action-id #3 dec.r
+\        space ." group-rules-for-changes: grp: " over group-get-region .region space ." cngs: " #2 pick .changes
+\        space ." rules: " dup .rule-list
+\        cr
+\    then
+
+    nip nip                         \ rul-lst
 ;
 
 \ Return a need to confirm a group.
@@ -547,7 +522,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
         true
         exit
     then
-    
+
     \ Check if square state is equal to square far from square 0.
     0 over group-get-squares    \ sta1 grp0 0 sqr-lst
     list-get-item               \ sta1 grp0 sqr0
@@ -636,14 +611,4 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
         cr ." Square not found?" cr
         2drop
     then
-;
-
-\ Return true if the rules of a group can predict a sample.
-: group-sample-expected? ( smpl1 grp0 -- bool )
-    \ Check args.
-    assert-tos-is-group
-    assert-nos-is-sample
-
-    group-get-rules             \ smpl1 ruls
-    rulestore-sample-expected?  \ bool
 ;

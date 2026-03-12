@@ -349,7 +349,7 @@
         over link-get-data                  \ regc-lst1 link0 xt regc0
         #3 pick                             \ regc-lst1 link0 xt regc0 regc-lst1
         list-member                         \ regc-lst1 link0 bool
-        is-false if
+        is-false? if
             2drop
             false
             exit
@@ -683,7 +683,7 @@
     \ Check args.
     assert-tos-is-regioncorr-list
     over 0 < abort" index out of range"
-    over over list-get-length < is-false abort" index out of range"
+    over over list-get-length < is-false? abort" index out of range"
     assert-3os-is-regioncorr
 
     \ Init return list.
@@ -727,7 +727,7 @@
     assert-tos-is-list
 
     list-get-links                     \ lol-link
-    
+
     begin
         ?dup
     while

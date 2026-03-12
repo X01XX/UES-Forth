@@ -44,7 +44,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 \ Check TOS for session, unconventional, leaves stack unchanged.
 : assert-tos-is-session ( tos -- tos )
     dup is-allocated-session
-    is-false if
+    is-false? if
         s" TOS is not an allocated session"
         .abort-xt execute
     then
@@ -311,7 +311,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 : current-session-new ( -- sess ) \ new session pushed onto session stack.
 
     structinfo-list-store structinfo-list-project-deallocated-xt execute
-    
+
     \ cr ." current-session-new: start " .s cr
     \ Allocate space.
     session-mma mma-allocate        \ ses
@@ -1128,11 +1128,11 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             rule-new-region-to-region   \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx rul'
 
             0                       \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx rul' 0
-            #3 pick link-get-data   \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx rul' 0 dom
-            domain-find-action      \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx rul', act t | f
-            is-false abort" action zero not found?"
+            tuck                    \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx alt-rul rul' 0
+            #4 pick link-get-data   \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx alt-rul rul' 0 dom
+            domain-find-action      \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx alt-rul rul', act t | f
+            is-false? abort" action zero not found?"
 
-                                    \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx rul' act
             planstep-new            \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx stp
             over plan-push          \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx
             #4 pick                 \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx ret-plc
@@ -1185,7 +1185,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         \ Run domain plan.
         over link-get-data          \ plc1 sess0 plc1-link dom-link pln
         plan-run                    \ plc1 sess0 plc1-link dom-link bool
-        is-false if
+        is-false? if
             2drop
             2drop
             false
@@ -1349,7 +1349,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         \ Choose a pathstep with the least number-unwanted-changes.
         dup list-get-length random          \ ret-lst regc-to pthstp-lst1 sess0 | regc-from pthstp-lst3 num
         over pathstep-list-remove-item      \ ret-lst regc-to pthstp-lst1 sess0 | regc-from pthstp-lst3, pthstpx t | f
-        is-false abort" pathstep-list item not removed?"
+        is-false? abort" pathstep-list item not removed?"
         swap pathstep-list-deallocate       \ ret-lst regc-to pthstp-lst1 sess0 | regc-from pthstpx
         \ cr ." pathstep chosen: " dup .pathstep cr
 
@@ -1394,7 +1394,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         over swap                           \ ret-lst regc-to pthstp-lst1 sess0 | regc-from regc-from pthsptx
         pathstep-get-rules                  \ ret-lst regc-to pthstp-lst1 sess0 | regc-form regc-from pthstp-rulc
         rulecorr-apply-to-regioncorr-fc     \ ret-lst regc-to pthstp-lst1 sess0 | regc-from regc-from' t | f
-        is-false abort" false returned?"
+        is-false? abort" false returned?"
        \  cr ." new regc-from: " dup .regioncorr cr
         swap regioncorr-deallocate
 
@@ -1409,7 +1409,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     assert-tos-is-session
     assert-nos-is-regioncorr
     assert-3os-is-regioncorr
-    \ cr ." session-calc-path: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
+    cr ." session-calc-path: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     #2 pick #2 pick regioncorr-intersects
     abort" session-calc-plan: from/to intersect?"
@@ -1493,7 +1493,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         #4 pick                             \ plnc-lst sess0 link-to link-from link-dom domx sess0
         session-set-current-domain          \ plnc-lst sess0 link-to link-from link-dom
         \ cr ." after set domain: " .stack-structs-xt execute cr
-        
+
         \ Get plan
         #2 pick link-get-data               \ plnc-lst sess0 link-to link-from link-dom reg-to
         #2 pick link-get-data               \ plnc-lst sess0 link-to link-from link-dom reg-to reg-from
@@ -1623,7 +1623,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ cr ." session-change-to: " over .regioncorr cr
 
     tuck                                            \ sess0 regc-to sses0
-    
+
     session-get-current-regions                     \ sess0 regc-to regc-from'
     \ cr ." after session-get-current-regions: regc-from: " dup .regioncorr space ." to: " over .regioncorr cr
     \ cr ." current regions: " dup .regioncorr cr
@@ -1637,7 +1637,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         cr ." path found: " dup .pathstep-list cr
         dup                                         \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst'
         #3 pick                                     \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst' regc-to
-        #3 pick                                     \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst' regc-to regc-from' 
+        #3 pick                                     \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst' regc-to regc-from'
         #6 pick                                     \ sess0 regc-to regc-from' pthstp-lst' pthstp-lst' regc-to regc-from' sess0
         session-calc-plnclst-from-pthstplst         \ sess0 regc-to regc-from' pthstp-lst', plnc-lst t | f
         if
@@ -1670,7 +1670,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     assert-tos-is-session
 
     dup session-get-current-regions                 \ sess cur-regc
-    dup                                             \ sess cur-regc cur-regc 
+    dup                                             \ sess cur-regc cur-regc
     #2 pick session-get-regioncorrrate-list         \ sess cur-regc cur-regc regcr-lst
     regioncorrrate-rate-regioncorr                  \ sess regcr-lst rate
     swap regioncorr-deallocate                      \ sess rate

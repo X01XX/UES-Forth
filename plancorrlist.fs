@@ -71,7 +71,7 @@
     while
         dup link-get-data       \ link plnc
         plancorr-run            \ link, t | f
-        is-false if
+        is-false? if
             drop
             false
             exit

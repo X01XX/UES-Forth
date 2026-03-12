@@ -79,6 +79,10 @@
 
 ' xtabort value action-state-confirmed-xt
 
+' xtabort value action-update-existing-square-xt
+
+' xtabort value action-add-sample-xt
+
 
 ' xtabort value planstep-list-push-xt
 
@@ -91,6 +95,8 @@
 ' xtabort value .planstep-xt
 
 ' xtabort value region-list-push-xt
+
+' xtabort value assert-nos-is-group-xt
 
 
 ' xtabort value .regioncorrrate-xt

@@ -4,7 +4,8 @@
     #9 constant action-struct-number-cells
 
 \ Struct fields
-0                                     constant action-header-disp               \ 16 bits, [0] struct id, [1] use count, [2] instance id (8 bits) Clean up trigger (8).
+0                                     constant action-header-disp               \ 16 bits, [0] Struct id, [1] Use count, [2] Instance id (8) Cull squares trigger (8)
+                                                                                \          [3] Calc corners trigger (8).
 action-header-disp              cell+ constant action-parent-domain-disp        \ Domain pointer.
 action-parent-domain-disp       cell+ constant action-squares-disp              \ A square-list
 action-squares-disp             cell+ constant action-incompatible-pairs-disp   \ A region-list
@@ -38,7 +39,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check TOS for action, unconventional, leaves stack unchanged.
 : assert-tos-is-action ( tos -- tos )
     dup is-allocated-action
-    is-false if
+    is-false? if
         s" TOS is not an allocated action"
        .abort-xt execute
     then
@@ -49,7 +50,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check NOS for action, unconventional, leaves stack unchanged.
 : assert-nos-is-action ( nos tos -- nos tos )
     over is-allocated-action
-    is-false if
+    is-false? if
         s" NOS is not an allocated action"
        .abort-xt execute
     then
@@ -60,7 +61,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check 3OS for action, unconventional, leaves stack unchanged.
 : assert-3os-is-action ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-action
-    is-false if
+    is-false? if
         s" 3OS is not an allocated action"
        .abort-xt execute
     then
@@ -94,12 +95,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     4c!
 ;
 
-\ Return the cull flag from an action instance.
-: action-get-cull-flag ( act0 -- bool)
+\ Return the cull squares trigger from an action instance.
+: action-get-cull-squares-trigger ( act0 -- bool)
     \ Check arg.
     assert-tos-is-action
 
-    \ Get cull flag.
+    \ Get cull trigger.
     5c@
 
     0=
@@ -110,8 +111,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
 ;
 
-\ Set the cull flag of an action instance, use only in this file.
-: _action-set-cull-flag ( bool act0 -- )
+\ Set the cull trigger of an action instance, use only in this file.
+: _action-set-cull-squares-trigger ( bool act0 -- )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-bool
@@ -123,8 +124,42 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         0 swap
     then
 
-    \ Set inst id.
+    \ Set trigger.
     5c!
+;
+
+\ Return the calc-corners trigger from an action instance.
+: action-get-calc-corners-trigger ( act0 -- bool)
+    \ Check arg.
+    assert-tos-is-action
+
+    \ Get calc-corner triggr.
+    6c@
+
+    0=
+    if
+        false
+    else
+        true
+    then
+;
+
+\ Set the calc-corners trigger of an action instance, use only in this file.
+: _action-set-calc-corners-trigger ( bool act0 -- )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-bool
+
+    swap                \ act0 bool
+    if
+        1
+    else
+        0
+    then
+    swap                \ flag act0
+
+    \ Set trigger.
+    6c!
 ;
 
 \ Return the parent domain of the action.
@@ -327,7 +362,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region-list
-    cr ." New DF regions: " over .region-list cr
+    cr
+    ." Dom: " current-domain-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
+    space ." New DF regions: " over .region-list cr
 
     dup action-get-defining-regions         \ reg-lst1 act0 df-lst
     -rot                                    \ df-lst reg-lst1 act0
@@ -492,8 +530,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     cr
                                         \ act0
 
-    \ Clean up.
-    drop                                \
+    \ Set calc corners trigger.
+    true swap                               \ true act0
+    _action-set-calc-corners-trigger        \
+
     \ cr ."  _action-update-logical-structure: end" cr
 ;
 
@@ -523,11 +563,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check args.
     assert-tos-is-action
     assert-nos-is-corner-list
-    cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
-    space ." update-corners: " over .corner-list-short
-    cr
+\    cr
+\    ." Dom: " current-domain-id #3 dec.r
+\    space ." Act: " current-action-id #3 dec.r
+\    space ." update-corners: " over .corner-list-short
+\    cr
 
     \ Get/save the previous corner list.
     dup action-get-corners -rot    \ prev-lst crn-lst1 act0
@@ -539,7 +579,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Deallocate old list.
     rot                             \ crn-lst act0 prev-lst
     corner-list-deallocate          \ crn-lst act0
-    
+
     \ Update groups first square, if needed.
     action-get-groups               \ crn-lst1 grp-lst
     swap                            \ grp-lst crn-lst1
@@ -638,8 +678,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     list-new                            \ act lst
     over _action-set-corners            \ act
 
+    \ Init triggers.
     false over                          \ act 0 act
-    _action-set-cull-flag               \ act
+    _action-set-cull-squares-trigger    \ act
+
+    false over                          \ act 0 act
+    _action-set-calc-corners-trigger    \ act
 ;
 
 \ Return a square given a state.
@@ -761,7 +805,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over region-get-state-0                     \ reg1 act0 sta0
     over action-get-corners                     \ reg1 act0 sta0 crn-lst
     corner-list-state-in-any-corner-region      \ reg1 act0 bool
-    is-false if
+    is-false? if
         \ Keep pair
         2drop
         true
@@ -772,7 +816,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over region-get-state-1                 \ reg1 act0 sta1
     over action-get-corners                 \ reg1 act0 sta1 crn-lst
     corner-list-state-in-any-corner-region  \ reg1 act0 bool
-    is-false if
+    is-false? if
         \ Keep pair
         2drop
         true
@@ -859,16 +903,18 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : action-calc-corners ( act0 -- )
     \ Check arg.
     assert-tos-is-action
-    \ cr
-    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
-    \ space ." Act: " dup action-get-inst-id #3 dec.r
-    \ space ." action-calc-corners: start" cr
+\    cr
+\    ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+\    space ." Act: " dup action-get-inst-id #3 dec.r
+\    space ." action-calc-corners: start"
+\     cr
 
     dup action-get-defining-regions     \ act0 def-regs
     list-get-length                     \ act0 len
     #2 <                                \ act0 bool
     if
         drop
+        cr ." action-calc-corners: too few defining regions" cr
         exit
     then
 
@@ -940,7 +986,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Init max num.
     0                                       \ act0 crn-lol' max
     over list-get-links                     \ act0 crn-lol' max crn-link
-    \ cr ." number corners: "
+    \ cr ." action-calc-corners: number corners: " cr
     begin
         ?dup
     while
@@ -954,9 +1000,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         link-get-next
     repeat
                                             \ act0 crn-lol' max
-    \ space ." max: " dup . cr
+    \ cr ." action-calc-corners: max number corners in one list: crmax: " dup . cr
 
     1 =
+    \ cr ." action-calc-corners: number corners: " cr
     if                                      \ act0 crn-lol'
         \ Flatten list.
         dup list-flatten-struct             \ act0 crn-lol' crn-lst-f
@@ -1159,7 +1206,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check a new, or changed square, for incompatible square pairs within
 \ the Logical Structure.
 \ If found, update action-incompatible-pairs and action-logical-structure, return true.
-: _action-check-square ( sqr1 act0 -- bool )
+: _action-check-square ( sqr1 act0 -- )
     \ cr ." _action-check-square: start" cr
     \ Check args.
     assert-tos-is-action
@@ -1173,7 +1220,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ cr ." _action-check-square: list is empty" cr
         list-deallocate
         drop
-        false
         exit
     then
 
@@ -1182,13 +1228,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ To get a new LS.
 
                                                     \ act0 inc-lst'
-    \ Set LS recalc flag.
-    false                                           \ act0 inc-lst' lsrc
-    over list-get-links                             \ act0 inc-lst' lsrc inc-link
+
+    dup list-get-links                              \ act0 inc-lst' inc-link
     begin
-        ?dup                                        \ act0 inc-lst' lsrc inc-link
+        ?dup                                        \ act0 inc-lst' inc-link
     while
-        dup link-get-data                           \ act0 inc-lst' lsrc inc-link regx
+        dup link-get-data                           \ act0 inc-lst' inc-link regx
 
         \ Add region to the action-incompatible-pairs  list.
         cr
@@ -1197,43 +1242,40 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         space ." Adding incompatible pair: " dup region-get-states .value space .value
         cr
 
-        dup                                         \ act0 inc-lst' lsrc link regx regx
-        #5 pick                                     \ act0 inc-lst' lsrc link regx regx act0
-        action-get-incompatible-pairs               \ act0 inc-lst' lsrc link regx regx inc-lst'
-        region-list-push-nosups                     \ act0 inc-lst' lsrc link regx flag
+        dup                                         \ act0 inc-lst' link regx regx
+        #4 pick                                     \ act0 inc-lst' link regx regx act0
+        action-get-incompatible-pairs               \ act0 inc-lst' link regx regx act-inc-lst
+        region-list-push-nosups                     \ act0 inc-lst' link regx flag
         if
-            \ Set LS recalc flag.
-            rot drop true -rot
-
             \ Calc regions possible for incompatible pair.
-            region-get-states                       \ act0 inc-lst' lsrc link s0 s1
-            #5 pick                                 \ act0 inc-lst' lsrc link s0 s1 act0
-            action-get-parent-domain                \ act0 inc-lst' lsrc link s0 s1 dom
-            domain-state-pair-complement-xt         \ act0 inc-lst' lsrc link s0 s1 dom xt
-            execute                                 \ act0 inc-lst' lsrc link reg-lst'
+            region-get-states                       \ act0 inc-lst' link s0 s1
+            #4 pick                                 \ act0 inc-lst' link s0 s1 act0
+            action-get-parent-domain                \ act0 inc-lst' link s0 s1 dom
+            domain-state-pair-complement-xt         \ act0 inc-lst' link s0 s1 dom xt
+            execute                                 \ act0 inc-lst' link reg-lst'
 
             \ Calc new action-logical-structure.
-            #4 pick action-get-logical-structure    \ act0 inc-lst' lsrc link reg-lst' lsl-lst
-            2dup                                    \ act0 inc-lst' lsrc link reg-lst' lsl-lst reg-lst lsl-lsn
-            region-list-intersections-nosubs        \ act0 inc-lst' lsrc link reg-lst' lsl-lst new-reg-lst
+            #3 pick action-get-logical-structure    \ act0 inc-lst' link reg-lst' lsl-lst
+            2dup                                    \ act0 inc-lst' link reg-lst' lsl-lst reg-lst lsl-lsn
+            region-list-intersections-nosubs        \ act0 inc-lst' link reg-lst' lsl-lst new-reg-lst
 
             \ Set new action-logical-structure.
-            #6 pick                                 \ act0 inc-lst' lsrc link reg-lst' lsl-lst new-reg-lst act0
-            _action-update-logical-structure        \ act0 inc-lst' lsrc link reg-lst' lsl-lst
-            drop                                    \ act0 inc-lst' lsrc link reg-lst'
-            region-list-deallocate                  \ act0 inc-lst' lsrc link
+            #5 pick                                 \ act0 inc-lst' link reg-lst' lsl-lst new-reg-lst act0
+            _action-update-logical-structure        \ act0 inc-lst' link reg-lst' lsl-lst
+            drop                                    \ act0 inc-lst' link reg-lst'
+            region-list-deallocate                  \ act0 inc-lst' link
         else
             cr ." subset region not added?"
             abort
         then
 
-        link-get-next                               \ act0 inc-lst' lsrc link-next
+        link-get-next                               \ act0 inc-lst' link-next
     repeat
-                                                    \ act0 inc-lst' lsrc
+                                                    \ act0 inc-lst'
 
 
-    swap region-list-deallocate                     \ act0 lsrc
-    nip                                             \ lsrc
+    region-list-deallocate                          \ act0
+    drop                                            \
     \ cr ." _action-check-square: end" cr
 ;
 
@@ -1343,9 +1385,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                                             \ act0 ls-new
 
     \ Store new LS.
-    over                                    \ act0 ls-new act0
-    _action-update-logical-structure        \ act0
-    action-calc-corners                     \
+    swap                                    \ ls-new act0
+    _action-update-logical-structure        \
+
     \ cr ." _action-recalc-logical-structure: end" cr
 ;
 
@@ -1443,7 +1485,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     repeat
                                             \ sqr1 act0 | flag reg-in-lst'
     region-list-deallocate                  \ sqr1 act0 | flag
-    
+
     if
         _action-recalc-logical-structure    \ sqr1
     else
@@ -1556,19 +1598,12 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             2dup                        \ sqr act0 sqr act0
             _action-check-incompatible-pairs    \ sqr act0
             2dup                        \ sqr act0 sqr act0
-            _action-check-square        \ sqr act0 bool
-            -rot                        \ bool sqr act0
-            tuck                        \ bool act0 sqr act0
-            action-get-groups           \ bool act0 sqr grp-lst
-            group-list-check-square     \ bool act0
-            swap                        \ act0 bool
-            if
-                action-calc-corners     \
-            else
-                drop
-            then
+            _action-check-square        \ sqr act0
+            tuck                        \ act0 sqr act0
+            action-get-groups           \ act0 sqr grp-lst
+            group-list-check-square     \ act0
         else
-            2drop                       \
+            drop                        \ act0
         then
     else                        \ smpl1 act0
         \ Add new square.
@@ -1580,52 +1615,59 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         square-list-push        \ act0 sqr
         swap                    \ sqr act0
         2dup                    \ sqr act0 sqr act0
-        _action-check-square    \ sqr act0 bool
-        -rot                    \ bool sqr act0
-        dup action-get-groups   \ bool sqr act0 grp-lst
-        #2 pick                 \ bool sqr act0 grp-lst sqr
-        square-get-state        \ bool sqr act0 grp-lst sta
-        over                    \ bool sqr act0 grp-lst sta grp-lst
-        group-list-state-in-group   \ bool sqr act0 grp-lst flag
+        _action-check-square    \ sqr act0
+        dup action-get-groups   \ sqr act0 grp-lst
+        #2 pick                 \ sqr act0 grp-lst sqr
+        square-get-state        \ sqr act0 grp-lst sta
+        over                    \ sqr act0 grp-lst sta grp-lst
+        group-list-state-in-group   \ sqr act0 grp-lst flag
         0= if
             \ Check if this is the first square
-                                \ bool sqr act0 grp-lst
-            over action-get-squares list-get-length \ bool sqr act0 grp-lst len
-            1 =                 \ bool sqr act0 grp-lst flag
+                                \ sqr act0 grp-lst
+            over action-get-squares list-get-length \ sqr act0 grp-lst len
+            1 =                 \ sqr act0 grp-lst flag
 
             if
                 \ Add max region with first square.
-                                            \ bool sqr act0 grp-lst
-                rot                         \ bool act0 grp-lst sqr
-                list-new                    \ bool act0 grp-lst sqr sqr-lst
-                tuck                        \ bool act0 grp-lst sqr-lst sqr sqr-lst
-                square-list-push            \ bool act0 grp-lst sqr-lst
-                #2 pick                     \ bool act0 grp-lst sqr-lst act0
-                action-get-parent-domain    \ bool act0 grp-lst sqr-lst dom
-                domain-get-max-region-xt    \ bool act0 grp-lst sqr-lst xt
-                execute                     \ bool act0 grp-lst sqr-lst mreg
-                group-new                   \ bool act0 grp-lst grp
-                swap                        \ bool act0 grp grp-lst
-                group-list-push             \ bool act0
+                                            \ sqr act0 grp-lst
+                rot                         \ act0 grp-lst sqr
+                list-new                    \ act0 grp-lst sqr sqr-lst
+                tuck                        \ act0 grp-lst sqr-lst sqr sqr-lst
+                square-list-push            \ act0 grp-lst sqr-lst
+                #2 pick                     \ act0 grp-lst sqr-lst act0
+                action-get-parent-domain    \ act0 grp-lst sqr-lst dom
+                domain-get-max-region-xt    \ act0 grp-lst sqr-lst xt
+                execute                     \ act0 grp-lst sqr-lst mreg
+                group-new                   \ act0 grp-lst grp
+                swap                        \ act0 grp grp-lst
+                group-list-push             \ act0
             else
-                drop nip                    \ bool act0
+                drop nip                    \ act0
             then
         else
-            #2 pick             \ bool sqr act0 grp-lst sqr
-            swap                \ bool sqr act0 sqr grp-lst
+            #2 pick             \ sqr act0 grp-lst sqr
+            swap                \ sqr act0 sqr grp-lst
             group-list-add-square
-            nip                 \ bool act0
+            nip                 \ act0
         then
-                                \ bool act0
-        swap                    \ act0 bool
-        if
-            action-calc-corners \
-        else
-            drop                \
-        then
+                                \ act0
     then
+                                    \ act0
+    dup                             \ act0 act0
+    action-get-calc-corners-trigger \ act0 bool
+    if
+        dup                         \ act0 act0
+        action-calc-corners         \ act0
+        false swap                  \ false act0
+        _action-set-calc-corners-trigger
+    else
+        drop                        \
+    then
+
     \ cr ." action-add-sample: end" cr
 ;
+
+' action-add-sample to action-add-sample-xt
 
 \ Return true if a state is confirmed with a pnc square.
 : action-state-confirmed ( sta1 act0 -- flag )
@@ -1701,14 +1743,25 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     action-add-sample       \ smpl
 ;
 
-: action-sample-expected? ( smpl1 act0 -- bool )
-     \ Check args.
+\ If a square exists for a sample initial state, update it.
+\ Otherwise, do nothing.
+: action-update-existing-square ( smpl1 act0 -- )
+    \ Check args.
     assert-tos-is-action
     assert-nos-is-sample
 
-    action-get-groups           \ smpl grp-lst
-    group-list-sample-expected? \ bool
+    over sample-get-initial         \ smpl1 act0 sta
+    over                            \ smpl1 act0 sta act0
+    action-find-square              \ smpl1 act0, sqr t | f
+    if
+        drop                        \ smpl1 act0
+        action-add-sample           \
+    else
+        2drop
+    then
 ;
+
+' action-update-existing-square to action-update-existing-square-xt
 
 \ Get a sample from an action, for a step.
 \ Depends on the current domain being set correctly.
@@ -1717,51 +1770,14 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ add the sample to the action.
 : action-get-sample-step ( sta1 act0 -- smpl )
     \ cr ." action-get-sample-step: start" cr
-     \ Check args.
+    \ Check args.
     assert-tos-is-action
     assert-nos-is-value
 
     tuck                        \ act0 sta1 act0
     _action-get-sample2         \ act0 smpl
 
-    \ Check for existing square.
-    dup sample-get-initial      \ act0 smpl initial
-    #2 pick                     \ act0 smpl initial act0
-    action-find-square          \ act0 smpl, sqr t | f
-    if
-        \ Update an existing square with a sample.
-        drop                    \ act0 smpl
-        tuck                    \ smpl act0 smpl
-        swap                    \ smpl smpl act0
-
-        cr
-        ." Dom: " current-domain-id #3 dec.r
-        space ." Act: " dup action-get-inst-id #3 dec.r
-        space ." update square with sample: " over .sample
-        cr
-
-        action-add-sample       \ smpl
-        exit
-    then
-                                \ act0 smpl
-
-    2dup swap                   \ act0 smpl smpl act0
-    action-sample-expected?     \ act0 smpl bool
-    if
-        \ Do not add the sample, to avoid creating an unneeded new square.
-        nip
-        exit
-    then
-                                \ act smpl
-    tuck swap                   \ smpl smpl act0
-
-    cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " dup action-get-inst-id #3 dec.r
-    space ." adding unexpected sample: " over .sample
-    cr
-
-    action-add-sample           \ smpl
+    nip                         \ smpl
 ;
 
 \ Return true if a action id matches a number.
@@ -1917,7 +1933,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Get square for ip state.
     #2 pick #2 pick             \ sta1 act0 ext-lst' sta1 act0
     action-find-square          \ sta1 act0 ext-lst', sqr t | f
-    is-false abort" square not found?"
+    is-false? abort" square not found?"
 
     \ Check for even one compatible external square.
     \ If any found, return false.
@@ -1980,7 +1996,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         link-get-next
     repeat
                                             \ sta1 act0 sqr1 ext-lst'
-    \ Get need for the first sample of an external state. 
+    \ Get need for the first sample of an external state.
     dup list-get-links                      \ sta1 act0 sqr1 ext-lst' ext-link
 
     begin
@@ -2224,7 +2240,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             #2 pick                             \ act0 ret-lst ip-link ned ret-lst
             list-push-struct                    \ act0 ret-lst ip-link
         then
-        
 
         link-get-next
     repeat
@@ -2252,7 +2267,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     2dup action-get-corners         \ sta1 act0 sta1 crn-lst
     corner-list-uses-state          \ sta1 act0 bool
     if
-        3drop
+        2drop
         true
         exit
     then
@@ -2320,11 +2335,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ Remove square from action square list.
         dup link-get-data       \ rmv-lst' grp-lst sqr-lst rmv-link stax
 
-
         cr ." Dom: " current-domain-id #3 dec.r
         space ." Act: " current-action-id #3 dec.r
         space ." culling square: " dup dec. cr
-    
+
         #2 pick                 \ rmv-lst' grp-lst sqr-lst rmv-link stax sqr-lst
         square-list-remove      \ rmv-lst' grp-lst sqr-lst rmv-link bool
         drop                    \ rmv-lst' grp-lst sqr-lst rmv-link
@@ -2385,14 +2399,14 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check for clean up.
     dup list-is-empty                               \ sta1 act0 | ret-lst bool
     if
-        over action-get-cull-flag                   \ sta1 act0 | ret-lst bool
+        over action-get-cull-squares-trigger        \ sta1 act0 | ret-lst bool
         if
             over                                    \ sta1 act0 | ret-lst act0
             action-cull-unneeded-squares            \ sta1 act0 | ret-lst
-            false #2 pick _action-set-cull-flag     \ sta1 act0 | ret-lst
+            false #2 pick _action-set-cull-squares-trigger  \ sta1 act0 | ret-lst
         then
     else
-        true #2 pick _action-set-cull-flag          \ sta1 act0 | ret-lst
+        true #2 pick _action-set-cull-squares-trigger   \ sta1 act0 | ret-lst
     then
 
     \ Clean up.
@@ -2400,20 +2414,30 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Return a step, given reg-to, reg-from, and a rule.
-: action-make-planstep ( reg-to reg-from rul1 act0 -- stp )
+: action-make-planstep ( reg-to reg-from alt-rul rul1 act0 -- stp )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-rule
-    assert-3os-is-region
+    #2 pick 0<>
+    if
+        assert-3os-is-rule
+    then
     assert-4os-is-region
+    assert-5os-is-region
+
+    \ Bring alt-rule forward.
+    rot                                     \ reg-to reg-from rul1 act0 | alt-rul
 
     \ Get number unwanted changes.
-    #3 pick #3 pick #3 pick                 \ | reg-to reg-from rul1
-    rule-number-unwanted-changes            \ | u-unw
+    #4 pick #4 pick #4 pick                 \ | alt-rul reg-to reg-from rul1
+    rule-number-unwanted-changes            \ | alt-rul u-unw
+    \ Add 2 if there is an alt-rul
+    over 0<> if 2 + then
+    swap                                    \ | u-unw alt-rul
 
     \ Make step.
-    #2 pick                                 \ | u-unw rul1
-    #2 pick                                 \ | u-unw rul1 act0
+    #3 pick                                 \ | u-unw alt-rul rul1
+    #3 pick                                 \ | u-unw alt-rul rul1 act0
     planstep-new                            \ | u-unw stp
 
     \ Set number unwanted changes.
@@ -2426,45 +2450,128 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Return a planstep list, given reg-to, reg-from, and a rule list.
-: action-planstep-list-from-rule-list ( reg-to reg-from rul-lst1 act0 -- plnstp-lst )
+\ Rule list is from a single group, with one, or two rules.
+: action-planstep-list-from-rule-list ( cngs4 reg-to reg-from rul-lst1 act0 -- plnstp-lst )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-rule-list
     assert-3os-is-region
     assert-4os-is-region
+    assert-5os-is-changes
+
+    over list-get-length            \ cngs4 reg-to reg-from rul-lst1 act0 len
+    0= abort" list length zero?"
+
+    over list-get-length            \ cngs4 reg-to reg-from rul-lst1 act0 len
+    #2 > abort" list length GT 2?"
 
     \ Init return list.
-    list-new                        \ reg-to reg-from rul-lst1 act0 plnstp-lst
+    list-new                        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
 
-    \ Prep for loop, for each rule.
-    #2 pick list-get-links          \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link
+    #2 pick list-get-length         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst len
 
-    begin
-        ?dup
-    while
-        #5 pick #5 pick             \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link reg-to reg-from
-        #2 pick link-get-data       \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link reg-to reg-from rulx
-        #5 pick                     \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link reg-to reg-from rulx act0
-        action-make-planstep        \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link stp
-        #2 pick                     \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link stp plnstp-lst
-        list-push-struct            \ reg-to reg-from rul-lst1 act0 plnstp-lst rul-link
+    1 =                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst bool
+    if
+        \ Build plan-step with zero alternate rule.
 
-        link-get-next
-    repeat
-                                    \ reg-to reg-from rul-lst1 act0 plnstp-lst
-    \ Clean up.
-    2nip                            \ reg-to act0 plnstp-lst
-    nip nip                         \ plnstp-lst
+        \ Get from-to regions.
+        #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from
+        \ Get null alternate rule.
+        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul
+        \ Get rule from list.
+        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul 0
+        #6 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
+        \ Get action.
+        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0 act0
+        \ Make new planstep.
+        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst stp
+        over list-push-struct       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
+        \ Return
+        2nip                        \ cngs4 reg-to act0 plnstp-lst
+        2nip nip                    \ plnstp-lst
+        exit
+    then
+
+    \ Must be two rules.
+
+    \ Get the first rule changes.
+    #5 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4
+    0                               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx
+    #4 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx rul-lst1
+    list-get-item                   \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0
+    rule-get-changes                \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0-cngs'
+
+    \ Check for non-null intersection.
+    2dup changes-intersection       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0-cngs' cngs-int'
+    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int'
+    dup                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int' cngs-int'
+    changes-not-null?               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int' bool
+    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 bool
+
+    if                              \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4
+        \ Build planstep from first rule.
+
+        \ Get second rule from list.
+        #5 pick #5 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from
+        1                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from inx
+        #6 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from inx rul-lst1
+        list-get-item               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul
+        \ Get first rule from list.
+        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul inx
+        #7 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul rul0
+        \ Get action.
+        #6 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul rul0 act0
+        \ Make and save new planstep.
+        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 stp
+        #2 pick list-push-struct    \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4
+    then
+
+    \ Get the second rule changes.
+    1                               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx
+    #4 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx plnstp-lst
+    list-get-item                   \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul1
+    rule-get-changes                \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul1-cngs'
+
+    \ Check for non-null intersection.
+    2dup changes-intersection       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0-cngs' cngs-int'
+    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int'
+    nip                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs-int'
+    dup                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs-int' cngs-ist'
+    changes-not-null?               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs-int' bool
+    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst bool
+
+    if
+        \ Build plan-step for the second rule in the list.
+
+        \ Get from-to regions.
+        #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from
+        \ Get first rule from list.
+        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from inx
+        #5 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul
+        \ Get second rule from list.
+        1                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul inx
+        #6 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
+        \ Get action.
+        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0 act0
+        \ Make and save new planstep.
+        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst stp
+        over list-push-struct       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
+    then
+
+    \ Return.
+    2nip                            \ cngs4 reg-to act0 plnstp-lst
+    2nip nip                        \ plnstp-lst
 ;
 
 \ Return a list of possible plansteps, given to/from regions.
 \ Steps may, or may not, intersect the to/from regions.
 \ If they do not intersect, there are no restrictions.
-: action-calc-plansteps-by-changes ( reg-to reg-from act0 -- plnstp-lst )
+: action-calc-possible-steps ( cngs3 reg-to reg-from act0 -- plnstp-lst )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
     assert-3os-is-region
+    assert-4os-is-changes
     #2 pick #2 pick                                 \ | reg-to reg-from
     swap region-superset-of                         \ | bool
     abort" action-calc-plansteps-by-changes: region subset?"    \ |
@@ -2473,183 +2580,58 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ space ." Act: " dup action-get-inst-id #3 dec.r
     \ space ." reg-to: " #2 pick .region space ." reg-from: " over .region cr
 
-    \ Get needed changes.
-    #2 pick #2 pick                         \ reg-to reg-from act0 reg-to reg-from
-    changes-new-region-to-region            \ reg-to reg-from act0 cngs'
-
     \ Init return list.
-    list-new                                \ reg-to reg-from act0 cngs' ret-lst
+    list-new                                \ cngs3 reg-to reg-from act0 ret-lst
 
-    #2 pick action-get-groups               \ reg-to reg-from act0 cngs' ret-lst grp-lst
-    list-get-links                          \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+    over action-get-groups                  \ cngs3 reg-to reg-from act0 ret-lst grp-lst
+    list-get-links                          \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
     begin
         ?dup
     while
-        dup link-get-data                   \ reg-to reg-from act0 cngs' ret-lst grp-lnk grpx
+        dup link-get-data                   \ cngs3 reg-to reg-from act0 ret-lst grp-lnk grpx
 
         \ Check if group might apply.
-        group-get-pn                        \ reg-to reg-from act0 cngs' ret-lst grp-lnk pn
-        #3 <                                \ reg-to reg-from act0 cngs' ret-lst grp-lnk flag
-        if                                  \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+        group-get-pn                        \ cngs3 reg-to reg-from act0 ret-lst grp-lnk pn
+        #3 <                                \ cngs3 reg-to reg-from act0 ret-lst grp-lnk flag
+        if                                  \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
+            \ Get rules, if any.
+            #5 pick                         \ cngs3 reg-to reg-from act0 ret-lst grp-lnk cngs3
+            over link-get-data              \ cngs3 reg-to reg-from act0 ret-lst grp-lnk cngs3 grpx
+            group-rules-for-changes         \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst'
 
-            \ Get backward rules, if any.
-            #2 pick over                    \ reg-to reg-from act0 cngs' ret-lst grp-lnk cngs' grp-lnk
-            link-get-data                   \ reg-to reg-from act0 cngs' ret-lst grp-lnk cngs' grpx
-            group-calc-for-plansteps-by-changes \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst'
-
-            dup list-is-empty               \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' bool
+            dup list-is-empty               \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst' bool
             if
-                list-deallocate             \ reg-to reg-from act0 cngs' ret-lst grp-lnk
-
-            else                            \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+                list-deallocate             \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
+            else                            \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
                 \ Get planstep from rules.
-                #6 pick #6 pick                     \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' reg-to reg-from
-                #2 pick                             \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' reg-to reg-from rul-lst'
-                #7 pick                             \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' reg-to reg-from rul-lst' act0
-                action-planstep-list-from-rule-list \ reg-to reg-from act0 cngs' ret-lst grp-lnk rul-lst' plnstp-lst'
-                swap rule-list-deallocate           \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst'
+                #6 pick #6 pick #6 pick             \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst' cngs3 reg-to reg-from
+                #3 pick                             \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst' cngs3 reg-to reg-from rul-lst'
+                #7 pick                             \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst' cngs3 reg-to reg-from rul-lst' act0
+                action-planstep-list-from-rule-list \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst' plnstp-lst'
+                swap rule-list-deallocate           \ cngs3 reg-to reg-from act0 ret-lst grp-lnk plnstp-lst'
 
                 \ Append planstep-list to return list.
-                dup                         \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst' plnstp-lst'
-                #3 pick                     \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst' plnstp-lst' ret-lst
-                planstep-list-append        \ reg-to reg-from act0 cngs' ret-lst grp-lnk plnstp-lst'
-                planstep-list-deallocate    \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+                dup                         \ cngs3 reg-to reg-from act0 ret-lst grp-lnk plnstp-lst' plnstp-lst'
+                #3 pick                     \ cngs3 reg-to reg-from act0 ret-lst grp-lnk plnstp-lst' plnstp-lst' ret-lst
+                planstep-list-append        \ cngs3 reg-to reg-from act0 ret-lst grp-lnk plnstp-lst'
+                planstep-list-deallocate    \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
             then
         then
 
-        link-get-next                       \ reg-to reg-from act0 cngs' ret-lst grp-lnk
+        link-get-next                       \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
     repeat
-                                            \ reg-to reg-from act0 cngs' ret-lst
-    swap changes-deallocate                 \ reg-to reg-from act0 ret-lst
-    2nip                                    \ act0 ret-lst
-    nip                                     \ ret-lst
-;
+                                            \ cngs3 reg-to reg-from act0 ret-lst
+\    dup list-is-not-empty
+\    if
+\        cr
+\        ." Dom: " current-domain-id #3 dec.r
+\        space ." Act: " current-action-id #3 dec.r
+\        space ." action-calc-possible-steps: returns: " dup .planstep-list
+\        cr
+\    then
 
-\ Return a list of possible forward-chaining plansteps, given region-from and region-to regions.
-\ Steps may, or may not, intersect the from region.
-\ If they do not intersect reg-from, going reg-from to the step initial-region cannot require a needed change.
-: action-calc-plansteps-fc ( reg-to reg-from act0 -- plnstp-lst )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-    assert-3os-is-region
-    #2 pick #2 pick                                 \ | reg-to reg-from
-    swap region-superset-of                         \ | bool
-    abort" action-calc-plansteps-fc: region subset?"    \ |
-
-    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
-    \ space ." Act: " dup action-get-inst-id #3 dec.r
-    \ space ." action-calc-steps-fc: " #2 pick .region space over .region cr
-
-    \ Init return list.
-    list-new                                \ reg-to reg-from act0 ret-lst
-
-    over action-get-groups                  \ reg-to reg-from act0 ret-lst grp-lst
-    list-get-links                          \ reg-to reg-from act0 ret-lst rul-link
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ reg-to reg-from act0 ret-lst rul-link grpx
-
-        \ Check if group might apply.
-        group-get-pn                        \ reg-to reg-from act0 ret-lst rul-link pn
-        #3 <                                \ reg-to reg-from act0 ret-lst rul-link flag
-        if                                  \ reg-to reg-from act0 ret-lst rul-link
-
-            \ Get backward rules, if any.
-            #4 pick #4 pick #2 pick         \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from link
-            link-get-data                   \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from grpx
-            group-calc-for-plansteps-fc     \ reg-to reg-from act0 ret-lst rul-link rul-lst'
-
-            dup list-is-empty               \ reg-to reg-from act0 ret-lst rul-link rul-lst' bool
-            if
-                list-deallocate             \ ret-lst reg-to reg-from link
-
-            else                            \ reg-to reg-from act0 ret-lst rul-link
-                \ Get planstep from rules.
-                #5 pick #5 pick             \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from
-                #2 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst'
-                #6 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst' act0
-                action-planstep-list-from-rule-list \ reg-to reg-from act0 ret-lst rul-link rul-lst' plnstp-lst'
-                swap rule-list-deallocate   \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
-
-                \ Append planstep-list to return list.
-                dup                         \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst'
-                #3 pick                     \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst' ret-lst
-                planstep-list-append        \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
-                planstep-list-deallocate    \ reg-to reg-from act0 ret-lst rul-link
-            then
-        then
-
-        link-get-next                       \ reg-to reg-from act0 ret-lst rul-link
-    repeat
-                                            \ reg-to reg-from act0 ret-lst
-    2nip                                    \ act0 ret-lst
-    nip                                     \ ret-lst
-    \ cr ." returning steps: " dup .step-list cr
-;
-
-\ Return a list of possible backward-chaining plansteps, given a sample.
-\ Steps may, or may not, intersect region reg-to.
-\ If they do not intersect reg-to, going from the step initial-region to reg-to cannot require a needed change.
-: action-calc-plansteps-bc ( reg-to reg-from act0 -- plnstp-lst )
-    \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-    assert-3os-is-region
-    #2 pick #2 pick                                     \ | reg-to reg-from
-    swap region-superset-of                             \ | bool
-    abort" action-calc-plansteps-bc: region subset?"    \ |
-
-    \ cr ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
-    \ space ." Act: " dup action-get-inst-id #3 dec.r
-    \ space ." action-calc-steps-bc: " #2 pick .region space over .region cr
-
-    \ Init return list.
-    list-new                                \ reg-to reg-from act0 ret-lst
-
-    over action-get-groups                  \ reg-to reg-from act0 ret-lst grp-lst
-    list-get-links                          \ reg-to reg-from act0 ret-lst rul-link
-    begin
-        ?dup
-    while
-        dup link-get-data                   \ reg-to reg-from act0 ret-lst rul-link grpx
-
-        \ Check if group might apply.
-        group-get-pn                        \ reg-to reg-from act0 ret-lst rul-link pn
-        #3 <                                \ reg-to reg-from act0 ret-lst rul-link flag
-        if                                  \ reg-to reg-from act0 ret-lst rul-link
-
-            \ Get backward rules, if any.
-            #4 pick #4 pick #2 pick         \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from link
-            link-get-data                   \ reg-to reg-from act0 ret-lst rul-link reg-to reg-from grpx
-            group-calc-for-plansteps-bc     \ reg-to reg-from act0 ret-lst rul-link rul-lst'
-
-            dup list-is-empty               \ reg-to reg-from act0 ret-lst rul-link rul-lst' bool
-            if
-                list-deallocate             \ ret-lst reg-to reg-from link
-
-            else                            \ reg-to reg-from act0 ret-lst rul-link
-                \ Get planstep from rules.
-                #5 pick #5 pick             \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from
-                #2 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst'
-                #6 pick                     \ reg-to reg-from act0 ret-lst rul-link rul-lst' reg-to reg-from rul-lst' act0
-                action-planstep-list-from-rule-list \ reg-to reg-from act0 ret-lst rul-link rul-lst' plnstp-lst'
-                swap rule-list-deallocate   \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
-
-                \ Append planstep-list to return list.
-                dup                         \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst'
-                #3 pick                     \ reg-to reg-from act0 ret-lst rul-link plnstp-lst' plnstp-lst' ret-lst
-                planstep-list-append        \ reg-to reg-from act0 ret-lst rul-link plnstp-lst'
-                planstep-list-deallocate    \ reg-to reg-from act0 ret-lst rul-link
-            then
-        then
-
-        link-get-next                       \ reg-to reg-from act0 ret-lst rul-link
-    repeat
-                                            \ reg-to reg-from act0 ret-lst
-    2nip                                    \ act0 ret-lst
-    nip                                     \ ret-lst
+    2nip                                    \ cngs3 act0 ret-lst
+    nip nip                                 \ ret-lst
 ;
 
 \ Return a corner matching a given anchor state.

@@ -15,7 +15,7 @@
     over regioncorr-list-push           \ regc regc-lst
 
     2dup regioncorr-list-any-superset   \ regc regc-lst bool
-    is-false abort" Superset not found?"
+    is-false? abort" Superset not found?"
 
                                         \ regc regc-lst
     regioncorr-list-deallocate          \ regc
@@ -49,7 +49,7 @@
     s" (XXX1 xx0xx)" regioncorr-from-string-a   \ regc regc-lst regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-t bool
-    is-false abort" regioncorr (XXX1 xx0xx) not found in regioncorr-list?"
+    is-false? abort" regioncorr (XXX1 xx0xx) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst
 
                                                 \ regc regc-lst
@@ -74,7 +74,7 @@
 
     cr ." before: " dup .regioncorr-list
     2dup regioncorr-list-push-nosubs            \ regc regc-lst bool
-    is-false abort" push-nosubs failed?"
+    is-false? abort" push-nosubs failed?"
     cr ." after:  " dup .regioncorr-list
 
     \ Check results.
@@ -85,7 +85,7 @@
     s" (XXX1 xx0xx)" regioncorr-from-string-a   \ regc regc-lst regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-t bool
-    is-false abort" regioncorr (XXX1 xx0xx) not found in regioncorr-list?"
+    is-false? abort" regioncorr (XXX1 xx0xx) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst
 
     \ Check results 2.
@@ -93,7 +93,7 @@
     [ ' regioncorr-eq ] literal                 \ regc-lst regc xt
     swap                                        \ regc-lst xt regc
     #2 pick list-member                         \ regc-lst bool
-    is-false abort" regioncorr (xx1x XX0XX) not found in regioncorr-list?"
+    is-false? abort" regioncorr (xx1x XX0XX) not found in regioncorr-list?"
 
                                                 \ regc-lst
     regioncorr-list-deallocate                  \
@@ -131,7 +131,7 @@
     s" (000X 000XX)" regioncorr-from-string-a   \ regc-lst regc-lst' regc-t
     [ ' regioncorr-eq ] literal                 \ regc-lst regc-lst' regc-t xt
     over #3 pick list-member                    \ regc-lst regc-lst' regc-t bool
-    is-false abort" regioncorr (000X 000XX) not found in regioncorr-list?"
+    is-false? abort" regioncorr (000X 000XX) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc-lst regc-lst'
 
     \ Clean up.
@@ -166,14 +166,14 @@
     s" (1001 00x0x)" regioncorr-from-string-a   \ regc regc-lst regc-left regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-left regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-left regc-t bool
-    is-false abort" regioncorr (1001 00x0x) not found in regioncorr-list?"
+    is-false? abort" regioncorr (1001 00x0x) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst regc-left
 
     \ Check result 2.
     s" (x001 0000X)" regioncorr-from-string-a   \ regc regc-lst regc-left regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-left regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-left regc-t bool
-    is-false abort" regioncorr (x001 0000X) not found in regioncorr-list?"
+    is-false? abort" regioncorr (x001 0000X) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst regc-left
 
     \ Clean up.
@@ -205,7 +205,7 @@
     s" (X011 00X0X)" regioncorr-from-string-a   \ regc regc-lst regc-left regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-left regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-left regc-t bool
-    is-false abort" regioncorr (X011 00X0X) not found in regioncorr-list?"
+    is-false? abort" regioncorr (X011 00X0X) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst regc-left
 
     \ Clean up.
@@ -270,21 +270,21 @@
     s" (1001 00x0x)" regioncorr-from-string-a   \ regc regc-lst regc-left regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-left regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-left regc-t bool
-    is-false abort" regioncorr (1001 00x0x) not found in regioncorr-list?"
+    is-false? abort" regioncorr (1001 00x0x) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst regc-left
 
     \ Check result 2.
     s" (x001 0000X)" regioncorr-from-string-a   \ regc regc-lst regc-left regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-left regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-left regc-t bool
-    is-false abort" regioncorr (x000 0000X) not found in regioncorr-list?"
+    is-false? abort" regioncorr (x000 0000X) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst regc-left
 
     \ Check result 3.
     s" (x011 00x0x)" regioncorr-from-string-a   \ regc regc-lst regc-left regc-t
     [ ' regioncorr-eq ] literal                 \ regc regc-lst regc-left regc-t xt
     over #3 pick list-member                    \ regc regc-lst regc-left regc-t bool
-    is-false abort" regioncorr (x011 00x0x) not found in regioncorr-list?"
+    is-false? abort" regioncorr (x011 00x0x) not found in regioncorr-list?"
     regioncorr-deallocate                       \ regc regc-lst regc-left
 
     \ Clean up.
@@ -321,7 +321,7 @@
     #2 pick                                     \ regc-lst regc-lst' regc-lst'' regc-lst
     over                                        \ regc-lst regc-lst' regc-lst'' regc-lst regc-lst''
     regioncorr-list-eq                          \ regc-lst regc-lst' regc-lst'' bool
-    is-false abort" Initial and result regioncorr-lists not equal?"
+    is-false? abort" Initial and result regioncorr-lists not equal?"
 
     \ Clean up.
     regioncorr-list-deallocate                  \ regc-lst regc-lst'
@@ -354,7 +354,7 @@
     s" (X1XX X1X0X)" regioncorr-from-string-a   \ regc-lst regc-lst' regc-t
     [ ' regioncorr-eq ] literal                 \ regc-lst regc-lst' regc-t xt
     over #3 pick list-member                    \ regc-lst regc-lst' regc-t bool
-    is-false abort" regioncorr (X1XX X1X0X) not found in regc-lst' ?"
+    is-false? abort" regioncorr (X1XX X1X0X) not found in regc-lst' ?"
     regioncorr-deallocate                       \ regc-lst regc-lst'
 
     \ Clean up.
@@ -388,7 +388,7 @@
     s" (11X1 X1111)" regioncorr-from-string-a   \ regc-lst regc-lst' regc-t
     [ ' regioncorr-eq ] literal                 \ regc-lst regc-lst' regc-t xt
     over #3 pick list-member                    \ regc-lst regc-lst' regc-t bool
-    is-false abort" regioncorr (11X1 X1111) not found in regc-lst' ?"
+    is-false? abort" regioncorr (11X1 X1111) not found in regc-lst' ?"
     regioncorr-deallocate                       \ regc-lst regc-lst'
 
     \ Clean up.

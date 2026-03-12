@@ -3,14 +3,15 @@
 \ A planstep may be added to a planstep list in a plan.
 
 #37171 constant planstep-id
-    #6 constant planstep-struct-number-cells
+    #7 constant planstep-struct-number-cells
 
 \ Struct fields.
 0                                       constant planstep-header-disp           \ id (16) use count (16) number unwanted changes (8)
 planstep-header-disp            cell+   constant planstep-action-disp           \ An action instance addr.
-planstep-action-disp            cell+   constant planstep-rule-disp             \ A rule instance addr.
+planstep-action-disp            cell+   constant planstep-rule-disp             \ A rule instance.
+planstep-rule-disp              cell+   constant planstep-alt-rule-disp         \ A rule instance, or zero.
 \ Store frequently used calculated fields, to decrease cycles and memory allocation/deallocation.
-planstep-rule-disp              cell+   constant planstep-initial-region-disp   \ A region instance addr.
+planstep-alt-rule-disp          cell+   constant planstep-initial-region-disp   \ A region instance addr.
 planstep-initial-region-disp    cell+   constant planstep-result-region-disp    \ A region instance addr.
 planstep-result-region-disp     cell+   constant planstep-changes-disp          \ A changes instance addr.
 
@@ -38,7 +39,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Check TOS for planstep, unconventional, leaves stack unchanged.
 : assert-tos-is-planstep ( tos -- tos )
     dup is-allocated-planstep
-    is-false if
+    is-false? if
         s" TOS is not an allocated planstep"
         .abort-xt execute
     then
@@ -47,7 +48,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Check NOS for planstep, unconventional, leaves stack unchanged.
 : assert-nos-is-planstep ( nos tos -- nos tos )
     over is-allocated-planstep
-    is-false if
+    is-false? if
         s" NOS is not an allocated planstep"
         .abort-xt execute
     then
@@ -83,6 +84,26 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 : _planstep-set-rule ( rul1 plnstp0 -- )
     planstep-rule-disp +    \ Add offset.
     !struct                 \ Set the field.
+;
+
+\ Return the planstep alt-rule.
+: planstep-get-alt-rule ( plnstp0 -- rul )
+    \ Check arg.
+    assert-tos-is-planstep
+
+    planstep-alt-rule-disp +    \ Add offset.
+    @                           \ Fetch the field.
+;
+
+\ Set the alt-rule of a planstep instance, use only in this file.
+: _planstep-set-alt-rule ( rul1 plnstp0 -- )
+    planstep-alt-rule-disp +    \ Add offset.
+    over 0=
+    if
+        !                       \ Set the field to zero.
+    else
+        !struct                 \ Set the field.
+    then
 ;
 
 \ Return the planstep initial-region.
@@ -150,41 +171,51 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
 \ End accessors.
 
-\ Return a new planstep, given a rule and an action.
-: planstep-new    ( rul1 act0 -- plnstp )
+\ Return a new planstep, given a rule, group and action.
+: planstep-new    ( alt-rul2 rul1 act0 -- plnstp )
     \ Check args.
     assert-tos-is-action-xt execute
     assert-nos-is-rule
+    #2 pick
+    0=
+    if
+    else
+        assert-3os-is-rule
+    then
 
    \ Allocate space.
-    planstep-mma mma-allocate               \ rul1 a0 plnstpx
+    planstep-mma mma-allocate               \ alt-rul2 rul1 act0 plnstpx
 
     \ Store id.
-    planstep-id over                        \ rul1 a0 plnstpx id plnstpx
-    struct-set-id                           \ rul1 a0 plnstpx
+    planstep-id over                        \ alt-rul2 rul1 act0 plnstpx id plnstpx
+    struct-set-id                           \ alt-rul2 rul1 act0 plnstpx
 
     \ Init use count.
-    0 over struct-set-use-count             \ rul1 a0 plnstpx
+    0 over struct-set-use-count             \ alt-rul2 rul1 act0 plnstpx
 
     \ Set action.
-    tuck                                    \ rul1 plnstpx a0 plnstpx
-    _planstep-set-action                    \ rul1 plnstpx
+    tuck                                    \ alt-rul2 rul1 plnstpx act0 plnstpx
+    _planstep-set-action                    \ alt-rul2 rul1 plnstpx
 
     \ Set initial-region.
-    over rule-calc-initial-region           \ rul1 plnstpx reg
-    over _planstep-set-initial-region       \ rul1 plnstpx
+    over rule-calc-initial-region           \ alt-rul2 rul1 plnstpx reg
+    over _planstep-set-initial-region       \ alt-rul2 rul1 plnstpx
 
     \ Set result-region.
-    over rule-calc-result-region            \ rul1 plnstpx reg
-    over _planstep-set-result-region        \ rul1 plnstpx
+    over rule-calc-result-region            \ alt-rul2 rul1 plnstpx reg
+    over _planstep-set-result-region        \ alt-rul2 rul1 plnstpx
 
     \ Set changes.
-    over rule-get-changes                   \ rul1 plnstpx cngs
-    over _planstep-set-changes              \ rul1 plnstpx
+    over rule-get-changes                   \ alt-rul2 rul1 plnstpx cngs
+    over _planstep-set-changes              \ alt-rul2 rul1 plnstpx
 
     \ Set rule.
-    tuck                                    \ plnstpx rul1 plnstpx
-    _planstep-set-rule                      \ plnstpx
+    tuck                                    \ alt-rul2 plnstpx rul1 plnstpx
+    _planstep-set-rule                      \ alt-rul2 plnstpx
+
+    \ Set alt-rule
+    tuck                                    \ plnstpx alt-rul2 pln-tpx
+    _planstep-set-alt-rule                  \ plnstpx
 
     \ Init number-unwanted-changes.
     0 over                                  \ plnstpx int plnstpx
@@ -192,49 +223,6 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 ;
 
 ' planstep-new to planstep-new-xt
-
-
-\ Copy a planstep.
-: planstep-copy    ( plnstp0 -- plnstp )
-    \ Check args.
-    assert-tos-is-action-xt execute
-    assert-nos-is-rule
-
-   \ Allocate space.
-    planstep-mma mma-allocate               \ plnstp0 plnstpx
-
-    \ Store id.
-    planstep-id over struct-set-id          \ plnstp0 plnstpx
-
-    \ Init use count.
-    0 over struct-set-use-count             \ plnstp0 plnstpx
-
-    \ Set action.
-    over planstep-get-action                \ plnstp0 plnstpx act
-    over _planstep-set-action               \ plnstp0 plnstpx
-
-    \ Set initial-region.
-    over planstep-get-initial-region        \ plnstp0 plnstpx reg-i
-    over _planstep-set-initial-region       \ plnstp0 plnstpx
-
-    \ Set result-region.
-    over planstep-get-result-region         \ plnstp0 plnstpx reg-r
-    over _planstep-set-result-region        \ plnstp0 plnstpx
-
-    \ Set changes.
-    over planstep-get-changes               \ plnstp0 plnstpx cngs
-    over _planstep-set-changes              \ plnstp0 plnstpx
-
-    \ Set rule.
-    over planstep-get-rule                  \ plnstp0 plnstpx rul
-    _planstep-set-rule                      \ plnstp0
-
-    \ Set number-unwanted-changes.
-    swap                                    \ plnstpx plnstp0
-    planstep-get-number-unwanted-changes    \ plnstpx u
-    over
-    planstep-set-number-unwanted-changes    \ plnstpx
-;
 
 : .planstep ( plnstp0 -- )
     \ Check arg.
@@ -265,6 +253,14 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
         \ Deallocate imbedded structs.
         dup planstep-get-rule
         rule-deallocate
+
+        dup planstep-get-alt-rule
+        dup 0<>
+        if
+            rule-deallocate
+        else
+            drop
+        then
 
         dup planstep-get-initial-region
         region-deallocate
@@ -298,24 +294,28 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     assert-tos-is-planstep
     assert-nos-is-region
 
+    \ cr ." planstep-restrict-initial-region: reg: " over .region space dup planstep-get-rule .rule cr
+
     over                                \ reg1 plnstp0 reg1
     over planstep-get-initial-region    \ reg1 plnstp0 reg1 s-reg
     region-intersects                   \ reg1 plnstp0 bool
-    is-false abort" no intersection wint planstep initial-region?"
+    is-false? abort" no intersection with planstep initial-region?"
 
     \ Copy number unwanted changes.
     dup planstep-get-number-unwanted-changes -rot    \ u-unw reg1 plnstp0
 
     \ Copy action, from planstep.
-    dup planstep-get-action -rot        \ u-unw act reg1 plnstp0
+    dup planstep-get-action -rot    \ u-unw act reg1 plnstp0
 
-    \ Calc new rule.
-    planstep-get-rule               \ u-unw act reg1 rul
-    rule-restrict-initial-region    \ u-unw act, rul' t | f
-    is-false abort" restrict-initial-region failed?"
+    \ Calc new rules.
+    dup planstep-get-alt-rule swap  \ u-unw act reg1 alt-rul plnstp0
+    rot swap                        \ u-unw act alt-rul reg1 plnstp0
+    planstep-get-rule               \ u-unw act alt-ru1 reg1 rul
+    rule-restrict-initial-region    \ u-unw act alt-rul, rul' t | f
+    is-false? abort" restrict-initial-region failed?"
 
     \ Make new planstep.
-    swap                            \ u-unw rul' act
+    rot                             \ u-unw alt-rul rul' act
     planstep-new                    \ u-unw plnstp
 
     \ Set number unwanted changes.
@@ -329,25 +329,29 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     assert-nos-is-region
     \ cr ." planstep " dup .planstep space ." restrict result to: " over .region
 
-    over                                \ reg1 plnstp0 reg1
-    over planstep-get-result-region     \ reg1 plnstp0 reg1 s-reg
-    region-intersects                   \ reg1 plnstp0 bool
-    is-false abort" no intersection wint planstep result-region?"
+    over                                    \ reg1 plnstp0 reg1
+    over planstep-get-result-region         \ reg1 plnstp0 reg1 s-reg
+    region-intersects                       \ reg1 plnstp0 bool
+    is-false? abort" no intersection wint planstep result-region?"
 
-    \ Copy number unwanted changes.
-    dup planstep-get-number-unwanted-changes -rot    \ u-unw reg1 plnstp0
+    \ Get number unwanted changes.
+    dup                                     \ reg1 plnstp0 plnstp0
+    planstep-get-number-unwanted-changes    \ reg1 plnstp0 u-unw
+    -rot                                    \ u-unw reg1 plnstp0
+    swap                                    \ u-unw plnstp0 reg1
 
-    \ Copy action, from planstep.
-    dup planstep-get-action -rot        \ u-unw act reg1 plnstp0
+    \ Get alt-rule
+    over planstep-get-alt-rule swap         \ u-unw plnstp0 alt-rul reg1
 
-    \ Calc new rule.
-    planstep-get-rule                   \ u-unw act reg1 rul
-    rule-restrict-result-region         \ u-unw act, rul' t | f
-    is-false abort" restrict-result-region failed?"
+    \ Get rule.
+    #2 pick planstep-get-rule               \ u-unw plnstp0 alt-rul reg1 rul
+    rule-restrict-result-region             \ u-unw plnstp0 alt-rul, rul t | f
+    is-false? abort" restrict-result-region failed?"
 
-    \ Make new planstep.
-    swap                        \ u-unw rul' act
-    planstep-new                \ u-unw plnstp
+    \ Make new planstep.                    \ u-unw plnstp0 alt-rul rul
+    rot                                     \ u-unw alt-rul rul plnstp0
+    planstep-get-action                     \ u-unw alt-rul rul act
+    planstep-new                            \ u-unw plnstp
 
     \ Set number unwanted changes.
     tuck planstep-set-number-unwanted-changes   \ plnstp
@@ -374,7 +378,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
                                     \ reg-to reg-from plnstp0
     planstep-get-rule               \ reg-to reg-from s-rul
     rule-restrict-initial-region    \ reg-to, s-rul' t | f
-    is-false if
+    is-false? if
         drop
         false
         exit
@@ -393,22 +397,44 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     then
 ;
 
-\ Ruturn a planstep restricted, initial and result regions, to a given
-\ region.
-: planstep-restrict-to-region ( reg1 plnstp0 -- plnstp t | f )
+\ Return the status of a sample, 0 = Expected/wanted, 1 = Unwanted, 2 = Unexpected.
+: planstep-result-status ( smpl1 plnstp0 -- status )
     \ Check args.
     assert-tos-is-planstep
-    assert-nos-is-region
+    assert-nos-is-sample
 
-    2dup                    \ reg1 plnstp0 reg1 plnstp0
-    planstep-get-rule       \ reg1 plnstp0 reg1 plnstp-rul
-    rule-restrict-to-region \ reg1 plnstp0, rul' t | f
+    \ Check for Expected/wanted.
+    over sample-get-result      \ smpl1 plnstp0 s-rslt
+    over                        \ smpl1 plnstp0 s-rslt plnstp0
+    planstep-get-result-region  \ smpl1 plnstp0 s-rslt r-rslt
+    region-superset-of-state?   \ smpl1 plnstp0 bool
     if
-        planstep-new        \ reg1 plnstp0 plnstp'
-        nip nip             \ plnstp'
-        true
+        2drop
+        0
+        exit
+    then
+
+    \ Check if there is an alternate rule.
+    \ If no, return Unexpected.
+    dup planstep-get-alt-rule   \ smpl1 plnstp0 alt-rul
+    0= if
+        2drop
+        2
+        exit
+    then
+
+    \ Get alt rule result for sample initial.
+    \ Return Unwanted (matches alt-rule result) or Unexpected.
+    over sample-get-initial     \ smpl1 plnstp0 s-ini
+    over planstep-get-alt-rule  \ smpl1 plnstp0 s-ini alt-rul
+    rule-apply-to-state         \ smpl1 plnstp0 ar-rslt
+    #2 pick sample-get-result   \ smpl1 plnstp0 ar-rslt s-rslt
+    =
+    if
+        2drop
+        1
     else
         2drop
-        false
-    then 
+        2
+    then
 ;

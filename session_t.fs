@@ -39,9 +39,13 @@
     %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act3
     %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
+    dup .domain
+
+
     %0111 %0111 region-new                      \ ses dom reg-to
     %0100 %0100 region-new                      \ ses dom reg-to reg-from
 
+    cr ." For reg: " dup .region space ." to: " over .region cr
     #3                                          \ ses dom reg-to reg-from | #3
     #2 pick #2 pick                             \ ses dom reg-to reg-from | #3 reg-to reg-from
     #5 pick                                     \ ses dom reg-to reg-from | #3 reg-to reg-from dom
@@ -49,8 +53,8 @@
     if
         cr ." plan " dup .plan cr
         dup plan-get-length #4 <> abort" plan not 4 steps long?"
-        %0100 over plan-get-initial-region region-superset-of-state 0= abort" plan does not start at 4?"
-        %0111 over plan-get-result-region region-superset-of-state 0= abort" plan does not end at 7?"
+        %0100 over plan-get-initial-region region-superset-of-state? 0= abort" plan does not start at 4?"
+        %0111 over plan-get-result-region region-superset-of-state? 0= abort" plan does not end at 7?"
         plan-deallocate
     else
         cr ." no plan found" cr
@@ -60,7 +64,8 @@
     region-deallocate
     drop
 
-    .session
+    drop
+    \ .session
 
     current-session-deallocate
 
@@ -116,8 +121,8 @@
     if
         cr ." plan " dup .plan cr
         dup plan-get-length #4 <> abort" plan not 4 steps long?"
-        %0100 over plan-get-initial-region region-superset-of-state 0= abort" plan does not start at 4?"
-        %0111 over plan-get-result-region region-superset-of-state 0= abort" plan does not end at 7?"
+        %0100 over plan-get-initial-region region-superset-of-state? 0= abort" plan does not start at 4?"
+        %0111 over plan-get-result-region region-superset-of-state? 0= abort" plan does not end at 7?"
         plan-deallocate
     else
         cr ." no plan found" cr
@@ -183,8 +188,8 @@
     if
         cr ." plan " dup .plan cr
         dup plan-get-length #4 <> abort" plan not 4 steps long?"
-        %0100 over plan-get-initial-region region-superset-of-state 0= abort" plan does not start at 4?"
-        %0111 over plan-get-result-region region-superset-of-state 0= abort" plan does not end at 7?"
+        %0100 over plan-get-initial-region region-superset-of-state? 0= abort" plan does not start at 4?"
+        %0111 over plan-get-result-region region-superset-of-state? 0= abort" plan does not end at 7?"
         plan-deallocate
     else
         cr ." no plan found" cr
@@ -194,6 +199,7 @@
     region-deallocate
     drop
 
+    \ drop
     .session
 
     current-session-deallocate
@@ -297,7 +303,7 @@
     over session-add-regioncorrrate                 \ ses
 
     0 over session-find-domain                      \ sess, dom t | f
-    is-false abort" domain 0 not found?"
+    is-false? abort" domain 0 not found?"
     over session-set-current-domain                 \ ses
 
     \ 0
@@ -307,12 +313,12 @@
     \ -1
     \ Set domain 0 current state.
     0 over session-find-domain                      \ ses, dom t | f
-    is-false abort" domain0 not found?"
+    is-false? abort" domain0 not found?"
     %1000 swap domain-set-current-state             \ ses
 
     \ Set domain1 current state.
     1 over session-find-domain                      \ ses, dom t | f
-    is-false abort" domain1 not found?"
+    is-false? abort" domain1 not found?"
     %01111 swap domain-set-current-state            \ ses
 
     dup .session

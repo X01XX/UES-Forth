@@ -98,7 +98,7 @@
 
     \ Init return list.
     list-new                            \ crn-lst0 | ret-lst
-    
+
     \ Prep for loop.
     over                                \ crn-lst0 | ret-lst crn-lst0
     list-get-links                      \ crn-lst0 | ret-lst crn-link

@@ -10,7 +10,7 @@
     session-add-domain                              \ dom0
 
     0  swap domain-find-action                      \ act0 t | f
-    is-false abort" act0 not found?"
+    is-false? abort" act0 not found?"
 
     \ Add arbitrary samples.
     #4 #5 sample-new                \ act smpl

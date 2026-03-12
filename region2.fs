@@ -68,7 +68,7 @@
     assert-nos-is-value
 
     \ Check if any subtraction is needed.
-    2dup region-superset-of-state 0=    \ sta1 reg0 flag
+    2dup region-superset-of-state? is-false?    \ sta1 reg0 flag
     if
         list-new tuck               \ sta1 list reg0 list
         region-list-push-xt

@@ -32,7 +32,7 @@
 \ Check TOS for rate, unconventional, leaves stack unchanged.
 : assert-tos-is-rate ( tos -- tos )
     dup is-allocated-rate
-    is-false if
+    is-false? if
         s" TOS is not an allocated rate"
         .abort-xt execute
     then
@@ -41,7 +41,7 @@
 \ Check NOS for rate, unconventional, leaves stack unchanged.
 : assert-nos-is-rate ( nos tos -- nos tos )
     over is-allocated-rate
-    is-false if
+    is-false? if
         s" NOS is not an allocated rate"
         .abort-xt execute
     then

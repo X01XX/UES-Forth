@@ -82,7 +82,7 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
     dup _mma-get-stack      \ mma-addr stack-addr
     stack-get-capacity      \ mma-addr capacity
     swap                    \ capacity mma-addr
-    mma-get-item-size       \ capacity item-size        
+    mma-get-item-size       \ capacity item-size
 
     \ Get array bytes, plus 4 cells overhead.
     over *                  \ capacity array-size
@@ -92,7 +92,7 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
     swap                    \ array-size capacity
     cells                   \ array-size stack-size
     1 cells +               \ array-size stack-size
- 
+
     +                       \ u
 ;
 

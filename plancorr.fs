@@ -31,7 +31,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Check TOS for plancorr, unconventional, leaves stack unchanged.
 : assert-tos-is-plancorr ( tos -- tos )
     dup is-allocated-plancorr
-    is-false if
+    is-false? if
         s" TOS is not an allocated plancorr"
         .abort-xt execute
     then
@@ -40,7 +40,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Check NOS for plancorr, unconventional, leaves stack unchanged.
 : assert-nos-is-plancorr ( nos tos -- nos tos )
     over is-allocated-plancorr
-    is-false if
+    is-false? if
         s" NOS is not an allocated plancorr"
         .abort-xt execute
     then
@@ -206,7 +206,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 
         \ Run plan.
         plan-run                    \ plnc-link d-link, t | f
-        is-false if
+        is-false? if
             2drop
             false
             exit

@@ -100,7 +100,7 @@
 : value-list-0-to-n ( n -- lst )
     \ Check arg.
     dup 1 < abort" value-list-0-to-n: invalid number?"
-    
+
     \ Init index list for need list.
     list-new swap                   \ inx-lst cnt
     0                               \ inx-lst cnt 0

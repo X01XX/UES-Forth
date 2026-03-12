@@ -82,6 +82,15 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     .abort-xt execute
 ;
 
+\ Check 5OS for region, unconventional, leaves stack unchanged.
+: assert-5os-is-region ( 5os 4os 3os nos tos -- 5os 4os 3os nos tos )
+    #4 pick is-allocated-region
+    if exit then
+
+    s" 5OS is not an allocated region"
+    .abort-xt execute
+;
+
 \ Start accessors.
 
 \ Return the state-0 field from a region instance.
@@ -178,10 +187,9 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
         #2 pick                     \ sta1 sta0 ms-bit sta1
         over                        \ sta1 sta0 ms-bit sta1 ms-bit
         and                         \ sta1 sta0 ms-bit sta1-bit
-        
 
         \ Apply msb to state 0.
-        #2 pick                     \ sta1 sta0 ms-bit sta1-bit sta0 
+        #2 pick                     \ sta1 sta0 ms-bit sta1-bit sta0
         #2 pick                     \ sta1 sta0 ms-bit sta1-bit sta0 ms-bit
         and                         \ sta1 sta0 ms-bit sta1-bit sta0-bit
 
@@ -203,7 +211,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
         1 rshift                    \ sta1 sta0 ms-bit\2
     repeat
                                     \ st2 st1 ms-bit
-    3drop 
+    3drop
 ;
 
 \ Return the highest state in a region.
@@ -488,7 +496,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     assert-nos-is-region
 
     region-eq
-    is-false
+    is-false?
 ;
 
 \ Return true if a TOS region is a superset of the NOS region.
@@ -535,7 +543,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 ;
 
 \ Return true if a TOS region is a superset of the NOS state.
-: region-superset-of-state ( sta1 reg0 -- flag )
+: region-superset-of-state? ( sta1 reg0 -- flag )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-value
@@ -671,7 +679,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     while
         dup link-get-data           \ reg0 ret-lst link data
         #3 pick                     \ reg0 ret-lst link data reg0
-        region-superset-of-state    \ reg0 ret-lst link flag
+        region-superset-of-state?   \ reg0 ret-lst link flag
         if
             \ Store the state into the return list.
             dup link-get-data       \ reg0 ret-lst link data
@@ -691,7 +699,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Check args.
     assert-tos-is-region
     assert-nos-is-value
-    2dup region-superset-of-state
+    2dup region-superset-of-state?
     if
         drop
         exit
@@ -749,7 +757,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Check args.
     assert-tos-is-region
     assert-nos-is-value
-    2dup region-superset-of-state
+    2dup region-superset-of-state?
     0= abort" State is not in region?"
 
     region-x-mask       \ sta1 x-msk

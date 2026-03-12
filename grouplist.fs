@@ -128,7 +128,7 @@
         #2 pick                     \ sqr1 link grpx sqr1
         square-get-state            \ sqr1 link grpx sta
         over group-get-region       \ sqr1 link grpx sta regx
-        region-superset-of-state    \ sqr1 link grpx flag
+        region-superset-of-state?   \ sqr1 link grpx flag
         if
             #2 pick swap            \ sqr1 link sqr1 grpx
             group-add-square        \ sqr1 link
@@ -157,7 +157,7 @@
         #2 pick                     \ sqr1 link grpx sqr1
         square-get-state            \ sqr1 link grpx sta
         over group-get-region       \ sqr1 link grpx sta regx
-        region-superset-of-state    \ sqr1 link grpx flag
+        region-superset-of-state?   \ sqr1 link grpx flag
         if
             #2 pick swap            \ sqr1 link sqr1 grpx
             group-check-square      \ sqr1 link
@@ -234,7 +234,7 @@
         over                    \ sta1 grp-link sta1
         over link-get-data      \ sta1 grp-link sta1 grpx
         group-uses-square       \ sta1 grp-link bool
-        if  
+        if
             2drop
             true
             exit
@@ -243,7 +243,7 @@
         link-get-next
     repeat
                                 \ sta1
-    drop                        \   
+    drop                        \
     false
 ;
 
@@ -266,31 +266,4 @@
     repeat
                             \ sta1
     drop
-;
-
-: group-list-sample-expected? ( smpl1 grp-lst0 -- bool )
-    \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-sample
-
-    \ Prep for loop.
-    list-get-links              \ smpl1 grp-link
-
-    begin
-        ?dup
-    while
-        2dup                    \ smpl1 grp-link smpl1 grp-link
-        link-get-data           \ smpl1 grp-link smpl1 grpx
-        group-sample-expected?  \ smpl1 grp-link bool
-        if
-            2drop
-            true
-            exit
-        then
-
-        link-get-next
-    repeat
-                                \ smpl1
-    drop
-    false
 ;

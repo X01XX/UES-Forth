@@ -142,7 +142,7 @@
     \ cr ." rule test 1: " dup .rule cr
     s" 00/01/01/00/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 1 failed?"
+    is-false? abort" rule-test-combine2: test 1 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -157,7 +157,7 @@
     \ cr ." rule test 2: " dup .rule cr
     s" 11/10/10/11/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 2 failed?"
+    is-false? abort" rule-test-combine2: test 2 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -172,7 +172,7 @@
     \ cr ." rule test 3: " dup .rule cr
     s" 01/00/00/01/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 3 failed?"
+    is-false? abort" rule-test-combine2: test 3 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -187,7 +187,7 @@
     \ cr ." rule test 4: " dup .rule cr
     s" 00/01/00/01/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 4 failed?"
+    is-false? abort" rule-test-combine2: test 4 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -202,7 +202,7 @@
     \ cr ." rule test 5: " dup .rule cr
     s" 10/11/10/11/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 5 failed?"
+    is-false? abort" rule-test-combine2: test 5 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -217,7 +217,7 @@
     \ cr ." rule test 6: " dup .rule cr
     s" 11/10/10/11/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 6 failed?"
+    is-false? abort" rule-test-combine2: test 6 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -232,7 +232,7 @@
     \ cr ." rule test 7: " dup .rule cr
     s" XX/Xx/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 7 failed?"
+    is-false? abort" rule-test-combine2: test 7 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -247,7 +247,7 @@
     \ cr ." rule test 8: " dup .rule cr
     s" 10/11/01/00/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 8 failed?"
+    is-false? abort" rule-test-combine2: test 8 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -262,7 +262,7 @@
     \ cr ." rule test 9: " dup .rule cr
     s" Xx/XX/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 9 failed?"
+    is-false? abort" rule-test-combine2: test 9 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -277,7 +277,7 @@
     \ cr ." rule test 10: " dup .rule cr
     s" 00/01/11/10/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 10 failed?"
+    is-false? abort" rule-test-combine2: test 10 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -292,7 +292,7 @@
     \ cr ." rule test 11: " dup .rule cr
     s" X1/X0/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 11 failed?"
+    is-false? abort" rule-test-combine2: test 11 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -307,7 +307,7 @@
     \ cr ." rule test 12: " dup .rule cr
     s" X0/X1/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 12 failed?"
+    is-false? abort" rule-test-combine2: test 12 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -322,7 +322,7 @@
     \ cr ." rule test 13: " dup .rule cr
     s" X0/X1/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 13 failed?"
+    is-false? abort" rule-test-combine2: test 13 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -337,7 +337,7 @@
     cr ." rule test 14: " dup .rule cr
     s" X1/X0/X1/X0/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    is-false abort" rule-test-combine2: test 14 failed?"
+    is-false? abort" rule-test-combine2: test 14 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -356,7 +356,7 @@
 
     \ cr ." rul1 " dup .rule cr
     s" 00/01/11/10/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq is-false abort" rule-test-new-region-to-region test1 region-eq failed?"
+    2dup rule-eq is-false? abort" rule-test-new-region-to-region test1 region-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
@@ -370,7 +370,7 @@
 
     \ cr ." rul1 " dup .rule cr
     s" X0/X1/XX/11/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq is-false abort" rule-test-new-region-to-region test2 region-eq failed?"
+    2dup rule-eq is-false? abort" rule-test-new-region-to-region test2 region-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
@@ -384,7 +384,7 @@
 
     \ cr ." rul1 " dup .rule cr
     s" 00/11/00/11/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq is-false abort" rule-test-new-region-to-region test3 region-eq failed?"
+    2dup rule-eq is-false? abort" rule-test-new-region-to-region test3 region-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
@@ -398,144 +398,13 @@
 
     \ cr ." rul1 " dup .rule cr
     s" 00/XX/X1/X0/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq is-false abort" rule-test-new-region-to-region test4 region-eq failed?"
+    2dup rule-eq is-false? abort" rule-test-new-region-to-region test4 region-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
     region-deallocate
 
     cr ." rule-test-new-region-to-region: Ok" cr
-;
-
-: rule-test-calc-for-planstep-fc
-    \ Test 1, reg-from intersects rule initial-region.
-    %1101 %1101 region-new                  \ reg-to
-    %0100 %0100 region-new                  \ reg-to reg-from
-    s" Xx/XX/01/01/" rule-from-string       \ reg-to reg-from rulx
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-for-planstep-fc               \ reg-to reg-from rulx | rul' t | f
-    if                                      \ reg-to reg-from rulx | rul'
-        \ cr ." step1: " dup .rule cr
-        s" 01/11/01/01/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
-        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
-        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
-        is-false abort" rule-test-calc-for-planstep-fc: 1: unexpected rule?"
-
-        rule-deallocate                         \ reg-to reg-from rulx | rul'
-        rule-deallocate
-        rule-deallocate
-        region-deallocate
-        region-deallocate
-    else                                \ reg-to reg-from rulx
-        cr ." rule-test-calc-for-planstep-fc: 1 rule-calc-planstep-fc failed?"
-        abort
-    then
-
-    \ Test 2, reg-from does not intersect the rule initial-region,
-    \ but the rule initial region is reachable without using another needed change.
-    %1101 %1101 region-new                  \ reg-to
-    %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/Xx/11/Xx/" rule-from-string       \ reg-to reg-from rulx
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-for-planstep-fc               \ reg-to reg-from rulx | rul' t | f
-    if                                      \ reg-to reg-from rulx | rul'
-        \ cr ." step2: " dup .rule cr
-        s" 01/10/11/01/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
-        \ cr ." expt: " dup .rule space ." found: " over .rule cr
-        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
-        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
-        is-false abort" rule-test-calc-for-planstep-fc: 2 unexpected rule?"
-
-        rule-deallocate                     \ reg-to reg-from rulx | rul'
-        rule-deallocate
-        rule-deallocate
-        region-deallocate
-        region-deallocate
-    else                                    \ reg-to reg-from rulx
-        cr ." rule-calc-for-planstep-fc: 2 failed?"
-        abort
-    then
-
-    \ Test 3, reg-from is a proper superset of reg-to.
-    %0101 %0101 region-new                  \ reg-to
-    %0111 %0001 region-new                  \ reg-to reg-from
-    s" XX/X1/X0/XX/" rule-from-string       \ reg-to reg-from rulx
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-for-planstep-fc               \ reg-to reg-from rulx | rul' t | f
-    if                                      \ reg-to reg-from rulx | rul'
-        \ cr ." step3: " dup .rule cr
-        s" 00/X1/X0/11/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
-        \ cr ." expt: " dup .rule space ." found: " over .rule cr
-        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
-        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
-        is-false abort" rule-test-calc-for-planstep-fc: 3 unexpected rule?"
-
-        rule-deallocate                     \ reg-to reg-from rulx | rul'
-        rule-deallocate
-        rule-deallocate
-        region-deallocate
-        region-deallocate
-    else                                    \ reg-to reg-from rulx
-        cr ." rule-calc-for-planstep-fc: 3 failed?"
-        abort
-    then
-
-    cr ." rule-test-calc-for-planstep-fc: Ok" cr
-;
-
-: rule-test-calc-for-planstep-bc
-
-    \ Test 1, reg-to intersects rule result-region.
-    %1101 %1101 region-new                  \ reg-to
-    %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/XX/X0/11/" rule-from-string       \ reg-to reg-from rulx
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-for-planstep-bc               \ reg-to reg-from rulx | rul' t | f
-    if                                      \ reg-to reg-from rulx | rul'
-        \ cr dup .rule cr
-        s" 01/11/X0/11/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
-        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul' rul-t'
-        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
-        is-false abort" unexpected rule?"
-
-        rule-deallocate                     \ reg-to reg-from rulx | rul'
-        rule-deallocate
-        rule-deallocate
-        region-deallocate
-        region-deallocate
-    else                                \ reg-to reg-from rulx
-        cr ." rule-calc-for-planstep-bc: 1 failed?"
-        abort
-    then
-
-    \ Test 2, reg-to does not rule-number-unwanted-changesintersect the rule result-region,
-    \ but the rule result region is reachable from reg-to without using another needed change.
-    \ Reg-from to the rule initial-region does require a needed change.
-    %1101 %1101 region-new                  \ reg-to
-    %0100 %0100 region-new                  \ reg-to reg-from
-    s" 01/Xx/11/XX/" rule-from-string       \ reg-to reg-from rulx
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx | reg-to reg-from rulx
-    rule-calc-for-planstep-bc               \ reg-to reg-from rulx | rul' t | f
-    if                                      \ reg-to reg-from rulx | rul'
-        \ Check planstep rule.
-        \ cr ." rule: " dup .rule cr
-        s" 01/01/11/11/" rule-from-string   \ reg-to reg-from rulx | rul' rul-t'
-        2dup                                \ reg-to reg-from rulx | rul' rul-t' rul rul-t'
-        rule-eq                             \ reg-to reg-from rulx | rul' rul-t' bool
-        is-false abort" unexpected rule?"
-
-        rule-deallocate                     \ reg-to reg-from rulx | rul'
-        rule-deallocate
-        rule-deallocate
-        region-deallocate
-        region-deallocate
-    else                                \ reg-to reg-from rulx
-        cr ." rule-calc-for-planstep-bc: 2 failed?"
-        abort
-    then
-
-
-    cr ." rule-test-calc-for-planstep-bc: Ok" cr
 ;
 
 : rule-test-number-unwanted-changes
@@ -546,9 +415,23 @@
 
     #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx reg-to reg-from rulx
     rule-number-unwanted-changes            \ reg-to reg-from rulx u
-    cr ." Number unwanted changes: " dup .
+    \ cr ." Number unwanted changes: " dup .
     1 <> abort" Number unwanted changes ne 1?"
-    
+
+    rule-deallocate
+    region-deallocate
+    region-deallocate
+
+    \ Test 2.
+    %1010 %1010 region-new                  \ reg-to
+    %1100 %1100 region-new                  \ reg-to reg-from
+    s" 00/11/01/10/" rule-from-string       \ reg-to reg-from rulx
+
+    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx reg-to reg-from rulx
+    rule-number-unwanted-changes            \ reg-to reg-from rulx u
+    \ cr ." Number unwanted changes: " dup .
+    1 <> abort" Number unwanted changes ne 1?"
+
     rule-deallocate
     region-deallocate
     region-deallocate
@@ -564,13 +447,12 @@
     swap                                            \ dom0 sess
     session-add-domain                              \
 
+    rule-test-number-unwanted-changes
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
     rule-test-restrict-to-region
     rule-test-combine2
     rule-test-new-region-to-region
-    rule-test-calc-for-planstep-fc
-    rule-test-calc-for-planstep-bc
 
     current-session-deallocate
 ;

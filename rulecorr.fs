@@ -31,7 +31,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Check TOS for rulecorr, unconventional, leaves stack unchanged.
 : assert-tos-is-rulecorr ( tos -- tos )
     dup is-allocated-rulecorr
-    is-false if
+    is-false? if
         s" TOS is not an allocated rulecorr"
         .abort-xt execute
     then
@@ -40,7 +40,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Check NOS for rulecorr, unconventional, leaves stack unchanged.
 : assert-nos-is-rulecorr ( nos tos -- nos tos )
     over is-allocated-rulecorr
-    is-false if
+    is-false? if
         s" NOS is not an allocated rulecorr"
         .abort-xt execute
     then
@@ -313,7 +313,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx rulx
         rule-apply-to-region-fc     \ reg-lst reg-link rul-link d-link, reg-r' t | f
-        is-false if
+        is-false? if
             3drop
             region-list-deallocate
             false

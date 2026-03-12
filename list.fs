@@ -346,7 +346,7 @@ list-header-disp    cell+   constant list-links-disp
         link-get-next       \ xt item link-next
     repeat
 
-    \ Cleanup, return.      \ xt item  
+    \ Cleanup, return.      \ xt item
     2drop
     false
 ;

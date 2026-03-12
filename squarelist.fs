@@ -178,7 +178,7 @@
         dup link-get-data           \ ret-lst reg1 link sqrx
         square-get-state            \ ret-lst reg1 link stax
         #2 pick                     \ ret-lst reg1 link stax reg1
-        region-superset-of-state    \ ret-lst reg1 link flag
+        region-superset-of-state?   \ ret-lst reg1 link flag
         if
             \ Add state to return list.
             dup link-get-data       \ ret-lst reg1 link sqrx
@@ -283,7 +283,7 @@
             else
                                             \ pn link sta reg
                 2dup                        \ pn link sta reg sta reg
-                region-superset-of-state    \ pn link sta reg flag
+                region-superset-of-state?   \ pn link sta reg flag
                 if
                     nip swap                \ pn reg link
                 else

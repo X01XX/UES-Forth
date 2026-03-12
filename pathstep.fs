@@ -37,7 +37,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Check TOS for pathstep, unconventional, leaves stack unchanged.
 : assert-tos-is-pathstep ( tos -- tos )
     dup is-allocated-pathstep
-    is-false if
+    is-false? if
         s" TOS is not an allocated pathstep"
         .abort-xt execute
     then
@@ -46,7 +46,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Check NOS for pathstep, unconventional, leaves stack unchanged.
 : assert-nos-is-pathstep ( nos tos -- nos tos )
     over is-allocated-pathstep
-    is-false if
+    is-false? if
         s" NOS is not an allocated pathstep"
         .abort-xt execute
     then

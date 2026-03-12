@@ -87,7 +87,7 @@
     \ cr ." from " over .region
     \ cr ." to   " #2 pick .region
     \ cr ." =    " dup .region cr
-    #2 pick over region-eq is-false abort" region-test-translate-to-region: 1: region unexpected"
+    #2 pick over region-eq is-false? abort" region-test-translate-to-region: 1: region unexpected"
     region-deallocate
     region-deallocate
     region-deallocate
@@ -95,13 +95,13 @@
     \ Test 2.
     %0101 %0101 region-new          \ reg-from' 0101
     %0000 %1111 region-new          \ reg-to'   1001
-    
+
     swap                            \ reg-to' reg-from'
     2dup region-translate-to-region \ reg-to' reg-from' reg-rslt'
     \ cr ." from " over .region
     \ cr ." to   " #2 pick .region
     \ cr ." =    " dup .region cr
-    2dup region-eq is-false abort" region-test-translate-to-region: 2: region unexpected"
+    2dup region-eq is-false? abort" region-test-translate-to-region: 2: region unexpected"
     region-deallocate
     region-deallocate
     region-deallocate

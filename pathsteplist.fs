@@ -212,7 +212,6 @@
         #3 pick                                 \ regc-to regc-from pthstp-lst1 pthstp-lst2' regc-to regc-from
         #2 pick                                 \ regc-to regc-from pthstp-lst1 pthstp-lst2' regc-to regc-from pthstp-lst2'
         pathstep-list-get-steps-fc2             \ regc-to regc-from pthstp-lst1 pthstp-lst2' pthstp-lst3'
-        
     then
     swap pathstep-list-deallocate               \ regc-to regc-from pthstp-lst1 pthstp-lst3'
     2nip nip                                    \ pthstp-lst3

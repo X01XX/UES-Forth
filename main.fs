@@ -9,7 +9,7 @@
 \ Words can be filtered, like "words list.fs | grep remove" or "words list.fs | grep -- list-set-"
 \ A brief comment on the same line as the function name can be helpful.
 \ For a bash shell user, the command can be added at the end of ~/.bashrc to make it permanent.
- 
+
 \ Struct IDs.
 \
 \ Each number is prime, 5 digits, and fits within 16 bits.
@@ -278,7 +278,7 @@ cr
     over session-add-domain                     \ sess dom1
 
     s" (X1X1 01X1X)" regioncorr-from-string-a   \ sess regc
-    -1 #2 rate-new                              \ sess regc rt
+    0 #2 rate-new                              \ sess regc rt
     regioncorrrate-new                          \ sess regc-rt
     over session-add-regioncorrrate             \ sess
 
@@ -383,12 +383,12 @@ cr
     input-tests
     regioncorr-tests
     regioncorr-list-tests
-    session-tests
     plan-tests
     domain-tests
     structinfolist-tests
     list-tests
     corner-tests
+    session-tests
 
     structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;

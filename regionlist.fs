@@ -615,7 +615,7 @@
         \ Check if the current list item is a superset of the state.
         2dup                        \ ctr sta lnk sta lnk
         link-get-data               \ ctr sta lnk sta region
-        region-superset-of-state    \ ctr sta lnk flag
+        region-superset-of-state?   \ ctr sta lnk flag
         if
             \ Get counter.
             rot             \ sta lnk ctr
@@ -702,7 +702,7 @@
         \ Check the current region.
         over                            \ ret-lst sta link sta1
         over link-get-data              \ ret-lst sta link sta1 regx
-        region-superset-of-state        \ ret-lst sta link flag
+        region-superset-of-state?       \ ret-lst sta link flag
         if
             \ Add the region to the return list.
             dup link-get-data           \ ret-lst sta link regx
@@ -735,7 +735,7 @@
         \ Check the current region.
         #2 pick                         \ sta cnt link sta1
         over link-get-data              \ sta cnt link sta1 regx
-        region-superset-of-state        \ sta cnt link flag
+        region-superset-of-state?       \ sta cnt link flag
         if                              \ sta cnt link
             \ Inc counter
             swap 1+ swap                \ sta cnt link
@@ -763,7 +763,7 @@
         \ Check the current region.
         2dup                            \ sta1 link sta1 link
         link-get-data                   \ sta1 link sta1 regx
-        region-superset-of-state        \ sta1 link flag
+        region-superset-of-state?       \ sta1 link flag
         if                              \ sta1 link
             2drop
             true
@@ -953,7 +953,7 @@
     \ Check args.
     assert-tos-is-region-list
     over 0 < abort" index out of range"
-    over over list-get-length < is-false abort" index out of range"
+    over over list-get-length < is-false? abort" index out of range"
     assert-3os-is-region
 
     \ Init return list.
@@ -1029,7 +1029,7 @@
 
 : region-list-from-string-a ( str-addr str-n -- regc )   \ Return a region-list from a string, or abort.
     region-list-from-string    \ reg-lst t | f
-    is-false abort" region-list-from-string failed?"
+    is-false? abort" region-list-from-string failed?"
 ;
 
 : region-list-union-nosubs ( reg-lst1 reg-lst0 -- reg-lst ) \ Combine two reigion-lists, deleteng subsets.

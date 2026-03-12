@@ -45,7 +45,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check TOS for changes, unconventional, leaves stack unchanged.
 : assert-tos-is-changes ( tos -- tos )
     dup is-allocated-changes
-    is-false if
+    is-false? if
         s" TOS is not an allocated changes."
        .abort-xt execute
     then
@@ -54,8 +54,35 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check NOS for changes, unconventional, leaves stack unchanged.
 : assert-nos-is-changes ( nos tos -- nos tos )
     over is-allocated-changes
-    is-false if
+    is-false? if
         s" NOS is not an allocated changes."
+       .abort-xt execute
+    then
+;
+
+\ Check 3OS for changes, unconventional, leaves stack unchanged.
+: assert-3os-is-changes ( 3os nos tos -- 3os nos tos )
+    #2 pick is-allocated-changes
+    is-false? if
+        s" 3OS is not an allocated changes."
+       .abort-xt execute
+    then
+;
+
+\ Check 4OS for changes, unconventional, leaves stack unchanged.
+: assert-4os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
+    #3 pick is-allocated-changes
+    is-false? if
+        s" 4OS is not an allocated changes."
+       .abort-xt execute
+    then
+;
+
+\ Check 5OS for changes, unconventional, leaves stack unchanged.
+: assert-5os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
+    #4 pick is-allocated-changes
+    is-false? if
+        s" 5OS is not an allocated changes."
        .abort-xt execute
     then
 ;
@@ -288,7 +315,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     nip nip
 ;
 
-: changes-null ( cngs0 -- bool )    \ Return true if changes masks are all zero.
+: changes-null? ( cngs0 -- bool )    \ Return true if changes masks are all zero.
     \ Check arg.
     assert-tos-is-changes
 
@@ -301,6 +328,11 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
     changes-get-m10         \ m10
     0=
+;
+
+: changes-not-null? ( cngs0 -- bool )    \ Return true if changes masks are not all zero.
+    changes-null?
+    invert
 ;
 
 : changes-invert ( cngs0 -- cngs )  \ Return the inversion of a changes masks.

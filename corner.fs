@@ -37,7 +37,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Check TOS for corner, unconventional, leaves stack unchanged.
 : assert-tos-is-corner ( tos -- tos )
     dup is-allocated-corner
-    is-false if
+    is-false? if
         s" TOS is not an allocated corner"
         .abort-xt execute
     then
@@ -46,7 +46,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Check NOS for corner, unconventional, leaves stack unchanged.
 : assert-nos-is-corner ( nos tos -- nos tos )
     over is-allocated-corner
-    is-false if
+    is-false? if
         s" NOS is not an allocated corner"
         .abort-xt execute
     then
@@ -148,8 +148,8 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
         \ Check that anchor state is in region.
         over                                \ reg2 sta1 act0 sta1
         #3 pick                             \ reg2 sta1 act0 sta1 reg2
-        region-superset-of-state            \ reg2 sta1 act0 bool
-        is-false abort" Anchor square not in region?"
+        region-superset-of-state?           \ reg2 sta1 act0 bool
+        is-false? abort" Anchor square not in region?"
 
     \ Allocate space.
     corner-mma mma-allocate             \ reg2 sta1 act0 crn
@@ -330,7 +330,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
     assert-nos-is-value
 
     corner-get-region           \ sta1 crn0
-    region-superset-of-state    \ bool
+    region-superset-of-state?   \ bool
 ;
 
 \ Return true if a corner uses a given state.

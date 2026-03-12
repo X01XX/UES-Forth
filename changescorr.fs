@@ -33,7 +33,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Check TOS for changescorr, unconventional, leaves stack unchanged.
 : assert-tos-is-changescorr ( tos -- tos )
     dup is-allocated-changescorr
-    is-false if
+    is-false? if
         s" TOS is not an allocated changescorr"
         .abort-xt execute
     then
@@ -42,7 +42,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Check NOS for changescorr, unconventional, leaves stack unchanged.
 : assert-nos-is-changescorr ( nos tos -- nos tos )
     over is-allocated-changescorr
-    is-false if
+    is-false? if
         s" NOS is not an allocated changescorr"
         .abort-xt execute
     then

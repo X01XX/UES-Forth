@@ -50,7 +50,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Check TOS for need, unconventional, leaves stack unchanged.
 : assert-tos-is-need ( tos -- tos )
     dup is-allocated-need
-    is-false if
+    is-false? if
         s" TOS is not an allocated need"
        .abort-xt execute
     then
@@ -59,7 +59,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Check NOS for need, unconventional, leaves stack unchanged.
 : assert-nos-is-need ( nos tos -- nos tos )
     over is-allocated-need
-    is-false if
+    is-false? if
         s" NOS is not an allocated need"
        .abort-xt execute
     then
@@ -77,7 +77,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check nos for valid need number.
 : assert-nos-is-need-number ( nos tos -- nos tos )
-    over is-need-type 
+    over is-need-type
     if
     else
         s" nos invalid need number?"
