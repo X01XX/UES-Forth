@@ -187,3 +187,22 @@
     swap rate-get-positive  \ u0 u1
     >                       \ bool
 ;
+
+\ Return true if two rates are equal.
+: rate-eq? ( rate1 rate0 -- bool )
+    \ Check args.
+    assert-tos-is-rate
+    assert-nos-is-rate
+
+    over rate-get-positive      \ rate1 rate0 pos1
+    over rate-get-positive      \ rate1 rate0 pos1 pos0
+    <> if
+        2drop
+        false
+        exit
+    then
+
+    rate-get-negative           \ rate1 neg0
+    swap rate-get-negative      \ neg0 neg1
+    =                           \ bool
+;

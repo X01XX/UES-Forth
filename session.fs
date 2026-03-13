@@ -876,19 +876,19 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
         \ Make regioncorrrate from loop1 fragment regc and the aggregate rate.
         rot                                     \ sess0 regcr-lst regc-lst2 link | regcrx rate-agg
-        regioncorrrate-new                      \ sess0 regcr-lst regc-lst2 link | regioncorrrate-new
+        regioncorrrate-new                      \ sess0 regcr-lst regc-lst2 link | regcr-new
         \ ." Fragment regioncorrrate: " dup .regioncorrrate cr
 
         \ Add the loop1 fragment regioncorrrate to the session regioncorrrate-fragments list.
-        #4 pick                                 \ sess0 regcr-lst regc-lst2 link | regioncorrrate-new sess0
-        session-get-regioncorrrate-fragments    \ sess0 regcr-lst regc-lst2 link | regioncorrrate-new frg-lst
+        #4 pick                                 \ sess0 regcr-lst regc-lst2 link | regcr-new sess0
+        session-get-regioncorrrate-fragments    \ sess0 regcr-lst regc-lst2 link | regcr-new frg-lst
 
-        2dup regioncorrrate-list-member         \ sess0 regcr-lst regc-lst2 link | regioncorrrate-new frg-lst bool
+        over swap                               \ sess0 regcr-lst regc-lst2 link | regcr-new regcr-new frg-lst
+        regioncorrrate-list-push-nosubs         \ sess0 regcr-lst regc-lst2 link | regcr-new bool
         if
             drop
-            regioncorrrate-deallocate
         else
-            regioncorrrate-list-push            \ sess0 regcr-lst regc-lst2 link |
+            regioncorrrate-deallocate
         then
 
         \ Prep for next loop1 fragment regc cycle.
@@ -970,32 +970,36 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     2dup list-push-struct                       \ sess0 val-lst sub-lst rslt-lst
     swap                                        \ sess0 val-lst rslt-lst sub-lst
                                                 \ sess0 val-lst rslt-lst sub-lst
+
     #2 pick list-get-links                      \ sess0 val-lst rslt-lst sub-lst link
-    link-get-next                               \ Skip the 0 value.
 
     begin
         ?dup
     while
         \ Get fragments matching the val-list current-value.
         dup link-get-data                       \ sess0 val-lst rslt-lst sub-lst link valx
-        \ cr ." val: " dup . cr
-        #5 pick                                 \ sess0 val-lst rslt-lst sub-lst link val sess0
-        session-get-regioncorrrate-fragments    \ sess0 val-lst rslt-lst sub-lst link val frag-lst
-        regioncorrrate-list-match-rate-negative \ sess0 val-lst rslt-lst sub-lst link regc-lst
 
-        \ Update sub-lst.
-        dup                                     \ sess0 val-lst rslt-lst sub-lst link regc-lst regc-lst
-        #3 pick                                 \ sess0 val-lst rslt-lst sub-lst link regc-lst regc-lst sub-lst
-        regioncorr-list-subtract                \ sess0 val-lst rslt-lst sub-lst link regc-lst sub-lst2
-        swap regioncorr-list-deallocate         \ sess0 val-lst rslt-lst sub-lst link sub-lst2
-        rot drop                                \ sess0 val-lst rslt-lst link sub-lst2
-        swap                                    \ sess0 val-lst rslt-lst sub-lst2 link
+        dup 0<> if
+            #5 pick                                 \ sess0 val-lst rslt-lst sub-lst link val sess0
+            session-get-regioncorrrate-fragments    \ sess0 val-lst rslt-lst sub-lst link val frag-lst
+            regioncorrrate-list-match-rate-negative \ sess0 val-lst rslt-lst sub-lst link regc-lst
 
-        \ Add regc list result list.
-        over                                    \ sess0 val-lst rslt-lst sub-lst2 link sub-lst2
-        \ cr ." regclst: " dup .regioncorr-list cr
-        #3 pick                                 \ sess0 val-lst rslt-lst sub-lst2 link sub-lst2 rslt-lst
-        list-push-struct                        \ sess0 val-lst rslt-lst sub-lst2 link
+            \ Update sub-lst.
+            dup                                     \ sess0 val-lst rslt-lst sub-lst link regc-lst regc-lst
+            #3 pick                                 \ sess0 val-lst rslt-lst sub-lst link regc-lst regc-lst sub-lst
+            regioncorr-list-subtract                \ sess0 val-lst rslt-lst sub-lst link regc-lst sub-lst2
+            swap regioncorr-list-deallocate         \ sess0 val-lst rslt-lst sub-lst link sub-lst2
+            rot drop                                \ sess0 val-lst rslt-lst link sub-lst2
+            swap                                    \ sess0 val-lst rslt-lst sub-lst2 link
+
+            \ Add regc list result list.
+            over                                    \ sess0 val-lst rslt-lst sub-lst2 link sub-lst2
+            \ cr ." regclst: " dup .regioncorr-list cr
+            #3 pick                                 \ sess0 val-lst rslt-lst sub-lst2 link sub-lst2 rslt-lst
+            list-push-struct                        \ sess0 val-lst rslt-lst sub-lst2 link
+        else
+            drop
+        then
 
         link-get-next
     repeat

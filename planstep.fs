@@ -419,7 +419,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     dup planstep-get-alt-rule   \ smpl1 plnstp0 alt-rul
     0= if
         2drop
-        2
+        #2
         exit
     then
 
@@ -435,6 +435,6 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
         1
     else
         2drop
-        2
+        #2
     then
 ;

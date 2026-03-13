@@ -198,3 +198,105 @@
                                             \ ret-lst rate1
     drop
 ;
+
+\ Return true if TOS is a superset of its corresponding region in NOS.
+: regioncorrrate-superset ( regcr1 regcr0 -- bool )
+    \ cr ." regioncorrrate-superset: " dup .regioncorrrate space ." sup " over .regioncorrrate
+    \ Check args.
+    assert-tos-is-regioncorrrate
+    assert-nos-is-regioncorrrate
+
+    \ Save lists for end.
+    2dup                                        \ regcr1 regcr0 regcr1 regcr0
+    \ Get regioncorrs.
+    swap regioncorrrate-get-regioncorr          \ regcr1 regcr0 regcr0 regc1
+    swap regioncorrrate-get-regioncorr          \ regcr1 regcr0 regc1 regc0
+
+    regioncorr-superset                         \ regcr1 regcr0 bool
+    is-false? if
+        2drop
+        false
+        exit
+    then
+
+    \ Subset, but check rates.
+    regioncorrrate-get-rate         \ regcr1 rate0
+    swap regioncorrrate-get-rate    \ rate0 rate1
+    rate-eq?                        \ bool
+;
+
+\ Return true if TOS is a subset of its corresponding region in NOS.
+: regioncorrrate-subset ( regcr1 regcr0 -- bool )
+    swap regioncorrrate-superset
+;
+
+\ Return true if a regioncorrrate-list (list of lists) contains
+\ a superset of a given regc.
+: regioncorrrate-list-any-superset ( regcr1 regcr-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-regioncorrrate-list
+    assert-nos-is-regioncorrrate
+
+    list-get-links                  \ regcr1 regcr-link
+
+    begin
+        ?dup
+    while
+        over                        \ regcr1 regcr-link regcr1
+        over link-get-data          \ regcr1 regcr-link regcr1 regcx
+        regioncorrrate-superset     \ regcr1 regcr-link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                    \ regcr1
+    drop                            \
+    false                           \ bool
+;
+
+\ For a regioncorrrate-list, remove subsets of a given regc.
+: regioncorrrate-list-remove-subsets ( regcr1 regcr-lst0 -- )
+    \ Check args.
+    assert-tos-is-regioncorrrate-list
+    assert-nos-is-regioncorrrate
+
+    begin
+        [ ' regioncorrrate-subset ] literal \ regcr1 regcr-lst0 xt
+        #2 pick #2 pick                 \ regcr1 regcr-lst0 xt regcr1 regcr-lst0
+        list-remove                     \ regcr1 regcr-lst0, regcx t | f
+        if
+            regioncorrrate-deallocate   \ regcr1 regcr-lst0
+        else
+            2drop
+            exit
+        then
+    again
+;
+
+
+\ Add a regc to an regc list, removing subsets.
+\ A duplicate in tregioncorrrateratelist.fshe list will be like a superset, the code will not push.
+\ Return true if the push succeeds.
+\ You may want to deallocate the regc if the push fails.
+: regioncorrrate-list-push-nosubs ( regcr1 regcr-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-regioncorrrate-list
+    assert-nos-is-regioncorrrate
+
+    \ Skip if any supersets/eq are in the list.
+    2dup regioncorrrate-list-any-superset      \ regcr1 regcr-lst0 bool
+    if
+        2drop
+        false
+        exit
+    then
+
+    2dup regioncorrrate-list-remove-subsets
+
+    regioncorrrate-list-push
+    true
+;

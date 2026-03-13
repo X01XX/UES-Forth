@@ -115,6 +115,8 @@
 
 ' xtabort value regioncorr-get-list-xt
 
+' xtabort value .regioncorr-list-xt
+
 
 ' xtabort value structinfo-list-project-deallocated-xt
 

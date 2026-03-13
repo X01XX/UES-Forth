@@ -184,7 +184,7 @@
     dup value-num-bits      \ ret val0 nb
 
     \ If the number of bits is GT 1, divide by 2.
-    dup 1 <> if 2 / then
+    dup 1 <> if #2 / then
 
     0 do
         value-isolate-lsb   \ ret val' lsb

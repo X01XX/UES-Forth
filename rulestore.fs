@@ -561,7 +561,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     then
 
     \ Check for two rules.
-    2 =
+    #2 =
     if
         \ Return 0, or 2 rules, never one, to allow for
         \ alternate rule setting in planstep.

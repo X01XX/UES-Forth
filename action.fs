@@ -88,7 +88,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over 0<
     abort" Invalid instance id"
 
-    over 255 >
+    over #255 >
     abort" Invalid instance id"
 
     \ Set inst id.
@@ -2432,7 +2432,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     #4 pick #4 pick #4 pick                 \ | alt-rul reg-to reg-from rul1
     rule-number-unwanted-changes            \ | alt-rul u-unw
     \ Add 2 if there is an alt-rul
-    over 0<> if 2 + then
+    over 0<> if #2 + then
     swap                                    \ | u-unw alt-rul
 
     \ Make step.

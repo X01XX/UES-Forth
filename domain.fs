@@ -115,7 +115,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     over 0<
     abort" Invalid instance id"
 
-    over 255 >
+    over #255 >
     abort" Invalid instance id"
 
     \ Set inst id.
@@ -727,7 +727,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         if                                          \ depth reg-to reg-from dom0 | pln reg-from | stpx
             \ Add intersecting step to plan.
                                                     \ depth reg-to reg-from dom0 | pln reg-from | stpx
-    
+
             \ Check if this is the first step.
             #2 pick                                 \ depth reg-to reg-from dom0 | pln reg-from | stpx2 pln
             plan-is-empty                           \ depth reg-to reg-from dom0 | pln reg-from | stpx2 bool
@@ -982,13 +982,13 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         \ cr ." Depth exceeded." cr
         2drop 2drop
         false
-        \ cr ." domain-get-plan2-bc: false exit 1" cr 
+        \ cr ." domain-get-plan2-bc: false exit 1" cr
         exit
     then
 
     \ Init return plan.
     dup plan-new                                    \ depth reg-to reg-from dom0 | pln
-    
+
     \ Establish current reg-to region, for loop.
     #3 pick                                         \ depth reg-to reg-from dom0 | pln reg-to
 

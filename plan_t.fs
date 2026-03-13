@@ -198,7 +198,7 @@
 
     swap planstep-deallocate            \ act0 pln' pln2'
     swap plan-deallocate                \ act pln2'
-    
+
     cr ." linked plan " dup .plan cr
 
     \ Test results.
@@ -242,7 +242,7 @@
 
     swap planstep-deallocate                \ act0 pln' pln2'
     swap plan-deallocate                    \ act0 pln2'
-    
+
     cr ." linked plan " dup .plan cr
 
     \ Test results.
