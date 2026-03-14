@@ -134,7 +134,7 @@
 \ The given pathstep-list will contain only pathsteps that have initial-regions that intersect regc-from.
 \ A chosen pathstep will have a needed change.
 : pathstep-list-get-steps-fc2 ( regc-to regc-from pthstp-lst1 -- pthstp-lst )
-    cr ." pathstep-list-get-steps-fc: start:       " .stack-structs-xt execute cr
+    \ cr ." pathstep-list-get-steps-fc: start:       " .stack-structs-xt execute cr
     \ Check args.
     assert-tos-is-pathstep-list
     assert-nos-is-regioncorr
@@ -144,7 +144,7 @@
     #2 pick                         \ regc-to regc-from pthstp-lst1 regc-to
     #2 pick                         \ regc-to regc-from pthstp-lst1 regc-to regc-from
     changescorr-new-regc-to-regc    \ regc-to regc-from pthstp-lst1 cngsc-needed'
-    cr ." changes needed: " dup .changescorr cr
+    \ cr ." changes needed: " dup .changescorr cr
     -rot                            \ regc-to cngs-needed' regc-from pthstp-lst1
 
     \ Init return pathstep list.

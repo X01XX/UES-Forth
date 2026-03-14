@@ -380,7 +380,7 @@
     dup regioncorr-list-intersection-fragments  \ regc-lst regc-lst'
 
     \ Check results.
-    \ cr ." results: " dup .regioncorr-list cr
+    cr ." results: " dup .regioncorr-list cr
 
     dup list-get-length #7 <> abort" result len not 7?"
 

@@ -136,7 +136,7 @@
 ;
 
 \ Return a rate for a given regioncorr.
-: regioncorrrate-rate-regioncorr ( regc1 regcr-lst0 -- rate )
+: regioncorrrate-list-rate-regioncorr ( regc1 regcr-lst0 -- rate )
     \ Check args.
     assert-tos-is-regioncorrrate-list
     assert-nos-is-regioncorr

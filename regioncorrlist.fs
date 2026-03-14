@@ -427,6 +427,7 @@
 : regioncorr-list-intersections-nodups ( regc-lst -- regc-lst )
     \ Check arg.
     assert-tos-is-regioncorr-list
+    \ cr ." regioncorr-list-intersections-nodups: start: " dup .regioncorr-list cr
 
     \ Init return list.
     list-new swap                           \ ret-lst reg-lst0
@@ -465,6 +466,7 @@
         link-get-next                       \ ret-lst regc-link
     repeat
                                             \ ret-lst
+    \ cr ." regioncorr-list-intersections-nodups: end: " dup .regioncorr-list cr
 ;
 
 \ Append NOS regc-lst to TOS-regioncorr-list.
@@ -510,6 +512,28 @@
     drop
 ;
 
+\ Append NOS regc-lst to TOS-regioncorr-list, no subsets.
+: regioncorr-list-append-nosubs ( regc-lst1 regc-lst0 -- )
+    \ Check args.
+    assert-tos-is-regioncorr-list
+    assert-nos-is-regioncorr-list
+
+    swap                            \ regc-lst0 regc-lst1
+    list-get-links                  \ regc-lst0 link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ regc-lst0 link regcx
+        #2 pick                     \ regc-lst0 link regcx regc-lst0
+        regioncorr-list-push-nosubs \ regc-lst0 link flag
+        drop                        \ regc-lst0 link
+
+        link-get-next               \ regc-lst0 link
+    repeat
+                                    \ regc-lst0
+    drop
+;
+
 \ Return fragments of a given regioncorr-list.
 \ The fragments will account for all parts of the given regioncorr-list.
 \ All fragments will be within all regions of the given regioncorr-list that they intersect.
@@ -519,37 +543,42 @@
     assert-tos-is-regioncorr-list
 
     \ Insure-no-duplicates.
-    list-new swap                           \ ret-lst lst0
-    regioncorr-list-copy-nodups                    \ ret-lst lst0'
+    regioncorr-list-copy-nodups                     \ lst0-copy
+
+    \ Init return list.
+    list-new swap                                   \ ret-lst lst0
 
     begin
-        dup list-is-empty 0=
-    while
-        dup                                 \ ret-lst lst0' lst0'
+        dup                                         \ ret-lst lst0 lst0
 
         \ Get intersections.
-        regioncorr-list-intersections-nodups    \ ret-lst lst0' int-lst
+        regioncorr-list-intersections-nodups        \ ret-lst lst0 int-lst
 
-        \ Get whats left over.
-        2dup swap                           \ ret-lst lst0' int-lst int-lst lst0'
-        regioncorr-list-subtract                   \ ret-lst lst0' int-lst left-over-lst
-        \ cr ." list: " #2 pick .regioncorr-list
-        \ space ." - " over .regioncorr-list
-        \ space ." = " dup .regioncorr-list
-        \ cr
+        \ Check if no more intersections.
+        dup list-is-empty
+        if
+            list-deallocate                         \ ret-lst lst0
+            \ Add remaining regioncorrs.
+            dup                                     \ ret-lst lst0 lst0
+            #2 pick regioncorr-list-append          \ ret-lst lst0
+            regioncorr-list-deallocate              \ ret-lst
+            exit
+        then
+        
+        \ Get lst0 minus intersections.
+        2dup swap                                   \ ret-lst lst0 int-lst int-lst lst0
+        regioncorr-list-subtract                    \ ret-lst lst0 int-lst lst0-left-over
 
-        \ Add left over to result list.
-        dup                                 \ ret-lst lst0' int-lst left-over-lst left-over-lst
-        #4 pick                             \ ret-lst lst0' int-lst left-over-lst left-over-lst ret-lst
-        regioncorr-list-append-nodups              \ ret-lst lst0' int-lst left-over-lst
+        \ Add left overs to return list.
+        dup                                         \ ret-lst lst0 int-lst lst0-left-over lst0-left-over
+        #4 pick                                     \ ret-lst lst0 int-lst lst0-left-over lst0-left-over
+        regioncorr-list-append                      \ ret-lst lst0 int-lst lst0-left-over
+        regioncorr-list-deallocate                  \ ret-lst lst0 int-lst
 
-        \ Clean up, intersections become the next cycle lst0'.
-        regioncorr-list-deallocate                 \ ret-lst lst0' int-lst
-        swap                                \ ret-lst int-lst lst0'
-        regioncorr-list-deallocate                 \ ret-lst int-lst
-    repeat
-                                            \ ret-lst lst (empty)
-    list-deallocate                         \ ret-lst
+        \ Make intersection list the list0 for the next cycle.
+        swap regioncorr-list-deallocate             \ ret-lst int-lst
+
+    again
 ;
 
 \ Return the least different value to two given regcs, not counting equal regcs.

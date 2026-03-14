@@ -167,6 +167,18 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     !struct                                    \ Set the field.
 ;
 
+\ Update the session regioncorrrate-fragments, deallocating the previous list.
+: _session-update-regioncorrrate-fragments  ( regcr-lst1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-regioncorrrate-list
+
+    dup session-get-regioncorrrate-fragments    \ regcr-lst sess0 prev-lst
+    -rot                                        \ prev-lst regcr-lst sess0
+    _session-set-regioncorrrate-fragments       \ prev-lst
+    regioncorrrate-list-deallocate
+;
+
 \ Return the session regioncorrrate-nq list.
 : session-get-regioncorrrate-nq ( sess0 -- regcr-lst )
     \ Check arg.
@@ -814,106 +826,50 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     dup                                         \ sess0 regc-lst regc-lst
 
     \ Get regc fragments of the given regioncorrrates, that are subsets of any given regioncorrrate that they intersect.
-    regioncorr-list-intersection-fragments      \ sess0 regc-lst regc-lst2
+    regioncorr-list-intersection-fragments      \ sess0 regc-lst frag-lst
     \ cr ." Fragment regcs: " dup .regioncorr-list cr
 
-    swap regioncorr-list-deallocate             \ sess0 regc-lst2
+    swap regioncorr-list-deallocate             \ sess0 frag-lst
 
-    \ Check fragments, and find values.
-    over session-get-regioncorrrate-list        \ sess0 regc-lst2 regcr-lst
-    swap                                        \ sess0 regcr-lst regc-lst2
+    \ Init new regioncorrrate list.
+    list-new                                    \ sess0 frag-lst regcr-lst
+    swap                                        \ sess0 regcr-lst frag-lst
+    #2 pick session-get-regioncorrrate-list     \ sess0 regcr-lst frag-lst sess-lst
+    swap                                        \ sess0 regcr-lst sess-lst frag-lst
 
-    \ For each fragment, calc its aggregate rate, form an regioncorrrate, add it to the session-rclrate-fragments list.
-
-    \ Init aggregate rate for the next fragment.
-    0 0 rate-new                                \ sess0 regcr-lst regc-lst2 rate-agg
-
-    \ Prep for loop 1.
-    over list-get-links                         \ sess0 regcr-lst regc-lst2 rate-agg link
-
+    \ For each fragment, calc its aggregate rate, form an regioncorrrate, add it to the rclrate fragment list.
+    dup list-get-links                          \ sess0 regcr-lst sess-lst frag-lst frag-link
     begin
         ?dup
     while
-        dup link-get-data                       \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx
+        \ Get fragment rate.
+        dup link-get-data                       \ sess0 regcr-lst sess-lst frag-lst frag-link fragx
+        dup                                     \ sess0 regcr-lst sess-lst frag-lst frag-link fragx fragx
+        #4 pick                                 \ sess0 regcr-lst sess-lst frag-lst frag-link fragx fragx sess-lst
+        regioncorrrate-list-rate-regioncorr     \ sess0 regcr-lst sess-lst frag-lst frag-link fragx rate
 
-        \ For each given regioncorrrate item.
-        #4 pick list-get-links                  \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2
-        begin
-            ?dup
-        while
-            \ Check if the loop1 regc fragment interserts the loop2 given regioncorrrate.
-            over                                    \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regcrx
-            over link-get-data                      \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regcrx regioncorrratey
-            regioncorrrate-get-regioncorr           \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regcrx regcry
-            2dup                                    \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regcrx regcry regcrx regcry
-            regioncorr-intersects                   \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regcrx regcry bool
-            if
-                \ Check that the loop2 intersecting regioncorrrate, is a regc-superset of the loop1 fragment regc.
-                2dup regioncorr-superset            \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regcrx regcry bool
-                if
-                    \ Add the loop2 regioncorrrate rate to the aggregate rate for the loop1 regc.
-                                                    \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regcrx regcry
-                    2drop                           \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2
-                    dup link-get-data               \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 regioncorrratey
-                    regioncorrrate-get-rate         \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 rate
+        \ Build/store regioncorrrate
+        regioncorrrate-new                      \ sess0 regcr-lst sess-lst frag-lst frag-link regcrx
+        #4 pick                                 \ sess0 regcr-lst sess-lst frag-lst frag-link regcrx regcr-lst
+        regioncorrrate-list-push                \ sess0 regcr-lst sess-lst frag-lst frag-link
 
-                    #4 pick                         \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2 rate rate-agg
-                    rate-add                        \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2
-                else
-                    \ This should not happen, unless there is a problem with the regioncorr-list-intersection-fragments function.
-                    cr .regioncorr space ." not superset of " .regioncorr space ." ?" cr
-                    abort
-                then
-                                                \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2
-            else
-                2drop                           \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2
-            then
-
-            \ Next loop2 cycle.
-            link-get-next                       \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx link2
-        repeat
-                                                \ sess0 regcr-lst regc-lst2 rate-agg link | regcrx
-
-        \ Make regioncorrrate from loop1 fragment regc and the aggregate rate.
-        rot                                     \ sess0 regcr-lst regc-lst2 link | regcrx rate-agg
-        regioncorrrate-new                      \ sess0 regcr-lst regc-lst2 link | regcr-new
-        \ ." Fragment regioncorrrate: " dup .regioncorrrate cr
-
-        \ Add the loop1 fragment regioncorrrate to the session regioncorrrate-fragments list.
-        #4 pick                                 \ sess0 regcr-lst regc-lst2 link | regcr-new sess0
-        session-get-regioncorrrate-fragments    \ sess0 regcr-lst regc-lst2 link | regcr-new frg-lst
-
-        over swap                               \ sess0 regcr-lst regc-lst2 link | regcr-new regcr-new frg-lst
-        regioncorrrate-list-push-nosubs         \ sess0 regcr-lst regc-lst2 link | regcr-new bool
-        if
-            drop
-        else
-            regioncorrrate-deallocate
-        then
-
-        \ Prep for next loop1 fragment regc cycle.
-        0 0 rate-new                            \ sess0 regcr-lst regc-lst2 link rate-agg
-        swap                                    \ sess0 regcr-lst regc-lst2 rate-agg link
-
-        \ Next loop1 cycle.
-        link-get-next                           \ sess0 regcr-lst regc-lst2 rate-agg link
+        link-get-next
     repeat
-                                                \ sess0 regcr-lst regc-lst2 rate-agg
     \ Clean up.
-    rate-deallocate                             \ sess0 regcr-lst regc-lst2
-    regioncorr-list-deallocate                  \ sess0 regcr-lst
-    drop                                        \ sess0
-    dup session-get-regioncorrrate-fragments    \ sess0 frg-lst
-    \ cr ." Fragment regioncorrrates: " dup .regioncorrrate-list cr
-                                                \ sess0 frg-lst
-    \ Get all rate negative values.
+                                                \ sess0 regcr-lst sess-lst frag-lst
+    regioncorr-list-deallocate                  \ sess0 regcr-lst sess-lst
+    drop                                        \ sess0 regcr-lst
+    2dup swap                                   \ sess0 regcr-lst regcr-lst sess0
+    _session-update-regioncorrrate-fragments    \ sess0 regcr-lst
+
+    \ Clean up.
 
     \ Init value list.
-    list-new                                    \ sess0 frg-lst val-lst
-    0 over list-push                            \ sess0 frg-lst val-lst
+    list-new                                    \ sess0 regcr-lst val-lst
+    0 over list-push                            \ sess0 regcr-lst val-lst
 
     \ Prep for loop.
-    swap                                        \ sess0 val-lst frg-lst
+    swap                                        \ sess0 val-lst regcr-lst
     list-get-links                              \ sess0 val-lst link
 
     begin
@@ -988,6 +944,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             dup                                     \ sess0 val-lst rslt-lst sub-lst link regc-lst regc-lst
             #3 pick                                 \ sess0 val-lst rslt-lst sub-lst link regc-lst regc-lst sub-lst
             regioncorr-list-subtract                \ sess0 val-lst rslt-lst sub-lst link regc-lst sub-lst2
+
             swap regioncorr-list-deallocate         \ sess0 val-lst rslt-lst sub-lst link sub-lst2
             rot drop                                \ sess0 val-lst rslt-lst link sub-lst2
             swap                                    \ sess0 val-lst rslt-lst sub-lst2 link
@@ -1013,7 +970,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     over _session-update-regioncorrrate-nq      \ sess0
 
-    dup .session-pathstep-lol-by-rate           \ sess0
+    \ dup .session-pathstep-lol-by-rate           \ sess0
 
     dup session-calc-pathstep-lol               \ sess0 rulecorr-list lists
 
@@ -1683,7 +1640,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     dup session-get-current-regions                 \ sess cur-regc
     dup                                             \ sess cur-regc cur-regc
     #2 pick session-get-regioncorrrate-list         \ sess cur-regc cur-regc regcr-lst
-    regioncorrrate-rate-regioncorr                  \ sess regcr-lst rate
+    regioncorrrate-list-rate-regioncorr             \ sess regcr-lst rate
     swap regioncorr-deallocate                      \ sess rate
     nip
 ;
