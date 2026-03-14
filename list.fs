@@ -154,6 +154,7 @@ list-header-disp    cell+   constant list-links-disp
     0 over _list-set-length     \ list-addr
     0 over _list-set-links      \ list-addr
     0 over struct-set-use-count \ list-addr
+    \ cr ." list-new: " dup hex. cr
 ;
 
 \ Return true if a list is empty.

@@ -1339,8 +1339,10 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         if
             pathstep-list-deallocate
             regioncorr-deallocate
-            2drop 2drop
+            2drop drop
+            pathstep-list-deallocate
             false
+            \ cr ." session-calc-path-fc: end: 1" cr
             exit
         then
                                                                 \ ret-lst regc-to pthstp-lst1 sess0 | regc-from pthstp-lst2
@@ -1369,6 +1371,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             3drop
             pathstep-list-deallocate
             false
+            \ cr ." session-calc-path-fc: end: 2" cr
             exit
         then
 
@@ -1390,6 +1393,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
             \ Return
             true
+            \ cr ." session-calc-path-fc: end: 3" cr
             exit
         then
 
@@ -1413,7 +1417,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     assert-tos-is-session
     assert-nos-is-regioncorr
     assert-3os-is-regioncorr
-    cr ." session-calc-path: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
+    \ cr ." session-calc-path: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     #2 pick #2 pick regioncorr-intersects
     abort" session-calc-plan: from/to intersect?"
@@ -1443,6 +1447,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         2nip                                    \ regc-lst pthstp-lst
         nip                                     \ pthstp-lst
         true
+        \ cr ." session-calc-path: end: 1" cr
         exit
     else                                        \ regc-to regc-from sess0 | rate-min regc-lst
         over                                    \ regc-to regc-from sess0 | rate-min regc-lst rate-min
@@ -1457,6 +1462,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
         if
             2nip 2nip nip                       \ pthstp-lst
             true
+            \ cr ." session-calc-path: end: 2" cr
             exit
         then
         drop                                    \ regc-to regc-from sess0 | rate-min
@@ -1464,6 +1470,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
                                                 \ regc-to regc-from sess0 | rate-min
     2drop 2drop
     false
+    \ cr ." session-calc-path: end: 3" cr
 ;
 
 \ Return a plan to change from one regioncorr to another.

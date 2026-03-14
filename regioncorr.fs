@@ -290,9 +290,11 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
-    cr ." regioncorr-subtract: "
-    cr ." regioncorr: " dup .regioncorr
-    cr ." minus:      " over .regioncorr
+
+\    cr ." regioncorr-subtract: "
+\    cr ." regioncorr: " dup .regioncorr
+\    cr ." minus:      " over .regioncorr
+
     \ Check for a superset subtrahend.
     2dup swap
     regioncorr-superset           \ regc1 regc0 bool
@@ -382,7 +384,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
                                     \ regc0 ret-lst link1 link0
     2drop                           \ regc0 ret-lst
     nip                             \ ret-lst
-    cr ." =           " dup .regioncorr-list-xt execute cr
+\    cr ." =           " dup .regioncorr-list-xt execute cr
     true
 ;
 
