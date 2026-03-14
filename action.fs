@@ -510,7 +510,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                     #2 pick action-get-groups   \ act0 link grp grp-lst
                     group-list-push             \ act0 link
                 else                            \ act0 link sqr-lst2
-                    space ." rules not found, must be a problem"
+                    cr ." Inompatible rules found for squares in "
+                    over link-get-data .region
+                    space dup .square-list-states
+                    ." , needs more incompatible-pair/corner development."
+                    \ space dup .square-list
+                    cr
+
                     square-list-deallocate      \ act0 link
 
                     \ If group exists, delete it.
