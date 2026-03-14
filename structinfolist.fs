@@ -164,9 +164,10 @@
                         then
                     endof
             \ Handle other structs.
-            swap
-            dup mma-in-use                  \ snf-lst0 snf-link snf-mma u
+                                            \ snf-lst0 snf-link snf-mma snf-id
+            over mma-in-use                 \ snf-lst0 snf-link snf-mma snf-id u
             0<> if
+                drop                        \ snf-lst0 snf-link snf-mma
                 over link-get-data
                 structinfo-get-name cr type space ." instances not fully deallocated" cr
                 .mma-in-use
