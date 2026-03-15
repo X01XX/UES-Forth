@@ -918,9 +918,20 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     dup action-get-defining-regions     \ act0 def-regs
     list-get-length                     \ act0 len
     #2 <                                \ act0 bool
-    if
-        drop
-        cr ." action-calc-corners: too few defining regions" cr
+    if                                  \ act0
+        dup action-get-corners          \ act0 crn-lst
+        list-is-empty                   \ act0 bool
+        if
+            drop                        \
+        else
+            list-new swap               \ crn-lst act0
+            _action-update-corners      \
+            cr
+            ." Dom: " current-domain-id #3 dec.r
+            space ." Act: " current-action-id #3 dec.r
+            space ." action-calc-corners: too few defining regions"
+            cr
+        then
         exit
     then
 
@@ -1548,7 +1559,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         ?dup
     while
         dup link-get-data               \ act0 reg-lst-not-i' link region
-        cr ." state " dup region-get-states .value space ." and " .value space ." are no longer incompatible" cr
+
+        cr
+        ." Dom: " current-domain-id #3 dec.r
+        space ." Act: " current-action-id #3 dec.r
+        space ." state " dup region-get-states .value space ." and " .value space ." are no longer incompatible"
+        cr
+
         [ ' region-eq ] literal swap    \ act0 reg-lst-not-i' link xt region
         #4 pick                         \ act0 reg-lst-not-i' link xt region act0
         action-get-incompatible-pairs   \ act0 reg-lst-not-i' link xt region pair-list

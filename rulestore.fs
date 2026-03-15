@@ -243,21 +243,23 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     then
 ;
 
-: .rulestore ( rul0 -- )
+: .rulestore ( rulstr0 -- )
     \ Check arg.
     assert-tos-is-rulestore
 
     ." ["
-    dup rulestore-get-rule-0
-    dup
-    if
-        .rule
-    else
-        drop
+    dup rulestore-get-rule-0    \ rulstr0 rul0
+    dup 0<>                     \ rulstr0 rul0 rul0
+    if                          
+        .rule                   \ rulstr0
+    else                        \ rulstr0 rul0
+        2drop
+        ." Unpredictable]"
+        exit
     then
 
-    rulestore-get-rule-1
-    dup if
+    rulestore-get-rule-1        \ rul1
+    dup 0<> if
         space
         .rule
     else
