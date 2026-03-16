@@ -266,11 +266,11 @@
 ;
 
 \ Remove a pathstep from a pathstep-list.
-: pathstep-list-remove-item ( inx1 pthstp-lst0 -- pthstpx true | false )
+: pathstep-list-remove-item ( inx1 pthstp-lst0 -- pthstpx t | f )
     \ Check arg.
     assert-tos-is-pathstep-list
 
-    list-remove-item        \ pthstpx true | false
+    list-remove-item        \ pthstpx t | f
     if
         dup struct-dec-use-count
         true

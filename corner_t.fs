@@ -6,7 +6,7 @@
     #4 over domain-new                              \ sess dom0
     2dup swap session-add-domain                    \ sess dom0
     0 over domain-find-action                       \ sess dom0, act0 t | f
-    is-false? abort" act0 not found?"                \ sess dom0 act0 |
+    false? abort" act0 not found?"                \ sess dom0 act0 |
 
     \ Init region.
     #5 #0 region-new                                \ | reg

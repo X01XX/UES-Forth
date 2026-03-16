@@ -317,7 +317,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 \ Return the intersection of two regions, or false if they do not intersect.
 \ Since this must check for intersection first, there may be no need to check
 \ for intersection before calling this.
-: region-intersection ( reg1 reg0 -- reg true | false )
+: region-intersection ( reg1 reg0 -- reg t | f )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
@@ -496,7 +496,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     assert-nos-is-region
 
     region-eq
-    is-false?
+    false?
 ;
 
 \ Return true if a TOS region is a superset of the NOS region.

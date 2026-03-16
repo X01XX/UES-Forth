@@ -38,7 +38,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Check TOS for domain, unconventional, leaves stack unchanged.
 : assert-tos-is-domain ( tos -- tos )
     dup is-allocated-domain
-    is-false? if
+    false? if
         s" TOS is not an allocated domain"
        .abort-xt execute
     then
@@ -49,7 +49,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Check NOS for domain, unconventional, leaves stack unchanged.
 : assert-nos-is-domain ( nos tos -- nos tos )
     over is-allocated-domain
-    is-false? if
+    false? if
         s" NOS is not an allocated domain"
        .abort-xt execute
     then
@@ -552,7 +552,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ towards the goal result region.
 \ If more than one step is found, randomly choose one,
 \ to support a random depth-first strategy.
-: domain-calc-step-fc ( reg-to reg-from dom0 -- step true | false )
+: domain-calc-step-fc ( reg-to reg-from dom0 -- step t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -661,7 +661,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Form a plan by getting successive steps closer, between
 \ a from-region (tos) and a to-region (nos).
-: domain-get-plan2-fc ( depth reg-to reg-from dom0 -- plan true | false )
+: domain-get-plan2-fc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -695,7 +695,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         #4 pick                     \ depth reg-to reg-from dom0 | pln reg-from | reg-to reg-from dom0
         domain-calc-step-fc         \ depth reg-to reg-from dom0 | pln reg-from | stpx t | f
         \ Return if no step.
-        is-false? if                 \ depth reg-to reg-from dom0 | pln reg-from |
+        false? if                   \ depth reg-to reg-from dom0 | pln reg-from |
             \ No step found, done.
             drop
             plan-deallocate
@@ -855,7 +855,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Using a random depth-first forward-chaining strategy. Try a number
 \ of times to find a plan to accomplish a desired sample.
-: domain-get-plan-fc ( depth reg-to reg-from dom0 -- plan true | false )
+: domain-get-plan-fc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -885,7 +885,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 ' domain-get-plan-fc to domain-get-plan-fc-xt
 
-: domain-calc-step-bc ( reg-to reg-from dom0 -- step true | false )
+: domain-calc-step-bc ( reg-to reg-from dom0 -- step t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -965,7 +965,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Form a plan by getting successive steps closer, between
 \ a sample result state to a sample initial state.
-: domain-get-plan2-bc ( depth reg-to reg-from dom0 -- plan true | false )
+: domain-get-plan2-bc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -1000,7 +1000,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         domain-calc-step-bc                         \ depth reg-to reg-from dom0 | pln reg-to | stpx t | f
         \ cr ." after calc-step-bc: " .stack-structs-xt execute cr
 
-        is-false? if                                 \ depth reg-to reg-from dom0 | pln reg-to |
+        false? if                                   \ depth reg-to reg-from dom0 | pln reg-to |
             \ No step found, done.
             drop
             plan-deallocate
@@ -1176,7 +1176,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Using a random depth-first backward-chaining strategy. Try a number
 \ of times to find a plan to accomplish a desired sample.
-: domain-get-plan-bc ( depth reg-to reg-from dom0 -- plan true | false )
+: domain-get-plan-bc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -1208,7 +1208,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Try forward and backward chaining to make a plan
 \ for going from an initial region to a non-intersecting result region.
-: domain-get-plan-fb ( reg-to reg-from dom0 -- plan true | false )
+: domain-get-plan-fb ( reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -1342,7 +1342,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #4 pick                                 \ reg-to reg-from dom0 | asym-lst' stpx plnstp-i reg-from
     #4 pick                                 \ reg-to reg-from dom0 | asym-lst' stpx plnstp-i reg-from dom0
     domain-get-plan-fb                      \ reg-to reg-from dom0 | asym-lst' stpx, plan1' t | f
-    is-false? if                             \ reg-to reg-from dom0 | asym-lst' stpx
+    false? if                               \ reg-to reg-from dom0 | asym-lst' stpx
         drop
         planstep-list-deallocate
         3drop
@@ -1375,7 +1375,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
     #3 pick                             \ reg-to reg-from dom0 | plan2' reg-to pln-r dom0
     domain-get-plan-fb                  \ reg-to reg-from dom0 | plan2', plan3' t | f
-    is-false? if                         \ reg-to reg-from dom0 | plan2'
+    false? if                           \ reg-to reg-from dom0 | plan2'
         plan-deallocate
         3drop
         false
@@ -1398,7 +1398,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     then
 ;
 \ Get a plan for going between an initial region and a non-intersecting result region.
-: domain-get-plan ( reg-to reg-from dom0 -- plan true | false )
+: domain-get-plan ( reg-to reg-from dom0 -- plan t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region
@@ -1415,7 +1415,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         rule-new-region-to-region               \ | alt-rul rul
         0 #3 pick                               \ | alt-rul rul 0 dom
         domain-find-action                      \ | alt-rul rul, act0 t | f
-        is-false? abort" Action 0 not found?"
+        false? abort" Action 0 not found?"
         planstep-new                            \ | plnstp
 
         \ Store planstep.

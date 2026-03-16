@@ -204,11 +204,18 @@
     cr ." from: " dup .regioncorr space ." to: " over .regioncorr cr
     regioncorr-deallocate                       \ regc-to
     current-session                             \ regc-to sess
-    session-change-to                           \ bool
+    session-change-to-plans                     \ planc-lst t | f
     if
-        cr ." Change succeeded" cr
+        cr ." Plan found: " dup .plancorr-list cr
+        dup plancorr-list-run-plans             \ planc-lst' bool
+        if
+            cr ." Plan suceeded" cr
+        else
+            cr ." Plan failed" cr
+        then
+        plancorr-list-deallocate                \
     else
-        cr ." Change failed"
+        cr ." No plan found" cr
     then
 ;
 
@@ -244,11 +251,18 @@
 
         \ Try to change path.
         #2 pick                                     \ sess clst-regc-lst' regc sess
-        session-change-to                           \ sess clst-regc-lst'
+        session-change-to-plans                     \ sess clst-regc-lst', planc-lst' t | f
         if
-            cr ." Change to non-negative regioncorr fragment succeeded" cr
+            cr ." Plan found: " dup .plancorr-list cr
+            dup plancorr-list-run-plans             \ sess clst-regc-lst' planc-lst' bool
+            if
+                cr ." Plan suceeded" cr
+            else
+                cr ." Plan failed" cr
+            then
+            plancorr-list-deallocate                    \ sess clst-lst'
         else
-            cr ." Change to non-negative regioncorr fragment failed" cr
+            cr ." No plan found" cr
         then
 
         regioncorr-list-deallocate                 \ sess
@@ -288,14 +302,22 @@
 
          \ Try to change path.
         #2 pick                                         \ sess clst-lst' regcx sess
-        session-change-to                               \ sess clst-lst'
+        session-change-to-plans                         \ sess clst-lst', planc-lst' t | f
         if
-            cr ." Change to more-positive regioncorr fragment succeeded" cr
+            cr ." Plan found: " dup .plancorr-list cr
+            dup plancorr-list-run-plans                 \ sess clst-lst' planc-lst' bool
+            if
+                cr ." Plan suceeded" cr
+            else
+                cr ." Plan failed" cr
+            then
+            plancorr-list-deallocate                    \ sess clst-lst'
         else
-            cr ." Change to more-positive regioncorr fragment failed" cr
+            cr ." No plan found" cr
         then
         regioncorr-list-deallocate                      \ sess
     then
+                                                        \ sess
     drop
 ;
 
@@ -370,7 +392,7 @@
         \ Remove the index, avoiding random picking the same need to try again.
         over                            \ ned-lst inx-lst' rnd-inx inx-lst'
         list-remove-item                \ ned-lst inx-lst', u t | f
-        is-false? abort" Item not removed?"
+        false? abort" Item not removed?"
                                         \ ned-lst inx-lst' u
         drop                            \ ned-lst inx-lst'
 

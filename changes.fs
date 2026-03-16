@@ -45,7 +45,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check TOS for changes, unconventional, leaves stack unchanged.
 : assert-tos-is-changes ( tos -- tos )
     dup is-allocated-changes
-    is-false? if
+    false? if
         s" TOS is not an allocated changes."
        .abort-xt execute
     then
@@ -54,7 +54,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check NOS for changes, unconventional, leaves stack unchanged.
 : assert-nos-is-changes ( nos tos -- nos tos )
     over is-allocated-changes
-    is-false? if
+    false? if
         s" NOS is not an allocated changes."
        .abort-xt execute
     then
@@ -63,7 +63,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check 3OS for changes, unconventional, leaves stack unchanged.
 : assert-3os-is-changes ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-changes
-    is-false? if
+    false? if
         s" 3OS is not an allocated changes."
        .abort-xt execute
     then
@@ -72,7 +72,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check 4OS for changes, unconventional, leaves stack unchanged.
 : assert-4os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
     #3 pick is-allocated-changes
-    is-false? if
+    false? if
         s" 4OS is not an allocated changes."
        .abort-xt execute
     then
@@ -81,7 +81,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check 5OS for changes, unconventional, leaves stack unchanged.
 : assert-5os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
     #4 pick is-allocated-changes
-    is-false? if
+    false? if
         s" 5OS is not an allocated changes."
        .abort-xt execute
     then
@@ -279,7 +279,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 ;
 
 \ Return true if the m01 and m10 masks have a one in the same position.
-: changes-duplex ( cngs0 -- bool )
+: ?changes-duplex ( cngs0 -- bool )
     \ Check arg.
     assert-tos-is-changes
 

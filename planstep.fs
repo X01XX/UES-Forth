@@ -39,7 +39,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Check TOS for planstep, unconventional, leaves stack unchanged.
 : assert-tos-is-planstep ( tos -- tos )
     dup is-allocated-planstep
-    is-false? if
+    false? if
         s" TOS is not an allocated planstep"
         .abort-xt execute
     then
@@ -48,7 +48,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Check NOS for planstep, unconventional, leaves stack unchanged.
 : assert-nos-is-planstep ( nos tos -- nos tos )
     over is-allocated-planstep
-    is-false? if
+    false? if
         s" NOS is not an allocated planstep"
         .abort-xt execute
     then
@@ -299,7 +299,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     over                                \ reg1 plnstp0 reg1
     over planstep-get-initial-region    \ reg1 plnstp0 reg1 s-reg
     region-intersects                   \ reg1 plnstp0 bool
-    is-false? abort" no intersection with planstep initial-region?"
+    false? abort" no intersection with planstep initial-region?"
 
     \ Copy number unwanted changes.
     dup planstep-get-number-unwanted-changes -rot    \ u-unw reg1 plnstp0
@@ -312,7 +312,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     rot swap                        \ u-unw act alt-rul reg1 plnstp0
     planstep-get-rule               \ u-unw act alt-ru1 reg1 rul
     rule-restrict-initial-region    \ u-unw act alt-rul, rul' t | f
-    is-false? abort" restrict-initial-region failed?"
+    false? abort" restrict-initial-region failed?"
 
     \ Make new planstep.
     rot                             \ u-unw alt-rul rul' act
@@ -332,7 +332,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     over                                    \ reg1 plnstp0 reg1
     over planstep-get-result-region         \ reg1 plnstp0 reg1 s-reg
     region-intersects                       \ reg1 plnstp0 bool
-    is-false? abort" no intersection wint planstep result-region?"
+    false? abort" no intersection wint planstep result-region?"
 
     \ Get number unwanted changes.
     dup                                     \ reg1 plnstp0 plnstp0
@@ -346,7 +346,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     \ Get rule.
     #2 pick planstep-get-rule               \ u-unw plnstp0 alt-rul reg1 rul
     rule-restrict-result-region             \ u-unw plnstp0 alt-rul, rul t | f
-    is-false? abort" restrict-result-region failed?"
+    false? abort" restrict-result-region failed?"
 
     \ Make new planstep.                    \ u-unw plnstp0 alt-rul rul
     rot                                     \ u-unw alt-rul rul plnstp0
@@ -369,7 +369,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 ;
 
 \ Return true if a planstep links two regions.
-: planstep-links-two-regions ( reg-to reg-from plnstp0 -- bool )
+: ?planstep-links-two-regions ( reg-to reg-from plnstp0 -- bool )
     \ Check args.
     assert-tos-is-planstep
     assert-nos-is-region
@@ -378,7 +378,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
                                     \ reg-to reg-from plnstp0
     planstep-get-rule               \ reg-to reg-from s-rul
     rule-restrict-initial-region    \ reg-to, s-rul' t | f
-    is-false? if
+    false? if
         drop
         false
         exit

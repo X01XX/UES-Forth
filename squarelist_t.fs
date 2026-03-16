@@ -1,5 +1,35 @@
 \ Tests for the square-list struct functions.
 
+\ Return square states in a region.
+: square-list-states-in-region ( reg1 sqr-lst0 -- ret-sta-lst )
+    \ Check args.
+    assert-tos-is-list
+    assert-nos-is-region
+
+    \ Init return list.
+    list-new -rot                   \ ret-lst reg1 sqr-lst0
+    list-get-links                  \ ret-lst reg1 link
+    begin
+        ?dup
+    while
+        dup link-get-data           \ ret-lst reg1 link sqrx
+        square-get-state            \ ret-lst reg1 link stax
+        #2 pick                     \ ret-lst reg1 link stax reg1
+        region-superset-of-state?   \ ret-lst reg1 link flag
+        if
+            \ Add state to return list.
+            dup link-get-data       \ ret-lst reg1 link sqrx
+            square-get-state        \ ret-lst reg1 link stax
+            #3 pick                 \ ret-lst reg1 link stax ret-lst
+            list-push               \ ret-lst reg1 link
+        then
+
+        link-get-next
+    repeat
+                                    \ ret-lst reg1
+    drop                            \ ret-lst
+;
+
 : square-list-test-in-region
     s" X1X1" region-from-string-a                 \ reg
 

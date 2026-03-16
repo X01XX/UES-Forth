@@ -37,7 +37,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Check TOS for sample, unconventional, leaves stack unchanged.
 : assert-tos-is-sample ( tos -- tos )
     dup is-allocated-sample
-    is-false? if
+    false? if
         s" TOS is not an allocated sample"
         .abort-xt execute
     then
@@ -46,7 +46,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Check NOS for sample, unconventional, leaves stack unchanged.
 : assert-nos-is-sample ( nos tos -- nos tos )
     over is-allocated-sample
-    is-false? if
+    false? if
         s" NOS is not an allocated sample"
         .abort-xt execute
     then

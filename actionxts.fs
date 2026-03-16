@@ -4,12 +4,13 @@
 \ Current state.
 \ Flag, true if there is a previous result.
 \ previous result, or 0 if none.
-: act-0-get-sample ( res1 flag1 cur0 -- sample )
+: act-0-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip dup
+    drop
+    dup
     sample-new
 ;
 
@@ -17,12 +18,12 @@
 \ Current state.
 \ Flag, true if there is a previous result.
 \ previous result, or 0 if none.
-: domain-0-act-1-get-sample ( res1 flag1 cur0 -- sample )
+: domain-0-act-1-get-sample ( cur-sta1 act0 -- sample )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
 
     dup #3 and
     case
@@ -47,12 +48,12 @@
 \ Current state.
 \ Flag, true if there is a previous result.
 \ previous result, or 0 if none.
-: domain-0-act-2-get-sample ( res1 flag1 cur0 -- sample )
+: domain-0-act-2-get-sample ( cur-sta1 act0 -- sample )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
 
     dup #12 and
     case
@@ -73,12 +74,12 @@
     sample-new
 ;
 
-: domain-0-act-3-get-sample ( res1 flag1 cur0 -- sample )
+: domain-0-act-3-get-sample ( cur-sta1 act0 -- sample )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
 
     dup #3 and
     case
@@ -103,12 +104,12 @@
 \ Current state.
 \ Flag, true if there is a previous result.
 \ previous result, or 0 if none.
-: domain-0-act-4-get-sample ( res1 flag1 cur0 -- sample )
+: domain-0-act-4-get-sample ( cur-sta1 act0-- sample )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
 
     dup #12 and
     case
@@ -130,21 +131,24 @@
 ;
 
 \ An action that changes all bits.
-: domain-0-act-5-get-sample ( res1 flag1 cur0 -- sample )
+: domain-0-act-5-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip dup !not swap
+    drop
+    dup !not swap
 
     sample-new
 ;
 
 \ Exhibit X->0 and X->1 bit positions.
-: domain-0-act-6-get-sample ( res1 flag1 cur0 -- sample )
+: domain-0-act-6-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
     dup
     %0100 or
     %1110 and
@@ -157,12 +161,12 @@
 \ Current state.
 \ Flag, true if there is a previous result.
 \ previous result, or 0 if none.
-: domain-1-act-1-get-sample ( res1 flag1 cur0 -- sample )
+: domain-1-act-1-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
 
     dup #3 and
     case
@@ -183,12 +187,12 @@
     sample-new
 ;
 
-: domain-1-act-2-get-sample ( res1 flag1 cur0 -- sample )
+: domain-1-act-2-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
 
     dup #12 and
     case
@@ -209,67 +213,67 @@
     sample-new
 ;
 
-: domain-1-act-3-get-sample ( res1 flag1 cur0 -- sample )
+: domain-1-act-3-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip
+    drop
 
     dup #16 xor swap     \ XXXXX -> xXXXX
     sample-new
 ;
 
 \ Do an act with two possible changes, 1 xor, 2 xor.
-: domain-1-act-4-get-sample ( res1 flag1 cur0 -- sample )
+: domain-1-act-4-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
-    assert-3os-is-value
+    assert-tos-is-action
+    assert-nos-is-value
 
-                            \ res1 flag1 cur0
-    swap                    \ res1 cur0 flag1
-    if                      \ res1 cur0, there is a previous result for this state.
-        tuck                \ cur0 res1 cur0
-        xor                 \ cur0 last-change
-        1 =                 \ cur0 bool
-        if                  \ cur0
-            dup #2 xor      \ cur0 rslt
-        else                \ cur0
-            dup 1 xor       \ cur0 rslt
+    over swap                   \ cur-sta1 cur-sta1 act0
+    action-find-square          \ cur-sta1, sqr t | f
+    if                          \ cur-sta1 sqr, there is a previous sample stored for this state.
+        square-get-last-result  \ cur-sta1 last-rslt
+        over                    \ cur-sta1 last-rslt cur-sta1
+        xor                     \ cur-sta1 last-change
+        1 =                     \ cur-sta1 bool
+        if                      \ cur-sta1
+            dup #2 xor          \ cur-sta1 rslt
+        else                    \ cur-sta1
+            dup 1 xor           \ cur-sta1 rslt
         then
-    else                    \ res1 cur0, there is no previous result for this state.
-        nip                 \ cur0
-        #2 random           \ cur0 0|1
-        1+ over xor         \ cur0 rslt
+    else                        \ cur-sta1, there is no previous sample stored for this state.
+        #2 random               \ cur-sta1, 0 | 1
+        1+ over xor             \ cur-sta1 rslt
     then
-    swap                    \ rslt cur0
+    swap                        \ rslt cur-sta1
 
     sample-new
 ;
 
 \ An action that changes all bits.
-: domain-1-act-5-get-sample ( res1 flag1 cur0 -- sample )
+: domain-1-act-5-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
+    assert-tos-is-action
+    assert-nos-is-value
 
-    nip nip dup !not swap
+    drop
+    dup !not swap
 
     sample-new
 ;
 
 \ Do an act with three possible changes, to appear unpredictable.
-: domain-1-act-6-get-sample ( res1 flag1 cur0 -- sample )
+: domain-1-act-6-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-value
-    assert-nos-is-bool
-    assert-3os-is-value
+    assert-tos-is-action
+    assert-nos-is-value
 
-                            \ res1 flag1 cur0
-    swap                    \ res1 cur0 flag1
-    if                      \ res1 cur0, there is a previous result for this state.
-        tuck                \ cur0 res1 cur0
-        xor                 \ cur0 last-change
+    over swap                   \ cur-sta1 cur-sta1 act0
+    action-find-square          \ cur-sta1, sqr t | f
+    if                          \ cur-sta1 sqr, there is a previous sample stored for this state.
+        square-get-last-result  \ cur-sta1 last-rslt
+        over xor                \ cur-sta1 last-change
 
         case
             1 of
@@ -282,38 +286,12 @@
                 dup 1 xor
             endof
         endcase
-    else                    \ res1 cur0, there is no previous result for this state.
-        nip                 \ cur0
-        #2 random           \ cur0 0|1
-        1+ over xor         \ cur0 rslt
+    else                    \ cur-sta1, there is no previous sample stored for this state.
+        #2 random           \ cur-sta1 act0, 0 | 1
+        1+ over xor         \ cur-sta1 rslt
     then
-    swap                    \ rslt cur0
+    swap                    \ rslt cur-sta1
 
     sample-new
 ;
 
-\ For testing.
-: xor-1 ( res1 flag1 cur0 -- sample )
-    nip nip
-    dup 1 xor swap sample-new
-;
-
-: xor-2 ( res1 flag1 cur0 -- sample )
-    nip nip
-    dup #2 xor swap sample-new
-;
-
-: xor-4 ( res1 flag1 cur0 -- sample )
-    nip nip
-    dup #4 xor swap sample-new
-;
-
-: xor-8 ( res1 flag1 cur0 -- sample )
-    nip nip
-    dup #8 xor swap sample-new
-;
-
-: xor-16 ( res1 flag1 cur0 -- sample )
-    nip nip
-    dup #16 xor swap sample-new
-;

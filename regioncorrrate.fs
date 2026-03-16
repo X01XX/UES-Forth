@@ -37,7 +37,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Check TOS for regioncorrrate, unconventional, leaves stack unchanged.
 : assert-tos-is-regioncorrrate ( tos -- tos )
     dup is-allocated-regioncorrrate
-    is-false? if
+    false? if
         s" TOS is not an allocated regioncorrrate"
         .abort-xt execute
     then
@@ -46,7 +46,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Check NOS for regioncorrrate, unconventional, leaves stack unchanged.
 : assert-nos-is-regioncorrrate ( nos tos -- nos tos )
     over is-allocated-regioncorrrate
-    is-false? if
+    false? if
         s" NOS is not an allocated regioncorrrate"
         .abort-xt execute
     then

@@ -213,7 +213,7 @@
     swap regioncorrrate-get-regioncorr          \ regcr1 regcr0 regc1 regc0
 
     regioncorr-superset                         \ regcr1 regcr0 bool
-    is-false? if
+    false? if
         2drop
         false
         exit

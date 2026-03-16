@@ -29,7 +29,7 @@
 
     \ Test intersection.
     2dup regioncorr-intersects    \ regc1 regc2 bool
-    is-false? abort" Lists do not intersect?"
+    false? abort" Lists do not intersect?"
 
     regioncorr-deallocate              \ regc1
 
@@ -66,28 +66,28 @@
         s" (0x0x 0X0X1)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
         [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
         over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        is-false? abort" regioncorr not found in list of lists?"
+        false? abort" regioncorr not found in list of lists?"
         regioncorr-deallocate                           \ regc1 regc2 regc-lst
 
         \ Check results 2.
         s" (0x0x 0XX11)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
         [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
         over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        is-false? abort" regioncorr not found in list of lists?"
+        false? abort" regioncorr not found in list of lists?"
         regioncorr-deallocate                           \ regc1 regc2 regc-lst
 
         \ Check results 3.
         s" (0X00 0xxx1)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
         [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
         over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        is-false? abort" regioncorr not found in list of lists?"
+        false? abort" regioncorr not found in list of lists?"
         regioncorr-deallocate                           \ regc1 regc2 regc-lst
 
         \ Check results 4.
         s" (000X 0xxx1)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
         [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
         over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        is-false? abort" regioncorr not found in list of lists?"
+        false? abort" regioncorr not found in list of lists?"
         regioncorr-deallocate                           \ regc1 regc2 regc-lst
 
         \ Clean up list-of-lists.
@@ -124,28 +124,28 @@
     s" (xxxx XX0XX)" regioncorr-from-string-a       \ regc regc-lst regc-t
     [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
     over #3 pick list-member                        \ regc regc-lst regc-t bool
-    is-false? abort" regioncorr not found in list of lists?"
+    false? abort" regioncorr not found in list of lists?"
     regioncorr-deallocate                          \ regc regc-lst
 
     \ Check results 2.
     s" (xxxx XXX1X)" regioncorr-from-string-a       \ regc regc-lst regc-t
     [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
     over #3 pick list-member                        \ regc regc-lst regc-t bool
-    is-false? abort" regioncorr not found in list of lists?"
+    false? abort" regioncorr not found in list of lists?"
     regioncorr-deallocate                          \ regc regc-lst
 
     \ Check results 3.
     s" (XXX0 xxxxx)" regioncorr-from-string-a       \ regc regc-lst regc-t
     [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
     over #3 pick list-member                        \ regc regc-lst regc-t bool
-    is-false? abort" regioncorr not found in list of lists?"
+    false? abort" regioncorr not found in list of lists?"
     regioncorr-deallocate                          \ regc regc-lst
 
     \ Check results 4.
     s" (X0XX xxxxx)" regioncorr-from-string-a       \ regc regc-lst regc-t
     [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
     over #3 pick list-member                        \ regc regc-lst regc-t bool
-    is-false? abort" regioncorr not found in list of lists?"
+    false? abort" regioncorr not found in list of lists?"
     regioncorr-deallocate                           \ regc regc-lst
 
     \ Clean up list-of-lists.

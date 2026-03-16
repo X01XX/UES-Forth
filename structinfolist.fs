@@ -23,7 +23,7 @@
 ;
 
 \ Find a structinfo instance in a list, by instance id, if any.
-: structinfo-list-find ( id1 si-lst0 -- si true | false )
+: structinfo-list-find ( id1 si-lst0 -- si t | f )
     \ Check args.
     assert-tos-is-structinfo-list
 

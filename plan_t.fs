@@ -194,7 +194,7 @@
 
     2dup swap                               \ act0 pln' stp' stp' pln'
     plan-link-step-to-initial-region        \ act0 pln' stp', pln2' t | f
-    is-false? abort" link failed?"
+    false? abort" link failed?"
 
     swap planstep-deallocate            \ act0 pln' pln2'
     swap plan-deallocate                \ act pln2'
@@ -238,7 +238,7 @@
 
     2dup swap                               \ act0 pln' stp' stp' pln'
     plan-link-step-to-result-region         \ act0 pln' stp', pln2' t | f
-    is-false? abort" link failed?"
+    false? abort" link failed?"
 
     swap planstep-deallocate                \ act0 pln' pln2'
     swap plan-deallocate                    \ act0 pln2'
@@ -271,7 +271,7 @@
     session-add-domain                              \ dom0
 
     0 swap domain-find-action                       \ act0 t | f
-    is-false? abort" act0 not found?"
+    false? abort" act0 not found?"
 
     dup plan-test-restrict-initial-region
     dup plan-test-restrict-result-region

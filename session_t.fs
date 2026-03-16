@@ -1,4 +1,30 @@
 
+: xor-1 ( cur-sta1 act0 -- smpl )
+    drop
+    dup 1 xor swap sample-new
+;
+
+: xor-2 ( cur-sta1 act0 -- smpl )
+    drop
+    dup #2 xor swap sample-new
+;
+
+: xor-4 ( cur-sta1 act0 -- smpl )
+    drop
+    dup #4 xor swap sample-new
+;
+
+: xor-8 ( cur-sta1 act0 -- smpl )
+    drop
+    dup #8 xor swap sample-new
+;
+
+: xor-16 ( cur-sta1 act0 -- smpl )
+    drop
+    dup
+    #16 xor swap sample-new
+;
+
 \ Test using a non-intersecting step, the first, to find a plan, using forward-chaining.
 \ Implementing the example in the sections of theory.html named "Choosing the next rule" and "A reason to not choose a rule".
 : session-test-domain-get-plan-fc
@@ -303,7 +329,7 @@
     over session-add-regioncorrrate                 \ ses
 
     0 over session-find-domain                      \ sess, dom t | f
-    is-false? abort" domain 0 not found?"
+    false? abort" domain 0 not found?"
     over session-set-current-domain                 \ ses
 
     \ 0
@@ -313,12 +339,12 @@
     \ -1
     \ Set domain 0 current state.
     0 over session-find-domain                      \ ses, dom t | f
-    is-false? abort" domain0 not found?"
+    false? abort" domain0 not found?"
     %1000 swap domain-set-current-state             \ ses
 
     \ Set domain1 current state.
     1 over session-find-domain                      \ ses, dom t | f
-    is-false? abort" domain1 not found?"
+    false? abort" domain1 not found?"
     %01111 swap domain-set-current-state            \ ses
 
     dup .session
@@ -337,16 +363,26 @@
 
     over                                            \ ses regc-to regc-from regc-to
     #3 pick                                         \ ses regc-to regc-from regc-to sess
-    session-change-to                               \ ses regc-to regc-from bool
+
+    session-change-to-plans                         \ ses regc-to regc-from, planc-lst t | f
     if
-        cr ." change succeeded" cr
+        cr ." Plan found: " dup .plancorr-list cr
+        dup plancorr-list-run-plans                 \ ses regc-to regc-from planc-lst' bool
+        if
+            cr ." Plan suceeded" cr
+        else
+            cr ." Plan failed?" cr
+            abort
+        then
+        plancorr-list-deallocate                    \ ses regc-to regc-from
     else
-        cr ." change failed?" cr
+        cr ." No plan found?" cr
         abort
     then
-                                                    \ sess regc-to regc-from
-    regioncorr-deallocate
-    regioncorr-deallocate
+
+                                                    \ ses regc-to regc-from
+    regioncorr-deallocate                           \ ses regc-to
+    regioncorr-deallocate                           \ ses
     drop
 
     current-session-deallocate

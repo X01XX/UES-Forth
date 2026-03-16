@@ -35,7 +35,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : assert-tos-is-rule ( tos -- tos ) \ Check TOS for rule, unconventional, leaves stack unchanged.
     dup is-allocated-rule
-    is-false? if
+    false? if
         s" TOS is not an allocated rule."
         .abort-xt execute
     then
@@ -43,7 +43,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : assert-nos-is-rule ( nos tos -- nos tos ) \ Check NOS for rule, unconventional, leaves stack unchanged.
     over is-allocated-rule
-    is-false? if
+    false? if
         s" NOS is not an allocated rule."
         .abort-xt execute
     then
@@ -51,7 +51,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : assert-3os-is-rule ( 3os nos tos -- 3os nos tos ) \ Check 3OS for rule, unconventional, leaves stack unchanged.
     #2 pick is-allocated-rule
-    is-false? if
+    false? if
         s" 3OS is not an allocated rule."
         .abort-xt execute
     then
@@ -373,7 +373,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ A valid intersection may not have the same initial region as the intersection
 \ of the two rules initial regions.
 \ As X1 & Xx = 01, X1 & XX = 11, X0 & Xx = 10, X0 & XX = 00.
-: rule-intersection ( rul1 rul0 -- result true | false )    \ Return the valid result of a rule intersection, or false.
+: rule-intersection ( rul1 rul0 -- result t | f )    \ Return the valid result of a rule intersection, or false.
     \ Check arg.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -430,7 +430,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     or                      \ mask
 ;
 
-: rule-union ( rul1 rul0 -- result true | false )   \ Return the result of a rule union, if valid.
+: rule-union ( rul1 rul0 -- result t | f )   \ Return the result of a rule union, if valid.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -489,7 +489,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-: rule-union-by-changes ( rul1 rul0 -- result true | false )    \ If two rule changes (m01, m10) are equal, form a union.
+: rule-union-by-changes ( rul1 rul0 -- result t | f )    \ If two rule changes (m01, m10) are equal, form a union.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -567,7 +567,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ cr ." rule-restrict-initial-region: " over .region space dup .rule cr
 
     2dup rule-initial-region-intersects  \ reg1 rul0 bool
-    is-false? if
+    false? if
         2drop
         false
         exit
@@ -613,7 +613,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-nos-is-region
 
     2dup rule-result-region-intersects  \ reg1 rul0 bool
-    is-false? if
+    false? if
         2drop
         false
         exit
@@ -815,7 +815,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Restrict the rule's initial region.
     2dup                            \ reg1 rul0 reg1 rul0
     rule-restrict-initial-region    \ reg1 rul0, rul1' t | f
-    is-false? if
+    false? if
         2drop
         false
         exit
@@ -844,7 +844,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     over rule-calc-result-region    \ rul1 rul0 rul1-i rul0-r
 
     2dup region-intersects          \ rul1 rul0 rul1-i rul0-r bool
-    is-false? abort" rules not linked?"
+    false? abort" rules not linked?"
 
                                     \ rul1 rul0 rul1-i rul0-r
     region-deallocate
@@ -916,7 +916,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Get rule restricted.
     tuck swap                       \ reg-to reg-from reg-from' reg-from' rul0
     rule-restrict-initial-region    \ reg-to reg-from reg-from', rul0' t | f
-    is-false? abort" rule-restrict-initial-region: failed?"
+    false? abort" rule-restrict-initial-region: failed?"
     swap region-deallocate          \ reg-to reg-from rul0'
 
     \ Get rule result region.
@@ -966,7 +966,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Clean up.
     swap changes-deallocate
     swap changes-deallocate             \ bool
-    is-false?
+    false?
 ;
 
 : rule-can-be-used-last  ( reg-to reg-from rul0 -- bool )    \ Return true if reg-from to rule result region involves all needed changes.
@@ -1098,7 +1098,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     tuck                            \ sta1 rul0 i-reg' sta1 i-reg'
     region-superset-of-state?       \ sta1 rul0 i-reg' bool
     swap region-deallocate          \ sta1 rul0 bool
-    is-false? abort" state not within rule initial region?"
+    false? abort" state not within rule initial region?"
 
     rule-get-changes                \ sta1 cngs'
     tuck                            \ cngs' sta1 cngs'

@@ -40,7 +40,7 @@
 ;
 
 \ Find a group in a list, by state, if any.
-: group-list-find ( reg1 list0 -- grp true | false )
+: group-list-find ( reg1 list0 -- grp t | f )
     \ Check args.
     assert-tos-is-group-list
     assert-nos-is-region

@@ -58,8 +58,8 @@
     list-push-end-struct
 ;
 
-\ Run a plancorr list plan.
-: plancorr-list-run-plan ( plnc-lst -- bool )
+\ Run a plancorr list plancorrs, left to right.
+: plancorr-list-run-plans ( plnc-lst -- bool )
     \ Check arg.
     assert-tos-is-plancorr-list
 
@@ -71,7 +71,7 @@
     while
         dup link-get-data       \ link plnc
         plancorr-run            \ link, t | f
-        is-false? if
+        false? if
             drop
             false
             exit

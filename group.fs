@@ -37,7 +37,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Check TOS for group, unconventional, leaves stack unchanged.
 : assert-tos-is-group ( tos -- tos )
     dup is-allocated-group
-    is-false? if
+    false? if
         s" TOS is not an allocated group"
        .abort-xt execute
     then
@@ -46,7 +46,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Check NOS for group, unconventional, leaves stack unchanged.
 : assert-nos-is-group ( nos tos -- nos tos )
     over is-allocated-group
-    is-false? if
+    false? if
         s" NOS is not an allocated group"
        .abort-xt execute
     then
@@ -276,7 +276,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     #2 pick _group-update-r-region  \ grp0 sqr-lst'
 
     dup square-list-get-rules       \ grp0 sqr-lst', ruls t | f
-    is-false? if
+    false? if
         rulestore-new-0
     then
 

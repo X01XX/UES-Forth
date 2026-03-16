@@ -42,7 +42,7 @@ functions=`/usr/bin/cat $wrkdir/functions.txt`
 # Check the number of references for each function name.
 for line in $functions
 do
- 	count=`/usr/bin/grep -- $line $wrkdir/source.fs | /usr/bin/grep -v -- $line- | /usr/bin/grep -cv -- "$line:"`  # remove references to the function name in prints and aborts.
+ 	count=`/usr/bin/grep -- $line $wrkdir/source.fs | /usr/bin/grep -v ":' " | /usr/bin/grep -v -- $line-[^xt] | /usr/bin/grep -cv -- "$line:"`  # remove references to the function name in prints and aborts.
  	if [ $count -lt 2 ]
    	then
         echo "    " $line

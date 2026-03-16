@@ -31,7 +31,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Check TOS for rulestore, unconventional, leaves stack unchanged.
 : assert-tos-is-rulestore ( tos -- tos )
     dup is-allocated-rulestore
-    is-false? if
+    false? if
         s" TOS is not an allocated rulestore."
         .abort-xt execute
     then
@@ -40,7 +40,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Check NOS for rulestore, unconventional, leaves stack unchanged.
 : assert-nos-is-rulestore ( nos tos -- nos tos )
     over is-allocated-rulestore
-    is-false? if
+    false? if
         s" NOS is not an allocated rulestore."
         .abort-xt execute
     then
@@ -292,11 +292,11 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 \ Attempt to form union of two pn-2 rulestores, matching
 \ rules 0 and 0 and 1 and 1.
-: rulestore-union-00 ( rulstr1 rulstr0 -- rulstr true | false )
+: rulestore-union-00 ( rulstr1 rulstr0 -- rulstr t | f )
     over rulestore-get-rule-0
     over rulestore-get-rule-0
 
-    rule-union                  \ rulstr1 rulstr0, rul00 true | false
+    rule-union                  \ rulstr1 rulstr0, rul00 t | f
     0= if
         2drop
         false
@@ -308,7 +308,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     swap                        \ rul00 rul1 rulstr1
     rulestore-get-rule-1        \ rul00 rul1 rul1
 
-    rule-union                  \ rul00, rul11 true | false
+    rule-union                  \ rul00, rul11 t | f
     if                          \ rul00 rul11
         rulestore-new-2
         true
@@ -320,11 +320,11 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 \ Attempt to form union of two pn-2 rulestores, matching
 \ rules 0 and 1 and 1 and 0.
-: rulestore-union-10 ( rulstr1 rulstr0 -- rulstr true | false )
+: rulestore-union-10 ( rulstr1 rulstr0 -- rulstr t | f )
     over rulestore-get-rule-1   \ rulstr1 rulstr0 rulstr1-1
     over rulestore-get-rule-0   \ rulstr1 rulstr0 rulstr1-1 rulstr0-0
 
-    rule-union                  \ rulstr1 rulstr0, rul01 true | false
+    rule-union                  \ rulstr1 rulstr0, rul01 t | f
     0= if
         2drop
         false
@@ -336,7 +336,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     swap                        \ rul01 rulstr0-1 rulstr1
     rulestore-get-rule-0        \ rul01 rulstr0-1 rulstr1-0
 
-    rule-union                  \ rul01, rul10 true | false
+    rule-union                  \ rul01, rul10 t | f
     if                          \ rul01 rul10
         rulestore-new-2
         true
@@ -348,11 +348,11 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 \ Attempt to form union of two pn-2 rulestores, matching
 \ rules 0 and 0 and 1 and 1.
-: rulestore-union-00-by-changes ( rulstr1 rulstr0 -- rulstr true | false )
+: rulestore-union-00-by-changes ( rulstr1 rulstr0 -- rulstr t | f )
     over rulestore-get-rule-0
     over rulestore-get-rule-0
 
-    rule-union-by-changes       \ rulstr1 rulstr0, rul00 true | false
+    rule-union-by-changes       \ rulstr1 rulstr0, rul00 t | f
     0= if
         2drop
         false
@@ -364,7 +364,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     swap                        \ rul00 rul1 rulstr1
     rulestore-get-rule-1        \ rul00 rul1 rul1
 
-    rule-union-by-changes       \ rul00, rul11 true | false
+    rule-union-by-changes       \ rul00, rul11 t | f
     if                          \ rul00 rul11
         rulestore-new-2
         true
@@ -376,11 +376,11 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 \ Attempt to form union of two pn-2 rulestores, matching
 \ rules 0 and 1 and 1 and 0.
-: rulestore-union-10-by-changes ( rulstr1 rulstr0 -- rulstr true | false )
+: rulestore-union-10-by-changes ( rulstr1 rulstr0 -- rulstr t | f )
     over rulestore-get-rule-1   \ rulstr1 rulstr0 rulstr1-1
     over rulestore-get-rule-0   \ rulstr1 rulstr0 rulstr1-1 rulstr0-0
 
-    rule-union-by-changes       \ rulstr1 rulstr0, rul01 true | false
+    rule-union-by-changes       \ rulstr1 rulstr0, rul01 t | f
     0= if
         2drop
         false
@@ -392,7 +392,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     swap                        \ rul01 rulstr0-1 rulstr1
     rulestore-get-rule-0        \ rul01 rulstr0-1 rulstr1-0
 
-    rule-union-by-changes       \ rul01, rul10 true | false
+    rule-union-by-changes       \ rul01, rul10 t | f
     if                          \ rul01 rul10
         rulestore-new-2
         true
@@ -407,18 +407,18 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     assert-tos-is-rulestore
     assert-nos-is-rulestore
 
-    2dup rulestore-union-00-by-changes  \ rulstr1 rulstr2, rulstr3 true | false
+    2dup rulestore-union-00-by-changes  \ rulstr1 rulstr2, rulstr3 t | f
     if                                  \ rulstr1 rulstr2 rulstr3
         nip nip true exit
     then
 
-    rulestore-union-10-by-changes       \ rulstr3 true | false
+    rulestore-union-10-by-changes       \ rulstr3 t | f
 ;
 
 \ Return the union of two pn-2 rulestores.
 \ Check if one, of two, methods of matching works,
 \ but not none or both.
-: rulestore-union-2 ( rulstr1 rulstr0 -- rulstr true | false )
+: rulestore-union-2 ( rulstr1 rulstr0 -- rulstr t | f )
    \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-rulestore
@@ -432,7 +432,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     then
 
     \ Try union by change-mask and same-result, order 1.
-    2dup rulestore-union-00         \ rulstr1 rulstr2, rulstr3 true | false
+    2dup rulestore-union-00         \ rulstr1 rulstr2, rulstr3 t | f
     if                              \ rulstr1 rulstr0 rulstr3
         nip nip
         true
@@ -440,12 +440,12 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     then
 
     \ Try union by change-mask and same-result, order 2.
-    rulestore-union-10         \ rulstr3 true | false
+    rulestore-union-10         \ rulstr3 t | f
 ;
 
 \ Return the union of two rulestores.
 
-: rulestore-union ( rulstr1 rulstr0 -- rulstr true | false )
+: rulestore-union ( rulstr1 rulstr0 -- rulstr t | f )
     \ Check args.
     assert-tos-is-rulestore
     assert-nos-is-rulestore
@@ -465,7 +465,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         1 of
             rulestore-get-rule-0        \ rulstr1 r0
             swap rulestore-get-rule-0   \ r0 r1
-            rule-union                  \ rule true | false
+            rule-union                  \ rule t | f
             if
                 rulestore-new-1 true
             else

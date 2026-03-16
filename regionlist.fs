@@ -62,7 +62,7 @@
 ;
 
 \ Return the intersection of two region lists.
-: region-list-set-intersection ( list1 list0 -- list-result )
+: ?region-list-set-intersection ( list1 list0 -- list-result )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region-list
@@ -492,7 +492,7 @@
     [ ' region-intersects ] literal -rot list-member
 ;
 
-: region-list-intersections-of-region ( reg1 lst0 -- reg-lst )
+: ?region-list-intersections-of-region ( reg1 lst0 -- reg-lst )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region
@@ -953,7 +953,7 @@
     \ Check args.
     assert-tos-is-region-list
     over 0 < abort" index out of range"
-    over over list-get-length < is-false? abort" index out of range"
+    over over list-get-length < false? abort" index out of range"
     assert-3os-is-region
 
     \ Init return list.
@@ -1009,7 +1009,7 @@
     loop
                                             \ ret-lst
     \ Test if there were any invalid regions.
-    dup list-get-length                     \ ret-lst len
+    dup list-get-length                     \ ret-lst lenregion-list-union-x-masks
     r>                                      \ ret-lst len tkn-cnt
     =                                       \ ret-lst bool
     if
@@ -1029,10 +1029,10 @@
 
 : region-list-from-string-a ( str-addr str-n -- regc )   \ Return a region-list from a string, or abort.
     region-list-from-string    \ reg-lst t | f
-    is-false? abort" region-list-from-string failed?"
+    false? abort" region-list-from-string failed?"
 ;
 
-: region-list-union-nosubs ( reg-lst1 reg-lst0 -- reg-lst ) \ Combine two reigion-lists, deleteng subsets.
+: ?region-list-union-nosubs ( reg-lst1 reg-lst0 -- reg-lst ) \ Combine two reigion-lists, deleteng subsets.
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region-list
@@ -1120,7 +1120,7 @@
 ;
 
 \ Return the number of intersections for a given region.
-: region-list-number-intersections ( reg1 lst0 -- reg-lst )
+: ?region-list-number-intersections ( reg1 lst0 -- reg-lst )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region
@@ -1151,7 +1151,7 @@
 ;
 
 \ Return a list of stats, from a given list, that are a subset of any region.
-: region-list-states-not-in ( sta-lst1 reg-lst0 -- sta-lst )
+: ?region-list-states-not-in ( sta-lst1 reg-lst0 -- sta-lst )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-value-list
@@ -1183,7 +1183,7 @@
 ;
 
 \ Return the union of all region x masks.
-: region-list-union-x-masks ( lst0 -- msk )
+: ?region-list-union-x-masks ( lst0 -- msk )
     \ Check arg.
     assert-tos-is-region-list
 
@@ -1257,7 +1257,7 @@
 ;
 
 \ Return true if a region-list in a list is a subset of a given region-list.
-: region-list-lol-any-subset? ( reg-lst1 reg-lol0 -- bool )
+: ?region-list-lol-any-subset? ( reg-lst1 reg-lol0 -- bool )
     \ Check arg.
     assert-tos-is-region-lol
     assert-nos-is-region-list

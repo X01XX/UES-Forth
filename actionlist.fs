@@ -55,7 +55,7 @@
 ;
 
 \ Find a action in a list, by instance id, if any.
-: action-list-find ( id1 list0 -- dom true | false )
+: action-list-find ( id1 list0 -- dom t | f )
     \ Check arg.
     assert-tos-is-action-list
 

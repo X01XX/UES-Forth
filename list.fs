@@ -357,7 +357,7 @@ list-header-disp    cell+   constant list-links-disp
 \
 \ e.g. TOS is a list of numbers.
 \ [ ' = ] literal over #5 swap list-find
-: list-find ( xt item list -- cell true | false )
+: list-find ( xt item list -- cell t | f )
     \ Check arg.
     assert-tos-is-list
 
@@ -436,7 +436,7 @@ list-header-disp    cell+   constant list-links-disp
 \
 \ If list data are struct instances, use list-pop-struct, to dec the use count.
 \ or dec the instance use count of the result.
-: list-pop ( lst0 -- data true | false )
+: list-pop ( lst0 -- data t | f )
     \ Check arg.
     assert-tos-is-list
 
@@ -476,7 +476,7 @@ list-header-disp    cell+   constant list-links-disp
 \
 \ e.g. TOS is a list of numbers.
 \ [ ' = ] literal over #5 swap list-remove
-: list-remove ( xt item list -- data true | false )
+: list-remove ( xt item list -- data t | f )
     \ Check arg.
     assert-tos-is-list
 
@@ -556,7 +556,7 @@ list-header-disp    cell+   constant list-links-disp
 \
 \ If list data are struct instances, the caller should dec the instance use count of the result.
 \ e.g. if dup struct-dec-use-count then
-: list-remove-item ( u1 lst0 -- data true | false )
+: list-remove-item ( u1 lst0 -- data t | f )
     \ Check args.
     assert-tos-is-list
     over                        \ u1 lst0 u1
@@ -594,7 +594,7 @@ list-header-disp    cell+   constant list-links-disp
 \
 \ If list data are struct instances, use list-pop-end-struct, to dec the use count.
 \ or dec the instance use count of the result.
-: list-pop-end ( lst0 -- data true | false )
+: list-pop-end ( lst0 -- data t | f )
     \ Check arg.
     assert-tos-is-list
 

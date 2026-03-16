@@ -40,7 +40,7 @@
 ;
 
 \ Return the union of two need lists.
-: need-list-set-union ( list1 list0 -- list-result )
+: ?need-list-set-union ( list1 list0 -- list-result )
     \ Check args.
     assert-tos-is-need-list
     assert-nos-is-need-list
@@ -111,8 +111,8 @@
     drop
 ;
 
-\ Return true if a need in a list has a given target state.
-: need-list-contains-target ( sta1 lst0 -- bool )
+\ Return true need-list-contains-targetif a need in a list has a given target state.
+: ?need-list-contains-target ( sta1 lst0 -- bool )
     \ Check args.
     assert-tos-is-need-list
     assert-nos-is-value

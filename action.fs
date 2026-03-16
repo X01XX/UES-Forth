@@ -39,7 +39,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check TOS for action, unconventional, leaves stack unchanged.
 : assert-tos-is-action ( tos -- tos )
     dup is-allocated-action
-    is-false? if
+    false? if
         s" TOS is not an allocated action"
        .abort-xt execute
     then
@@ -50,7 +50,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check NOS for action, unconventional, leaves stack unchanged.
 : assert-nos-is-action ( nos tos -- nos tos )
     over is-allocated-action
-    is-false? if
+    false? if
         s" NOS is not an allocated action"
        .abort-xt execute
     then
@@ -61,7 +61,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check 3OS for action, unconventional, leaves stack unchanged.
 : assert-3os-is-action ( 3os nos tos -- 3os nos tos )
     #2 pick is-allocated-action
-    is-false? if
+    false? if
         s" 3OS is not an allocated action"
        .abort-xt execute
     then
@@ -693,7 +693,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Return a square given a state.
-: action-find-square ( sta1 act0 -- sqr true | false )
+: action-find-square ( sta1 act0 -- sqr t | f )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-value
@@ -811,7 +811,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over region-get-state-0                     \ reg1 act0 sta0
     over action-get-corners                     \ reg1 act0 sta0 crn-lst
     corner-list-state-in-any-corner-region      \ reg1 act0 bool
-    is-false? if
+    false? if
         \ Keep pair
         2drop
         true
@@ -822,7 +822,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over region-get-state-1                 \ reg1 act0 sta1
     over action-get-corners                 \ reg1 act0 sta1 crn-lst
     corner-list-state-in-any-corner-region  \ reg1 act0 bool
-    is-false? if
+    false? if
         \ Keep pair
         2drop
         true
@@ -1708,58 +1708,25 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 ' action-state-confirmed to action-state-confirmed-xt
 
-
-\ Get a sample from an action.
-: _action-get-sample2 ( sta1 act0 -- smpl )
-    \ cr ." action-get-sample2: start" cr
-     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
-
-    \ cr ."action-get-sample2: Act: " dup action-get-inst-id . cr
-
-    tuck                        \ act0 sta1 act0
-
-    over                        \ act0 sta1 act0 sta1
-    over action-get-squares     \ act0 sta1 act0 sta1 sqr-lst
-    square-list-find            \ act0 sta1 act0, sqrx true | false
-
-    if                          \ act0 sta1 act0 sqrx
-        \ Load last square result to help function figure out the next result.
-        \ Should not be needed in a real application.
-        square-get-last-result  \ act0 sta1 act0 rslt
-        -rot                    \ act0 rslt sta1 act0
-        true -rot               \ act0 rslt true sta1 act0
-        action-get-function     \ act0 rslt true sta1 xt
-        execute                 \ act0 smpl
-        nip                     \ smpl
-    else                        \ act0 sta1 act0
-                                \ act0 sta1 act0
-        0 -rot                  \ act0 0 sta1 act0
-        0 -rot                  \ act0 0 0 sta1 act0
-        action-get-function     \ act0 0 0 sta1 xt
-        execute                 \ act0 smpl
-        nip                     \ smpl
-    then
-    \ cr ." action-get-sample2: end" cr
-;
-
 \ Get a sample from an action.
 \ Depends on the current domain being set correctly.
 \ Add the sample to the action.
 : action-get-sample ( sta1 act0 -- smpl )
     \ cr ." action-get-sample: start" cr
-     \ Check args.
+    \ Check args.
     assert-tos-is-action
     assert-nos-is-value
 
     tuck                    \ act0 sta1 act0
-    _action-get-sample2     \ act0 smpl
-    tuck swap               \ smpl smpl act0
+    dup                     \ act0 sta1 act0 act0
+    action-get-function     \ act0 sta1 act0 xt
+    execute                 \ act0 smpl
+    tuck                    \ smpl act0 smpl
+    swap                    \ smpl smpl act0
 
     cr
     ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " dup action-get-inst-id #3 dec.r
+    space ." Act: " current-action-id #3 dec.r
     space ." adding sample: " over .sample
     cr
 
@@ -1797,10 +1764,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-value
 
-    tuck                        \ act0 sta1 act0
-    _action-get-sample2         \ act0 smpl
-
-    nip                         \ smpl
+    dup                     \ sta1 act0 act0
+    action-get-function     \ sta1 act0 xt
+    execute                 \ smpl
 ;
 
 \ Return true if a action id matches a number.
@@ -1956,7 +1922,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Get square for ip state.
     #2 pick #2 pick             \ sta1 act0 ext-lst' sta1 act0
     action-find-square          \ sta1 act0 ext-lst', sqr t | f
-    is-false? abort" square not found?"
+    false? abort" square not found?"
 
     \ Check for even one compatible external square.
     \ If any found, return false.
@@ -2658,7 +2624,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Return a corner matching a given anchor state.
-: action-find-corner ( sta1 act0 -- crn t | f )
+: ?action-find-corner ( sta1 act0 -- crn t | f )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-value

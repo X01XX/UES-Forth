@@ -1,11 +1,11 @@
-' 0= alias is-false?
+' 0= alias false?
 
 \ Check TOS for bool, unconventional, leaves stack unchanged.
 : assert-tos-is-bool ( tos -- tos )
     dup 0=
     over -1 =
     or
-    is-false? if
+    false? if
         s" TOS is not bool"
         .abort-xt execute
     then
@@ -16,7 +16,7 @@
     over dup 0=
     swap -1 =
     or
-    is-false? if
+    false? if
         s" NOS is not bool"
         .abort-xt execute
     then
@@ -26,7 +26,7 @@
     \ Check arg.
     assert-tos-is-bool
 
-    is-false?
+    false?
     if
         ." f"
     else
