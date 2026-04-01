@@ -48,6 +48,15 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     then
 ;
 
+\ Check 3OS for changescorr, unconventional, leaves stack unchanged.
+: assert-3os-is-changescorr ( 3os nos tos -- 3os nos tos )
+    #2 pick is-allocated-changescorr
+    false? if
+        s" 3OS is not an allocated changescorr"
+        .abort-xt execute
+    then
+;
+
 \ Start accessors.
 
 \ Return the changescorr list field from a changescorr instance.
@@ -137,8 +146,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     #2 <
     if
         \ Deallocate fields.
-        dup changescorr-get-list   \ cngs0 cngsc-lst
-        changes-list-deallocate
+        dup changescorr-get-list        \ cngs0 cngsc-lst
+        changes-list-deallocate         \ cngs0
 
         \ Deallocate instance.
         changescorr-mma mma-deallocate
@@ -181,6 +190,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     \ Check args.
     assert-tos-is-regioncorr-xt execute
     assert-nos-is-regioncorr-xt execute
+    \ cr ." changescorr-new-regc-to-regc: from " dup .regioncorr-xt execute space ." to " over .regioncorr-xt execute cr
 
     \ Init changesscorr list.
     list-new -rot                   \ cngsc-lst regc-to regc-from
@@ -318,4 +328,76 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
                                                 \ cngs-lst link0
     drop                                        \ cngs-lst
     changescorr-new
+;
+
+\ Return true if two changescorr are equal.
+: changescorr-eq? ( cngsc1 cngsc0 -- bool )
+    \ Check args.
+    assert-tos-is-changescorr
+    assert-nos-is-changescorr
+
+    changescorr-get-list list-get-links     \ cngsc1 cngs0-link
+    swap                                    \ cngs0-link cngsc1
+    changescorr-get-list list-get-links     \ cngs0-link cngs1-link
+
+    begin
+        ?dup
+    while
+        over link-get-data                  \ cngs0-link cngs1-link cngs0
+        over link-get-data                  \ cngs0-link cngs1-link cngs0 cngs1
+        changes-eq?                         \ cngs0-link cngs1-link bool
+        if
+        else
+            2drop
+            false
+            exit
+        then
+
+        swap link-get-next
+        swap link-get-next
+    repeat
+                                            \ cngs0-link
+    drop
+    true
+;
+
+\ Return true if TOS changescorr is a superset, or equal, the NOS changescorr.
+: changescorr-is-superset? ( cngsc1 cngsc0 -- bool )
+    \ Check args.
+    assert-tos-is-changescorr
+    assert-nos-is-changescorr
+
+    \ Check intersection equal nos changescorr.
+    over                        \ cngsc1 cngsc0 cngsc1
+    changescorr-intersection    \ cngsc1 cngsc-int'
+    tuck                        \ cngsc-int' cngsc1 cngsc-int'
+    changescorr-eq?             \ cngsc-int' bool
+
+    \ Return.
+    swap changescorr-deallocate \ bool
+;
+
+: changescorr-null? ( cngsc0 -- bool )
+    \ Check arg.
+    assert-tos-is-changescorr
+
+    changescorr-get-list        \ cngsc-lst
+    list-get-links              \ cngsc-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ cngsc-link cngscx
+        changes-null?
+        if
+        else
+            drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+
+    true
 ;

@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a regioncorr instance as its first item.
 : assert-tos-is-regioncorr-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-regioncorr
@@ -14,9 +14,31 @@
 \ Check if nos is an empty list, or has a regioncorr instance as its first item.
 : assert-nos-is-regioncorr-list ( nos tos -- nos tos )
     assert-nos-is-list
-    over list-is-not-empty
+    over list-is-not-empty?
     if
         over list-get-links link-get-data
+        assert-tos-is-regioncorr
+        drop
+    then
+;
+
+\ Check if 3os is an empty list, or has a regioncorr instance as its first item.
+: assert-3os-is-regioncorr-list ( 3os nos tos -- 3os nos tos )
+    assert-3os-is-list
+    #2 pick list-is-not-empty?
+    if
+        #2 pick list-get-links link-get-data
+        assert-tos-is-regioncorr
+        drop
+    then
+;
+
+\ Check if 4os is an empty list, or has a regioncorr instance as its first item.
+: assert-4os-is-regioncorr-list ( 4os 3os nos tos -- 4os 3os nos tos )
+    assert-4os-is-list
+    #3 pick list-is-not-empty?
+    if
+        #3 pick list-get-links link-get-data
         assert-tos-is-regioncorr
         drop
     then
@@ -75,6 +97,44 @@
 
 ' .regioncorr-list to .regioncorr-list-xt
 
+: .regioncorr-list-as-path-fc ( regc-lst -- )
+    \ Check arg.
+    assert-tos-is-regioncorr-list
+
+    s" (" type
+    list-get-links          \ regc-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data   \ regc-link regcx
+        .regioncorr         \ regc-link
+
+        link-get-next       \ regc-link
+        dup 0<> if s" ->" type then
+    repeat
+    s" )" type
+;
+
+: .regioncorr-list-as-path-bc ( regc-lst -- )
+    \ Check arg.
+    assert-tos-is-regioncorr-list
+
+    s" (" type
+    list-get-links          \ regc-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data   \ regc-link regcx
+        .regioncorr         \ regc-link
+
+        link-get-next       \ regc-link
+        dup 0<> if s" <-" type then
+    repeat
+    s" )" type
+;
+
 \ Return true if a regioncorr-list (list of lists) contains
 \ a superset of a given regc.
 : regioncorr-list-any-superset ( regc1 regc-lst0 -- bool )
@@ -89,7 +149,7 @@
     while
         over                        \ regc1 regc-link regc1
         over link-get-data          \ regc1 regc-link regc1 regcx
-        regioncorr-superset         \ regc1 regc-link bool
+        regioncorr-superset?        \ regc1 regc-link bool
         if
             2drop
             true
@@ -105,16 +165,16 @@
 
 \ For a regioncorr-list, remove subsets of a given regc.
 : regioncorr-list-remove-subsets ( regc1 regc-lst0 -- )
-    \ Check args.
+    \ Check args.regioncorr-superset
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr
 
     begin
-        [ ' regioncorr-subset ] literal \ regc1 regc-lst0 xt
-        #2 pick #2 pick                 \ regc1 regc-lst0 xt regc1 regc-lst0
-        list-remove                     \ regc1 regc-lst0, regcx t | f
+        [ ' regioncorr-subset? ] literal    \ regc1 regc-lst0 xt
+        #2 pick #2 pick                     \ regc1 regc-lst0 xt regc1 regc-lst0
+        list-remove                         \ regc1 regc-lst0, regcx t | f
         if
-            regioncorr-deallocate       \ regc1 regc-lst0
+            regioncorr-deallocate           \ regc1 regc-lst0
         else
             2drop
             exit
@@ -122,13 +182,41 @@
     again
 ;
 
-\ Push an regc into a regioncorr-list.
+\ For a regioncorr-list, remove supersets of a given regc.
+: regioncorr-list-remove-supersets ( regc1 regc-lst0 -- )
+    \ Check args.regioncorr-superset
+    assert-tos-is-regioncorr-list
+    assert-nos-is-regioncorr
+
+    begin
+        [ ' regioncorr-superset? ] literal  \ regc1 regc-lst0 xt
+        #2 pick #2 pick                     \ regc1 regc-lst0 xt regc1 regc-lst0
+        list-remove                         \ regc1 regc-lst0, regcx t | f
+        if
+            regioncorr-deallocate           \ regc1 regc-lst0
+        else
+            2drop
+            exit
+        then
+    again
+;
+
+\ Push a regc onto the beginning of a regioncorr-list.
 : regioncorr-list-push  ( regc1 regc-lst0 -- )
     \ Check args.
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr
 
     list-push-struct                     \
+;
+
+\ Push a regc onto the end of a regioncorr-list.
+: regioncorr-list-push-end  ( regc1 regc-lst0 -- )
+    \ Check args.
+    assert-tos-is-regioncorr-list
+    assert-nos-is-regioncorr
+
+    list-push-end-struct                     \
 ;
 
 \ Add a regc to an regc list, removing subsets.
@@ -154,26 +242,122 @@
     true
 ;
 
+\ Add a regc to an regc list, removing subsets.
+\ A duplicate in the list will be like a superset, the code will not push.
+\ Return true if the push succeeds.
+\ You may want to deallocate the regc if the push fails.
+: regioncorr-list-push-end-nosubs ( regc1 regc-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-regioncorr-list
+    assert-nos-is-regioncorr
+
+    \ Skip if any supersets/eq are in the list.
+    2dup regioncorr-list-any-superset      \ regc1 regc-lst0 bool
+    if
+        2drop
+        false
+        exit
+    then
+
+    2dup regioncorr-list-remove-subsets
+
+    regioncorr-list-push-end
+    true
+;
+
+\ Add a regc to an regc list, removing supersets.
+\ A duplicate in tregioncorrratelist.fshe list will be like a superset, the code will not push.
+\ Return true if the push succeeds.
+\ You may want to deallocate the regc if the push fails.
+: regioncorr-list-push-end-nosups ( regc1 regc-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-regioncorr-list
+    assert-nos-is-regioncorr
+
+    \ Skip if any supersets/eq are in the list.
+    2dup regioncorr-list-any-superset      \ regc1 regc-lst0 bool
+    if
+        2drop
+        false
+        exit
+    then
+
+    2dup regioncorr-list-remove-supersets
+
+    regioncorr-list-push-end
+    true
+;
+
 \ Return an regioncorr-list with no duplicates or subsets.
 : regioncorr-list-copy-nosubs ( regc-lst0 -- regc-list )
     \ Check arg.
     assert-tos-is-regioncorr-list
 
-    list-new swap                   \ ret-lst regc-lst0
+    list-new swap                       \ ret-lst regc-lst0
 
-    list-get-links                  \ ret-lst link
+    list-get-links                      \ ret-lst link
 
     begin
         ?dup
     while
-        dup link-get-data           \ ret-lst link regcx
-        #2 pick                     \ ret-lst link regcx ret-lst
-        regioncorr-list-push-nosubs \ ret-lst link bool
-        drop                        \ ret-lst link
+        dup link-get-data               \ ret-lst link regcx
+        #2 pick                         \ ret-lst link regcx ret-lst
+        regioncorr-list-push-end-nosubs \ ret-lst link bool
+        drop                            \ ret-lst link
 
-        link-get-next               \ ret-lst link
+        link-get-next                   \ ret-lst link
     repeat
-                                    \ ret-lst
+                                        \ ret-lst
+;
+
+\ Return an regioncorr-list with no duplicates.
+: regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )                                                                                        
+    \ Check arg.
+    assert-tos-is-regioncorr-list
+
+    list-new swap                       \ ret-lst regc-lst0
+
+    list-get-links                      \ ret-lst link
+
+    begin
+        ?dup
+    while
+        [ ' regioncorr-eq ] literal     \ ret-lst link xt
+        over link-get-data              \ ret-lst link xt regcx
+        #3 pick                         \ ret-lst link xt regcx ret-lst
+        list-member                     \ ret-lst link bool
+        if  
+        else
+            dup link-get-data           \ ret-lst link regcx
+            #2 pick                     \ ret-lst link regcx ret-lst
+            regioncorr-list-push-end    \ ret-lst link
+        then
+
+        link-get-next                   \ ret-lst link
+    repeat
+                                        \ ret-lst
+;
+
+\ Return an regioncorr-list with no duplicates or supersets.
+: regioncorr-list-copy-nosups ( regc-lst0 -- regc-list )
+    \ Check arg.
+    assert-tos-is-regioncorr-list
+
+    list-new swap                       \ ret-lst regc-lst0
+
+    list-get-links                      \ ret-lst link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ ret-lst link regcx
+        #2 pick                         \ ret-lst link regcx ret-lst
+        regioncorr-list-push-end-nosups \ ret-lst link bool
+        drop                            \ ret-lst link
+
+        link-get-next                   \ ret-lst link
+    repeat
+                                        \ ret-lst
 ;
 
 \ Return true if a regioncorr-list contains at least one regc
@@ -189,7 +373,7 @@
     while
         over                        \ regc1 regc-link regc1
         over link-get-data          \ regc1 regc-link regc1 regc0
-        regioncorr-intersects       \ regc1 regc-link bool
+        regioncorr-intersects?      \ regc1 regc-link bool
         if
             2drop
             true
@@ -222,14 +406,14 @@
         \ Check if regc1 is a superset of regc0.
         dup link-get-data               \ ret-lst regc1 regc-link regc0
         #2 pick                         \ ret-lst regc1 regc-link regc0 regc1
-        regioncorr-superset             \ ret-lst regc1 regc-link bool
+        regioncorr-superset?            \ ret-lst regc1 regc-link bool
         if
             \ Don't add regc0 to return list.
         else
             \ Check if regc1 intersects regc0.
             dup link-get-data           \ ret-lst regc1 regc-link regc0
             #2 pick                     \ ret-lst regc1 regc-link regc0 regc1
-            regioncorr-intersects       \ ret-lst regc1 regc-link bool
+            regioncorr-intersects?      \ ret-lst regc1 regc-link bool
             if
                 \ Subtract regc1 from regc0.
                 over                    \ ret-lst regc1 regc-link regc1
@@ -281,7 +465,8 @@
 
     \ Subtract each regc in regc-lst1 from regc-lst0'.
     begin
-        ?dup
+   \ Return an regioncorr-list with no duplicates.
+    ?dup
     while
         \ Prep for process.
         swap                    \ link1 regc-lst0'
@@ -403,7 +588,7 @@
 ;
 
 \ Return a copy of an regioncorr-list, with duplicates removed.
-: regioncorr-list-copy-nodups ( regc-lst -- regc-lst )
+: ?regioncorr-list-copy-nodups ( regc-lst -- regc-lst )
     \ Check arg.
     assert-tos-is-regioncorr-list
 
@@ -420,6 +605,33 @@
 
         link-get-next           \ ret link
     repeat
+;
+\ Return an regioncorr-list with no duplicates.
+: regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )                                                                                        
+    \ Check arg.
+    assert-tos-is-regioncorr-list
+
+    list-new swap                       \ ret-lst regc-lst0
+
+    list-get-links                      \ ret-lst link
+
+    begin
+        ?dup
+    while
+        [ ' regioncorr-eq ] literal     \ ret-lst link xt
+        over link-get-data              \ ret-lst link xt regcx
+        #3 pick                         \ ret-lst link xt regcx ret-lst
+        list-member                     \ ret-lst link bool
+        if  
+        else
+            dup link-get-data           \ ret-lst link regcx
+            #2 pick                     \ ret-lst link regcx ret-lst
+            regioncorr-list-push-end    \ ret-lst link
+        then
+
+        link-get-next                   \ ret-lst link
+    repeat
+                                        \ ret-lst
 ;
 
 \ Return all two-regc intersections from an regioncorr-list.
@@ -482,7 +694,7 @@
     while
         dup link-get-data       \ regc-lst0 link regcx
         #2 pick                 \ regc-lst0 link regcx regc-lst0
-        regioncorr-list-push    \ regc-lst0 link
+        regioncorr-list-push-end    \ regc-lst0 link
 
         link-get-next           \ regc-lst0 link
     repeat
@@ -555,7 +767,7 @@
         regioncorr-list-intersections-nodups        \ ret-lst lst0 int-lst
 
         \ Check if no more intersections.
-        dup list-is-empty
+        dup list-is-empty?
         if
             list-deallocate                         \ ret-lst lst0
             \ Add remaining regioncorrs.
@@ -660,7 +872,7 @@
     while
         dup link-get-data       \ regc1 link regcx
         #2 pick                 \ regc1 link regcx regc1
-        regioncorr-intersects   \ regc1 link bool
+        regioncorr-intersects?  \ regc1 link bool
         if
             2drop
             true
@@ -674,8 +886,8 @@
     false
 ;
 
-\ Return regc that intersects both regc-to and regc-from.
-: regioncorr-list-intersects-both ( regc-to regc-from lst0 -- regc t | f )
+\ Return true if both regc-to and regc-from intersect one regioncorr in the list.
+: regioncorr-list-intersects-both ( regc-to regc-from regc-lst0 -- bool )
     \ Check args.
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr
@@ -683,24 +895,25 @@
 
     list-get-links                      \ regc-to regc-from link
 
+    \ For each regioncorr in list.
     begin
         ?dup
     while
-        dup link-get-data               \ regc-to regc-from link regcx
-        #3 pick over                    \ regc-to regc-from link regcx regc-to regcx
-        regioncorr-intersects           \ regc-to regc-from link regcx bool
+        \ Check regc-to.
+        #2 pick                         \ regc-to regc-from link regc-to
+        over link-get-data              \ regc-to regc-from link regc-to regcx
+        regioncorr-intersects?          \ regc-to regc-from link bool
         if
-            #2 pick over                \ regc-to regc-from link regcx regc-from regcx
-            regioncorr-intersects       \ regc-to regc-from link regcx bool
-            if                          \ regc-to regc-from link regcx
-                2nip nip                \ regcx
+            over                        \ regc-to regc-from link regc-from
+            over link-get-data          \ regc-to regc-from link regc-from regcx
+            regioncorr-intersects?      \ regc-to regc-from link bool
+            if                          \ regc-to regc-from link
+                3drop                   \
                 true
                 exit
             then
         then
-                                        \ regc-to regc-from link regcx
-        drop                            \ regc-to regc-from link
-
+                                        \ regc-to regc-from link
         link-get-next
     repeat
                                         \ regc-to regc-from
@@ -772,7 +985,7 @@
 ;
 
 : regioncorr-list-closest-regioncorrs ( regc1 regc-lsn0 -- regc-lst ) \ Return a list of regc in list closest to a given regc.
-        \ Check args.
+    \ Check args.
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr
 
@@ -817,4 +1030,40 @@
 
                                         \ | ret-lst min
     2nip drop                           \ ret-lst
+;
+
+\ Return intersections of a regioncorr list with a given regioncorr.
+: regioncorr-list-calc-intersections ( regc1 regc-lst0 -- regc-lst )
+    \ Check args.
+    assert-tos-is-regioncorr-list
+    assert-nos-is-regioncorr
+
+    \ Init return list.
+    list-new                            \ regc1 regc-lst0 ret-lst
+
+    \ Prep for loop.
+    over list-get-links                 \ regc1 regc-lst0 ret-lst regc-link
+
+    \ For each regioncorr in list.
+    begin
+        ?dup
+    while
+        dup link-get-data               \ regc1 regc-lst0 ret-lst regc-link regcx
+        #4 pick                         \ regc1 regc-lst0 ret-lst regc-link regcx regc1
+        regioncorr-intersection         \ regc1 regc-lst0 ret-lst regc-link, regc-i t | f
+        if
+            dup                         \ regc1 regc-lst0 ret-lst regc-link regc-i regc-i
+            #3 pick                     \ regc1 regc-lst0 ret-lst regc-link regc-i regc-i ret-lst
+            regioncorr-list-push-nosubs \ regc1 regc-lst0 ret-lst regc-link regc-i bool
+            if
+                drop
+            else
+                regioncorr-deallocate
+            then
+        then
+
+        link-get-next
+    repeat
+                                        \ regc1 regc-lst0 ret-lst
+    nip nip                             \ ret-lst
 ;

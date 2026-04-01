@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a need instance as its first item.
 : assert-tos-is-need-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-need
@@ -14,7 +14,7 @@
 \ Check if nos is an empty list, or has a need instance as its first item.
 : assert-nos-is-need-list ( nos tos -- nos tos )
     assert-nos-is-list
-    over list-is-not-empty
+    over list-is-not-empty?
     if
         over list-get-links link-get-data
         assert-tos-is-need
@@ -167,7 +167,7 @@
     repeat
                                 \ ret-lst typ1
     drop                        \ ret-lst
-    dup list-is-empty           \ ret-lst bool
+    dup list-is-empty?          \ ret-lst bool
     if
         list-deallocate
         false

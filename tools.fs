@@ -238,25 +238,13 @@
     2rot 2rot
 ;
 
-\ Return a terrible random number, from 0 to a given limit - 1.
-\ Used to exercise different sections of code, purity of randomness is not important.
+\ Return a poor random number, from 0 to a given limit - 1.
+\ Mostly used to change a non-empty list length into a random index.
 : random ( limit -- result )
     dup 1 < abort" limit is zero?"
 
-    \ Get the stack pointer.
-    sp@
-
-    \ Add seconds + minute-seconds.
-    time&date 2drop 2drop #60 * + +
-
-    \ Add limit.
-    over +
-
-    \ Get the return address, a code pointer.
-    r@
-
-    \ Modify return addr.
-    xor
+    \ Get microseconds.
+    utime drop
 
     \ Get result.
     swap mod
@@ -358,10 +346,6 @@
 ;
 
 : 3dup #2 pick #2 pick #2 pick ;
-
-: assert-forth-stack-empty ( -- )
-    depth 0<> abort" Forth stack is not empty"
-;
 
 \ Get the first word, 16 bits, of a, possibly invalid, address.
 : get-first-word ( addr -- w t | f )

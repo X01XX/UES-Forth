@@ -496,13 +496,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             #2 pick                             \ act0 link reg act0
             action-get-squares                  \ act0 link reg sqr-lst1
             square-list-in-region               \ act0 link sqr-lst2
-            dup list-is-empty                   \ act0 link sqr-lst2 flag
+            dup list-is-empty?                  \ act0 link sqr-lst2 flag
             if                                  \ act0 link sqr-lst2
                 space ." no squares found "
                 list-deallocate
             else
                 dup                             \ act0 link sqr-lst2 sqr-lst2
-                square-list-get-rules           \ act0 link sqr-lst2, ruls true | false
+                square-list-get-rules           \ act0 link sqr-lst2, ruls t | f
                 if                              \ act0 link sqr-lst2 ruls
                     rulestore-deallocate        \ act0 link sqr-lst2
                     over link-get-data          \ act0 link sqr-lst2 reg
@@ -920,7 +920,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     #2 <                                \ act0 bool
     if                                  \ act0
         dup action-get-corners          \ act0 crn-lst
-        list-is-empty                   \ act0 bool
+        list-is-empty?                  \ act0 bool
         if
             drop                        \
         else
@@ -984,7 +984,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         list-deallocate                     \ act0 crn-lol' inc-stas' def-regs def-link crs-lst
 
         \ Store corner(s) list for one defining region.
-        dup list-is-not-empty
+        dup list-is-not-empty?
         if
             #4 pick                         \ act0 crn-lol' inc-stas' def-regs def-link crs-lst crn-lol'
             list-push-struct                \ act0 crn-lol' inc-stas' def-regs def-link
@@ -1173,7 +1173,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     swap region-list-deallocate                 \ ret-lst sqr1 act0 inc-sqr-lst'
 
     \ Check for no incompatible squares.
-    dup list-is-empty
+    dup list-is-empty?
     if
         list-deallocate                         \ ret-lst sqr1 act0
         2drop                                   \ ret-lst
@@ -1208,7 +1208,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     square-list-deallocate                  \ ret-lst sqr1 act0
 
     drop                                    \ ret-lst sqr1
-\    over list-is-empty
+\    over list-is-empty?
 \    if
 \        cr
 \        ." Dom: " current-domain-id #3 dec.r
@@ -1232,7 +1232,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Form regions with incompatible squares, no supersets.
     tuck                                            \ act0 sqr1 act0
     action-find-incompatible-pairs-for-square       \ act0 inc-lst'
-    dup list-is-empty
+    dup list-is-empty?
     if
         \ cr ." _action-check-square: list is empty" cr
         list-deallocate
@@ -1304,7 +1304,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-list
 
-    over list-is-empty
+    over list-is-empty?
     abort" list is empty?"
 
     \ Create return list.
@@ -1420,7 +1420,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over square-get-state                   \ sqr1 act0 | sta
     over action-get-incompatible-pairs      \ sqr1 act0 | sta ip-lst'
     region-list-regions-state-in            \ sqr1 act0 | reg-in-lst'
-    dup list-is-empty                       \ sqr1 act0 | reg-in-lst' flag
+    dup list-is-empty?                      \ sqr1 act0 | reg-in-lst' flag
     if
         list-deallocate
         2drop
@@ -1525,7 +1525,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     action-get-incompatible-pairs       \ sqr1 act0 sta ip-lst
     region-list-regions-using-state     \ sqr1 act0 reg-lst-in'
 
-    dup list-is-empty                   \ sqr1 act0 reg-lst-in' flag
+    dup list-is-empty?                  \ sqr1 act0 reg-lst-in' flag
     if
         list-deallocate                 \ sqr1 act0
         _action-check-incompatible-pairs2
@@ -1538,7 +1538,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Some regions found, check them.       \ act0 reg-lst-in'
     2dup swap                               \ act0 reg-lst-in' reg-lst-in' act0
     _action-pairs-no-longer-incompatible    \ act0 reg-lst-in' reg-lst-not-i'
-    dup list-is-empty                       \ act0 reg-lst-in' reg-lst-not-i' flag
+    dup list-is-empty?                      \ act0 reg-lst-in' reg-lst-not-i' flag
     if
         \ No not-incompatible pairs found.
         list-deallocate                     \ act0 reg-lst-in'
@@ -1566,7 +1566,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         space ." state " dup region-get-states .value space ." and " .value space ." are no longer incompatible"
         cr
 
-        [ ' region-eq ] literal swap    \ act0 reg-lst-not-i' link xt region
+        [ ' region-eq? ] literal swap   \ act0 reg-lst-not-i' link xt region
         #4 pick                         \ act0 reg-lst-not-i' link xt region act0
         action-get-incompatible-pairs   \ act0 reg-lst-not-i' link xt region pair-list
         list-remove                     \ act0 reg-lst-not-i' link reg? flag
@@ -1609,7 +1609,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     over sample-get-initial     \ smpl1 act0 s-i
     over action-get-squares     \ smpl1 act0 s-i sqr-lst
-    square-list-find            \ smpl1 act0, sqr true | false
+    square-list-find            \ smpl1 act0, sqr t | f
     if
                                 \ smpl1 act0 sqr
         \ Update existing square
@@ -2155,7 +2155,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     repeat
                                         \ act0 ret-lst
     \ Check for any needs, so far.
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         nip                             \ ret-lst
         exit
@@ -2201,7 +2201,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
                                         \ act0 ret-lst
 
     \ Check for any needs, so far.
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         nip                             \ ret-lst
         exit
@@ -2386,7 +2386,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     need-list-deallocate                            \ sta1 act0 | ret-lst
 
     \ Check for clean up.
-    dup list-is-empty                               \ sta1 act0 | ret-lst bool
+    dup list-is-empty?                              \ sta1 act0 | ret-lst bool
     if
         over action-get-cull-squares-trigger        \ sta1 act0 | ret-lst bool
         if
@@ -2468,8 +2468,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ Get null alternate rule.
         0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul
         \ Get rule from list.
-        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul 0
-        #6 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
+        #5 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
         \ Get action.
         #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0 act0
         \ Make new planstep.
@@ -2485,9 +2484,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Get the first rule changes.
     #5 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4
-    0                               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx
-    #4 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx rul-lst1
-    list-get-item                   \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0
+    #3 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx rul-lst1
+    list-get-first-item             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0
     rule-get-changes                \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0-cngs'
 
     \ Check for non-null intersection.
@@ -2502,12 +2500,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
         \ Get second rule from list.
         #5 pick #5 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from
-        1                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from inx
-        #6 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from inx rul-lst1
-        list-get-item               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul
+        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from inx rul-lst1
+        list-get-second-item        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul
         \ Get first rule from list.
-        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul inx
-        #7 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul rul0
+        #6 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul rul0
         \ Get action.
         #6 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul rul0 act0
         \ Make and save new planstep.
@@ -2516,9 +2512,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     then
 
     \ Get the second rule changes.
-    1                               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx
-    #4 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx plnstp-lst
-    list-get-item                   \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul1
+    #3 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx plnstp-lst
+    list-get-second-item            \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul1
     rule-get-changes                \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul1-cngs'
 
     \ Check for non-null intersection.
@@ -2535,11 +2530,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ Get from-to regions.
         #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from
         \ Get first rule from list.
-        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from inx
-        #5 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul
+        #4 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul
         \ Get second rule from list.
-        1                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul inx
-        #6 pick list-get-item       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
+        #5 pick list-get-second-item    \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
         \ Get action.
         #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0 act0
         \ Make and save new planstep.
@@ -2588,7 +2581,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             over link-get-data              \ cngs3 reg-to reg-from act0 ret-lst grp-lnk cngs3 grpx
             group-rules-for-changes         \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst'
 
-            dup list-is-empty               \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst' bool
+            dup list-is-empty?              \ cngs3 reg-to reg-from act0 ret-lst grp-lnk rul-lst' bool
             if
                 list-deallocate             \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
             else                            \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
@@ -2610,7 +2603,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         link-get-next                       \ cngs3 reg-to reg-from act0 ret-lst grp-lnk
     repeat
                                             \ cngs3 reg-to reg-from act0 ret-lst
-\    dup list-is-not-empty
+\    dup list-is-not-empty?
 \    if
 \        cr
 \        ." Dom: " current-domain-id #3 dec.r

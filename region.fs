@@ -1,12 +1,17 @@
 \ Implement a region struct and functions.
 \
-\ The region represents a span of 2^N power squares in a K-Map of a number of bits, less than one Forth word.
+\ The region is a series of trits, representing a span of 2^N power squares,
+\ in a K-Map of a number of bits, less the number of bits in a unsigned forth cell.
+\
+\ The bit limitation is for one Domain, but there can be a number of domains.
+\
+\ A number of trits equal to the number of bits in a whole forth cell may be possible,
+\ but the sign bit may be a problem.
 \
 \ The region can do this with any two states/numbers. The states may be the same for a single-state
 \ "region" in a K-Map.
 \
-\ The region is used as a two-state store, the states being not-equal, in
-\ action-incompatible-pairs list.
+\ In the action-incompatible-pairs list, regions are used as a two-state store, the states being not-equal.
 \
 \ Order of the states does not matter, although it can be seen in a printed region.
 \ XxXx is state-0: 1010 and state-1: 0101.
@@ -174,12 +179,12 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Check arg.
     assert-tos-is-region
 
-    \ Setup for bit-position loop.
+    \ Setup for trit-position loop.
     dup  region-get-state-1         \ reg0 sta1
     swap region-get-state-0         \ sta1 sta0
     current-ms-bit-mask             \ sta1 sta0 ms-bit
 
-    \ Process each bit.
+    \ Process each trit.
     begin
       dup
     while
@@ -261,7 +266,8 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     region-get-state-0      \ sta1 sta0
 ;
 
-\ Return a regions edge mask.
+\ Return a regions edge mask,
+\ trits that are 0, or 1.
 : region-edge-mask ( reg0 -- msk )
     \ Check arg.
     assert-tos-is-region
@@ -271,11 +277,8 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     !nxor
 ;
 
-\ Return true if two regions intersect.
-\ And diff-bits in a state from each region.
-\     same bits mask from reg1
-\     same bits mask from reg2
-\ Return 0=
+\ Return true if two regions intersect, no corresponding
+\ trits are 0 and 1.
 : region-intersects ( reg1 reg0 -- flag )
     \ Check args.
     assert-tos-is-region
@@ -441,6 +444,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     and                     \ sta1 keep sta0-new
     -rot                    \ sta0-new sta1 keep
     and                     \ sta0-new sta1-new
+    swap                    \ sta1-new sta0-new
     region-new              \ reg
 ;
 
@@ -458,11 +462,12 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     or                      \ sta1 to-1-msk sta0-new
     -rot                    \ sta0-new sta1 to-1-msk
     or                      \ sta0-new sta1-new
+    swap                    \ sta1-new sta0-new
     region-new              \ reg
 ;
 
 \ Return true if two regions are equal.
-: region-eq ( reg1 reg0 -- flag )
+: region-eq? ( reg1 reg0 -- flag )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
@@ -495,7 +500,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     assert-tos-is-region
     assert-nos-is-region
 
-    region-eq
+    region-eq?
     false?
 ;
 
@@ -511,7 +516,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
         over region-intersection    \ reg1 reg-int flag
         0= abort" region-superset-of: reg-sup and reg1 should intersect"
                                     \ reg1 reg-int
-        tuck region-eq              \ reg-int flag
+        tuck region-eq?             \ reg-int flag
         swap region-deallocate      \ flag
     else
         \ Regions do not intersect, return false.
@@ -533,7 +538,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
         region-intersection         \ reg-sub reg-int flag
         0= abort" region-subset-of: reg-sub and reg1 should intersect"
                                     \ reg-sub reg-int'
-        tuck region-eq              \ reg-int' flag
+        tuck region-eq?             \ reg-int' flag
         swap region-deallocate      \ flag
     else
         \ Regions do not intersect, return false.
@@ -634,7 +639,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
                         \ Update char counter.
                         rot 1+ -rot
                     endof
-                \ Ignore unrecognized characters.
+            \ Ignore unrecognized characters.
         endcase
     loop
                             \ c-addr cnt sta1 sta0
@@ -712,13 +717,13 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     xor                         \ sta' (in region)
 ;
 
-\ Return a mask of different non-X bit positions between two regions.
+\ Return a mask of different non-X trit positions between two regions.
 : region-diff-mask ( reg1 reg0 -- msk )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
 
-    \ Get mask of bit positions that are not X in either region.
+    \ Get mask of trit positions that are not X in either region.
     over region-edge-mask           \ reg1 reg0 e1-msk
     over region-edge-mask           \ reg1 reg0 e1-msk e0-msk
     and                             \ reg1 reg0 e-msk
@@ -729,11 +734,11 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     swap region-get-state-0         \ e-msk sta-0 sta-1
     xor                             \ e-msk sta0-dif-msk
 
-    \ Remove X bit positions from the mask.
+    \ Remove X trit positions from the mask.
     and                             \ dif-msk
 ;
 
-\ Return the number of bits difference between two regions.
+\ Return the number of corresponding trits that are 0 and 1, between two regions.
 : region-distance ( reg1 reg0 -- u )
     \ Check args.
     assert-tos-is-region

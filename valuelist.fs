@@ -5,7 +5,7 @@
 \ Check if tos is a list, if non-empty, with the first item being a value.
 : assert-tos-is-value-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-value
@@ -16,7 +16,7 @@
 \ Check if nos is a list, if non-empty, with the first item being a value.
 : assert-nos-is-value-list ( tos -- tos )
     assert-nos-is-list
-    over list-is-not-empty
+    over list-is-not-empty?
     if
         over list-get-links link-get-data
         assert-tos-is-value

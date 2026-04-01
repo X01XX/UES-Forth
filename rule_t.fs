@@ -132,17 +132,17 @@
     cr ." rule-test-restrict-to-region: Ok" cr
 ;
 
-: rule-test-combine2
+: rule-test-combine
     \ Test 1.
     s" 00/00/01/01/" rule-from-string   \ rul0
     s" 00/01/11/10/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 1: " dup .rule cr
     s" 00/01/01/00/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 1 failed?"
+    false? abort" rule-test-combine: test 1 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -153,11 +153,11 @@
     s" 11/10/00/01/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 2: " dup .rule cr
     s" 11/10/10/11/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 2 failed?"
+    false? abort" rule-test-combine: test 2 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -168,11 +168,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 3: " dup .rule cr
     s" 01/00/00/01/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 3 failed?"
+    false? abort" rule-test-combine: test 3 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -183,11 +183,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 4: " dup .rule cr
     s" 00/01/00/01/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 4 failed?"
+    false? abort" rule-test-combine: test 4 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -198,11 +198,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 5: " dup .rule cr
     s" 10/11/10/11/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 5 failed?"
+    false? abort" rule-test-combine: test 5 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -213,11 +213,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 6: " dup .rule cr
     s" 11/10/10/11/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 6 failed?"
+    false? abort" rule-test-combine: test 6 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -228,11 +228,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 7: " dup .rule cr
     s" XX/Xx/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 7 failed?"
+    false? abort" rule-test-combine: test 7 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -243,11 +243,11 @@
     s" 00/01/11/10/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 8: " dup .rule cr
     s" 10/11/01/00/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 8 failed?"
+    false? abort" rule-test-combine: test 8 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -258,11 +258,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 9: " dup .rule cr
     s" Xx/XX/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 9 failed?"
+    false? abort" rule-test-combine: test 9 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -273,11 +273,11 @@
     s" 00/01/11/10/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 10: " dup .rule cr
     s" 00/01/11/10/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 10 failed?"
+    false? abort" rule-test-combine: test 10 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -288,11 +288,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 11: " dup .rule cr
     s" X1/X0/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 11 failed?"
+    false? abort" rule-test-combine: test 11 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -303,11 +303,11 @@
     s" 00/01/00/01/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 12: " dup .rule cr
     s" X0/X1/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 12 failed?"
+    false? abort" rule-test-combine: test 12 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -318,11 +318,11 @@
     s" Xx/XX/X0/X1/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 13: " dup .rule cr
     s" X0/X1/X0/X1/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 13 failed?"
+    false? abort" rule-test-combine: test 13 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
@@ -333,17 +333,17 @@
     s" 11/10/11/10/" rule-from-string   \ rul0 rul1
     swap                                \ rul1 rul0
     2dup
-    rule-combine2                       \ rul1 rul0 rul01
+    rule-combine                        \ rul1 rul0 rul01
     cr ." rule test 14: " dup .rule cr
     s" X1/X0/X1/X0/" rule-from-string   \ rul1 rul0 rul01 rult
     2dup rule-eq                        \ rul1 rul0 rul01 rult bool
-    false? abort" rule-test-combine2: test 14 failed?"
+    false? abort" rule-test-combine: test 14 failed?"
     rule-deallocate
     rule-deallocate
     rule-deallocate
     rule-deallocate
 
-    cr ." rule-test-combine2: Ok" cr
+    cr ." rule-test-combine: Ok" cr
 ;
 
 : rule-test-new-region-to-region
@@ -356,7 +356,7 @@
 
     \ cr ." rul1 " dup .rule cr
     s" 00/01/11/10/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test1 region-eq failed?"
+    2dup rule-eq false? abort" rule-test-new-region-to-region test1 rule-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
@@ -370,7 +370,7 @@
 
     \ cr ." rul1 " dup .rule cr
     s" X0/X1/XX/11/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test2 region-eq failed?"
+    2dup rule-eq false? abort" rule-test-new-region-to-region test2 rule-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
@@ -384,7 +384,7 @@
 
     \ cr ." rul1 " dup .rule cr
     s" 00/11/00/11/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test3 region-eq failed?"
+    2dup rule-eq false? abort" rule-test-new-region-to-region test3 rule-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
@@ -398,7 +398,7 @@
 
     \ cr ." rul1 " dup .rule cr
     s" 00/XX/X1/X0/" rule-from-string   \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test4 region-eq failed?"
+    2dup rule-eq false? abort" rule-test-new-region-to-region test4 rule-eq failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
@@ -451,7 +451,7 @@
     rule-test-restrict-initial-region
     rule-test-restrict-result-region
     rule-test-restrict-to-region
-    rule-test-combine2
+    rule-test-combine
     rule-test-new-region-to-region
 
     current-session-deallocate

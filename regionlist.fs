@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a region instance as its first item.
 : assert-tos-is-region-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-region
@@ -14,7 +14,7 @@
 \ Check if nos is an empty list, or has a region instance as its first item.
 : assert-nos-is-region-list ( nos tos -- nos tos )
     assert-nos-is-list
-    over list-is-not-empty
+    over list-is-not-empty?
     if
         over list-get-links link-get-data
         assert-tos-is-region
@@ -25,7 +25,7 @@
 \ Check if 3os is a list, if non-empty, with the first item being a region.
 : assert-3os-is-region-list ( 3os nos tos -- 3os nos tos )
     assert-3os-is-list
-    #2 pick list-is-not-empty
+    #2 pick list-is-not-empty?
     if
         #2 pick list-get-links link-get-data
         assert-tos-is-region
@@ -36,7 +36,7 @@
 \ Check if 4os is a list, if non-empty, with the first item being a region.
 : assert-4os-is-region-list ( 4os 3os nos tos -- 4os 3os nos tos )
     assert-4os-is-list
-    #3 pick list-is-not-empty
+    #3 pick list-is-not-empty?
     if
         #3 pick list-get-links link-get-data
         assert-tos-is-region
@@ -67,7 +67,7 @@
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    [ ' region-eq ] literal -rot        \ xt list1 list0
+    [ ' region-eq? ] literal -rot       \ xt list1 list0
     list-intersection-struct            \ list-result
 ;
 
@@ -77,7 +77,7 @@
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    [ ' region-eq ] literal -rot        \ xt list1 list0
+    [ ' region-eq? ] literal -rot       \ xt list1 list0
     list-union-struct                   \ list-result
 ;
 
@@ -89,7 +89,7 @@
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    [ ' region-eq ] literal -rot        \ xt list1 list0
+    [ ' region-eq? ] literal -rot       \ xt list1 list0
     list-difference-struct              \ list-result
 ;
 
@@ -121,7 +121,7 @@
 
     \ Return if any region in the list is a duplicate of reg1.
     2dup                                    \ reg1 list0 reg1 list0
-    [ ' region-eq ] literal                 \ reg1 list0 reg1 list0 xt
+    [ ' region-eq? ] literal                \ reg1 list0 reg1 list0 xt
     -rot                                    \ reg1 list0 xt reg1 list0
     list-member                             \ reg1 list0 flag
     if
@@ -153,10 +153,10 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-eq ] literal     \ reg1 list0  xt
+    [ ' region-eq? ] literal    \ reg1 list0  xt
     -rot                        \ xt reg1 list0
 
-    list-remove                 \ reg2 true | false
+    list-remove                 \ reg2 t | f
     if
         region-deallocate
         true
@@ -176,7 +176,7 @@
     [ ' region-subset-of ] literal      \ reg1 list0  xt
     -rot                                \ xt reg1 list0
 
-    list-remove                         \ reg2 true | false
+    list-remove                         \ reg2 t | f
     if
         region-deallocate
         true
@@ -196,7 +196,7 @@
     [ ' region-superset-of ] literal    \ reg1 list0  xt
     -rot                                \ xt reg1 list0
 
-    list-remove                         \ reg2 true | false
+    list-remove                         \ reg2 t | f
     if
         region-deallocate
         true
@@ -433,7 +433,7 @@
         while
             dup link-get-data       \ ret-list list1 link0 data0 link1 data1
             #2 pick                 \ ret-list list1 link0 data0 link1 data1 data0
-            region-intersection     \ ret-list list1 link0 data0 link1, reg-int true | false
+            region-intersection     \ ret-list list1 link0 data0 link1, reg-int t | f
             if
                                         \ ret-list list1 link0 data0 link1 reg-int
                 dup                     \ ret-list list1 link0 data0 link1 reg-int reg-int
@@ -462,7 +462,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-eq ] literal -rot list-member
+    [ ' region-eq? ] literal -rot list-member
 ;
 
 \ Return true if a region-list contains a superset, or equal, region.
@@ -666,7 +666,7 @@
         dup link-get-data               \ lst1 link data
 
         \ Check if its in the other list.
-        [ ' region-eq ] literal swap    \ lst1 link xt data
+        [ ' region-eq? ] literal swap    \ lst1 link xt data
         #3 pick                         \ lst1 link xt data lst1
         list-member                     \ lst1 link flag
 
@@ -918,7 +918,7 @@
     region-list-copy-nodups                 \ ret-lst lst0'
 
     begin
-        dup list-is-empty 0=
+        dup list-is-empty? 0=
     while
         dup                                 \ ret-lst lst0' lst0'
 
@@ -1091,7 +1091,7 @@
 
         \ Check if the region is the same as the given region. If so, skip it.
         #3 pick                             \ reg1 rem-lst ls-link regx reg1
-        region-eq                           \ reg1 rem-lst ls-link bool
+        region-eq?                          \ reg1 rem-lst ls-link bool
         if
         else
             dup link-get-data               \ reg1 rem-lst ls-link regx
@@ -1107,7 +1107,7 @@
     repeat
                                         \ reg1 rem-lst
 
-    dup list-is-empty                   \ reg1 rem-lst bool
+    dup list-is-empty?                  \ reg1 rem-lst bool
     if
         list-deallocate
         drop
@@ -1216,7 +1216,7 @@
     swap                        \  reg-sub-lst reg-sup-lst
     \ Get sub-list minus sup-list.
     region-list-set-difference  \ dif-lst
-    dup list-is-empty
+    dup list-is-empty?
     if
         list-deallocate
         true
@@ -1229,7 +1229,7 @@
 \ Return true if tos is a region-list lol.
 : assert-tos-is-region-lol ( lst0 -- bool )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-region-list

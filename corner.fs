@@ -318,7 +318,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
     assert-tos-is-corner
 
     corner-calc-needs       \ ned-lst'
-    dup list-is-empty       \ ned-lst' bool
+    dup list-is-empty?      \ ned-lst' bool
     swap                    \ bool ned-lst'
     need-list-deallocate    \ bool
 ;

@@ -136,3 +136,12 @@
     [ ' struct-inc-use-count ] literal  \ ret-lst xt
     over list-apply                     \ ret-lst
 ;
+
+\ Remove a struct item based on index.
+: list-remove-item-struct ( u1 lst0 -- item )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-remove-item        \ item
+    dup struct-dec-use-count
+;

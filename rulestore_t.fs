@@ -3,7 +3,7 @@
     \ Test two empty rulestores.
     rulestore-new-0
     rulestore-new-0
-    2dup rulestore-union                \ rs1 rs2, rs3 true | false
+    2dup rulestore-union                \ rs1 rs2, rs3 t | f
     0= abort" Rulestore union of two empty rulestores should work"
     rulestore-deallocate
     rulestore-deallocate
@@ -12,7 +12,7 @@
     \ Test two single-rule rulestores, that are compatible.
     s" 00/11/00/11/" rule-from-string rulestore-new-1
     s" 11/11/00/11/" rule-from-string rulestore-new-1
-    2dup rulestore-union                \ rs1 rs2, rs3 true | false
+    2dup rulestore-union                \ rs1 rs2, rs3 t | f
     0= abort" Rulestore union of two single-rule rulestores should work"
     rulestore-deallocate
     rulestore-deallocate
@@ -21,7 +21,7 @@
     \ Test two single-rule rulestores, that are not compatible.
     s" 00/11/00/11/" rule-from-string rulestore-new-1
     s" 11/11/00/10/" rule-from-string rulestore-new-1
-    2dup rulestore-union                \ rs1 rs2, rs3 true | false
+    2dup rulestore-union                \ rs1 rs2, rs3 t | f
     abort" Rulestore union of two single-rule rulestores should not work"
     rulestore-deallocate
     rulestore-deallocate
@@ -37,7 +37,7 @@
     rulestore-new-2                     \ rs1 rs2
     cr ." rulestore2: " dup .rulestore cr
 
-    2dup rulestore-union                \ rs1 rs3, rsx true | false
+    2dup rulestore-union                \ rs1 rs3, rsx t | f
     if
         cr dup ." union:      " .rulestore cr
         rulestore-deallocate
@@ -53,7 +53,7 @@
     rulestore-new-2                     \ rs1 rs2b
     cr ." rulestor2b: " dup .rulestore cr
 
-    2dup rulestore-union                \ rs1 rs3b, rsx true | false
+    2dup rulestore-union                \ rs1 rs3b, rsx t | f
     if
         cr dup ." union:      " .rulestore cr
         rulestore-deallocate
@@ -69,7 +69,7 @@
     rulestore-new-2                     \ rs1 rs3
     cr ." rulestore3: " dup .rulestore cr
 
-    2dup rulestore-union                \ rs1 rs3, rsx true | false
+    2dup rulestore-union                \ rs1 rs3, rsx t | f
     if
         cr ." rulestore-union rs1 rs3 should not have succeeded" cr
         abort
@@ -83,7 +83,7 @@
     cr ." rulestore1: " over .rulestore cr
     cr ." rulestore4: " dup .rulestore cr
 
-    2dup rulestore-union                \ rs1 rs4, rsx true | false
+    2dup rulestore-union                \ rs1 rs4, rsx t | f
     if
     cr ." union:      " dup .rulestore cr
         rulestore-deallocate

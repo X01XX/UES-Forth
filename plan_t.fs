@@ -102,9 +102,8 @@
     region-deallocate                   \ act0 pln reg pln'
 
     \ Test use count of last step.
-    1
-    over plan-get-step-list             \ act0 pln reg pln' 1 stp-lst
-    list-get-item                       \ act0 pln reg pln' stp1
+    dup plan-get-step-list             \ act0 pln reg pln' stp-lst
+    list-get-second-item               \ act0 pln reg pln' stp1
     struct-get-use-count                \ act0 pln reg pln' u
     #2 <> abort" use count of last step not 2?"
 

@@ -167,6 +167,26 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     rule-get-m10            \ m00 m01 m11 m10
 ;
 
+\ Return a rule's X->0 mask.
+: rule-get-x0-mask ( rul0 -- mask )
+    \ Check arg.
+    assert-tos-is-rule
+
+    dup rule-get-m00        \ rul0 m00
+    swap rule-get-m10       \ m00 m10
+    and
+;
+
+\ Return a rule's X->1 mask.
+: rule-get-x1-mask ( rul0 -- mask )
+    \ Check arg.
+    assert-tos-is-rule
+
+    dup rule-get-m11        \ rul0 m11
+    swap rule-get-m01       \ m11 m01
+    and
+;
+
 : rule-eq ( rul1 rul0 -- flag ) \ Return true if two rules are equal.
     \ Check arg.
     assert-tos-is-rule
@@ -765,10 +785,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         dup c@                      \ rul addr ci
 
         case
+            [char] ( of endof
+            [char] ) of endof
             [char] / of             \ rul ci cr addr
                 -rot                \ rul addr ci cr
                 #3 pick             \ rul addr ci cr rul
-                _rule-adjust-masks   \ rul addr
+                _rule-adjust-masks  \ rul addr
             endof
             [char] _ of
                 -rot                \ rul addr ci cr
@@ -835,7 +857,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-: rule-combine2 ( rul1-to rul0-from -- rul )    \ Return a rule by combining tos rule to nos rule.
+: rule-combine ( rul1-to rul0-from -- rul )    \ Return a rule by combining tos rule to nos rule.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -997,7 +1019,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Combine tos rule to nos rule.
 \ If the tos rule result region does not intersect the nos initial rule,
 \ calculate a rule between them.
-: rule-combine ( rul1 rul0 -- rul )
+: ?rule-combine ( rul1 rul0 -- rul )
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -1009,7 +1031,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     if
         region-deallocate
         region-deallocate
-        rule-combine2               \ rul
+        rule-combine                \ rul
         exit
     then
 
@@ -1021,12 +1043,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     tuck                            \ rul1 rul-bet rul0 rul-bet
     swap                            \ rul1 rul-bet rul-bet rul0
-    rule-combine2                   \ rul1 rul-bet rul-0b
+    rule-combine                    \ rul1 rul-bet rul-0b
 
     swap rule-deallocate            \ rul1 rul-0b
 
     tuck                            \ rul-0b rul1 rul-0b
-    rule-combine2                   \ rul-0b rul-0b1
+    rule-combine                    \ rul-0b rul-0b1
 
     swap rule-deallocate            \ rul-0b1
 ;
@@ -1066,16 +1088,36 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     =                           \ bool
 ;
 
-: rule-apply-to-region-fc ( reg1 rul0 -- reg t | f )    \ Return the result of applying a rule to an initial-region intersecting region.
+: rule-apply-to-region-fc ( reg1 rul0 -- reg t | f )    \ Return the result region from applying a region to a rule's initial region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
 
     \ Restrict rule initial region.
-    rule-restrict-initial-region    \ rul0' t | f
+    rule-restrict-initial-region        \ rul0' t | f
     if
         \ Get result region.
         dup rule-calc-result-region     \ rul0' reg
+
+        \ Clean up.
+        swap rule-deallocate            \ reg
+
+        true
+    else
+        false
+    then
+;
+
+: rule-apply-to-region-bc ( reg1 rul0 -- reg t | f )    \ Return the initial region from applying a region to a rule's result region.
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-region
+
+    \ Restrict rule initial region.
+    rule-restrict-result-region         \ rul0' t | f
+    if
+        \ Get result region.
+        dup rule-calc-initial-region    \ rul0' reg
 
         \ Clean up.
         swap rule-deallocate            \ reg
@@ -1107,3 +1149,37 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Clean up.
     swap changes-deallocate         \ sta-result
 ;
+
+\ Return true if the TOS rule is a superset of the NOS rule.
+: rule-superset-of ( rul-sub rul-sup -- bool )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-rule
+
+    over rule-intersection      \ rul-sub, rul-int' t | f
+    if
+        tuck rule-eq            \ rul-int' bool
+        swap rule-deallocate    \ bool
+    else
+        drop
+        false
+    then
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

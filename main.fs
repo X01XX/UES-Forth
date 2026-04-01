@@ -145,6 +145,8 @@ include plan_t.fs
 include domain_t.fs
 include structinfolist_t.fs
 include list_t.fs
+include pathstep_t.fs
+include pathsteplist_t.fs
 
 cr ." main.fs"
 
@@ -282,8 +284,18 @@ cr
     regioncorrrate-new                          \ sess regc-rt
     over session-add-regioncorrrate             \ sess
 
-    s" (1XX1 01X1X)" regioncorr-from-string-a   \ sess regc
+    s" (1XXX 01XXX)" regioncorr-from-string-a   \ sess regc
     #-2 0 rate-new                              \ sess
+    regioncorrrate-new                          \ sess regc-rt
+    over session-add-regioncorrrate             \ sess
+
+    s" (00XX 000XX)" regioncorr-from-string-a   \ sess regc
+    #-1 0 rate-new                              \ sess
+    regioncorrrate-new                          \ sess regc-rt
+    over session-add-regioncorrrate             \ sess
+
+    s" (01XX 11XXX)" regioncorr-from-string-a   \ sess regc
+    #-3 0 rate-new                              \ sess
     regioncorrrate-new                          \ sess regc-rt
     over session-add-regioncorrrate             \ sess
 
@@ -389,6 +401,8 @@ cr
     list-tests
     corner-tests
     session-tests
+    pathstep-tests
+    pathsteplist-tests
 
     structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;

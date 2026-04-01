@@ -167,7 +167,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     \ Check that the rule initial regions are equal.
     over rule-calc-initial-region   \ rul1 rul0 reg1
     over rule-calc-initial-region   \ rul1 rul0 reg1 reg0
-    2dup region-eq 0=               \ rul1 rul0 reg1 reg0 flag
+    2dup region-eq? false?          \ rul1 rul0 reg1 reg0 flag
     abort" rulestore-new-2: Rules must have the same initial region."
 
     region-deallocate

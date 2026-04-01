@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a structinfo instance as its first item.
 : assert-tos-is-structinfo-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-empty
+    dup list-is-empty?
     if
     else
         dup list-get-links link-get-data
@@ -110,6 +110,15 @@
 ;
 
 ' structinfo-list-print-memory-use to structinfo-list-print-memory-use-xt
+
+: assert-forth-stack-empty ( -- )
+    depth 0<>
+    if
+        cr ." Forth stack is not empty"
+        cr .stack-struct cr
+        abort
+    then
+;
 
 \ Check all project instances are deallocated.
 : structinfo-list-project-deallocated ( snf-lst0 -- )
@@ -303,6 +312,8 @@
     ." )"                               \
 ;
 
+' structinfo-list-print-struct-list to structinfo-list-print-struct-list-xt
+
 \ Deallocate a list of structures.
 : structinfo-list-deallocate-struct-list ( lst0 -- )
     \ Check args.
@@ -338,3 +349,4 @@
     then
 ;
 
+' structinfo-list-deallocate-struct-list to structinfo-list-deallocate-struct-list-xt

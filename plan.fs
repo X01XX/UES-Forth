@@ -138,7 +138,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
     \ Check for empty list.
     plan-get-step-list      \ plnplnplnstp-lst
-    dup list-is-empty
+    dup list-is-empty?
     abort" plan-get-result-region: Empty plan?"
 
     \ Scan the steps.
@@ -236,7 +236,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     over plan-get-step-list         \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst
 
     \ Check step linkage.
-    dup list-is-empty               \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst flag
+    dup list-is-empty?              \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst flag
     0= if                           \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst
         over                        \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp1
         planstep-get-initial-region \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i
@@ -255,7 +255,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     assert-tos-is-plan
 
     plan-get-step-list          \ plnplnstp-lst
-    dup list-is-empty
+    dup list-is-empty?
     abort" plan-get-initial-region: Empty plan?"
 
     list-get-links              \ link
@@ -280,13 +280,13 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     over plan-get-step-list         \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst
 
     \ Check step linkage.
-    dup list-is-empty               \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst flag
+    dup list-is-empty?              \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst flag
     0= if                           \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst
         over                        \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp1
         planstep-get-result-region  \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i
         #3 pick                     \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i pln
         plan-get-initial-region     \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i pln-r
-        region-eq false? abort" plansteps do not link directly, maybe use plan-link?"
+        region-eq? false? abort" plansteps do not link directly, maybe use plan-link?"
     then
 
     planstep-list-push              \ plnplnstp1 pln0
@@ -429,7 +429,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         then
 
                                                 \ pln reg1 stp-link stpx reg1 stp-i-reg
-        region-subset-of                        \ pln reg1 stp-link stpx bool ( includes region-eq )
+        region-subset-of                       \ pln reg1 stp-link stpx bool ( includes region-eq )
         false? if                               \ pln reg1 stp-link stpx
             \ Restrict step initial region.
             #2 pick                             \ pln reg1 stp-link stpx reg1
@@ -622,7 +622,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     assert-tos-is-plan
 
     plan-get-step-list
-    list-is-empty
+    list-is-empty?
 ;
 
 \ Add a copy of a step to a copy of a plan, returning a plan.

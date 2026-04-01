@@ -572,7 +572,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     square-get-rules rulestore-get-rule-0   \ sqr1 rul0
     swap                                    \ rul0 sqr1
     square-get-rules rulestore-get-rule-0   \ rul0 rul1
-    rule-union                              \ rul-u true | false
+    rule-union                              \ rul-u t | f
     if
         rule-deallocate
         [char] C
@@ -638,7 +638,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     \ Get union OK by two different orders.
     square-get-rules                \ sqr1 sqr0-ruls
     swap square-get-rules           \ sqr0-ruls sqr1-ruls
-    rulestore-union-2               \ rulstr true | false
+    rulestore-union-2               \ rulstr t | f
     if
         rulestore-deallocate
         [char] C

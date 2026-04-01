@@ -158,7 +158,7 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Return true if a list is empty.
-: list-is-empty ( list0 -- flag )
+: list-is-empty? ( list0 -- flag )
     \ Check arg.
     assert-tos-is-list
 
@@ -167,7 +167,7 @@ list-header-disp    cell+   constant list-links-disp
 ;
 
 \ Return true if a list is not empty.
-: list-is-not-empty ( list0 -- flag )
+: list-is-not-empty? ( list0 -- flag )
     \ Check arg.
     assert-tos-is-list
 
@@ -440,7 +440,7 @@ list-header-disp    cell+   constant list-links-disp
     \ Check arg.
     assert-tos-is-list
 
-    dup list-is-empty
+    dup list-is-empty?
     if
         drop
         false
@@ -556,7 +556,7 @@ list-header-disp    cell+   constant list-links-disp
 \
 \ If list data are struct instances, the caller should dec the instance use count of the result.
 \ e.g. if dup struct-dec-use-count then
-: list-remove-item ( u1 lst0 -- data t | f )
+: list-remove-item ( u1 lst0 -- data )
     \ Check args.
     assert-tos-is-list
     over                        \ u1 lst0 u1
@@ -568,8 +568,8 @@ list-header-disp    cell+   constant list-links-disp
 
     \ Check for first item
     over 0= if
-        nip
-        list-pop
+        nip                     \ lst0
+        list-pop drop           \ data
         exit
     then
                                 \ u1 lst0
@@ -587,7 +587,6 @@ list-header-disp    cell+   constant list-links-disp
     swap link-deallocate        \ lst0 data last cur-next
     swap _link-set-next         \ lst0 data
     rot _list-dec-length        \ data
-    true
 ;
 
 \ Pop the last item in a list.
@@ -598,11 +597,12 @@ list-header-disp    cell+   constant list-links-disp
     \ Check arg.
     assert-tos-is-list
 
-    dup list-is-empty
+    dup list-is-empty?
     if drop false exit then
 
     dup list-get-length 1-
     swap list-remove-item
+    true
 ;
 
 \ Deallocate a list.
@@ -915,6 +915,32 @@ list-header-disp    cell+   constant list-links-disp
     2drop link-get-data
 ;
 
+\ Return a reference to the first item in a list.
+: list-get-first-item ( list -- data )
+    \ Check args.
+    assert-tos-is-list
+
+    0 swap list-get-item
+;
+
+\ Return a reference to the second item in a list.
+: list-get-second-item ( list -- data )
+    \ Check args.
+    assert-tos-is-list
+
+    1 swap list-get-item
+;
+
+\ Return a reference to the last item in a list.
+: list-get-last-item ( list -- data )
+    \ Check args.
+    assert-tos-is-list
+
+    dup list-get-length     \ list len
+    1 -                     \ list inx
+    swap list-get-item
+;
+
 \ Sort a list, given an xt that returns true if two successive items
 \ should be swapped.
 \
@@ -1036,7 +1062,7 @@ list-header-disp    cell+   constant list-links-disp
 : list-one-of-each ( lst0 -- lol )
     \ Check arg.
     assert-tos-is-list
-    dup list-is-empty abort" list is empty?"
+    dup list-is-empty? abort" list is empty?"
 
     \ Init first-level template.
     list-new list-new               \ lst0 tmp-lst sub-tmp-lst
@@ -1053,7 +1079,7 @@ list-header-disp    cell+   constant list-links-disp
         \ Init templat link next.
         list-new swap               \ tmp-lst link lst-next sub-lst
 
-        dup list-is-empty abort" empty list?"
+        dup list-is-empty? abort" empty list?"
 
         \ Prep for loop.
         list-get-links              \ tmp-lst link lst-next sub-link

@@ -6,12 +6,12 @@
     s" (0XX1 0XX0X)" regioncorr-from-string-a \ regc1
     s" (0XXX 0XXXX)" regioncorr-from-string-a \ regc1 regc2
 
-    2dup regioncorr-superset        \ regc1 regc2 flag
+    2dup regioncorr-superset?       \ regc1 regc2 flag
     0= abort" List is not superset?"
 
     \ Try the reverse.
     swap                            \ regc2 regc1
-    2dup regioncorr-superset        \ regc2 regc1 flag
+    2dup regioncorr-superset?       \ regc2 regc1 flag
     abort" List is superset?"
 
     \ Clean up.
@@ -28,7 +28,7 @@
     s" (0XXX 0XXXX)" regioncorr-from-string-a \ regc1 regc2
 
     \ Test intersection.
-    2dup regioncorr-intersects    \ regc1 regc2 bool
+    2dup regioncorr-intersects?   \ regc1 regc2 bool
     false? abort" Lists do not intersect?"
 
     regioncorr-deallocate              \ regc1
@@ -38,7 +38,7 @@
 
     \ cr ." lst3: " dup .regioncorr cr
 
-    2dup regioncorr-intersects    \ regc1 lst3 bool
+    2dup regioncorr-intersects?   \ regc1 lst3 bool
     abort" Lists do intersect?"
 
     \ Clean up.

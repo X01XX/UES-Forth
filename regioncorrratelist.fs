@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a regioncorrrate instance as its first item.
 : assert-tos-is-regioncorrrate-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-regioncorrrate
@@ -14,7 +14,7 @@
 \ Check if nos is an empty list, or has a regioncorrrate instance as its first item.
 : assert-nos-is-regioncorrrate-list ( nos tos -- nos tos )
     assert-nos-is-list
-    over list-is-not-empty
+    over list-is-not-empty?
     if
         over list-get-links link-get-data
         assert-tos-is-regioncorrrate
@@ -141,8 +141,8 @@
     assert-tos-is-regioncorrrate-list
     assert-nos-is-regioncorr
 
-    0 0 rate-new swap           \ regc1 ret-rate regcr-lst0
-    list-get-links              \ regc1 ret-rate link
+    0 0 rate-new swap                       \ regc1 ret-rate regcr-lst0
+    list-get-links                          \ regc1 ret-rate link
 
     begin
         ?dup
@@ -150,7 +150,7 @@
         dup link-get-data                   \ regc1 ret-rate link regctx
         #3 pick                             \ regc1 ret-rate link regctx regc1
         over regioncorrrate-get-regioncorr  \ regc1 ret-rate link regctx regc1 regcx
-        regioncorr-superset                 \ regc1 ret-rate link regctx bool
+        regioncorr-superset?                \ regc1 ret-rate link regctx bool
         if
             regioncorrrate-get-rate         \ regc1 ret-rate link ratex
             #2 pick                         \ regc1 ret-rate link ratex rate
@@ -212,7 +212,7 @@
     swap regioncorrrate-get-regioncorr          \ regcr1 regcr0 regcr0 regc1
     swap regioncorrrate-get-regioncorr          \ regcr1 regcr0 regc1 regc0
 
-    regioncorr-superset                         \ regcr1 regcr0 bool
+    regioncorr-superset?                        \ regcr1 regcr0 bool
     false? if
         2drop
         false

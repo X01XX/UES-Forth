@@ -194,7 +194,7 @@
 
     \ Check if the current states are already at the goal.
     2dup swap                                   \ regc-to regc-from' regc-from' regc-to
-    regioncorr-superset                         \ regc-to regc-from' bool
+    regioncorr-superset?                        \ regc-to regc-from' bool
     if
         cr ." The current states are already at goal." cr
         regioncorr-deallocate
@@ -277,7 +277,7 @@
         swap rate-deallocate                            \ sess mrp-lst'
 
         \ Check for no more-positive items found.
-        dup list-is-empty
+        dup list-is-empty?
         if
             cr ." There are no more-positive regioncorr fragments" cr
             list-deallocate
@@ -346,6 +346,7 @@
         \ Check if no plan needed.
         dup need-current-state-satisfies    \ ned-lst inx-lst' rnd-inx nedx bool
         if
+            \ No plan needed.
             cr
             need-take-sample                \ ned-lst inx-lst' rnd-inx
             \ Need satisfied, done.
@@ -355,9 +356,85 @@
             true
             exit
         else                                \ ned-lst inx-lst' rnd-inx nedx
+            \ Plan needed.
+
+
+            \ Testing.
+
+            \ Check if safer plan is needed, that is, a plan unlikely to pass through
+            \ more negative regions that the current regions and goal regions are in..
+            current-session                     \ ned-lst inx-lst' rnd-inx nedx sess
+
+            2dup                                \ ned-lst inx-lst' rnd-inx nedx sess nedx sess
+            session-regioncorr-for-need         \ ned-lst inx-lst' rnd-inx nedx sess to-regc'
+            \ cr ." to regcorr: " dup .regioncorr cr
+
+            over                                \ ned-lst inx-lst' rnd-inx nedx sess regc-to' sess
+            session-get-current-regions         \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from'
+            \ cr ." from regcorr: " dup .regioncorr cr
+
+            \ Get the lowest rate from reg-to and reg-from highest rates.                                                                                                                    
+            over #3 pick                        \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' regc-to' sess
+            session-find-highest-le-zero-rate   \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-to
+
+            over #4 pick                        \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-to regc-from' sess
+            session-find-highest-le-zero-rate   \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-to rate-from
+
+            min                                 \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-min
+            \ cr ." path: rate: " dup dec. cr
+
+            #3 pick                             \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-min sess
+            session-get-regioncorrrate-nq       \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-min nq-lst
+            list-get-last-item                  \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-min lowest-rate
+            <> if
+                \ Rate is better than the lowest, so try safe planning.
+                over #3 pick                    \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' regc-to' sess
+                session-change-to-plans         \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from', plnc' t | f 
+                if  
+                    cr cr ." plan found: " dup .plancorr-list cr
+                    dup plancorr-list-run-plans \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' plnc' bool
+                    swap                        \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' bool plnc'
+                    plancorr-list-deallocate    \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' bool
+                    swap regioncorr-deallocate  \ ned-lst inx-lst' rnd-inx nedx sess regc-to' bool
+                    swap regioncorr-deallocate  \ ned-lst inx-lst' rnd-inx nedx sess bool
+                    nip                         \ ned-lst inx-lst' rnd-inx nedx bool
+
+                    if
+                        cr ." plan suceeded" cr
+                        need-take-sample            \ ned-lst inx-lst' rnd-inx
+                        drop                        \ ned-lst inx-lst'
+                        list-deallocate             \ ned-lst
+                        drop
+                        true
+                        exit
+                    else
+                        cr ." plan failed" cr
+                        2drop                       \ ned-lst inx-lst'
+                        list-deallocate             \ ned-lst
+                        drop
+                        true
+                        exit
+                    then
+                else
+                    \ cr ." session-change-to-plans: not found" cr
+                                                \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from'
+                    regioncorr-deallocate       \ ned-lst inx-lst' rnd-inx nedx sess regc-to'
+                    regioncorr-deallocate       \ ned-lst inx-lst' rnd-inx nedx sess
+                    drop                        \ ned-lst inx-lst' rnd-inx nedx
+                then
+            else
+                \ Rate is lowest already.
+                \ Clean up.                 \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from'
+                regioncorr-deallocate       \ ned-lst inx-lst' rnd-inx nedx sess regc-to'
+                regioncorr-deallocate       \ ned-lst inx-lst' rnd-inx nedx sess
+                drop                        \ ned-lst inx-lst' rnd-inx nedx
+            then
+            \ End testing
+
+            \ Try unsafe plan.
             dup need-get-plan               \ ned-lst inx-lst' rnd-inx nedx, pln t | f
             if                              \ ned-lst inx-lst' rnd-inx nedx pln'
-                cr
+                cr cr ." plan found: " dup .plan cr
                 2dup swap                   \ ned-lst inx-lst' rnd-inx nedx pln' pln' nedx
                 need-run-plan               \ ned-lst inx-lst' rnd-inx nedx pln' bool
                 if
@@ -380,7 +457,6 @@
                     exit
                 then
             else                            \ ned-lst inx-lst' rnd-inx nedx
-
                 ." , no plan found."
                 drop                        \ ned-lst inx-lst' rnd-inx
             then
@@ -391,9 +467,7 @@
 
         \ Remove the index, avoiding random picking the same need to try again.
         over                            \ ned-lst inx-lst' rnd-inx inx-lst'
-        list-remove-item                \ ned-lst inx-lst', u t | f
-        false? abort" Item not removed?"
-                                        \ ned-lst inx-lst' u
+        list-remove-item                \ ned-lst inx-lst' u
         drop                            \ ned-lst inx-lst'
 
         \ Check if index list is empty.

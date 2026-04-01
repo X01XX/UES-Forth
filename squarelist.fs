@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a square instance as its first item.
 : assert-tos-is-square-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-square
@@ -14,7 +14,7 @@
 \ Check if nos is an empty list, or has a square instance as its first item.
 : assert-nos-is-square-list ( nos tos -- nos tos )
     assert-nos-is-list
-    over list-is-not-empty
+    over list-is-not-empty?
     if
         over list-get-links link-get-data
         assert-tos-is-square
@@ -25,7 +25,7 @@
 \ Check if 3os is an empty list, or has a square instance as its first item.
 : assert-3os-is-square-list ( nos tos -- nos tos )
     assert-3os-is-list
-    #2 pick list-is-not-empty
+    #2 pick list-is-not-empty?
     if
         #2 pick list-get-links link-get-data
         assert-tos-is-square
@@ -143,7 +143,7 @@
     [ ' square-state-eq ] literal   \ sta1 lst0 xt
     -rot                            \ xt sta1 lst0
 
-    list-remove                     \ sqr true | false
+    list-remove                     \ sqr t | f
     if
         square-deallocate
         true
@@ -164,7 +164,7 @@
 ;
 
 \ Find a square in a list, by state, if any.
-: square-list-find ( val1 list0 -- sqr true | false )
+: square-list-find ( val1 list0 -- sqr t | f )
     \ Check args.
     assert-tos-is-list
     assert-nos-is-value
@@ -185,7 +185,7 @@
 : square-list-highest-pn ( list0 -- pn )
     \ Check arg.
     assert-tos-is-list
-    dup list-is-empty
+    dup list-is-empty?
     abort" List is empty?"
 
     \ Prep for loop.
@@ -216,7 +216,7 @@
 : square-list-region ( sqr-lst0 -- reg t | f )
     \ Check arg.
     assert-tos-is-list
-    dup list-is-empty
+    dup list-is-empty?
     if
         drop
         false
@@ -276,12 +276,12 @@
 ;
 
 \ Return rules for a square-list.
-: square-list-get-rules ( list0 -- rulestore true | false )
+: square-list-get-rules ( list0 -- rulestore t | f )
     \ Check arg.
     assert-tos-is-list
 
     \ Check for empty list.
-    dup list-is-empty
+    dup list-is-empty?
     if
         drop
         false
@@ -323,7 +323,7 @@
             over                            \ max-pn link rul-str sqr-ruls rul-str
             if                              \ max-pn link rul-str sqr-ruls
                 over                        \ max-pn link rul-str sqr-ruls rul-str
-                rulestore-union             \ max-pn link rul-str, new-rules true | false
+                rulestore-union             \ max-pn link rul-str, new-rules t | f
                 if                          \ max-pn link rul-str new-rules
                     swap                    \ max-pn link new-rules rul-str
                     rulestore-deallocate    \ max-pn link new-rules

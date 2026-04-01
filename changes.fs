@@ -254,8 +254,11 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     assert-tos-is-region
     assert-nos-is-region
 
+    \ cr ." changes-new-region-to-region: from: " dup .region space ." to " over .region
     change-masks-region-to-region           \ m10 m01
     changes-new                             \ cngs
+    \ space ." = " dup .changes cr
+
 ;
 
 \ Return true if two changes intersect, in at least one bit.
@@ -357,7 +360,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 ;
 
 \ Return true if two changes are equal.
-: changes-eq ( cngs1 cngs0 -- bool )
+: changes-eq? ( cngs1 cngs0 -- bool )
     \ Check args.
     assert-tos-is-changes
     assert-nos-is-changes
@@ -387,6 +390,6 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     over                    \ cngs-sub cngs-sup cngs-sub
     changes-intersection    \ cngs-sub cngs-int'
     tuck                    \ cngs-int' cngs-sub cngs-int'
-    changes-eq              \ cngs-int' bool
+    changes-eq?             \ cngs-int' bool
     swap changes-deallocate \ bool
 ;

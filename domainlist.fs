@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a domain instance as its first item.
 : assert-tos-is-domain-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-domain
@@ -37,7 +37,7 @@
 ;
 
 \ Find a domain in a list, by instance id, if any.
-: domain-list-find ( id1 list0 -- dom true | false )
+: domain-list-find ( id1 list0 -- dom t | f )
     \ Check args.
     assert-tos-is-domain-list
 

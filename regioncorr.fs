@@ -94,7 +94,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ End accessors.
 
-\ Create a regioncorr-list-corr from a regioncorr-list-corr-list on the stack.
+\ Create a regioncorr from a region-list corresponding, in order, to domains.
 : regioncorr-new ( reg-lst0 -- addr)
     \ check arg.
     assert-tos-is-region-list
@@ -159,6 +159,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     ." )"
 ;
 
+' .regioncorr to .regioncorr-xt
+
 \ Deallocate the given regc, if its use count is 1 or 0.
 : regioncorr-deallocate ( regc0 -- )
     \ Check arg.
@@ -180,8 +182,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return true if TOS is a superset of its corresponding region in NOS.
-: regioncorr-superset ( regc1 regc0 -- bool )
-    \ cr ." regioncorr-superset: " dup .regioncorr space ." sup " over .regioncorr
+: regioncorr-superset? ( regc1 regc0 -- bool )
+    \ cr ." regioncorr-superset?: " dup .regioncorr space ." sup " over .regioncorr
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
@@ -228,11 +230,11 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return true if TOS is a subset of its corresponding region in NOS.
-: regioncorr-subset ( regc1 regc0 -- bool )
-    swap regioncorr-superset
+: regioncorr-subset? ( regc1 regc0 -- bool )
+    swap regioncorr-superset?
 ;
 
-: regioncorr-intersects ( regc1 regc0 -- bool )
+: regioncorr-intersects? ( regc1 regc0 -- bool )
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
@@ -297,11 +299,11 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     \ Check for a superset subtrahend.
     2dup swap
-    regioncorr-superset           \ regc1 regc0 bool
+    regioncorr-superset?          \ regc1 regc0 bool
     abort" Subtrahend is a superset?"
 
     \ Check that the two lists intersect.
-    2dup regioncorr-intersects    \ regc1 regc0 bool
+    2dup regioncorr-intersects?   \ regc1 regc0 bool
     0= if
         2drop
         false
@@ -473,7 +475,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     while
         over link-get-data  \ link1 link0 reg1
         over link-get-data  \ link1 link0 reg1 reg0
-        region-eq           \ link1 link0 bool
+        region-eq?          \ link1 link0 bool
         false? if
             2drop
             false
@@ -592,5 +594,49 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
                                     \ reg-lst link1 link0
     2drop                           \ reg-lst
     regioncorr-new
+    true
+;
+
+\ Return true if two regioncorrs are equal.
+: regioncorr-eq? ( regc1 regc0 -- bool )
+    \ Check args.
+    assert-tos-is-regioncorr
+    assert-nos-is-regioncorr
+
+    \ Init links for loop.
+    regioncorr-get-list list-get-links swap   \ link0 regc1
+    regioncorr-get-list list-get-links swap   \ link1 link0
+    cur-session-get-domain-list-xt execute
+    list-get-links                          \ link1 link0 d-link
+
+    begin
+        ?dup
+    while
+                                    \ link1 link0 d-link
+
+        \ Set current domain.
+        dup link-get-data           \ link1 link0 d-link domx
+        domain-set-current-xt       
+        execute                     \ link1 link0 d-link
+
+        \ Check regions
+        #2 pick link-get-data       \ link1 link0 d-link reg1
+        #2 pick link-get-data       \ link1 link0 d-link reg1 reg0
+        region-eq?                  \ link1 link0 d-link bool
+        if
+        else
+            3drop
+            false
+            exit
+        then
+
+        \ Prep for next cycle.
+                                    \ link1 link0 d-link
+        rot link-get-next           \ link0 d-link link1
+        rot link-get-next           \ d-link link1 link0
+        rot link-get-next           \ link1 link0 d-link
+    repeat
+                                    \ link1 link0
+    2drop                           \
     true
 ;

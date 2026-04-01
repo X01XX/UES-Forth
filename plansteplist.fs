@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a planstep instance as its first item.
 : assert-tos-is-planstep-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-planstep
@@ -14,7 +14,7 @@
 \ Check if nos is an empty list, or has a planstep instance as its first item.
 : assert-nos-is-planstep-list ( nos tos -- nos tos )
     assert-tos-is-list
-    over list-is-not-empty
+    over list-is-not-empty?
     if
         over list-get-links link-get-data
         assert-tos-is-planstep
@@ -89,17 +89,12 @@
 ;
 
 \ Remove a planstep from a planstep-list.
-: planstep-list-remove-item ( inx1 plnstp-lst0 -- plnstpx true | false )
+: planstep-list-remove-item ( inx1 plnstp-lst0 -- plnstpx )
     \ Check arg.
     assert-tos-is-planstep-list
 
-    list-remove-item        \ plnstpx true | false
-    if
-        dup struct-dec-use-count
-        true
-    else
-        false
-    then
+    list-remove-item        \ plnstpx
+    dup struct-dec-use-count
 ;
 
 \ Return a list of plansteps that have a sample with the desired changes.

@@ -3,7 +3,7 @@
 \ Check if tos is an empty list, or has a changes instance as its first item.
 : assert-tos-is-changes-list ( tos -- tos )
     assert-tos-is-list
-    dup list-is-not-empty
+    dup list-is-not-empty?
     if
         dup list-get-links link-get-data
         assert-tos-is-changes

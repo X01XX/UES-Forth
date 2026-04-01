@@ -162,7 +162,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-tos-is-region
     assert-nos-is-list
 
-    over list-is-empty
+    over list-is-empty?
     if
         ." empty square list?"
         abort
@@ -236,7 +236,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-region
 
     group-get-region
-    region-eq
+    region-eq?
 ;
 
 : .group ( grp -- )
@@ -378,7 +378,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     group-get-region
     swap
     group-get-region
-    region-eq
+    region-eq?
 ;
 
 \ Return true, if a state is in a group region.
@@ -419,7 +419,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     over group-get-rules            \ cngs1 grp0 cngs1 ruls
     rulestore-rules-with-changes    \ cngs1 grp0 rul-lst
 
-\    dup list-is-not-empty
+\    dup list-is-not-empty?
 \    if
 \        cr
 \        ." Dom: " current-domain-id #3 dec.r
@@ -438,8 +438,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-tos-is-group
     \ cr ." group " dup group-get-region .region cr
 
-    0 over group-get-squares    \ grp0 | 0 sqr-lst
-    list-get-item               \ grp0 | sqr-0
+    dup group-get-squares       \ grp0 | sqr-lst
+    list-get-first-item         \ grp0 | sqr-0
     dup square-get-pnc          \ grp0 | sqr-0 pnc
     if                          \ grp0 | sqr-0
     else
@@ -512,8 +512,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     then
 
     \ Check if the square is item 0 in the list.
-    0 over group-get-squares    \ sta1 grp0 0 sqr-lst
-    list-get-item               \ sta1 grp0 sqr0
+    dup group-get-squares       \ sta1 grp0 0 sqr-lst
+    list-get-first-item         \ sta1 grp0 sqr0
     square-get-state            \ sta1 grp0 sta0
     #2 pick                     \ sta1 grp0 sqr0 sta1
     =                           \ sta1 grp0 bool
@@ -524,8 +524,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     then
 
     \ Check if square state is equal to square far from square 0.
-    0 over group-get-squares    \ sta1 grp0 0 sqr-lst
-    list-get-item               \ sta1 grp0 sqr0
+    dup group-get-squares       \ sta1 grp0 0 sqr-lst
+    list-get-first-item         \ sta1 grp0 sqr0
     square-get-state            \ sta1 grp0 sta
     over group-get-region       \ sta1 grp0 sta reg
     region-far-from-state       \ sta1 grp0 sta-far
@@ -539,8 +539,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
     \ Check if far square exists.
     \ If so, passed square is between the first ad far square, and is not needed.
-    0 over group-get-squares    \ sta1 grp0 0 sqr-lst
-    list-get-item               \ sta1 grp0 sqr0
+    dup group-get-squares       \ sta1 grp0 0 sqr-lst
+    list-get-first-item         \ sta1 grp0 sqr0
     square-get-state            \ sta1 grp0 sta
     over group-get-region       \ sta1 grp0 sta reg
     region-far-from-state       \ sta1 grp0 sta-far
@@ -582,7 +582,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
     \ Check first square.
     group-get-squares           \ sta1 sqr-lst
-    0 over list-get-item        \ sta1 sqr-lst sqr0
+    dup list-get-first-item     \ sta1 sqr-lst sqr0
     square-get-state            \ sta1 sqr-lst sta0
     #2 pick                     \ sta1 sqr-lst sta0 sta1
     =                           \ sta1 sqr-lst bool

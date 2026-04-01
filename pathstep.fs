@@ -7,11 +7,12 @@
 
 \ Struct fields.
 0                                       constant pathstep-header-disp           \ id (16) use count (16) number unwanted changes (8) will change frequently.
-pathstep-header-disp            cell+   constant pathstep-rules-disp            \ A ruleicorr instance addr.
+pathstep-header-disp            cell+   constant pathstep-rules-disp            \ A rulecorr instance addr.
 \ Store frequently used calculated fields, to decrease cycles and memory allocation/deallocation.
 pathstep-rules-disp             cell+   constant pathstep-initial-regions-disp  \ A regioncorr instance addr.
 pathstep-initial-regions-disp   cell+   constant pathstep-result-regions-disp   \ A regioncorr instance addr.
 pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          \ A changescorr instance addr.
+                                                                                \ There will be no X->x changes, since they are all region->subset-region.
 
 0 value pathstep-mma \ Storage for pathstep mma instance.
 
@@ -65,6 +66,10 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
 \ Set the rule of a pathstep instance, use only in this file.
 : _pathstep-set-rules ( rulc1 pstp0 -- )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-rulecorr
+
     pathstep-rules-disp +   \ Add offset.
     !struct                 \ Set field.
 ;
@@ -80,6 +85,10 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
 \ Set the initial-region of a pathstep instance, use only in this file.
 : _pathstep-set-initial-regions ( regc1 pstp0 -- )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-regioncorr
+
     pathstep-initial-regions-disp + \ Add offset.
     !struct                         \ Set the field.
 ;
@@ -95,6 +104,10 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
 \ Set the result-region of a pathstep instance, use only in this file.
 : _pathstep-set-result-regions ( regc1 pstp0 -- )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-regioncorr
+
     pathstep-result-regions-disp +  \ Add offset.
     !struct                         \ Set the field.
 ;
@@ -228,11 +241,11 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
     swap pathstep-get-result-regions    \ pstp0 regc-r
     swap pathstep-get-initial-regions   \ regc-r regc-i
-    regioncorr-intersects               \ bool
+    regioncorr-intersects?              \ bool
 ;
 
 \ Calc, and set' the number unwanted changes, given the needed changes.
-: pathstep-calc-number-unwanted-changes ( cngsc-needed1 pthstp0 -- )
+: ?pathstep-calc-number-unwanted-changes ( cngsc-needed1 pthstp0 -- )
     \ Check args.
     assert-tos-is-pathstep
     assert-nos-is-changescorr
@@ -248,3 +261,110 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     pathstep-set-number-unwanted-changes    \
 ;
 
+\ Return true if a TOS pathstep is a superset of the NOS pathstep.
+: ?pathstep-superset-of ( pthstp-sub pthstp-sup -- bool )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-pathstep
+
+    swap pathstep-get-rules         \ pthstp-sup ruls-sub
+    swap pathstep-get-rules         \ ruls-sub ruls-sup
+
+    rulecorr-superset-of            \ bool
+;
+
+\ Return true if a TOS pathstep is a subset of the NOS pathstep.
+: ?pathstep-subset-of ( pthstp-sup pthstp-sub -- bool )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-pathstep
+
+    swap ?pathstep-superset-of
+;
+
+\ Return true if TOS pathstep has an equal initial region, but superset result
+\ to the NOS pathstep.
+: pathstep-eq-initial-superset-result? ( pthstp-sub pthstp-sup -- bool )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-pathstep
+    \ cr ." pathstep-eq-initial-superset-result?: sup: " dup .pathstep
+    \ cr ."                                       sub: " over .pathstep
+
+    \ Check initial regions.
+    over pathstep-get-initial-regions       \ pthstp-sub pthstp-sup sub-initial
+    over pathstep-get-initial-regions       \ pthstp-sub pthstp-sup sub-initial sup-initial
+    regioncorr-eq?                          \ pthstp-sub pthstp-sup bool
+    if
+    else
+        2drop
+        false
+        \ space ." false" cr
+        exit
+    then
+
+    \ Check result regions.
+    over pathstep-get-result-regions       \ pthstp-sub pthstp-sup sub-rslt
+    over pathstep-get-result-regions       \ pthstp-sub pthstp-sup sub-rslt sup-rslt
+    regioncorr-superset?                   \ pthstp-sub pthstp-sup bool
+
+    nip nip
+    \ space dup .bool cr
+;
+
+: pathstep-eq-initial-subset-result? ( pthstp-sup pthstp-sub -- bool )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-pathstep
+    \ cr ." pathstep-eq-initial-subset-result?: sub: " dup .pathstep
+    \ cr ."                                     sup: " over .pathstep
+
+    \ Check initial regions.
+    over pathstep-get-initial-regions       \ pthstp-sup pthstp-sub sub-initial
+    over pathstep-get-initial-regions       \ pthstp-sup pthstp-sub sub-initial sup-initial
+    regioncorr-eq?                          \ pthstp-sup pthstp-sub bool
+    if
+    else
+        2drop
+        false
+        \ space ." false" cr
+        exit
+    then
+
+    \ Check result regions.
+    over pathstep-get-result-regions       \ pthstp-sup pthstp-sub sup-rslt
+    over pathstep-get-result-regions       \ pthstp-sup pthstp-sub sup-rslt sub-rslt
+    regioncorr-subset?                     \ pthstp-sup pthstp-sub bool
+
+    nip nip
+    \ space dup .bool cr
+;
+
+\ Return a pathstep from a string, or abort.
+: pathstep-from-string-a ( str-addr str-n -- pthstp )
+    rulecorr-from-string-a  \ rulc
+    pathstep-new
+;
+
+\ Apply a pathstep to a regioncorr, forward chaining.
+: pathstep-apply-to-regioncorr-fc ( regc2 pthstp0 -- regc t | f )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-regioncorr
+    \ cr ." pathstep-apply-to-regioncorr-fc: " over .regioncorr space dup .pathstep cr
+
+    pathstep-get-rules                  \ regc2 rulc
+    rulecorr-apply-to-regioncorr-fc     \ regc-rslt t | f
+;
+
+
+\ Apply a pathstep to a regioncorr, backward chaining.
+: pathstep-apply-to-regioncorr-bc ( regc2 pthstp0 -- regc t | f )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-regioncorr
+    \ cr ." pathstep-apply-to-regioncorr-bc: " over .regioncorr space dup .pathstep cr
+
+    pathstep-get-rules                  \ regc2 rulc
+    rulecorr-apply-to-regioncorr-bc     \ regc-rslt t | f
+;

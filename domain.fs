@@ -570,7 +570,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     domain-calc-possible-steps              \ stp-lst
 
     \ Check for no steps.
-    dup list-is-empty                       \ stp-lst flag
+    dup list-is-empty?                      \ stp-lst flag
     if
         planstep-list-deallocate
         false
@@ -606,7 +606,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     [ ' > ] literal over list-sort          \ stp-lst lst-unw
 
     \ Get first, lowest, number.
-    0 over list-get-item                    \ stp-lst lst-unw u-unw
+    dup list-get-first-item                 \ stp-lst lst-unw u-unw
     swap list-deallocate                    \ stp-lst u-unw
 
     \ Get steps with lowest number unwanted changes.
@@ -619,8 +619,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     over                            \ stp-lst2 inx stp-lst
 
     \ Extract step.
-    planstep-list-remove-item       \ stp-lst2, stpx true | false
-    0= abort" Step not found?"      \ stp-lst2 stpx
+    planstep-list-remove-item       \ stp-lst2 stpx
 
     \ Clean up.                     \ stp-lst2 stpx
     swap planstep-list-deallocate   \ stpx
@@ -904,7 +903,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     domain-calc-possible-steps              \ stp-lst
 
     \ Check for no steps.
-    dup list-is-empty                       \ stp-lst flag
+    dup list-is-empty?                      \ stp-lst flag
     if
         planstep-list-deallocate
         false
@@ -939,7 +938,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     [ ' > ] literal over list-sort          \ stp-lst lst-unw
 
     \ Get first, lowest, number.
-    0 over list-get-item                    \ stp-lst lst-unw u-unw
+    dup list-get-first-item                 \ stp-lst lst-unw u-unw
     swap list-deallocate                    \ stp-lst u-unw
 
     \ Get steps with lowest number unwanted changes.
@@ -952,8 +951,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     over                            \ stp-lst2 inx stp-lst
 
     \ Extract step.
-    planstep-list-remove-item           \ stp-lst2, stpx true | false
-    0= abort" domain-calc-step-bc: Step not found?"      \ stp-lst2 stpx
+    planstep-list-remove-item           \ stp-lst2 stpx
 
     \ Clean up.                     \ stp-lst2 stpx
     swap planstep-list-deallocate   \ stpx
@@ -1282,7 +1280,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #2 pick #2 pick                         \ reg-to reg-from dom0 | reg-to reg-from
     #2 pick                                 \ reg-to reg-from dom0 | reg-to reg-from dom0
     domain-calc-possible-steps              \ reg-to reg-from dom0 | plnstp-lst'
-    dup list-is-empty if
+    dup list-is-empty? if
         list-deallocate
         3drop
         false
@@ -1324,7 +1322,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     planstep-list-deallocate                \ reg-to reg-from dom0 | asym-lst'
 
     \ Check list len.
-    dup list-is-empty                     \ reg-to reg-from dom0 | asym-lst' bool
+    dup list-is-empty?                    \ reg-to reg-from dom0 | asym-lst' bool
     if
         planstep-list-deallocate            \ reg-to reg-from dom0 |
         3drop
@@ -1403,7 +1401,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    \ cr ." domain-get-plan:     start:           from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
+    \ cr ." domain-get-plan:     start:           from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec.
 
     \ Check for no plan needed.
     #2 pick #2 pick swap                        \ | reg-from reg-to
@@ -1424,6 +1422,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
         \ Return
         2nip nip                                \ pln
+        \ space ." plan found 1: " dup .plan cr
         true
         exit
     then
@@ -1445,22 +1444,36 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     if
     else
         3drop
+        \ space ." plan NOT found 1" cr
         false
         exit
     then
 
-    3dup domain-get-plan-fb            \ reg-to reg-from dom0, plan t | f
-    if
-        2nip nip true                   \ plan t
-    else
-        domain-asymmetric-chaining      \ plan t | f
+    #3 0 do
+        3dup domain-get-plan-fb            \ reg-to reg-from dom0, plan t | f
         if
-            \ cr ." plan found (asm) " dup .plan cr
-            true
+            2nip nip
+            \ space ." plan found 2: " dup .plan cr
+            true                            \ plan t
+            unloop
+            exit
         else
-            false
+            3dup domain-asymmetric-chaining      \ plan t | f
+            if
+                \ cr ." plan found (asm) " dup .plan cr
+                \ space ." plan found 3" cr
+                2nip nip
+                true
+                unloop
+                exit
+            else
+                \ space ." plan NOT found 3" cr
+                \ false
+            then
         then
-    then
+    loop
+    3drop
+    false
 ;
 
 \ Set the current domain.
