@@ -250,7 +250,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     ." ["
     dup rulestore-get-rule-0    \ rulstr0 rul0
     dup 0<>                     \ rulstr0 rul0 rul0
-    if                          
+    if
         .rule                   \ rulstr0
     else                        \ rulstr0 rul0
         2drop

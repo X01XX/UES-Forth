@@ -358,9 +358,6 @@
         else                                \ ned-lst inx-lst' rnd-inx nedx
             \ Plan needed.
 
-
-            \ Testing.
-
             \ Check if safer plan is needed, that is, a plan unlikely to pass through
             \ more negative regions that the current regions and goal regions are in..
             current-session                     \ ned-lst inx-lst' rnd-inx nedx sess
@@ -373,7 +370,7 @@
             session-get-current-regions         \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from'
             \ cr ." from regcorr: " dup .regioncorr cr
 
-            \ Get the lowest rate from reg-to and reg-from highest rates.                                                                                                                    
+            \ Get the lowest rate from reg-to and reg-from highest rates.
             over #3 pick                        \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' regc-to' sess
             session-find-highest-le-zero-rate   \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' rate-to
 
@@ -389,8 +386,8 @@
             <> if
                 \ Rate is better than the lowest, so try safe planning.
                 over #3 pick                    \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' regc-to' sess
-                session-change-to-plans         \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from', plnc' t | f 
-                if  
+                session-change-to-plans         \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from', plnc' t | f
+                if
                     cr cr ." plan found: " dup .plancorr-list cr
                     dup plancorr-list-run-plans \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' plnc' bool
                     swap                        \ ned-lst inx-lst' rnd-inx nedx sess regc-to' regc-from' bool plnc'
@@ -429,7 +426,6 @@
                 regioncorr-deallocate       \ ned-lst inx-lst' rnd-inx nedx sess
                 drop                        \ ned-lst inx-lst' rnd-inx nedx
             then
-            \ End testing
 
             \ Try unsafe plan.
             dup need-get-plan               \ ned-lst inx-lst' rnd-inx nedx, pln t | f

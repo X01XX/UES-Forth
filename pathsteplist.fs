@@ -388,7 +388,6 @@
     \ Add pathstep to list.                 \ pthstp1 pthstp-lst0
     pathstep-list-push
     true
-    
 ;
 
 \ Return a list of pathsteps with changes that intersect a given changescorr.
@@ -414,7 +413,7 @@
             #2 pick                     \ cngsc1 pthstp-lst0 | ret-lst pthstp-link pthstpx ret-lst
             pathstep-list-push          \ cngsc1 pthstp-lst0 | ret-lst pthstp-link
         then
-        
+
         link-get-next
     repeat
 
@@ -435,7 +434,7 @@
     \ Get needed changes.
     #2 pick #2 pick                         \ regc-to regc-from pthstp-lst0 | regc-to regc-from
     changescorr-new-regc-to-regc            \ regc-to regc-from pthstp-lst0 | cngsc'
-    
+
     over                                    \ regc-to regc-from pthstp-lst0 | cngsc' pthstp-lst0
     list-get-links                          \ regc-to regc-from pthstp-lst0 | cngsc' pthstp-link
 
@@ -493,7 +492,7 @@
     \ Get needed changes.
     #2 pick #2 pick                         \ regc-to regc-from pthstp-lst0 | regc-to regc-from
     changescorr-new-regc-to-regc            \ regc-to regc-from pthstp-lst0 | cngsc'
-    
+
     over                                    \ regc-to regc-from pthstp-lst0 | cngsc' pthstp-lst0
     list-get-links                          \ regc-to regc-from pthstp-lst0 | cngsc' pthstp-link
 
@@ -1095,4 +1094,72 @@
     nip                                     \ ret-lst
     true
     \ cr ." pathstep-list-reachable-fc: exit 2, Ok: " .stack-gbl cr
+;
+
+\ Return a list of pathsteps with result-regions closest to a given regioncorr.
+: pathstep-list-closest-result-regions ( regc1 pthstp-lst0 -- pthstp-lst )
+    \ Check args.
+    assert-tos-is-pathstep-list
+    assert-nos-is-regioncorr
+
+    \ Init return list.
+    list-new                            \ regc1 pthstp-lst0 ret-lst
+
+    \ Init min-distance counter
+    #9999                               \ regc1 pthstp-lst0 ret-lst min
+
+    \ Prep for loop, find min distance.
+    #2 pick list-get-links              \ regc1 pthstp-lst0 ret-lst min pthstp-link
+
+    begin
+        ?dup
+    while
+        \ Prep for later distance comparison.
+        swap                            \ regc1 pthstp-lst0 ret-lst pthstp-link min
+
+        \ Get current pathstep result regions.
+        over link-get-data              \ regc1 pthstp-lst0 ret-lst pthstp-link min pathstpx
+        pathstep-get-result-regions     \ regc1 pthstp-lst0 ret-lst pthstp-link min pthstp-rslt
+
+        \ Get distance to regc1.
+        #5 pick                         \ regc1 pthstp-lst0 ret-lst pthstp-link min pthstp-rslt regc1
+        regioncorr-distance             \ regc1 pthstp-lst0 ret-lst pthstp-link min dist
+
+        \ Set minimum distance.
+        min                             \ regc1 pthstp-lst0 ret-lst pthstp-link min
+
+        \ Prep for next cycle.
+        swap                            \ regc1 pthstp-lst0 ret-lst min pthstp-link
+
+        link-get-next
+    repeat
+                                        \ regc1 pthstp-lst0 ret-lst min
+
+    \ Prep for loop, gather pathsteps that are at the minimum distance.
+    #2 pick list-get-links              \ regc1 pthstp-lst0 ret-lst min pthstp-link
+
+    begin
+        ?dup
+    while
+        \ Get current pathstep result regions.
+        dup link-get-data               \ regc1 pthstp-lst0 ret-lst min pthstp-link pathstpx
+        pathstep-get-result-regions     \ regc1 pthstp-lst0 ret-lst min pthstp-link pthstp-rslt
+
+        \ Get distance to regc1.
+        #5 pick                         \ regc1 pthstp-lst0 ret-lst min pthstp-link pthstp-rslt regc1
+        regioncorr-distance             \ regc1 pthstp-lst0 ret-lst min pthstp-link dist
+
+        \ Check if pathstep distance is equal to the minimum.
+        #2 pick =                       \ regc1 pthstp-lst0 ret-lst min pthstp-link bool
+        if
+            dup link-get-data           \ regc1 pthstp-lst0 ret-lst min pthstp-link pathstpx
+            #3 pick                     \ regc1 pthstp-lst0 ret-lst min pthstp-link pathstpx ret-lst
+            list-push-struct            \ regc1 pthstp-lst0 ret-lst min pthstp-link
+        then
+
+        link-get-next
+    repeat
+                                        \ regc1 pthstp-lst0 ret-lst min
+    drop                                \ regc1 pthstp-lst0 ret-lst
+    nip nip
 ;

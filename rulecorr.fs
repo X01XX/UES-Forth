@@ -567,7 +567,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
     \ Init rule list.
     list-new -rot                   \ rul-lst-rst regc1 rulc0
-    
+
     \ Prep for loop.
     swap rulecorr-get-list          \ rul-lst-rst rulc0 regc1-lst
     list-get-links                  \ rul-lst-rst rulc0 regc1-link

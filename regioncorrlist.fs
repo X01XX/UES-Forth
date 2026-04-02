@@ -311,7 +311,7 @@
 ;
 
 \ Return an regioncorr-list with no duplicates.
-: regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )                                                                                        
+: regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )
     \ Check arg.
     assert-tos-is-regioncorr-list
 
@@ -326,7 +326,7 @@
         over link-get-data              \ ret-lst link xt regcx
         #3 pick                         \ ret-lst link xt regcx ret-lst
         list-member                     \ ret-lst link bool
-        if  
+        if
         else
             dup link-get-data           \ ret-lst link regcx
             #2 pick                     \ ret-lst link regcx ret-lst
@@ -607,7 +607,7 @@
     repeat
 ;
 \ Return an regioncorr-list with no duplicates.
-: regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )                                                                                        
+: regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )
     \ Check arg.
     assert-tos-is-regioncorr-list
 
@@ -622,7 +622,7 @@
         over link-get-data              \ ret-lst link xt regcx
         #3 pick                         \ ret-lst link xt regcx ret-lst
         list-member                     \ ret-lst link bool
-        if  
+        if
         else
             dup link-get-data           \ ret-lst link regcx
             #2 pick                     \ ret-lst link regcx ret-lst
@@ -776,7 +776,7 @@
             regioncorr-list-deallocate              \ ret-lst
             exit
         then
-        
+
         \ Get lst0 minus intersections.
         2dup swap                                   \ ret-lst lst0 int-lst int-lst lst0
         regioncorr-list-subtract                    \ ret-lst lst0 int-lst lst0-left-over

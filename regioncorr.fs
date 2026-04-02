@@ -616,7 +616,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
         \ Set current domain.
         dup link-get-data           \ link1 link0 d-link domx
-        domain-set-current-xt       
+        domain-set-current-xt
         execute                     \ link1 link0 d-link
 
         \ Check regions

@@ -1416,7 +1416,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             \ Best solution, loop continues.
             swap changescorr-deallocate     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs'
             \ cr ." take pathstep that has a needed change" cr
-        
+
             \ Choose a pathstep.
             dup list-get-length             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' len
             random                          \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' inx
@@ -1493,15 +1493,21 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
                 if
                     \ Third solution, loop is paused to recurse.
                     \ cr ." pairing list is empty" cr
-                    list-deallocate             \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2'
-                    pathstep-list-deallocate    \ | ret-lst cur-from pthstp-lst-int'
+                    list-deallocate                     \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2'
+                    pathstep-list-deallocate            \ | ret-lst cur-from pthstp-lst-int'
 
-                    \ Select one intersecting pathstep.
-                    dup list-get-length                 \ | ret-lst cur-from pthstp-lst-int' len
-                    random                              \ | ret-lst cur-from pthstp-lst-int' inx
-                    over                                \ | ret-lst cur-from pthstp-lst-int' inx pthstp-lst-int'
-                    list-remove-item-struct             \ | ret-lst cur-from pthstp-lst-int' pthstpx
-                    swap                                \ | ret-lst cur-from pthstpx pthstp-lst-int'
+                    \ Get closest to regc-to possibilities.
+                    #6 pick                                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' regc-to
+                    over                                    \ | ret-lst cur-from pthstp-lst-int' regc-to pthstp-lst-int'
+                    pathstep-list-closest-result-regions    \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cls'
+                    swap pathstep-list-deallocate           \ | ret-lst cur-from pthstp-lst-cls'
+                    
+                    \ Select one, cur-from intersecting, closest to regc-to, pathstep.
+                    dup list-get-length                 \ | ret-lst cur-from pthstp-lst-cls' len
+                    random                              \ | ret-lst cur-from pthstp-lst-cls' inx
+                    over                                \ | ret-lst cur-from pthstp-lst-cls' inx pthstp-lst-int'
+                    list-remove-item-struct             \ | ret-lst cur-from pthstp-lst-cls' pthstpx
+                    swap                                \ | ret-lst cur-from pthstpx pthstp-lst-cls'
                     pathstep-list-deallocate            \ | ret-lst cur-from pthstpx
                     \ cr ." pathstep used 2: " dup .pathstep cr
 

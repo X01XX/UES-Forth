@@ -59,7 +59,7 @@
     s" (0100)" regioncorr-from-string-a swap    \ regc-to' regc-from' pthstp-lst'
 
     \ Check direct steps.
-    #2 pick #2 pick #2 pick                     \ regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst' 
+    #2 pick #2 pick #2 pick                     \ regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
     pathstep-list-next-steps-direct             \ regc-to' regc-from' pthstp-lst' pthstp-lst2'
     \ cr ." direct returns: " dup .pathstep-list cr
 
@@ -85,7 +85,7 @@
     pathstep-list-deallocate                    \ regc-to' regc-from' pthstp-lst'
 
     \ Check indirect steps.
-    #2 pick #2 pick #2 pick                     \ regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst' 
+    #2 pick #2 pick #2 pick                     \ regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
     pathstep-list-next-steps-indirect           \ regc-to' regc-from' pthstp-lst' pthstp-lst2' pthstp-lst3'
     \ cr ." indirect returns: " dup .pathstep-list cr
 

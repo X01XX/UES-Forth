@@ -641,6 +641,8 @@
 
     dup .session
 
+\   s" (0000)" regioncorr-from-string-a             \ dom0 ses regc-to'
+\   s" (0011)" regioncorr-from-string-a             \ dom0 ses regc-to'
     s" (0111)" regioncorr-from-string-a             \ dom0 ses regc-to'
     s" (0100)" regioncorr-from-string-a             \ dom0 ses regc-to' regc-from'
 
@@ -659,7 +661,7 @@
 
         \ Check results.
 \        dup list-get-length 4 <> abort" path not legth 4?"
-\        
+\
 \        2dup regioncorr-list-get-first              \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' first-regc
 \        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
 \        false? abort" first item is not regc-from?"
