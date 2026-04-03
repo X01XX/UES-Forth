@@ -1,5 +1,5 @@
 \ Split a non-zero changes instance into separate single-bit changes.
-: ?changes-split ( cngs0 -- cngs-lst )
+: changes-split ( cngs0 -- cngs-lst )
     \ Check args.
     assert-tos-is-changes
 

@@ -173,7 +173,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         dup link-get-data           \ reg-r link step
         planstep-get-initial-region \ reg-r link s-r
         #2 pick                     \ reg-r link s-r reg-r
-        region-intersects           \ reg-r link flag
+        region-intersects?          \ reg-r link flag
         if
             2drop
             true
@@ -205,7 +205,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         dup link-get-data           \ reg-i link step
         planstep-get-result-region  \ reg-i link s-r
         #2 pick                     \ reg-i link s-r reg-i
-        region-intersects           \ reg-i link flag
+        region-intersects?          \ reg-i link flag
         if
             2drop
             true
@@ -403,7 +403,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     \ cr ." plan-restrict-initial-region: reg: " over .region space ." plan: " dup .plan cr
 
     2dup plan-get-initial-region                \ reg1 pln0 reg1 pln-i-reg
-    region-intersects                           \ reg1 pln0 bool
+    region-intersects?                          \ reg1 pln0 bool
     false? abort" plan initial region does not intersect?"
 
     \ Init return plan.
@@ -420,7 +420,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         dup link-get-data                       \ pln reg1 stp-link stpx
         #2 pick                                 \ pln reg1 stp-link stpx reg1
         over planstep-get-initial-region        \ pln reg1 stp-link stpx reg1 stp-i-reg
-        2dup region-intersects                  \ pln reg1 stp-link stpx reg1 stp-i-reg bool
+        2dup region-intersects?                 \ pln reg1 stp-link stpx reg1 stp-i-reg bool
         false? if
             3drop 2drop                         \ pln
             plan-deallocate
@@ -460,7 +460,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     assert-nos-is-region
 
     2dup plan-get-result-region     \ reg1 pln0 reg1 pln-r-reg
-    region-intersects               \ reg1 pln0 bool
+    region-intersects?              \ reg1 pln0 bool
     false? abort" plan result region does not intersect?"
 
     \ cr ." plan-restrict-result-region: plan: " dup .plan space ." reg: " over .region cr
@@ -485,7 +485,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         dup link-get-data               \ plnplnstp-lst' pln reg1 link plnplnstpx
         #2 pick                         \ plnplnstp-lst' pln reg1 link plnplnstpx reg1
         over planstep-get-result-region \ plnplnstp-lst' pln reg1 link plnplnstpx reg1 plnplnstp-r-reg
-        2dup region-intersects          \ plnplnstp-lst' pln reg1 link plnplnstpx reg1 plnplnstp-r-reg bool
+        2dup region-intersects?         \ plnplnstp-lst' pln reg1 link plnplnstpx reg1 plnplnstp-r-reg bool
         false? if
             3drop 2drop                 \ plnplnstp-lst' pln
             plan-deallocate

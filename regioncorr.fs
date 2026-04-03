@@ -258,7 +258,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         \ Check regions
         #2 pick link-get-data       \ link1 link0 d-link reg1
         #2 pick link-get-data       \ link1 link0 d-link reg1 reg0
-        region-intersects           \ link1 link0 d-link bool
+        region-intersects?          \ link1 link0 d-link bool
         false? if
             3drop
             false

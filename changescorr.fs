@@ -170,7 +170,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     while
         over link-get-data                      \ link link cngsc
         over link-get-data                      \ link link cngsc cngsc
-        changes-intersect                       \ link link bool
+        changes-intersect?                      \ link link bool
         if
             2drop
             true

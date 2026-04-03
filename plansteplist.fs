@@ -207,7 +207,7 @@
         dup link-get-data               \ reg-to reg-from link plnstpx
         dup planstep-get-initial-region \ reg-to reg-from link plnstpx plnstp-i
         #3 pick                         \ reg-to reg-from link plnstpx plnstp-i reg-from
-        region-intersects               \ reg-to reg-from link plnstpx bool
+        region-intersects?              \ reg-to reg-from link plnstpx bool
         if
             2drop 2drop
             true
@@ -216,7 +216,7 @@
 
         planstep-get-result-region      \ reg-to reg-from link plnstp-r
         #3 pick                         \ reg-to reg-from link plnstp-r reg-to
-        region-intersects               \ reg-to reg-from link bool
+        region-intersects?              \ reg-to reg-from link bool
         if
             3drop
             true
@@ -257,3 +257,83 @@
                                 \ ret-cngs
 ;
 
+: ?planstep-list-non-intersecting ( reg-to reg-from plnstp-lst0 -- plnstp-lst t | f )
+    \ Check args.
+    assert-tos-is-planstep-list
+    assert-nos-is-region
+    assert-3os-is-region
+
+    \ Init return list.
+    list-new                 \ reg-to reg-from plnstp-lst0 | ret-lst
+
+    \ Prep for loop.
+    over list-get-links      \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk
+        #4 pick #4 pick                 \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk reg-to reg-from
+        #2 pick                         \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk reg-to reg-from plnstp-lnk
+        link-get-data                   \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk reg-to reg-from plnstpx
+        planstep-any-intersection?      \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk bool
+        if
+        else
+            link-get-data               \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk plnstpx
+            #2 pick                     \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk plnstpx ret-lst
+            list-push-struct            \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk
+        then
+
+        link-get-next
+    repeat
+                            \ reg-to reg-from plnstp-lst0 | ret-lst
+    dup list-is-empty?
+    if
+        list-deallocate
+        2drop drop
+        false
+        exit
+    then
+
+    2nip                    \ plnstp-lst0 | ret-lst
+    nip
+    true
+;
+
+: planstep-list-change-intersection ( cngs1 plnstp-lst0 -- plnstp-lst t | f )
+    \ Check args.
+    assert-tos-is-planstep-list
+    assert-nos-is-changes
+
+    \ Init return list.
+    list-new                 \ cngs1 plnstp-lst0 | ret-lst
+
+    \ Prep for loop.
+    over list-get-links      \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk plnstpx
+        planstep-get-changes    \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk stp-cngs
+        #4 pick                 \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk stp-cngs cngs1
+        changes-intersect?      \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk bool
+        if
+            dup link-get-data   \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk plnstpx
+            #2 pick             \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk plnstpx ret-lst
+            list-push-struct    \ cngs1 plnstp-lst0 | ret-lst plnstp-lnk
+        then
+
+        link-get-next
+    repeat
+                                \ cngs1 plnstp-lst0 | ret-lst
+    dup list-is-empty?
+    if
+        list-deallocate
+        2drop
+        false
+    else
+        nip nip
+        true
+    then
+;

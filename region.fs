@@ -279,7 +279,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
 \ Return true if two regions intersect, no corresponding
 \ trits are 0 and 1.
-: region-intersects ( reg1 reg0 -- flag )
+: region-intersects? ( reg1 reg0 -- flag )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
@@ -326,7 +326,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     assert-nos-is-region
 
     \ Check that the two regions intersect.
-    2dup region-intersects  \ reg1 reg0 bool
+    2dup region-intersects? \ reg1 reg0 bool
     if
         \ Get high and low state of reg0
         region-high-low     \ reg1 reg0high reg0low
@@ -510,7 +510,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     assert-tos-is-region
     assert-nos-is-region
 
-    2dup region-intersects          \ reg1 reg-sup flag
+    2dup region-intersects?         \ reg1 reg-sup flag
     if
         \ Regions intersect.
         over region-intersection    \ reg1 reg-int flag
@@ -531,7 +531,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     assert-tos-is-region
     assert-nos-is-region
 
-    2dup region-intersects          \ reg1 reg-sub flag
+    2dup region-intersects?         \ reg1 reg-sub flag
     if
         \ Regions intersect.
         tuck                        \ reg-sub reg1 reg-sub

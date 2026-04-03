@@ -315,7 +315,7 @@
             2drop
         else
             \ Check if they intersect
-            2dup region-intersects          \ ret-lst reg1 link reg1 reg2 flag
+            2dup region-intersects?         \ ret-lst reg1 link reg1 reg2 flag
             if
                 \ They intersect, there will be some remainder.
                 region-subtract             \ ret-lst reg1 link remainder-lstegion-list-state-in-region
@@ -489,7 +489,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-intersects ] literal -rot list-member
+    [ ' region-intersects? ] literal -rot list-member
 ;
 
 : ?region-list-intersections-of-region ( reg1 lst0 -- reg-lst )
@@ -497,7 +497,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-intersects ] literal -rot list-find-all-struct
+    [ ' region-intersects? ] literal -rot list-find-all-struct
 ;
 
 \ Return true if a region uses a given state.
@@ -1138,7 +1138,7 @@
         \ Check the current region.
         #2 pick                         \ reg1 cnt link reg1
         over link-get-data              \ reg1 cnt link reg1 regx
-        region-intersects               \ reg1 cnt link flag
+        region-intersects?              \ reg1 cnt link flag
         if                              \ reg1 cnt link
             \ Inc counter
             swap 1+ swap                \ reg1 cnt link

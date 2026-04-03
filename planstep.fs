@@ -285,7 +285,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     assert-nos-is-changes
 
     planstep-get-changes            \ cngs1 s-cngs
-    changes-intersect               \ flag
+    changes-intersect?              \ bool
 ;
 
 \ Return a planstep with a rule initial-region restricted by a given region.
@@ -298,7 +298,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
     over                                \ reg1 plnstp0 reg1
     over planstep-get-initial-region    \ reg1 plnstp0 reg1 s-reg
-    region-intersects                   \ reg1 plnstp0 bool
+    region-intersects?                  \ reg1 plnstp0 bool
     false? abort" no intersection with planstep initial-region?"
 
     \ Copy number unwanted changes.
@@ -331,7 +331,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
     over                                    \ reg1 plnstp0 reg1
     over planstep-get-result-region         \ reg1 plnstp0 reg1 s-reg
-    region-intersects                       \ reg1 plnstp0 bool
+    region-intersects?                      \ reg1 plnstp0 bool
     false? abort" no intersection wint planstep result-region?"
 
     \ Get number unwanted changes.
@@ -365,7 +365,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
     swap planstep-get-result-region     \ plnstp0 reg1
     swap planstep-get-initial-region    \ reg1 reg0
-    region-intersects                   \ bool
+    region-intersects?                  \ bool
 ;
 
 \ Return true if a planstep links two regions.
@@ -439,3 +439,54 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     then
 ;
 
+\ Return true if a planstep's initial or result regions intersect
+\ any of two regions.
+: planstep-any-intersection? ( reg2 reg1 plnstp -- bool )
+    \ Check args.
+    assert-tos-is-planstep
+    assert-nos-is-region
+    assert-3os-is-region
+
+    \ Check for planstep initial region intersection with reg1.
+    dup planstep-get-initial-region     \ reg2 reg1 plnstp initial
+    #2 pick                             \ reg2 reg1 plnstp initial reg1
+    region-intersects?                  \ reg2 reg1 plnstp bool
+    if
+        2drop drop
+        true
+        exit
+    then
+
+    \ Check for planstep initial region intersection with reg2.
+    dup planstep-get-initial-region     \ reg2 reg1 plnstp initial
+    #3 pick                             \ reg2 reg1 plnstp initial reg2
+    region-intersects?                  \ reg2 reg1 plnstp bool
+    if
+        2drop drop
+        true
+        exit
+    then
+
+    \ Check for planstep result region intersection with reg1.
+    dup planstep-get-result-region      \ reg2 reg1 plnstp result
+    #2 pick                             \ reg2 reg1 plnstp result reg1
+    region-intersects?                  \ reg2 reg1 plnstp bool
+    if
+        2drop drop
+        true
+        exit
+    then
+
+    \ Check for planstep result region intersection with reg2.
+    dup planstep-get-result-region      \ reg2 reg1 plnstp result
+    #3 pick                             \ reg2 reg1 plnstp result reg2
+    region-intersects?                  \ reg2 reg1 plnstp bool
+    if
+        2drop drop
+        true
+        exit
+    then
+
+    2drop drop
+    false
+;

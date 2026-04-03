@@ -262,7 +262,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 ;
 
 \ Return true if two changes intersect, in at least one bit.
-: changes-intersect ( cngs1 cngs0 -- flag )
+: changes-intersect? ( cngs1 cngs0 -- bool )
     \ Check args.
     assert-tos-is-changes
     assert-nos-is-changes

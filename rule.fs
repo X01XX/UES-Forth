@@ -363,7 +363,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-nos-is-region
 
     rule-calc-initial-region    \ reg1 initial'
-    tuck region-intersects      \ initial' bool
+    tuck region-intersects?     \ initial' bool
     swap region-deallocate      \ bool
 ;
 
@@ -373,7 +373,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-nos-is-region
 
     rule-calc-result-region     \ reg1 initial'
-    tuck region-intersects      \ initial' bool
+    tuck region-intersects?     \ initial' bool
     swap region-deallocate      \ bool
 ;
 
@@ -865,7 +865,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     over rule-calc-initial-region   \ rul1 rul0 rul1-i
     over rule-calc-result-region    \ rul1 rul0 rul1-i rul0-r
 
-    2dup region-intersects          \ rul1 rul0 rul1-i rul0-r bool
+    2dup region-intersects?         \ rul1 rul0 rul1-i rul0-r bool
     false? abort" rules not linked?"
 
                                     \ rul1 rul0 rul1-i rul0-r
@@ -983,7 +983,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     changes-new-region-to-region        \ to-cngs' ned-cngs'
 
     \ Check if they intersect.
-    2dup changes-intersect              \ to-cngs' ned-cngs' bool
+    2dup changes-intersect?             \ to-cngs' ned-cngs' bool
 
     \ Clean up.
     swap changes-deallocate
@@ -1027,7 +1027,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     over rule-calc-initial-region   \ rul1 rul0 rul1-reg-i
     over rule-calc-result-region    \ rul1 rul0 rul1-reg-i rul0-reg-r
 
-    2dup region-intersects          \ rul1 rul0 rul1-reg-i rul0-reg-r bool
+    2dup region-intersects?         \ rul1 rul0 rul1-reg-i rul0-reg-r bool
     if
         region-deallocate
         region-deallocate

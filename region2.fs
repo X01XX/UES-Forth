@@ -5,7 +5,7 @@
     assert-nos-is-region
 
     \ Check if any subtraction is needed.
-    2dup region-intersects 0=       \ reg1 reg0 flag
+    2dup region-intersects? 0=      \ reg1 reg0 flag
     if
         list-new tuck               \ reg1 list reg0 list
         region-list-push-xt execute \ reg1 list
