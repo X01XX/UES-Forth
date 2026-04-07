@@ -46,7 +46,7 @@ UES definitions
 decimal
 \ #2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
 
-0 value structinfo-list-store   \ Storage for a list containing info on all structs.
+\ 0 value structinfo-list-store   \ Storage for a list containing info on all structs.
                                 \ Used for memory use print, memory leak checking,
                                 \ freeing heap, struct-aware printing of the Forth stack.
 
@@ -125,13 +125,17 @@ include actionxts.fs
 include domain.fs
 include domainlist.fs
 
+include structinfo.fs
+include structinfolist.fs
+include stackprint.fs
+
 include session.fs
 
 include input.fs
 
-include stackprint.fs
-include structinfo.fs
-include structinfolist.fs
+\ include stackprint.fs
+\ include structinfo.fs
+\ include structinfolist.fs
 cs
 
 \ Test files.

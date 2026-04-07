@@ -1662,8 +1662,14 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ cr ." session-calc-plancorr: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     #2 pick #2 pick regioncorr-intersects?
-    abort" session-calc-plancorr: from/to intersect?"
-
+    if
+        cr
+        ." session-calc-plancorr: from/to intersect? "
+        space ." from: " over .regioncorr
+        space ." to: " #2 pick .regioncorr
+        cr
+    then
+    
     \ Init planlist.
     list-new swap                           \ regc-to regc-from plnc-lst sess0
     2swap                                   \ plnc-lst sess0 regc-to regc-from
@@ -1871,7 +1877,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
     session-calc-path                               \ sess0 regc-to regc-from', regc-lst' t | f
     if
-        \ cr ." path found: " dup .pathstep-list cr
+        \ cr ." path found: " dup .regioncorr-list cr
         dup                                         \ sess0 regc-to regc-from' regc-lst' regc-lst'
         #3 pick                                     \ sess0 regc-to regc-from' regc-lst' regc-lst' regc-to
         #3 pick                                     \ sess0 regc-to regc-from' regc-lst' regc-lst' regc-to regc-from'
@@ -1888,6 +1894,8 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
             \ cr ." session-change-to-plans: plans not found"
         then
         regioncorr-list-deallocate                  \ sess0 regc-to regc-from'
+    else
+       \ cr ." no path found " cr
     then
                                                     \ sess0 regc-to regc-from'
     regioncorr-deallocate                           \ sess0 regc-to

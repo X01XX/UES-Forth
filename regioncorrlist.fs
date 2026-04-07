@@ -587,53 +587,6 @@
     true
 ;
 
-\ Return a copy of an regioncorr-list, with duplicates removed.
-: ?regioncorr-list-copy-nodups ( regc-lst -- regc-lst )
-    \ Check arg.
-    assert-tos-is-regioncorr-list
-
-    list-new swap               \ ret lst0
-    list-get-links              \ ret link
-
-    begin
-        ?dup
-    while
-        dup link-get-data       \ ret link regx
-        #2 pick                 \ ret link regx ret
-        regioncorr-list-push-nodups    \ ret link flag
-        drop
-
-        link-get-next           \ ret link
-    repeat
-;
-\ Return an regioncorr-list with no duplicates.
-: regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )
-    \ Check arg.
-    assert-tos-is-regioncorr-list
-
-    list-new swap                       \ ret-lst regc-lst0
-
-    list-get-links                      \ ret-lst link
-
-    begin
-        ?dup
-    while
-        [ ' regioncorr-eq ] literal     \ ret-lst link xt
-        over link-get-data              \ ret-lst link xt regcx
-        #3 pick                         \ ret-lst link xt regcx ret-lst
-        list-member                     \ ret-lst link bool
-        if
-        else
-            dup link-get-data           \ ret-lst link regcx
-            #2 pick                     \ ret-lst link regcx ret-lst
-            regioncorr-list-push-end    \ ret-lst link
-        then
-
-        link-get-next                   \ ret-lst link
-    repeat
-                                        \ ret-lst
-;
-
 \ Return all two-regc intersections from an regioncorr-list.
 \ Duplicates will be suppresed, but propr subsets are Ok.
 : regioncorr-list-intersections-nodups ( regc-lst -- regc-lst )

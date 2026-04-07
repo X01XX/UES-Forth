@@ -450,23 +450,6 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     true
 ;
 
-\ Return a regioncorr, given a token-list.
-: regioncorr-from-token-list ( tkn-lst0 -- regc t | f )
-    \ Check arg.
-    assert-tos-is-token-list
-
-    \ Get regioncorr.
-    dup                             \ tkn-lst' tkn-lst'
-    regioncorr-from-token-list      \ tkn-lst', regc t | f
-    if
-        nip                         \ regc
-        true
-    else
-        drop
-        false
-    then
-;
-
 \ Return a regioncorr from a string.
 : regioncorr-from-string ( str-addr str-n -- regc t | f )
     \ Get tokens.
