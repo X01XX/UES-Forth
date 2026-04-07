@@ -1338,9 +1338,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
         \ cr dup .square cr
         \ cr over .square cr
-        square-compare          \ ret-lst act0 link region compare-result
-
-        [char] I =              \ ret-lst act0 link region flag
+        square-incompatible     \ ret-lst act0 link region compare-result
         if                      \ ret-lst act0 link region
             drop                \ ret-lst act0 link
         else
@@ -1442,8 +1440,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         #4 pick action-find-square          \ sqr1 act0 | flag reg-in-lst' link, r-sqr t | f
         0= abort" square not found?"
         #5 pick                             \ sqr1 act0 | flag reg-in-lst' link r-sqr sqr1
-        square-compare                      \ sqr1 act0 | flag reg-in-lst' link char
-        [char] I =                          \ sqr1 act0 | flag reg-in-lst' link flag
+        square-incompatible                 \ sqr1 act0 | flag reg-in-lst' link char
         if                                  \ sqr1 act0 | flag reg-in-lst' link
             \ Add new incompatible pair.
             #4 pick square-get-state        \ sqr1 act0 | flag reg-in-lst' link sta1
@@ -1473,8 +1470,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         #4 pick action-find-square          \ sqr1 act0 | flag reg-in-lst' link, r-sqr t | f
         0= abort" square not found?"
         #5 pick                             \ sqr1 act0 | flag reg-in-lst' link r-sqr sqr1
-        square-compare                      \ sqr1 act0 | flag reg-in-lst' link char
-        [char] I =                          \ sqr1 act0 | flag reg-in-lst' link flag
+        square-incompatible                      \ sqr1 act0 | flag reg-in-lst' link char
         if                                  \ sqr1 act0 | flag reg-in-lst' link
             \ Add new incompatible pair.
             #4 pick square-get-state        \ sqr1 act0 | flag reg-in-lst' link sta1

@@ -770,39 +770,62 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 \ The slash (/) characters, *including the last*, are important as separators.
 \ The uderscore (_) character can also be used.
-: rule-from-string ( addr n -- rule )   \ Return a rule from a string, like 00/01/11/10/XX/Xx/X0/X1/
+\ All bit positions must be specified.
+: rule-from-string ( c-addr u -- rule t | f )   \ Return a rule from a string, like 00/01/11/10/XX/Xx/X0/X1/
+    \ Init position counter.
+    0 -rot                          \ cnt c-addr u
+
     \ Init rule.
-    _rule-allocate                  \ addr n rul
+    _rule-allocate                  \ cnt addr n rul
     0 over _rule-set-m00
     0 over _rule-set-m01
     0 over _rule-set-m11
-    0 over _rule-set-m10            \ addr n rul
+    0 over _rule-set-m10            \ cnt addr n rul
 
-    -rot                            \ rul addr n
+    -rot                            \ cnt rul addr n
     \ Check each pair of characters.
-    0                               \ rul addr n 0
-    do                              \ rul addr
-        dup c@                      \ rul addr ci
+    0                               \ cnt rul addr n 0
+    do                              \ cnt rul addr
+        dup c@                      \ cnt rul addr ci
 
         case
             [char] ( of endof
             [char] ) of endof
-            [char] / of             \ rul ci cr addr
-                -rot                \ rul addr ci cr
-                #3 pick             \ rul addr ci cr rul
-                _rule-adjust-masks  \ rul addr
+            [char] / of             \ cnt rul ci cr addr
+                -rot                \ cnt rul addr ci cr
+                #3 pick             \ cnt rul addr ci cr rul
+                _rule-adjust-masks  \ cnt rul addr
+                \ Inc counter
+                rot 1 + -rot
             endof
             [char] _ of
-                -rot                \ rul addr ci cr
-                #3 pick             \ rul addr ci cr rul
-                _rule-adjust-masks   \ rul addr
+                -rot                \ cnt rul addr ci cr
+                #3 pick             \ cnt rul addr ci cr rul
+                _rule-adjust-masks  \ cnt rul addr
+                \ Inc counter
+                rot 1 + -rot
             endof
-            tuck                    \ rul cx addr
+            tuck                    \ cnt rul cx addr
         endcase
         1+
     loop
-                                    \ rul addr+
-    drop
+                                    \ cnt rul addr+
+    drop                            \ cnt rul
+
+    swap                            \ rul cnt
+    current-num-bits                \ rul cnt num-bits
+    = if
+        true
+    else
+        rule-deallocate
+        false
+    then
+;
+
+\ Get rule from a string, abort if the attempt failed.
+: rule-from-string-a ( c-addr u -- rule )
+    rule-from-string        \ rule t | f
+    0= abort" rule-from-string failed?"
 ;
 
 : rule-get-changes ( rul0 -- cngs ) \ Return a changes struct, from a rule.

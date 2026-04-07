@@ -1469,7 +1469,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         false
         exit
     then
-    
+
     \ cr ." steps: " dup .planstep-list cr
     dup planstep-list-union-changes             \ | cngs' plnstp-lst' plnstp-cngs'
     swap planstep-list-deallocate               \ | cngs' plnstp-cngs'

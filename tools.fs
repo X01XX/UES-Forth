@@ -287,32 +287,41 @@
         \ Get next char
         i c@                        \ c-start fl t-cnt c-end char
 
-        \ Check for a separator.
-        bl =                        \ c-start fl t-cnt c-end flag
+        \ Check for valid, printable, char.
+        dup $20 < if
+        else
+            \ GE space.
+            dup $7E > if
+            else
+                \ LE ~
+                \ Check for a separator.
+                bl =                        \ c-start fl t-cnt c-end flag
 
-        if
-            \ Check length GT zero.
-            dup i -                 \ c-start fl t-cnt c-end s-len
-            dup                     \ c-start fl t-cnt c-end s-len s-len
-            if                      \ c-start fl t-cnt c-end s-len
+                if
+                    \ Check length GT zero.
+                    dup i -                 \ c-start fl t-cnt c-end s-len
+                    dup                     \ c-start fl t-cnt c-end s-len s-len
+                    if                      \ c-start fl t-cnt c-end s-len
 
-                \ Calc token start.
-                i  1+               \ c-start fl t-cnt c-end s-len t-start
+                        \ Calc token start.
+                        i  1+               \ c-start fl t-cnt c-end s-len t-start
 
-                \ Prep token definition.
-                swap                \ c-start fl t-cnt c-end t-start t-len
+                        \ Prep token definition.
+                        swap                \ c-start fl t-cnt c-end t-start t-len
 
-                \ Store token def deeper into stack.
-                -2rot               \ c-start fl t-cnt c-end
+                        \ Store token def deeper into stack.
+                        -2rot               \ c-start fl t-cnt c-end
 
-                \ Update token count.
-                swap 1+ swap        \ c-start fl t-cnt c-end
-            else                    \ c-start fl t-cnt c-end s-len
-                drop                \ c-start fl t-cnt c-end
+                        \ Update token count.
+                        swap 1+ swap        \ c-start fl t-cnt c-end
+                    else                    \ c-start fl t-cnt c-end s-len
+                        drop                \ c-start fl t-cnt c-end
+                    then
+
+                    \ Restart c-end
+                    drop i 1-               \ c-start fl t-cnt c-end
+                then
             then
-
-            \ Restart c-end
-            drop i 1-               \ c-start fl t-cnt c-end
         then
 
         \ Count string index down.

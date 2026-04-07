@@ -439,68 +439,81 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     true
 ;
 
-\ Return a rulecorr from a parsed string.
-: rulecorr-from-parsed-string ( ... c-addr u cnt -- rulc t | f )
+\ Return a rulecorr from a token-list.
+: rulecorr-from-token-list ( tkn-lst0 -- rulc t | f )
+    \ Check arg.
+    assert-tos-is-token-list
 
     \ Check number tokens.
-    dup                         \ c-addr u cnt cnt
+    dup list-get-length         \ tkn-lst0 cnt
     current-session
     session-get-number-domains-xt
-    execute                     \ c-addr u cnt cnt domain-count
-    <> if                       \ c-addr u cnt
-        0 do
-            2drop
-        loop
+    execute                     \ tkn-lst0 cnt domain-count
+    <> if                       \ tkn-lst0
+        drop
         false
         exit
     then
-    drop                        \ c-addr u
 
-    \ Process each rule, skip invalid rules.
-                                            \ addr0 cnt0
-    list-new                                \ addr0 cnt0 ret-lst
+    \ Process each rule.
+                                            \ tkn-lst0
+    list-new                                \ tkn-lst0 rul-lst
+
+    \ Prep for loop.
+    swap list-get-links                     \ rul-lst tkn-lnk
     cur-session-get-domain-list-xt execute
-    list-get-links                          \ addr0 cnt0 ret-lst d-link
+    list-get-links                          \ rul-lst tkn-lnk d-lnk
+
+    \ Process each token.
     begin
         ?dup
     while
         \ Set current domain.
-        dup link-get-data           \ addr0 cnt0 ret-lst d-link domx
+        dup link-get-data           \ rul-lst tkn-lnk d-lnk domx
         domain-set-current-xt
-        execute                     \ addr0 cnt0 ret-lst d-link
+        execute                     \ rul-lst tkn-lnk d-lnk
 
-        \ Get one rule.
-        2swap                       \ ret-lst d-link addr0 cnt0
-        rule-from-string            \ ret-lst d-link, rulx
+        \ Get one region.
+        over link-get-data          \ rul-lst tkn-lnk d-lnk tknx
+        token-get-string            \ rul-lst tkn-lnk d-lnk c-addr u
+        rule-from-string            \ rul-lst tkn-lnk d-lnk, rulx t | f
+        if
+            #3 pick                 \ rul-lst tkn-lnk d-lnk rulx rul-lst
+            rule-list-push-end      \ rul-lst tkn-lnk d-lnk
+        else
+            2drop
+            rule-list-deallocate
+            false
+            exit
+        then
 
-        #2 pick                 \ ret-lst d-link rulx ret-lst
-        rule-list-push-end      \ ret-lst d-link
-
-
-        link-get-next
+        swap link-get-next
+        swap link-get-next
     repeat
 
-    \ Check results.                \ ret-lst
-    dup list-get-length             \ ret-lst len
-    current-session
-    session-get-number-domains-xt
-    execute                         \ ret-lst len dnum
-    <> if
-        rule-list-deallocate
-        false
-        exit
-    then
-                                \ ret-lst
-    rulecorr-new                \ rulcorr
+    \ Clean up.                     \ rul-lst tkn-lnk
+    drop                            \ rul-lst
+
+    \ Return.
+    rulecorr-new                    \ rulecorr
     true
 ;
 
 \ Return a rulecorr from a string.
 : rulecorr-from-string ( str-addr str-n -- rulc t | f )
     \ Get tokens.
-    parse-string                \ [str-addr str-n ]+ tkn-cnt
+    token-list-from-string          \ tkn-lst'
 
-    rulecorr-from-parsed-string
+    \ Get rulecorr.
+    dup                             \ tkn-lst' tkn-lst'
+    rulecorr-from-token-list        \ tkn-lst', rulc t | f
+    if
+        swap token-list-deallocate  \ rulc
+        true
+    else
+        token-list-deallocate
+        false
+    then
 ;
 
 \ Return a rulecorr from a string, or abort.

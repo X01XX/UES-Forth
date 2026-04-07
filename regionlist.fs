@@ -990,41 +990,56 @@
     nip nip                         \ ret-lst
 ;
 
-: region-list-from-parsed-string ( [addr n]+ tkn-cnt -- reg-lst t | f ) \ Return a region-list from a parsed string.
+: region-list-from-token-list ( tkn-lst0 -- reg-lst t | f ) \ Return a region-list from a token-list.
+    \ Check arg.
+    assert-tos-is-token-list
 
-    \ Save number tokens.
-    dup >r
+    \ Process each region.
+                                            \ tkn-lst0
+    list-new                                \ tkn-lst0 ret-lst
 
-    \ Process each region, skip invalid regions.
-    \ So clear stack of all tokens, valid or not.
-                                            \ addr0 cnt0 tkn-cnt
-    list-new swap                           \ addr0 cnt0 ret-lst tkn-cnt
-    0 do                                    \ addrx cntx ret-lst
-        rot rot                             \ addry cnty ret-lst addrx cntx
-        region-from-string                  \ addry cnty ret-lst, regx t | f
+    \ Prep for loop.
+    swap list-get-links                     \ reg-lst tkn-lnk
+
+    \ Process each token.
+    begin
+        ?dup
+    while
+        \ Get one region.
+        dup link-get-data           \ reg-lst tkn-lnk tknx
+        token-get-string            \ reg-lst tkn-lnk c-addr u
+        region-from-string          \ reg-lst tkn-lnk, regx t | f
         if
-            \ Add the region.
-            over list-push-end-struct       \ addry cnty ret-lst
+            #2 pick                 \ reg-lst tkn-lnk regx reg-lst
+            region-list-push-end    \ reg-lst tkn-lnk
+        else
+            drop
+            region-list-deallocate
+            false
+            exit
         then
-    loop
-                                            \ ret-lst
-    \ Test if there were any invalid regions.
-    dup list-get-length                     \ ret-lst lenregion-list-union-x-masks
-    r>                                      \ ret-lst len tkn-cnt
-    =                                       \ ret-lst bool
-    if
-        true
-    else
-        region-list-deallocate
-        false
-    then
+
+        link-get-next
+    repeat
+
+    \ Return.
+    true
 ;
 
 : region-list-from-string ( str-addr str-n -- reg-lst t | f )  \ Return a region-list from a string, like (x000 xx10).
     \ Get tokens.
-    parse-string                \ [str-addr str-n ]+ tkn-cnt
+    token-list-from-string          \ tkn-lst'
 
-    region-list-from-parsed-string
+    \ Get region-list.
+    dup                             \ tkn-lst' tkn-lst'
+    region-list-from-token-list     \ tkn-lst', reg-lst t | f
+    if
+        swap token-list-deallocate  \ regc-lst
+        true
+    else
+        token-list-deallocate
+        false
+    then
 ;
 
 : region-list-from-string-a ( str-addr str-n -- regc )   \ Return a region-list from a string, or abort.

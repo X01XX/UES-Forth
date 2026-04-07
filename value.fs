@@ -1,5 +1,5 @@
 \ Return true if a number is a valid value.
-: is-value ( u0 -- flag )
+: is-value? ( u0 -- flag )
     dup                                 \ u0 u0
     current-domain                      \ u0 u0 dom
     domain-get-all-bits-mask-xt execute \ u0 u0 msk
@@ -8,7 +8,7 @@
 ;
 
 \ Return true if a number is an invalid value.
-: is-not-value ( u0 -- flag )
+: is-not-value? ( u0 -- flag )
     dup                         \ u0 u0
     current-all-bits-mask       \ u0 u0 msk
     and                         \ u0'
@@ -17,7 +17,7 @@
 
 \ Check TOS for value, unconventional, leaves stack unchanged.
 : assert-tos-is-value ( tos -- tos )
-    dup is-not-value
+    dup is-not-value?
     if
         s" TOS is not a valid value."
         .abort-xt execute
@@ -26,7 +26,7 @@
 
 \ Check NOS for value, unconventional, leaves stack unchanged.
 : assert-nos-is-value ( nos tos -- nos tos )
-    over is-not-value
+    over is-not-value?
     if
         s" NOS is not a valid value."
         .abort-xt execute
@@ -35,7 +35,7 @@
 
 \ Check 3OS for value, unconventional, leaves stack unchanged.
 : assert-3os-is-value ( 3os nos tos -- 3os nos tos )
-    #2 pick is-not-value
+    #2 pick is-not-value?
     if
         s" 3OS is not a valid value."
         .abort-xt execute

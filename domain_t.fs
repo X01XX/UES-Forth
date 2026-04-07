@@ -90,7 +90,7 @@
     if
         \ cr ." plan found: " dup .plan cr
         dup plan-get-length         \ dom act reg-to 'reg-from' plan' len
-        3 <> abort" invalid plan length?"
+        #3 <> abort" invalid plan length?"
 
         dup plan-get-initial-region \ dom act reg-to 'reg-from' plan' reg-init
         #2 pick                     \ dom act reg-to 'reg-from' plan' reg-init reg-from

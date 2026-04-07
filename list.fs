@@ -931,6 +931,22 @@ list-header-disp    cell+   constant list-links-disp
     1 swap list-get-item
 ;
 
+\ Return a reference to the third item in a list.
+: list-get-third-item ( list -- data )
+    \ Check args.
+    assert-tos-is-list
+
+    #2 swap list-get-item
+;
+
+\ Return a reference to the fourth item in a list.
+: list-get-fourth-item ( list -- data )
+    \ Check args.
+    assert-tos-is-list
+
+    #3 swap list-get-item
+;
+
 \ Return a reference to the last item in a list.
 : list-get-last-item ( list -- data )
     \ Check args.
@@ -1163,4 +1179,29 @@ list-header-disp    cell+   constant list-links-disp
         link-get-next
     repeat
                             \ prd
+;
+
+\ Return a copy of a list, except the first item.
+: list-copy-after-first ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+    dup list-is-empty?
+    abort" list-copy-after-first: list empty"
+
+    \ Init return list.
+    list-new                \ lst0 ret-lst
+
+    \ Copy each item.
+    swap list-get-links     \ ret-lst lnk
+    link-get-next           \ ret-lst lnk
+
+    begin
+        ?dup
+    while
+        dup link-get-data   \ ret-lst lnk item
+        #2 pick             \ ret-lst lnk item ret-lst
+        list-push-end       \ ret-lst lnk
+
+        link-get-next
+    repeat
 ;

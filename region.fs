@@ -584,7 +584,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 
 \ Get a region from a string.
 \ Valid chars are 0, 1, X, x, and underscore as separator.
-\ The number of valid characters must equal the number of bits in the current domain.
+\ All bit positions must be specified.
 : region-from-string ( c-addr u --  reg t | f)
     \ Init character counter.
     0 swap              \ c-addr cnt u
@@ -658,7 +658,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     true
 ;
 
-\ Get region from a string, abort if the attemp failed.
+\ Get region from a string, abort if the attempt failed.
 : region-from-string-a ( addr n --  reg )
     region-from-string      \ reg t | f
     0= abort" region-from-string failed?"

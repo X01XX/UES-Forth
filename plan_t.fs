@@ -14,14 +14,14 @@
 
     \ Add first step.
     0                                   \ act0 reg pln alt-rul
-    s" 00/XX/01/11/" rule-from-string   \ act0 reg pln alt-rul rul
+    s" 00/XX/01/11/" rule-from-string-a \ act0 reg pln alt-rul rul
     #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
     \ Add second step.
     0                                   \ act0 reg pln alt-rul
-    s" 01/XX/11/11/" rule-from-string   \ act0 reg pln alt-rul rul
+    s" 01/XX/11/11/" rule-from-string-a \ act0 reg pln alt-rul rul
     #4 pick                             \ act0 reg pln alt-rul rul ac0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
@@ -65,14 +65,14 @@
 
     \ Add first step.
     0                                   \ act0 reg pln alt-rul
-    s" 00/XX/01/X1/" rule-from-string   \ act0 reg pln alt-rul rul
+    s" 00/XX/01/X1/" rule-from-string-a \ act0 reg pln alt-rul rul
     #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
     \ Add second step.
     0                                   \ act0 reg pln alt-rul
-    s" 01/XX/11/11/" rule-from-string   \ act0 reg pln alt-rul rul
+    s" 01/XX/11/11/" rule-from-string-a \ act0 reg pln alt-rul rul
     #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
@@ -128,14 +128,14 @@
 
     \ Add first step.
     0                                   \ act0 reg pls alt-rul
-    s" 00/XX/01/Xx/" rule-from-string   \ act0 reg pln alt-rul rul
+    s" 00/XX/01/Xx/" rule-from-string-a \ act0 reg pln alt-rul rul
     #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
 
     \ Add second step.
     0                                   \ act0 reg plsn alt-rul
-    s" 01/XX/11/X1/" rule-from-string   \ act0 reg pln alt-rul rul
+    s" 01/XX/11/X1/" rule-from-string-a \ act0 reg pln alt-rul rul
     #4 pick                             \ act0 reg pln alt-rul rul act0
     planstep-new                        \ act0 reg pln stp
     over plan-push-end                  \ act0 reg pln
@@ -179,14 +179,14 @@
 
     \ Add step to plan.
     0                                   \ act0 pln alt-rul
-    s" 00/11/01/XX/" rule-from-string   \ act0 pln alt-rul rul
+    s" 00/11/01/XX/" rule-from-string-a \ act0 pln alt-rul rul
     #3 pick                             \ act0 pln alt-rul rul act0
     planstep-new                        \ act0 pln stp'
     over plan-push                      \ act0 pln
 
     \ create step to link.
     0                                       \ act0 pln alt-rul
-    s" 10/XX/00/00/" rule-from-string       \ act0 pln alt-rul rul
+    s" 10/XX/00/00/" rule-from-string-a     \ act0 pln alt-rul rul
     #3 pick                                 \ act0 pln alt-rul rul act0
 
     planstep-new                            \ act0 pln stp'
@@ -224,14 +224,14 @@
 
     \ Add step to plan.
     0                                   \ act0 pln' alt-rul
-    s" 00/11/01/XX/" rule-from-string   \ act0 pln' alt-rul rul
+    s" 00/11/01/XX/" rule-from-string-a \ act0 pln' alt-rul rul
     #3 pick                             \ act0 pln' alt-rul rul' act0
     planstep-new                        \ act0 pln' stp'
     over plan-push                      \ act0 pln
 
     \ create step to link.
     0                                       \ act0 pln' alt-rul
-    s" 01/XX/11/00/" rule-from-string       \ act0 pln' alt-rul rul'
+    s" 01/XX/11/00/" rule-from-string-a     \ act0 pln' alt-rul rul'
     #3 pick                                 \ act0 pln' alt-rul rul' act0
     planstep-new                            \ act0 pln' stp'
 

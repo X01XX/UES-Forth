@@ -551,7 +551,7 @@
         cr ." Path: " dup .regioncorr-list-as-path-fc cr
 
         \ Check results.
-        dup list-get-length 4 <> abort" path not legth 4?"
+        dup list-get-length #4 <> abort" path not legth 4?"
 
         \ Check first regioncorr.
         2dup list-get-first-item                    \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' first-regc

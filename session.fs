@@ -1323,6 +1323,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Prep for loop.
     #3 pick                              \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from
 
+    \ One RegionCorr step forward per cycle, except for recursion.
     begin
         \ cr ." begin: cur path: " over .regioncorr-list space ." cur-from: " dup .regioncorr cr
 
@@ -1501,7 +1502,7 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
                     over                                    \ | ret-lst cur-from pthstp-lst-int' regc-to pthstp-lst-int'
                     pathstep-list-closest-result-regions    \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cls'
                     swap pathstep-list-deallocate           \ | ret-lst cur-from pthstp-lst-cls'
-                    
+
                     \ Select one, cur-from intersecting, closest to regc-to, pathstep.
                     dup list-get-length                 \ | ret-lst cur-from pthstp-lst-cls' len
                     random                              \ | ret-lst cur-from pthstp-lst-cls' inx

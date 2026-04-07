@@ -30,8 +30,11 @@
 \ RuleCorr  Changescorr PathStep Plancorr Corner Stack-info
 \ 53171,    53173,      53197,   53717,   53719, 53731
 \
+\ Token
+\ 59797
+\
 \ Struct ids not yet used:
-\ 59797, 61379, 61717, 61979.
+\ 61379, 61717, 61979.
 
 \ Start a clean vocabulary.
 cr ." Starting vocabulary UES," cr
@@ -57,6 +60,9 @@ include mm_array.fs     \ includes stack.fs
 include link.fs
 include list.fs
 include structlist.fs
+
+include token.fs
+include tokenlist.fs
 
 \ Application.
 include globals.fs
@@ -160,6 +166,9 @@ list-new to structinfo-list-store
 
 ' structinfo-list-deallocate-struct-list ' structinfo-list-print-struct-list s" List" list-mma list-id structinfo-new structinfo-list-store structinfo-list-push-end
 ' structinfo-deallocate ' .structinfo s" StructInfo" structinfo-mma structinfo-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#100  token-mma-init
+' token-deallocate ' .token s" Token" token-mma token-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #3003 region-mma-init
 ' region-deallocate ' .region s" Region" region-mma region-id structinfo-new structinfo-list-store structinfo-list-push-end
@@ -355,7 +364,7 @@ cr
         drop                                            \
         cr
 
-        #80 s" Enter command: > " get-user-input
+        #80 s" Enter command: > " get-user-input        \ bool
         \ cr .s cr
         depth 1 <>
         if

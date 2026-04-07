@@ -145,3 +145,14 @@
     list-remove-item        \ item
     dup struct-dec-use-count
 ;
+
+\ Return a copy of a list, except the first item.
+: list-copy-after-first-struct ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-copy-after-first               \ ret-list
+
+    [ ' struct-inc-use-count ] literal  \ ret-lst xt
+    over list-apply                     \ ret-lst
+;

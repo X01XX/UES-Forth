@@ -390,74 +390,102 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     true
 ;
 
-\ Return a regioncorr from a parsed string.
-: regioncorr-from-parsed-string ( ... c-addr u cnt -- regc t | f )
+\ Return a regioncorr from a token-list.
+: regioncorr-from-token-list ( tkn-lst0 -- regc t | f )
+    \ Check arg.
+    assert-tos-is-token-list
 
     \ Check number tokens.
-    dup                         \ c-addr u cnt cnt
+    dup list-get-length         \ tkn-lst0 cnt
     current-session
     session-get-number-domains-xt
-    execute                     \ c-addr u cnt cnt domain-count
-    <> if                       \ c-addr u cnt
-        0 do
-            2drop
-        loop
+    execute                     \ tkn-lst0 cnt domain-count
+    <> if                       \ tkn-lst0
+        drop
         false
         exit
     then
-    drop                        \ c-addr u
 
-    \ Process each region, skip invalid regions.
-                                            \ addr0 cnt0
-    list-new                                \ addr0 cnt0 ret-lst
+    \ Process each region.
+                                            \ tkn-lst0
+    list-new                                \ tkn-lst0 ret-lst
+
+    \ Prep for loop.
+    swap list-get-links                     \ reg-lst tkn-lnk
     cur-session-get-domain-list-xt execute
-    list-get-links                          \ addr0 cnt0 ret-lst d-link
+    list-get-links                          \ reg-lst tkn-lnk d-lnk
+
+    \ Process each token.
     begin
         ?dup
     while
         \ Set current domain.
-        dup link-get-data           \ addr0 cnt0 ret-lst d-link domx
+        dup link-get-data           \ reg-lst tkn-lnk d-lnk domx
         domain-set-current-xt
-        execute                     \ addr0 cnt0 ret-lst d-link
+        execute                     \ reg-lst tkn-lnk d-lnk
 
         \ Get one region.
-        2swap                       \ ret-lst d-link addr0 cnt0
-        region-from-string          \ ret-lst d-link, regx t | f
+        over link-get-data          \ reg-lst tkn-lnk d-lnk tknx
+        token-get-string            \ reg-lst tkn-lnk d-lnk c-addr u
+        region-from-string          \ reg-lst tkn-lnk d-lnk, regx t | f
         if
-            #2 pick                 \ ret-lst d-link regx ret-lst
-            region-list-push-end    \ ret-lst d-link
+            #3 pick                 \ reg-lst tkn-lnk d-lnk regx reg-lst
+            region-list-push-end    \ reg-lst tkn-lnk d-lnk
+        else
+            2drop
+            region-list-deallocate
+            false
+            exit
         then
 
-        link-get-next
+        swap link-get-next
+        swap link-get-next
     repeat
 
-    \ Check results.                \ ret-lst
-    dup list-get-length             \ ret-lst len
-    current-session
-    session-get-number-domains-xt
-    execute                         \ ret-lst len dnum
-    <> if
-        region-list-deallocate
-        false
-        exit
-    then
-                                \ ret-lst
-    regioncorr-new              \ regcorr
+    \ Clean up.                     \ reg-lst tkn-lnk
+    drop                            \ reg-lst
+
+    \ Return.
+    regioncorr-new                  \ regcorr
     true
+;
+
+\ Return a regioncorr, given a token-list.
+: regioncorr-from-token-list ( tkn-lst0 -- regc t | f )
+    \ Check arg.
+    assert-tos-is-token-list
+
+    \ Get regioncorr.
+    dup                             \ tkn-lst' tkn-lst'
+    regioncorr-from-token-list      \ tkn-lst', regc t | f
+    if
+        nip                         \ regc
+        true
+    else
+        drop
+        false
+    then
 ;
 
 \ Return a regioncorr from a string.
 : regioncorr-from-string ( str-addr str-n -- regc t | f )
     \ Get tokens.
-    parse-string                \ [str-addr str-n ]+ tkn-cnt
+    token-list-from-string          \ tkn-lst'
 
-    regioncorr-from-parsed-string
+    dup regioncorr-from-token-list  \ tkn-lst', rec t | f
+    if
+        swap token-list-deallocate
+        true
+    else
+        token-list-deallocate
+        false
+    then
 ;
 
 \ Return a regioncorr from a string, or abort.
 : regioncorr-from-string-a ( str-addr str-n -- regc )
     regioncorr-from-string    \ regc t | f
-    false? abort" regioncorr-from-string failed?"
+    false? abort" regioncorr-from-string-a failed?"
 ;
 
 \ Return true if two regioncorrs are equal.
