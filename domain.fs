@@ -408,6 +408,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \    space dup .sample
 \    cr
 
+     current-session  session-update-points-xt execute
+
     nip nip
 ;
 
@@ -431,6 +433,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     dup sample-get-result           \ act1 dom0 | smpl sta
     #2 pick                         \ act1 dom0 | smpl sta dom
     domain-set-current-state        \ act1 dom0 | smpl
+
+    current-session  session-update-points-xt execute
 
 \    cr
 \    over domain-get-inst-id cr ." Dom: " #3 dec.r   \ act1 dom0 | smpl

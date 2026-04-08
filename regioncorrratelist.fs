@@ -150,12 +150,17 @@
         dup link-get-data                   \ regc1 ret-rate link regctx
         #3 pick                             \ regc1 ret-rate link regctx regc1
         over regioncorrrate-get-regioncorr  \ regc1 ret-rate link regctx regc1 regcx
-        regioncorr-superset?                \ regc1 ret-rate link regctx bool
+        over swap                           \ regc1 ret-rate link regctx regc1 regc1 regcx
+        regioncorr-superset?                \ regc1 ret-rate link regctx regc1 bool
         if
+            \ cr ." regc: " dup .regioncorr space ." is in: " over .regioncorrrate cr
+            drop
+
             regioncorrrate-get-rate         \ regc1 ret-rate link ratex
             #2 pick                         \ regc1 ret-rate link ratex rate
             rate-add                        \ regc1 ret-rate link
         else
+            drop
             drop
         then
 

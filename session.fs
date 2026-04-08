@@ -1,7 +1,7 @@
 \ Implement a Session struct and functions.
 
 #31319 constant session-id
-    #9 constant session-struct-number-cells
+   #10 constant session-struct-number-cells
 
 \ Struct fields
 0                                               constant session-header-disp                        \ 16-bits [0] struct id [1] use count:w
@@ -19,6 +19,8 @@ session-regioncorrrate-nq-disp          cell+   constant session-regioncorr-lol-
                                                                                                     \ leads to regioncorrs with intersections.
                                                                                                     \ So there is a path from one regioncorr, to another, through an intersection.
 session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by-rate-disp          \ A list of pathstep lists, corresponding to session-regioncorrrate-nq items.
+session-pathstep-lol-by-rate-disp       cell+   constant session-points-disp                        \ Signed "points" counter based on current states in regioncorrrate fragments.
+session-points-disp                     cell+   constant session-previous-points-disp               \ Previous session/user step value of session-points. 
 
 
 0 value session-mma     \ Storage for session mma instance.
@@ -283,6 +285,41 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     pathstep-lol-deallocate
 ;
 
+: _session-set-points ( u1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+
+    session-points-disp +
+    !
+;
+
+: session-get-points ( sess0 -- u )
+    \ Check args.
+    assert-tos-is-session
+
+    session-points-disp +
+    @
+;
+
+\ Copy the current points value to the previous points value.
+: session-set-previous-points ( sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+
+    dup session-get-points          \ sess0 pnts
+    swap                            \ pnts sess0
+    session-previous-points-disp +
+    !
+;
+
+: session-get-previous-points ( sess0 -- u )
+    \ Check args.
+    assert-tos-is-session
+
+    session-previous-points-disp +
+    @
+;
+
 \ End accessors.
 
 \ Return an regc of max domain regions.
@@ -363,6 +400,10 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Init rulecorr list, by rate.
     list-new
     over _session-set-pathstep-lol-by-rate              \ sess
+
+    \ Init points.
+    0 over _session-set-points                          \ sess
+    dup session-set-previous-points                     \ sess
 
     \ cr ." current-session-new: end " .s cr
     dup to current-session-store
@@ -520,36 +561,48 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Check args.
     assert-tos-is-session
 
-    list-new                        \ sess0 sat-lst
-    over session-get-domains        \ sess0 sta-lst dom-lst
+    \ Save current domain.
+    dup session-get-current-domain  \ sess0 cur-dom
+    swap                            \ cur-dom sess0
 
-    list-get-links                  \ sess0 sta-lst link
+    list-new                        \ cur-dom sess0 sat-lst
+    over session-get-domains        \ cur-dom sess0 sta-lst dom-lst
+
+    list-get-links                  \ cur-dom sess0 sta-lst link
 
     begin
         ?dup
     while
-        dup link-get-data           \  sess0 sta-lst link domx
+        dup link-get-data           \ cur-dom sess0 sta-lst link domx
 
         dup #4 pick session-set-current-domain
 
-        domain-get-current-state    \ sess0 sta-lst link stax
-        #2 pick                     \ sess0 sta-lst link stax sta-lst
-        list-push-end               \ sess0 sta-lst link
+        domain-get-current-state    \ cur-dom sess0 sta-lst link stax
+        #2 pick                     \ cur-dom sess0 sta-lst link stax sta-lst
+        list-push-end               \ cur-dom sess0 sta-lst link
 
-        link-get-next               \ sess0 sta-lst link
+        link-get-next               \ cur-dom sess0 sta-lst link
     repeat
-                                    \ sess0 sta-lst
-    nip
+                                    \ cur-dom sess0 sta-lst
+
+    \ Restore original current domain.
+    -rot                            \ sta-lst cur-dom sess0
+    session-set-current-domain      \ sta-lst
 ;
 
 : session-get-current-regions ( sess0 -- regcorr )  \ Return a list of regions, one for each domain state, in domain list order.
     \ Check args.
     assert-tos-is-session
 
-    list-new                        \ sess0 sat-lst
-    over session-get-domains        \ sess0 reg-lst dom-lst
+    \ Save current domain.
+    dup session-get-current-domain  \ sess0 cur-dom
+    swap                            \ cur-dom sess0
 
-    list-get-links                  \ sess0 reg-lst link
+    \ Init return list.
+    list-new                        \ cur-dom sess0 sat-lst
+    over session-get-domains        \ cur-dom sess0 reg-lst dom-lst
+
+    list-get-links                  \ cur-dom sess0 reg-lst link
 
     begin
         ?dup
@@ -558,15 +611,18 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
 
         dup #4 pick session-set-current-domain
 
-        domain-get-current-state    \ sess0 reg-lst link stax
-        dup region-new              \ sess0 reg-lst link regx
-        #2 pick                     \ sess0 reg-lst link regx reg-lst
-        list-push-end               \ sess0 reg-lst link
+        domain-get-current-state    \ cur-dom sess0 reg-lst link stax
+        dup region-new              \ cur-dom sess0 reg-lst link regx
+        #2 pick                     \ cur-dom sess0 reg-lst link regx reg-lst
+        list-push-end               \ cur-dom sess0 reg-lst link
 
-        link-get-next               \ sess0 reg-lst link
+        link-get-next               \ cur-dom sess0 reg-lst link
     repeat
-                                    \ sess0 reg-lst
-    nip
+                                    \ cur-dom sess0 reg-lst
+    \ Restore original current domain.
+    -rot                            \ reg-lst cur-dom sess0
+    session-set-current-domain      \ reg-lst
+
     regioncorr-new
 ;
 
@@ -574,28 +630,33 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Check args.
     assert-tos-is-session
 
-    dup session-get-domains         \ sess0 dom-lst
-    list-get-links                  \ sess0 d-link
+    \ Save current domain.
+    dup session-get-current-domain  \ sess0 cur-dom
+    swap                            \ cur-dom sess0
+
+    dup session-get-domains         \ cur-dom sess0 dom-lst
+    list-get-links                  \ cur-dom sess0 d-link
     ." ("
     begin
         ?dup
     while
         \ Set current domain.
-        dup link-get-data           \ sess0 d-link domx
-        #2 pick                     \ sess0 d-link domx sess0
-        session-set-current-domain  \ sess0 d-link
+        dup link-get-data           \ cur-dom sess0 d-link domx
+        #2 pick                     \ cur-dom sess0 d-link domx sess0
+        session-set-current-domain  \ cur-dom sess0 d-link
 
-        dup link-get-data           \ sess0 d-link domx
-        domain-get-current-state    \ sess0 d-link d-sta
-        .value                      \ sess0 d-link
+        dup link-get-data           \ cur-dom sess0 d-link domx
+        domain-get-current-state    \ cur-dom sess0 d-link d-sta
+        .value                      \ cur-dom sess0 d-link
 
-        link-get-next               \ sess0 d-link-nxt
+        link-get-next               \ cur-dom sess0 d-link-nxt
         dup 0<> if
             space
         then
     repeat
-                                    \ sess0
-    drop
+                                    \ cur-dom sess0
+    \ Restore original current domain.
+    session-set-current-domain      \
     ." )"
 ;
 
@@ -1907,13 +1968,41 @@ session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by
     \ Check arg.
     assert-tos-is-session
 
-    dup session-get-current-regions                 \ sess cur-regc
-    dup                                             \ sess cur-regc cur-regc
-    #2 pick session-get-regioncorrrate-list         \ sess cur-regc cur-regc regcr-lst
-    regioncorrrate-list-rate-regioncorr             \ sess regcr-lst rate
-    swap regioncorr-deallocate                      \ sess rate
-    nip
+    \ Save current domain.
+    dup session-get-current-domain                  \ sess0 cur-dom
+    swap                                            \ cur-dom sess0
+    
+    dup session-get-current-regions                 \ cur-dom sess cur-regc
+    dup                                             \ cur-dom sess cur-regc cur-regc
+    #2 pick session-get-regioncorrrate-list         \ cur-dom sess cur-regc cur-regc regcr-lst
+    regioncorrrate-list-rate-regioncorr             \ cur-dom sess regcr-lst rate
+    swap regioncorr-deallocate                      \ cur-dom sess rate
+
+    \ Restore current domain.
+    -rot                                            \ rate cur-dom sess
+    session-set-current-domain                      \ rate
 ;
+
+\ Get current domain states rate, add to points value.
+: session-update-points ( sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+
+    dup session-get-current-rate    \ sess rt
+    dup rate-get-positive           \ sess rt pos
+    swap                            \ sess pos rt
+    dup rate-get-negative           \ sess pos rt neg
+    swap rate-deallocate            \ sess pos neg
+    +                               \ sess net
+    swap                            \ net sess
+
+    dup session-get-points          \ net sess0 u
+    rot +                           \ sess0 new-pts
+    swap                            \ new-pts sess0
+    _session-set-points
+;
+
+' session-update-points to session-update-points-xt
 
 \ Return the numebr of domains.
 : session-get-number-domains ( sess0 -- u )

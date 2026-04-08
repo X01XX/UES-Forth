@@ -317,12 +317,20 @@ cr
     regioncorrrate-new                          \ sess regc-rt
     over session-add-regioncorrrate             \ sess
 
+    \ todo? Set current domain states.
+    
     .session
 ;
 
 0 value step-num
 : main ( -- )
     init-main
+
+    \ Set first points value.
+    current-session                             \ sess
+    dup session-update-points                   \ sess
+    session-set-previous-points
+
     0 to step-num
     true
     begin
@@ -364,8 +372,16 @@ cr
                 ." Conflicted"
             then
         then
+
         rate-deallocate                                 \ sess
-        drop                                            \
+
+        \ Display points.
+        dup session-get-points                          \ sess pnts
+        space ." points: " dup dec.
+        over session-get-previous-points                \ sess pnts ppnts
+        -                                               \ sess dif
+        space ." change: " dec.                         \ sess
+        session-set-previous-points                     \
         cr
 
         #80 s" Enter command: > " get-user-input        \ bool

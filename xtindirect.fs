@@ -29,6 +29,8 @@
 
 ' xtabort value assert-tos-is-session-xt
 
+' xtabort value session-update-points-xt
+
 
 ' xtabort value domain-get-all-bits-mask-xt
 

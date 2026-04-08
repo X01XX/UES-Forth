@@ -228,6 +228,7 @@
             plancorr-list-deallocate                    \ sess clst-lst'
         else
             cr ." No plan found" cr
+            over session-update-points
         then
 
         regioncorr-list-deallocate                 \ sess
@@ -242,11 +243,11 @@
         swap rate-deallocate                            \ sess mrp-lst'
 
         \ Check for no more-positive items found.
-        dup list-is-empty?
+        dup list-is-empty?                              \ sess mrp-lst'
         if
             cr ." There are no more-positive regioncorr fragments" cr
-            list-deallocate
-            drop
+            list-deallocate                             \ sess
+            session-update-points
             exit
         then
 
@@ -279,6 +280,7 @@
             plancorr-list-deallocate                    \ sess clst-lst'
         else
             cr ." No plan found" cr
+            over session-update-points
         then
         regioncorr-list-deallocate                      \ sess
     then
