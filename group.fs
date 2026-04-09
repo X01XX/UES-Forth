@@ -215,6 +215,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-tos-is-group
 
     dup struct-get-use-count      \ grp0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

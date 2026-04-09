@@ -142,6 +142,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     assert-tos-is-regioncorrrate
 
     dup struct-get-use-count                \ regcr0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if                                      \ regcr0

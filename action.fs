@@ -783,6 +783,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
 
     dup struct-get-use-count      \ act0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

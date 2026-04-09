@@ -142,6 +142,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     assert-tos-is-changescorr
 
     dup struct-get-use-count            \ cngsc0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

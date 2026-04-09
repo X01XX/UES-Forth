@@ -214,6 +214,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     assert-tos-is-rulestore
 
     dup struct-get-use-count      \ reg0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

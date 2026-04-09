@@ -617,8 +617,7 @@ list-header-disp    cell+   constant list-links-disp
 
     dup struct-get-use-count        \ lst0 uc
 
-    dup 0 <
-    abort" invalid use count"
+    dup 0 < abort" invalid use count"
 
     #2 <                            \ lst0 bool
     if

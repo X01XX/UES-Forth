@@ -156,6 +156,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     assert-tos-is-changes
 
     dup struct-get-use-count      \ cngs0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

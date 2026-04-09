@@ -242,6 +242,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     assert-tos-is-need
 
     dup struct-get-use-count      \ ned0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

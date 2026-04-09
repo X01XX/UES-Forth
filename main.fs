@@ -318,7 +318,7 @@ cr
     over session-add-regioncorrrate             \ sess
 
     \ todo? Set current domain states.
-    
+
     .session
 ;
 

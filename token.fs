@@ -97,6 +97,7 @@ token-header-disp cell+ constant token-string-disp
     assert-tos-is-token
 
     dup struct-get-use-count    \ token-addr count
+    dup 0< abort" invalid use count"
 
     dup 1 <
     if

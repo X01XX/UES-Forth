@@ -352,6 +352,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
 
     dup struct-get-use-count      \ act0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

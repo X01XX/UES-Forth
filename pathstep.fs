@@ -200,6 +200,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     assert-tos-is-pathstep
 
     dup struct-get-use-count      \ pstp0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

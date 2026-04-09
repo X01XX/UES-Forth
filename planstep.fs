@@ -247,6 +247,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     assert-tos-is-planstep
 
     dup struct-get-use-count      \ plnstp0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

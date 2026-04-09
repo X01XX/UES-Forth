@@ -228,6 +228,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
     assert-tos-is-corner
 
     dup struct-get-use-count      \ smp0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

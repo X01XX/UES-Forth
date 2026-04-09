@@ -119,6 +119,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     assert-tos-is-plan
 
     dup struct-get-use-count      \ pln0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

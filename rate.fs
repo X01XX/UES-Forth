@@ -134,6 +134,7 @@
     assert-tos-is-rate
 
     dup struct-get-use-count      \ reg0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

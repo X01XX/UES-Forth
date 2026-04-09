@@ -20,7 +20,7 @@ session-regioncorrrate-nq-disp          cell+   constant session-regioncorr-lol-
                                                                                                     \ So there is a path from one regioncorr, to another, through an intersection.
 session-regioncorr-lol-by-rate-disp     cell+   constant session-pathstep-lol-by-rate-disp          \ A list of pathstep lists, corresponding to session-regioncorrrate-nq items.
 session-pathstep-lol-by-rate-disp       cell+   constant session-points-disp                        \ Signed "points" counter based on current states in regioncorrrate fragments.
-session-points-disp                     cell+   constant session-previous-points-disp               \ Previous session/user step value of session-points. 
+session-points-disp                     cell+   constant session-previous-points-disp               \ Previous session/user step value of session-points.
 
 
 0 value session-mma     \ Storage for session mma instance.
@@ -1305,29 +1305,29 @@ session-points-disp                     cell+   constant session-previous-points
 ;
 
 \ Return a pathstep list for a given rate (number, le 0).
-: session-find-pathstep-list-by-rate ( rate1 regc-lol0 -- regc-list )
+: session-find-pathstep-list-by-rate ( rate1 sess0 -- pthstp-list )
     \ Check args.
     assert-tos-is-session
     \ cr ." session-find-pathstep-list-by-rate: start: "
 
-    \ Find highest rate.
-    dup session-get-pathstep-lol-by-rate       \ | regclst-lst
-    list-get-links                          \ | regclst-link
+    \ Find equal rate.
+    dup session-get-pathstep-lol-by-rate    \ | rate1 sess0 pthstp-lst-lst
+    list-get-links                          \ | rate1 sess0 pthstp-lst-link
 
-    over session-get-regioncorrrate-nq      \ | regclst-link rates-lst
-    list-get-links                          \ | regclst-link rates-link
+    over session-get-regioncorrrate-nq      \ | rate1 sess0 pthstp-lst-link rates-lst
+    list-get-links                          \ | rate1 sess0 pthstp-lst-link rates-link
 
     \ Check each rate and list.
     begin
         ?dup
     while
-        dup link-get-data                   \ | regclst-link rates-link ratex
-        #4 pick                             \ | regclst-link rates-link ratex rate1
-        =                                   \ | regclst-link rates-link bool
+        dup link-get-data                   \ | rate1 sess0 pthstp-lst-link rates-link ratex
+        #4 pick                             \ | rate1 sess0 pthstp-lst-link rates-link ratex rate1
+        =                                   \ | rate1 sess0 pthstp-lst-link rates-link bool
         if
-            drop                            \ | regclst-link
-            link-get-data                   \ | regcip-list
-            nip nip                         \ regcip-list
+            drop                            \ | rate1 sess0 pthstp-lst-link
+            link-get-data                   \ | rate1 sess0 pthstp-list
+            nip nip                         \ pthstp-list
             exit
         then
 
@@ -1673,7 +1673,6 @@ session-points-disp                     cell+   constant session-previous-points
     session-find-highest-le-zero-rate           \ regc-to regc-from sess0 | rate-to rate-from
 
     min                                         \ regc-to regc-from sess0 | rate-min
-    \ cr ." session-calc-path: rate: " dup dec. cr
 
     \ Get pathstep-list for rate.
     over                                        \ regc-to regc-from sess0 | rate-min sess0
@@ -1682,6 +1681,7 @@ session-points-disp                     cell+   constant session-previous-points
     #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to
     #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from
     #3 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from pthstp-lst
+   \ cr ." pathsteps picked: " dup .pathstep-list cr
     #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from pthstp-lst sess0
 
     \ Try forward chaining.
@@ -1730,7 +1730,7 @@ session-points-disp                     cell+   constant session-previous-points
         space ." to: " #2 pick .regioncorr
         cr
     then
-    
+
     \ Init planlist.
     list-new swap                           \ regc-to regc-from plnc-lst sess0
     2swap                                   \ plnc-lst sess0 regc-to regc-from
@@ -1971,7 +1971,7 @@ session-points-disp                     cell+   constant session-previous-points
     \ Save current domain.
     dup session-get-current-domain                  \ sess0 cur-dom
     swap                                            \ cur-dom sess0
-    
+
     dup session-get-current-regions                 \ cur-dom sess cur-regc
     dup                                             \ cur-dom sess cur-regc cur-regc
     #2 pick session-get-regioncorrrate-list         \ cur-dom sess cur-regc cur-regc regcr-lst

@@ -130,6 +130,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     assert-tos-is-rulecorr
 
     dup struct-get-use-count        \ rulc0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if
@@ -151,27 +152,36 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     assert-nos-is-regioncorr
 
     \ Init return list.
-    list-new -rot                           \ rul-lst regc-to regc-from
+    list-new -rot                               \ rul-lst regc-to regc-from
 
     \ Prep for loop.
-    regioncorr-get-list list-get-links swap \ rul-lst link-from regc-to
-    regioncorr-get-list list-get-links swap \ rul-lst link-to link-from
+    regioncorr-get-list list-get-links swap     \ rul-lst link-from regc-to
+    regioncorr-get-list list-get-links swap     \ rul-lst link-to link-from
+    cur-session-get-domain-list-xt              \ rul-lst link-to link-from xt
+    execute list-get-links                      \ rul-lst link-to link-from dom-link
 
     begin
         ?dup
     while
-        over link-get-data          \ rul-lst link-to link-from reg-to
-        over link-get-data          \ rul-lst link-to link-from reg-to reg-from
-        rule-new-region-to-region   \ rul-lst link-to link-from rulx ( rule may have no changes )
-        #3 pick                     \ rul-lst link-to link-from rulx rul-lst
-        rule-list-push-end          \ rul-lst link-to link-from
+        \ Set current domain.
+        dup link-get-data                       \ rul-lst link-to link-from dom-link dom
+        current-session                         \ rul-lst link-to link-from dom-link dom sess
+        session-set-current-domain-xt execute   \ rul-lst link-to link-from dom-link
 
-        link-get-next swap
-        link-get-next swap
+        \ Calc next rule.
+        #2 pick link-get-data                   \ rul-lst link-to link-from dom-link reg-to
+        #2 pick link-get-data                   \ rul-lst link-to link-from dom-link reg-to reg-from
+        rule-new-region-to-region               \ rul-lst link-to link-from dom-link rulx ( rule may have no changes )
+        #4 pick                                 \ rul-lst link-to link-from dom-link rulx rul-lst
+        rule-list-push-end                      \ rul-lst link-to link-from dom-link
+
+        link-get-next rot
+        link-get-next rot
+        link-get-next rot
     repeat
-                                    \ rul-lst link-to
-    drop                            \ rul-lst
-    rulecorr-new                    \ rulc
+                                                \ rul-lst link-to link-from
+    2drop                                       \ rul-lst
+    rulecorr-new                                \ rulc
 ;
 
 : rulecorr-calc-initial-regions ( rulc -- regc )

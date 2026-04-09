@@ -128,6 +128,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     assert-tos-is-plancorr
 
     dup struct-get-use-count        \ plnc0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

@@ -183,6 +183,7 @@ structinfo-deallocate-xt-disp   cell+   constant structinfo-name-disp           
     assert-tos-is-structinfo
 
     dup struct-get-use-count    \ structinfo-addr count
+    dup 0< abort" invalid use count"
 
     dup 1 <
     if

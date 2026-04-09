@@ -256,6 +256,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     assert-tos-is-square
 
     dup struct-get-use-count      \ sqr0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if

@@ -167,6 +167,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     assert-tos-is-regioncorr
 
     dup struct-get-use-count            \ regc0 count
+    dup 0< abort" invalid use count"
 
     #2 <
     if
