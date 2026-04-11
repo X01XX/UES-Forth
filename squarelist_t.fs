@@ -94,16 +94,16 @@
 ;
 
 : square-list-tests
-    current-session-new                             \ sess
+    session-new                                     \ sess
 
     \ Init domain 0.
     #4 over domain-new                              \ sess dom0
-    swap                                            \ dom0 sess
-    session-add-domain                              \
+    over                                            \ sess dom0 sess
+    session-add-domain                              \ sess
 
     square-list-test-in-region
     square-list-test-states-in-region
 
-    current-session-deallocate
+    session-deallocate
 ;
 

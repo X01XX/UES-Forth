@@ -47,6 +47,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     then
 ;
 
+' assert-nos-is-plan to assert-nos-is-plan-xt
+
 \ Start accessors.
 
 \ Return the plan domain.

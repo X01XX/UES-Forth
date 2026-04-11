@@ -409,12 +409,15 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \    space dup .sample
 \    cr
 
-     current-session  session-update-points-xt execute
+    swap                            \ act1 smpl dom
+    domain-get-parent-session       \ act1 smpl sess
+    session-update-points-xt        \ act1 smpl sess xt
+    execute                         \ act1 smpl
 
-    nip nip
+    nip
 ;
 
-\ ' domain-get-sample to domain-get-sample-xt
+' domain-get-sample to domain-get-sample-xt
 
 \ Get a sample from an action in a domain, for a step.
 : domain-get-sample-step ( act1 dom0 -- smpl )
@@ -435,7 +438,10 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #2 pick                         \ act1 dom0 | smpl sta dom
     domain-set-current-state        \ act1 dom0 | smpl
 
-    current-session  session-update-points-xt execute
+    swap                            \ act1 smpl dom
+    domain-get-parent-session       \ act1 smpl sess
+    session-update-points-xt        \ act1 smpl sess xt
+    execute                         \ act1 smpl
 
 \    cr
 \    over domain-get-inst-id cr ." Dom: " #3 dec.r   \ act1 dom0 | smpl
@@ -443,7 +449,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \    space dup .sample
 \    cr
 
-    nip nip
+    nip
 ;
 
 ' domain-get-sample-step to domain-get-sample-step-xt
@@ -1516,6 +1522,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     3drop
     false
 ;
+
+' domain-get-plan to domain-get-plan-xt
 
 \ Set the current domain.
 : domain-set-current ( dom0 -- )

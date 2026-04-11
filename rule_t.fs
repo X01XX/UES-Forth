@@ -440,12 +440,12 @@
 ;
 
 : rule-tests
-    current-session-new                             \ sess
+    session-new                                     \ sess
 
     \ Init domain 0.
     #4 over domain-new                              \ sess dom0
-    swap                                            \ dom0 sess
-    session-add-domain                              \
+    over                                            \ sess dom0 sess
+    session-add-domain                              \ sess
 
     rule-test-number-unwanted-changes
     rule-test-restrict-initial-region
@@ -454,6 +454,6 @@
     rule-test-combine
     rule-test-new-region-to-region
 
-    current-session-deallocate
+    session-deallocate
 ;
 

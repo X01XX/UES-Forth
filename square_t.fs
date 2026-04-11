@@ -397,15 +397,15 @@
 ;
 
 : square-tests
-    current-session-new                             \ sess
+    session-new                                     \ sess
 
     \ Init domain 0.
     #4 over domain-new                              \ sess dom0
-    swap                                            \ dom0 sess
-    session-add-domain                              \
+    over                                            \ sess dom0 sess
+    session-add-domain                              \ sess
 
     square-test-add-result
     square-test-compare
 
-    current-session-deallocate
+    session-deallocate
 ;

@@ -62,6 +62,10 @@
 
 ' xtabort value domain-state-pair-complement-xt
 
+' xtabort value domain-get-sample-xt
+
+' xtabort value domain-get-plan-xt
+
 
 ' xtabort value action-get-inst-id-xt
 
@@ -84,6 +88,8 @@
 ' xtabort value action-update-existing-square-xt
 
 ' xtabort value action-add-sample-xt
+
+' xtabort value .action-xt
 
 
 ' xtabort value planstep-list-push-xt
@@ -135,4 +141,6 @@
 ' xtabort value structinfo-list-print-struct-list-xt
 
 ' xtabort value structinfo-list-deallocate-struct-list-xt
+
+' xtabort value assert-nos-is-plan-xt
 

@@ -262,14 +262,14 @@
 ;
 
 : plan-tests
-    current-session-new                             \ sess
+    session-new                                     \ sess
 
     \ Init domain 0.
     #4 over domain-new                              \ sess dom0
-    dup rot                                         \ dom0 dom0 sess
-    session-add-domain                              \ dom0
+    dup #2 pick                                     \ sess dom0 dom0 sess
+    session-add-domain                              \ sess dom0
 
-    0 swap domain-find-action                       \ act0 t | f
+    0 swap domain-find-action                       \ sess act0 t | f
     false? abort" act0 not found?"
 
     dup plan-test-restrict-initial-region
@@ -277,8 +277,8 @@
     dup plan-test-link-step-to-initial-region
     dup plan-test-link-step-to-result-region
 
-                                                    \ act0
+                                                    \ sess act
     drop
 
-    current-session-deallocate
+    session-deallocate
 ;

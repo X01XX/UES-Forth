@@ -81,7 +81,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
 \ End accessors.
 
-\ Create a changescorr-list-corr from a changescorr-list-corr-list on the stack.
+\ Create a changescorr from a list of changes on the stack.
 : changescorr-new ( lst0 -- addr)
     \ check arg.
     assert-tos-is-changes-list

@@ -769,6 +769,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     drop
 ;
 
+' .action to .action-xt
+
 : .action-id ( act0 -- )
     \ Check arg.
     assert-tos-is-action

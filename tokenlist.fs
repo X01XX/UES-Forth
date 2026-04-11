@@ -21,6 +21,17 @@
     then
 ;
 
+\ Check if nos is an empty list, or has a token instance as its first item.
+: assert-nos-is-token-list ( nos tos -- nos tos )
+    assert-nos-is-list
+    over list-is-not-empty?
+    if
+        over list-get-links link-get-data
+        assert-tos-is-token
+        drop
+    then
+;
+
 \ Print a token-list
 : .token-list ( list0 -- )
     \ Check arg.

@@ -131,11 +131,6 @@ include stackprint.fs
 
 include session.fs
 
-include input.fs
-
-\ include stackprint.fs
-\ include structinfo.fs
-\ include structinfolist.fs
 cs
 
 \ Test files.
@@ -147,7 +142,7 @@ include regionlist_t.fs
 include rule_t.fs
 include action_t.fs
 include rulestore_t.fs
-include input_t.fs
+include tokenlist_t.fs
 include regioncorr_t.fs
 include regioncorrlist_t.fs
 include session_t.fs
@@ -238,9 +233,9 @@ list-new to structinfo-list-store
 ' session-deallocate ' .session s" Session" session-mma session-id structinfo-new structinfo-list-store structinfo-list-push-end
 cr
 
-: init-main ( -- )
+: init-main ( -- sess )
     \ Set up session.
-    current-session-new                         \ sess, session instance added to session stack.
+    session-new                                 \ sess
 
     \ Add domain 0square_t
     #4 over  domain-new                         \ sess dom
@@ -319,17 +314,16 @@ cr
 
     \ todo? Set current domain states.
 
-    .session
+    dup .session
 ;
 
 0 value step-num
 : main ( -- )
-    init-main
+    init-main                                   \ sess
 
     \ Set first points value.
-    current-session                             \ sess
     dup session-update-points                   \ sess
-    session-set-previous-points
+    dup session-set-previous-points             \ sess
 
     0 to step-num
     true
@@ -337,13 +331,13 @@ cr
     while
         \ Inc step num.
 
-        step-num 1+ to step-num
+        step-num 1+ to step-num                         \ sess
 
         \ Print header.
         cr ." ***************************"
         cr ." Step: " step-num .
         space ." Current state: "
-        current-session dup .session-current-states     \ sess
+        dup .session-current-states                     \ sess
 
         dup session-get-current-rate                    \ sess rate
 
@@ -381,25 +375,26 @@ cr
         over session-get-previous-points                \ sess pnts ppnts
         -                                               \ sess dif
         space ." change: " dec.                         \ sess
-        session-set-previous-points                     \
+        dup session-set-previous-points                 \ sess
         cr
 
-        #80 s" Enter command: > " get-user-input        \ bool
+        dup session-get-user-input                      \ sess bool
         \ cr .s cr
-        depth 1 <>
+        depth 2 <>
         if
-            ." depth not equal one? " .s
+            ." depth not equal two? " .s
             abort
         then
     repeat
+    cr ." at end of session: " .stack-gbl cr
 
-    \ Clean up
+    \ Clean up                                          \ sess
 
     \ Print memory use before deallocating.
     cr structinfo-list-store structinfo-list-print-memory-use
 
     cr ." Deallocating ..." cr
-    current-session-deallocate
+    session-deallocate                                  \
 
     \ Print memory use after deallocating.
     cr structinfo-list-store structinfo-list-print-memory-use
@@ -421,7 +416,7 @@ cr
     rule-tests
     action-tests
     rulestore-tests
-    input-tests
+    token-list-tests
     regioncorr-tests
     regioncorr-list-tests
     plan-tests

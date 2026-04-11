@@ -50,56 +50,56 @@
 ;
 
 : domain-test-asymmetric-chaining
-    current-session-new                             \ sess
+    session-new                     \ sess
 
     \ Init domain 0.
-    #4 over domain-new                              \ sess dom0
-    tuck                                            \ dom0 sess dom0
-    swap                                            \ dom0 dom0 sess
-    session-add-domain                              \ dom0
+    #4 over domain-new              \ sess dom
+    2dup                            \ sess dom sess dom
+    swap                            \ sess dom dom sess
+    session-add-domain              \ sess dom
 
-    0  over domain-find-action                      \ dom act0 t | f
+    0  over domain-find-action      \ sess dom act0 t | f
     false? abort" act0 not found?"
 
     \ Add rule for 0->1.
-    #1 #0 sample-new                \ dom act smpl'
-    dup #2 pick action-add-sample   \ dom act smpl'
-    sample-deallocate               \ dom act
+    #1 #0 sample-new                \ sess dom act smpl'
+    dup #2 pick action-add-sample   \ sess dom act smpl'
+    sample-deallocate               \ sess dom act
 
     \ Add rule for 1->3.
-    #3 #1 sample-new                \ dom act smpl'
-    dup #2 pick action-add-sample   \ dom act smpl'
-    sample-deallocate               \ dom act
+    #3 #1 sample-new                \ sess dom act smpl'
+    dup #2 pick action-add-sample   \ sess dom act smpl'
+    sample-deallocate               \ sess dom act
 
     \ Add rule for 3->7.
-    #7 #3 sample-new                \ dom act smpl'
-    dup #2 pick action-add-sample   \ dom act smpl'
-    sample-deallocate               \ dom act
+    #7 #3 sample-new                \ sess dom act smpl'
+    dup #2 pick action-add-sample   \ sess dom act smpl'
+    sample-deallocate               \ sess dom act
 
     \ cr dup .action cr
 
     \ Create reg-to.
-    #7 #7 region-new                \ dom act reg-to'
+    #7 #7 region-new                \ sess dom act reg-to'
 
     \ Create reg-from.
-    0 0 region-new                  \ dom act reg-to 'reg-from'
+    0 0 region-new                  \ sess dom act reg-to 'reg-from'
 
-    2dup                            \ dom act reg-to 'reg-from' reg-to 'reg-from'
-    #5 pick                         \ dom act reg-to 'reg-from' reg-to 'reg-from' dom
-    domain-asymmetric-chaining      \ dom act reg-to 'reg-from', plan' t | f
+    2dup                            \ sess dom act reg-to 'reg-from' reg-to 'reg-from'
+    #5 pick                         \ sess dom act reg-to 'reg-from' reg-to 'reg-from' dom
+    domain-asymmetric-chaining      \ sess dom act reg-to 'reg-from', plan' t | f
     if
         \ cr ." plan found: " dup .plan cr
-        dup plan-get-length         \ dom act reg-to 'reg-from' plan' len
+        dup plan-get-length         \ sess dom act reg-to 'reg-from' plan' len
         #3 <> abort" invalid plan length?"
 
-        dup plan-get-initial-region \ dom act reg-to 'reg-from' plan' reg-init
-        #2 pick                     \ dom act reg-to 'reg-from' plan' reg-init reg-from
-        region-eq?                  \ dom act reg-to 'reg-from' plan' bool
+        dup plan-get-initial-region \ sess dom act reg-to 'reg-from' plan' reg-init
+        #2 pick                     \ sess dom act reg-to 'reg-from' plan' reg-init reg-from
+        region-eq?                  \ sess dom act reg-to 'reg-from' plan' bool
         false? abort" Invalid initial region?"
 
-        dup plan-get-result-region  \ dom act reg-to 'reg-from' plan' reg-rslt
-        #3 pick                     \ dom act reg-to 'reg-from' plan' reg-rslt reg-to
-        region-eq?                  \ dom act reg-to 'reg-from' plan' bool
+        dup plan-get-result-region  \ sess dom act reg-to 'reg-from' plan' reg-rslt
+        #3 pick                     \ sess dom act reg-to 'reg-from' plan' reg-rslt reg-to
+        region-eq?                  \ sess dom act reg-to 'reg-from' plan' bool
         false? abort" Invalid result region?"
 
         plan-deallocate
@@ -112,25 +112,25 @@
     region-deallocate
     region-deallocate
     2drop
-    current-session-deallocate
+    session-deallocate
 
     cr ." domain-test-asymmetric-chaining: Ok" cr
 ;
 
 : domain-tests
-    current-session-new                             \ sess
+    session-new                     \ sess
 
     \ Init domain 0.
-    #4 over domain-new                              \ sess dom0
-    tuck                                            \ dom0 sess dom0
-    swap                                            \ dom0 dom0 sess
-    session-add-domain                              \ dom0
+    #4 over domain-new              \ sess dom0
+    2dup                            \ sess dom0 sess dom0
+    swap                            \ sess dom0 dom0 sess
+    session-add-domain              \ sess dom0
 
     dup domain-test-state-complement
     dup domain-test-state-pair-complement
-
     drop
-    current-session-deallocate
+
+    session-deallocate
 
     domain-test-asymmetric-chaining
 ;

@@ -346,13 +346,13 @@
 ;
 
 : region-list-tests
-    current-session-new                             \ sess
+    session-new                                     \ sess
 
     \ Init domain 0.
     #4 over domain-new                              \ sess dom0
-    tuck                                            \ dom0 sess dom0
-    swap                                            \ dom0 dom0 sess
-    session-add-domain                              \ dom0
+    2dup                                            \ sess dom0 sess dom0
+    swap                                            \ sess dom0 dom0 sess
+    session-add-domain                              \ sess dom0
 
     region-list-test-region-intersections-n
     region-list-test-subtract-n
@@ -367,6 +367,6 @@
 
     drop
 
-    current-session-deallocate
+    session-deallocate
 ;
 

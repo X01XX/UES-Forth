@@ -99,14 +99,14 @@
 ;
 
 : rulestore-tests
-    current-session-new                             \ sess
+    session-new                                     \ sess
 
     \ Init domain 0.
     #4 over domain-new                              \ sess dom0
-    swap                                            \ dom0 sess
-    session-add-domain                              \
+    over                                            \ sess dom0 sess
+    session-add-domain                              \ sess
 
     rulestore-test-union
 
-    current-session-deallocate
+    session-deallocate
 ;

@@ -29,7 +29,7 @@
 \ Implementing the example in the sections of theory.html named "Choosing the next rule" and "A reason to not choose a rule".
 : session-test-domain-get-plan-fc
     \ Init session.
-    current-session-new                 \ ses
+    session-new                         \ ses
 
     \ Init domain.
     #4 current-session domain-new dup   \ sess dom dom
@@ -90,17 +90,16 @@
     region-deallocate
     drop
 
-    drop
-    \ .session
+    \ dup .session
 
-    current-session-deallocate
+    session-deallocate
 
     cr ." session-test-domain-get-plan-fc: Ok" cr
 ;
 
 : session-test-domain-get-plan-bc
     \ Init session.
-    current-session-new                 \ ses
+    session-new                         \ ses
 
     \ Init domain.
     #4 current-session domain-new dup   \ ses dom dom
@@ -158,16 +157,16 @@
     region-deallocate
     drop
 
-    .session
+    dup .session
 
-    current-session-deallocate
+    session-deallocate
 
     cr ." session-test-domain-get-plan-bc: Ok" cr
 ;
 
 : session-test-domain-asymmetric-chaining
     \ Init session.
-    current-session-new                 \ ses
+    session-new                         \ ses
 
     \ Init domain.
     #4 over                             \ ses #4 ses
@@ -225,17 +224,16 @@
     region-deallocate
     drop
 
-    \ drop
-    .session
+    dup .session
 
-    current-session-deallocate
+    session-deallocate
 
     cr ." session-test-domain-asymmetric-chaining: Ok" cr
 ;
 
 : session-test-change-to
     \ Init session.
-    current-session-new                             \ ses
+    session-new                                     \ ses
 
     \ Init domain 0.
     #4 current-session domain-new dup               \ ses dom0 dom0
@@ -383,9 +381,8 @@
                                                     \ ses regc-to regc-from
     regioncorr-deallocate                           \ ses regc-to
     regioncorr-deallocate                           \ ses
-    drop
 
-    current-session-deallocate
+    session-deallocate
 
     cr ." session-test-change-to: Ok" cr
 ;
@@ -394,7 +391,7 @@
 \ Like 0->8->9->B->F->7, bypassing 0011, X101 and X110.
 : session-test-change-to-plans
     \ Init session.
-    current-session-new                             \ ses
+    session-new                                     \ ses
 
     \ Init domain 0.
     #4 current-session domain-new dup               \ ses dom0 dom0
@@ -468,9 +465,8 @@
     then
     regioncorr-deallocate                           \ dom0 ses
 
-    2drop
-
-    current-session-deallocate
+    nip                                             \ ses
+    session-deallocate
 
     cr ." session-test-change-to-plans: Ok" cr
 ;
@@ -478,7 +474,7 @@
 : session-test-calc-path-fc
     cr ." session-test-calc-path-fc: Start" cr
     \ Init session.
-    current-session-new                             \ ses
+    session-new                                     \ ses
 
     \ Init domain 0.
     #4 current-session domain-new dup               \ ses dom0 dom0
@@ -575,9 +571,9 @@
                                                     \ dom0 ses regc-to' regc-from'
     regioncorr-deallocate                           \ dom0 ses regc-to'
     regioncorr-deallocate                           \ dom0 ses
-    2drop                                           \
+    nip                                             \ ses
 
-    current-session-deallocate
+    session-deallocate
 
     cr ." session-test-calc-path-fc: Ok" cr
 ;
@@ -585,7 +581,7 @@
 : session-test-calc-path-bc
     cr ." session-test-calc-path-bc: Start" cr
     \ Init session.
-    current-session-new                             \ ses
+    session-new                                     \ ses
 
     \ Init domain 0.
     #4 current-session domain-new dup               \ ses dom0 dom0
@@ -679,9 +675,9 @@
                                                     \ dom0 ses regc-to' regc-from'
     regioncorr-deallocate                           \ dom0 ses regc-to'
     regioncorr-deallocate                           \ dom0 ses
-    2drop                                           \
+    nip                                             \ ses
 
-    current-session-deallocate
+    session-deallocate
 
     cr ." session-test-calc-path-bc: Ok" cr
 ;

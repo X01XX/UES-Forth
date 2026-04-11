@@ -2,30 +2,30 @@
 
 \ Test adding samples and changing the logical structure, incompatible pairs.
 : action-test-add-sample
-    current-session-new                             \ sess
+    session-new                     \ sess
 
     \ Init domain 0.
-    #4 over domain-new                              \ sess dom0
-    tuck swap                                       \ dom0 dom0 sess
-    session-add-domain                              \ dom0
+    #4 over domain-new              \ sess dom0
+    dup #2 pick                     \ sess dom0 dom0 sess
+    session-add-domain              \ sess dom0
 
-    0  swap domain-find-action                      \ act0 t | f
+    0  swap domain-find-action      \ sess act0 t | f
     false? abort" act0 not found?"
 
     \ Add arbitrary samples.
-    #4 #5 sample-new                \ act smpl
-    dup #2 pick action-add-sample   \ act smpl
+    #4 #5 sample-new                \ sess act smpl
+    dup #2 pick action-add-sample   \ sess act smpl
 
-    1 1 sample-new                  \ act smpl smpl2
-    dup #3 pick action-add-sample   \ act smpl smpl2
-    dup #3 pick action-add-sample   \ act smpl smpl2
-    dup #3 pick action-add-sample   \ act smpl smpl2
-    dup #3 pick action-add-sample   \ act smpl smpl2
+    1 1 sample-new                  \ sess act smpl smpl2
+    dup #3 pick action-add-sample   \ sess act smpl smpl2
+    dup #3 pick action-add-sample   \ sess act smpl smpl2
+    dup #3 pick action-add-sample   \ sess act smpl smpl2
+    dup #3 pick action-add-sample   \ sess act smpl smpl2
 
     cr #2 pick .action cr
 
-    #2 #15 sample-new               \ act smpl smpl2 smpl3
-    dup #4 pick action-add-sample   \ act smpl smpl2 smpl3
+    #2 #15 sample-new               \ sess act smpl smpl2 smpl3
+    dup #4 pick action-add-sample   \ sess act smpl smpl2 smpl3
 
     cr #3 pick .action cr
     #3 pick action-get-incompatible-pairs
@@ -44,11 +44,11 @@
         abort
     then
 
-    #3 #15 sample-new               \ act smpl smpl2 smpl3 smpl4
-    dup #5 pick action-add-sample   \ act smpl smpl2 smpl3 smpl4
+    #3 #15 sample-new               \ sess act smpl smpl2 smpl3 smpl4
+    dup #5 pick action-add-sample   \ sess act smpl smpl2 smpl3 smpl4
 
-    #4 #15 sample-new               \ act smpl smpl2 smpl3 smpl4 smpl5
-    dup #6 pick action-add-sample   \ act smpl smpl2 smpl3 smpl4 smpl5
+    #4 #15 sample-new               \ sess act smpl smpl2 smpl3 smpl4 smpl5
+    dup #6 pick action-add-sample   \ sess act smpl smpl2 smpl3 smpl4 smpl5
 
     cr #5 pick .action cr
 
@@ -74,25 +74,26 @@
     sample-deallocate
     sample-deallocate
 
-    #3 #5 sample-new                \ act smpl
-    dup #2 pick action-add-sample   \ act smpl
+    #3 #5 sample-new                \ sess act smpl
+    dup #2 pick action-add-sample   \ sess act smpl
 
-    #2 #5 sample-new                \ act smpl smpl
-    dup #3 pick action-add-sample   \ act smpl smpl
+    #2 #5 sample-new                \ sess act smpl smpl
+    dup #3 pick action-add-sample   \ sess act smpl smpl
 
     sample-deallocate
     sample-deallocate
 
     dup cr .action cr
 
-    #2 #2 sample-new                \ act smpl
-    dup #2 pick action-add-sample   \ act smpl
+    #2 #2 sample-new                \ sess act smpl
+    dup #2 pick action-add-sample   \ sess act smpl
 
     over cr .action cr
 
     sample-deallocate
-    drop
-    current-session-deallocate
+    drop                            \ sess
+
+    session-deallocate
 
     cr ." action-test-add-sample: Ok"
 ;
