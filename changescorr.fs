@@ -86,7 +86,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     \ check arg.
     assert-tos-is-changes-list
     dup list-get-length
-    current-session session-get-number-domains-xt execute
+    number-domains-gbl
     <> abort" changescorr-new: invalid list length?"
 
     \ Allocate space.
@@ -110,8 +110,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
     changescorr-get-list            \ lst
     list-get-links                  \ link0
-    cur-session-get-domain-list-xt  \ link0 xt
-    execute                         \ link0 dom-lst
+    get-domain-list-gbl             \ link0 dom-lst
     list-get-links                  \ link0 d-link
     ." ("
     begin
@@ -119,8 +118,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     while
         \ Set current domain.
         dup link-get-data           \ link0 d-link domx
-        domain-set-current-xt
-        execute                     \ link0 d-link
+        domain-set-current-gbl      \ link0 d-link
 
         over link-get-data          \ link0 d-link reg0
         .changes                    \ link0 d-link
@@ -199,7 +197,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     \ Prep for loop.
     regioncorr-get-list-xt execute list-get-links swap      \ cngs-lst link-from regc-to
     regioncorr-get-list-xt execute list-get-links swap      \ cngs-lst link-to link-from
-    cur-session-get-domain-list-xt execute list-get-links   \ cngs-lst link-to link-from dom-link
+    get-domain-list-gbl list-get-links                      \ cngs-lst link-to link-from dom-link
 
     begin
         ?dup
@@ -209,9 +207,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
         #2 pick link-get-data           \ cngs-lst link-to link-from dom-link reg-to
         #2 pick link-get-data           \ cngs-lst link-to link-from dom-link reg-to reg-from
         #2 pick link-get-data           \ cngs-lst link-to link-from dom-link reg-to reg-from domx
-        current-session                 \ cngs-lst link-to link-from dom-link reg-to reg-from domx sess
-        session-set-current-domain-xt   \ cngs-lst link-to link-from dom-link reg-to reg-from domx sess xt
-        execute                         \ cngs-lst link-to link-from dom-link reg-to reg-from
+        domain-set-current-gbl          \ cngs-lst link-to link-from dom-link reg-to reg-from
 
         \ Get changes needed for item, store same.
         changes-new-region-to-region    \ cngs-lst link-to link-from dom-link cngs
@@ -267,8 +263,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
     \ Prep for loop.
     changescorr-get-list list-get-links \ cngs-lst cngs-link
-    cur-session-get-domain-list-xt      \ cngs-lst cngs-link xt
-    execute list-get-links              \ cngs-lst cngs-link d-link
+    get-domain-list-gbl list-get-links  \ cngs-lst cngs-link d-link
 
     begin
         ?dup
@@ -276,9 +271,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
         \ Set current domain.
         dup link-get-data               \ cngs-lst cngs-link d-link domx
-        current-session                 \ cngs-lst cngs-link d-link domx sess
-        session-set-current-domain-xt   \ cngs-lst cngs-link d-link domx sess xt
-        execute                         \ cngs-lst cngs-link d-link
+        domain-set-current-gbl          \ cngs-lst cngs-link d-link
 
         \ Get changes item.
         over link-get-data              \ cngs-lst cngs-link d-link cngsx

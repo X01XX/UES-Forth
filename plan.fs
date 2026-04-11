@@ -304,9 +304,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     \ Set current domain and action.
     dup plan-get-domain             \ pln0 dom
     dup                             \ pln0 dom dom
-    current-session                 \ pln0 dom dom sess
-    session-set-current-domain-xt
-    execute                         \ pln0 dom
+    domain-set-current-gbl          \ pln0 dom
     cr ." plan-run: " over .plan cr
 
     dup domain-get-current-state-xt
@@ -328,8 +326,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         domain-get-sample-step-xt
         execute                     \ pln0 dom link step d-smpl
 
-        cr ." Dom: " current-domain-id #3 dec.r
-        space ." Act: " current-action-id #3 dec.r
+        cr ." Dom: " current-domain-id-gbl #3 dec.r
+        space ." Act: " current-action-id-gbl #3 dec.r
         space ." sample: " dup .sample
 
         \ Check if action sample is expected, unwanted ( the alternate possibility) or unexpected.

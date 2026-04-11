@@ -74,7 +74,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     \ check arg.
     assert-tos-is-plan-list
     dup list-get-length
-    current-session session-get-number-domains-xt execute
+    number-domains-gbl
     <> abort" plancorr-new: invalid list length?"
 
     \ Allocate space.
@@ -96,8 +96,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 
     plancorr-get-list               \ pln-lst
     list-get-links                  \ plnc-link
-    cur-session-get-domain-list-xt  \ plnc-link xt
-    execute                         \ plnc-link dom-lst
+    get-domain-list-gbl             \ plnc-link dom-lst
     list-get-links                  \ plnc-link d-link
     ." ("
     begin
@@ -105,8 +104,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     while
         \ Set current domain.
         dup link-get-data           \ plnc-link d-link domx
-        domain-set-current-xt
-        execute                     \ plnc-link d-link
+        domain-set-current-gbl      \ plnc-link d-link
 
         over link-get-data          \ plnc-link d-link reg0
         .plan                       \ plnc-link d-link
@@ -154,8 +152,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     \ Prep for loop.
     plancorr-get-list               \ reg-lst pln-lst
     list-get-links                  \ reg-lst plnc-link
-    cur-session-get-domain-list-xt  \ reg-lst plnc-link xt
-    execute                         \ reg-lst plnc-link dom-lst
+    get-domain-list-gbl             \ reg-lst plnc-link dom-lst
     list-get-links                  \ reg-lst plnc-link d-link
 
     begin
@@ -163,8 +160,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     while
         \ Set current domain.
         dup link-get-data           \ reg-lst plnc-link d-link domx
-        domain-set-current-xt
-        execute                     \ reg-lst plnc-link d-link
+        domain-set-current-gbl      \ reg-lst plnc-link d-link
 
         \ Get planx result.
         over link-get-data          \ reg-lst plnc-link d-link plnx
@@ -190,8 +186,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     \ Prep for loop.
     plancorr-get-list               \  pln-lst
     list-get-links                  \  plnc-link
-    cur-session-get-domain-list-xt  \  plnc-link xt
-    execute                         \  plnc-link dom-lst
+    get-domain-list-gbl             \  plnc-link dom-lst
     list-get-links                  \  plnc-link d-link
 
     begin
@@ -199,8 +194,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     while
         \ Set current domain.
         dup link-get-data           \  plnc-link d-link domx
-        domain-set-current-xt
-        execute                     \  plnc-link d-link
+        domain-set-current-gbl      \  plnc-link d-link
 
         \ Get planx result.
         over link-get-data          \  plnc-link d-link plnx

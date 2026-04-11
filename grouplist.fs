@@ -81,8 +81,8 @@
     assert-tos-is-group-list
     assert-nos-is-group
 
-    cr ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
+    cr ." Dom: " current-domain-id-gbl #3 dec.r
+    space ." Act: " current-action-id-gbl #3 dec.r
     space ." adding group " over .group-region
     cr
 
@@ -97,8 +97,8 @@
     assert-tos-is-group-list
     assert-nos-is-region
 
-    cr ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
+    cr ." Dom: " current-domain-id-gbl #3 dec.r
+    space ." Act: " current-action-id-gbl #3 dec.r
     space ." deleting group " over .region
     cr
 

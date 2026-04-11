@@ -340,8 +340,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-square
 
     cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
+    ." Dom: " current-domain-id-gbl #3 dec.r
+    space ." Act: " current-action-id-gbl #3 dec.r
     space ." group " dup .group-region space ." adding square " over .square-state
     cr
 
@@ -575,8 +575,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-value
 
     cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
+    ." Dom: " current-domain-id-gbl #3 dec.r
+    space ." Act: " current-action-id-gbl #3 dec.r
     space ." group-set-first-square: grp: " dup group-get-region .region
     space ." state: " over .value
     cr

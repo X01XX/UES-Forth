@@ -363,8 +363,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
     assert-nos-is-region-list
     cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
+    ." Dom: " current-domain-id-gbl #3 dec.r
+    space ." Act: " current-action-id-gbl #3 dec.r
     space ." New DF regions: " over .region-list cr
 
     dup action-get-defining-regions         \ reg-lst1 act0 df-lst
@@ -411,8 +411,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-nos-is-list
 
     cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
+    ." Dom: " current-domain-id-gbl #3 dec.r
+    space ." Act: " current-action-id-gbl #3 dec.r
     space ." New LS region list: " over .region-list
     cr
 
@@ -864,7 +864,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check arg.
     assert-tos-is-action
     \ cr
-    \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+    \ ." Dom: " current-domain-id-gbl #3 dec.r
     \ space ." Act: " dup action-get-inst-id #3 dec.r
     \ space ." action-cull-incompatible-pairs: start" cr
 
@@ -913,7 +913,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check arg.
     assert-tos-is-action
 \    cr
-\    ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
+\    ." Dom: " current-domain-id-gbl execute #3 dec.r
 \    space ." Act: " dup action-get-inst-id #3 dec.r
 \    space ." action-calc-corners: start"
 \     cr
@@ -930,8 +930,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             list-new swap               \ crn-lst act0
             _action-update-corners      \
             cr
-            ." Dom: " current-domain-id #3 dec.r
-            space ." Act: " current-action-id #3 dec.r
+            ." Dom: " current-domain-id-gbl #3 dec.r
+            space ." Act: " current-action-id-gbl #3 dec.r
             space ." action-calc-corners: too few defining regions"
             cr
         then
@@ -1257,8 +1257,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
         \ Add region to the action-incompatible-pairs  list.
         cr
-        ." Dom: " current-domain-id #3 dec.r
-        space ." Act: " current-action-id #3 dec.r
+        ." Dom: " current-domain-id-gbl #3 dec.r
+        space ." Act: " current-action-id-gbl #3 dec.r
         space ." Adding incompatible pair: " dup region-get-states .value space .value
         cr
 
@@ -1455,8 +1455,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             region-list-push-nosups         \ sqr1 act0 | flag reg-in-lst' link reg-new flag
             if
                 cr
-                ." Dom: " current-domain-id #3 dec.r
-                ." Act: " current-action-id #3 dec.r
+                ." Dom: " current-domain-id-gbl #3 dec.r
+                ." Act: " current-action-id-gbl #3 dec.r
                 space ." New incompatible pair: " dup .region
                 cr
                 drop                        \ sqr1 act0 | flag reg-in-lst' link
@@ -1485,8 +1485,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             region-list-push-nosups         \ sqr1 act0 | flag reg-in-lst' link reg-new flag
             if
                 cr
-                ." Dom: " current-domain-id #3 dec.r
-                ." Act: " current-action-id #3 dec.r
+                ." Dom: " current-domain-id-gbl #3 dec.r
+                ." Act: " current-action-id-gbl #3 dec.r
                 space ." New incompatible pair: " dup .region
                 cr
                 drop                        \ sqr1 act0 | flag reg-in-lst' link
@@ -1560,8 +1560,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         dup link-get-data               \ act0 reg-lst-not-i' link region
 
         cr
-        ." Dom: " current-domain-id #3 dec.r
-        space ." Act: " current-action-id #3 dec.r
+        ." Dom: " current-domain-id-gbl #3 dec.r
+        space ." Act: " current-action-id-gbl #3 dec.r
         space ." state " dup region-get-states .value space ." and " .value space ." are no longer incompatible"
         cr
 
@@ -1724,8 +1724,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     swap                    \ smpl smpl act0
 
     cr
-    ." Dom: " current-domain-id #3 dec.r
-    space ." Act: " current-action-id #3 dec.r
+    ." Dom: " current-domain-id-gbl #3 dec.r
+    space ." Act: " current-action-id-gbl #3 dec.r
     space ." adding sample: " over .sample
     cr
 
@@ -2323,8 +2323,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ Remove square from action square list.
         dup link-get-data       \ rmv-lst' grp-lst sqr-lst rmv-link stax
 
-        cr ." Dom: " current-domain-id #3 dec.r
-        space ." Act: " current-action-id #3 dec.r
+        cr ." Dom: " current-domain-id-gbl #3 dec.r
+        space ." Act: " current-action-id-gbl #3 dec.r
         space ." culling square: " dup dec. cr
 
         #2 pick                 \ rmv-lst' grp-lst sqr-lst rmv-link stax sqr-lst

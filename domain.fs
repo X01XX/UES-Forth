@@ -68,6 +68,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     @                           \ Fetch the field.
 ;
 
+' domain-get-parent-session to domain-get-parent-session-xt
+
 \ Set the parent session of an domain.
 : _domain-set-parent-session ( ses1 dom0 -- )
     \ Check args.
@@ -278,9 +280,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     0 over struct-set-use-count     \ nb1 ses0 dom
 
     \ Set instance ID.
-    over                            \ nb1 ses0 dom ses0
-    session-get-number-domains-xt   \ nb1 ses0 dom ses0 xt
-    execute                         \ nb1 ses0 dom nd
+    number-domains-gbl              \ nb1 ses0 dom nd
     over                            \ nb1 ses0 dom nd dom
     domain-set-inst-id              \ nb1 ses0 dom
 
@@ -385,7 +385,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Get a sample from an action in a domain.
 \ Call only from session-get-sample, since current-domain in set there.
-: domain-get-sample ( act1 dom0 -- sample )
+: domain-get-sample ( act1 dom0 -- smpl )
      \ Check args.
     assert-tos-is-domain
     assert-nos-is-action
@@ -1523,18 +1523,38 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     false
 ;
 
-' domain-get-plan to domain-get-plan-xt
-
-\ Set the current domain.
-: domain-set-current ( dom0 -- )
-    \ Check arg.
+\ Get a plan for going from the current state to a need target.
+: domain-get-plan-for-need ( ned1 dom0 -- plan t | f )
+    \ Check args.
     assert-tos-is-domain
+    assert-nos-is-need
 
-    dup domain-get-parent-session
-    session-set-current-domain-xt execute
+    \ Calc to region.
+    over need-get-target            \ ned1 dom0 n-sta
+    dup region-new                  \ ned1 dom0 n-reg'
+
+    \ Calc from region.
+    over domain-get-current-state   \ ned1 dom0 n-reg' d-sta
+    dup region-new                  \ ned1 dom0 n-reg' d-reg'
+
+    \ Get plan.
+    2dup                            \ ned1 dom0 n-reg' d-reg' n-reg' d-reg'
+    #4 pick                         \ ned1 dom0 n-reg' d-reg' n-reg' d-reg' dom0
+    domain-get-plan                 \ ned1 dom0 n-reg' d-reg', pln t | f
+
+    \ Clean up.
+    if
+        swap region-deallocate      \ ned1 dom0 n-reg' pln
+        swap region-deallocate      \ ned1 dom0 pln
+        nip nip                     \ pln
+        true
+    else
+        region-deallocate           \ ned1 dom0 n-reg'
+        region-deallocate           \ ned1 dom0
+        2drop
+        false
+    then
 ;
-
-' domain-set-current to domain-set-current-xt
 
 : domain-get-number-actions ( dom -- na )
     \ Check arg.

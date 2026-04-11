@@ -380,7 +380,7 @@ cr
 
         dup session-get-user-input                      \ sess bool
         \ cr .s cr
-        depth 2 <>
+        depth #2 <>
         if
             ." depth not equal two? " .s
             abort

@@ -219,7 +219,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
     \ Set up for value print.
     dup need-get-domain
-    current-session session-set-current-domain-xt execute
+    domain-set-current-gbl
 
     ." Target: "
     dup need-get-target .value
@@ -275,101 +275,12 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     over need-get-target =
 ;
 
-\ Return true if the domain current state satisfies the need.
-: need-current-state-satisfies ( ned -- bool )
+\ Return true if a state satisfies the need.
+: need-current-state-satisfies ( sta1 ned0 -- bool )
     \ Check arg.
     assert-tos-is-need
+    assert-nos-is-value
 
-    dup need-get-domain             \ ned dom
-
-    \ Set cur domain.
-    dup                             \ ned dom dom
-    domain-set-current-xt execute   \ ned dom
-
-    \ See if a plan is needed.
-    domain-get-current-state-xt execute \ ned d-sta
-    swap need-get-target                \ d-sta n-sta
+    need-get-target             \ sta1 n-sta
     =
-;
-
-\ Take a sample for a need, the current state matches the need.
-: need-take-sample ( ned -- )
-    \ Check arg.
-    assert-tos-is-need
-
-    dup need-get-action             \ ned act
-    over need-get-domain            \ ned act dom
-
-    \ Set cur domain.
-    dup                             \ ned act dom dom
-    domain-set-current-xt execute   \ ned act dom
-
-    \ See if a plan is needed.
-    dup domain-get-current-state-xt \ ned act dom dom xt
-    execute                         \ ned act dom d-sta
-    #3 pick need-get-target         \ ned act dom d-sta n-sta
-    =                               \ ned act dom flag
-    if
-        \ No plan needed, get sample.
-        2dup                            \ ned act dom act dom
-        domain-get-sample-xt execute    \ ned act dom sample
-        sample-deallocate               \ ned act dom
-        domain-get-inst-id-xt execute   \ ned act dom-id
-        cr ." Dom: " #3 dec.r           \ ned act
-        .action-xt execute cr           \ ned
-        drop                            \
-    else
-        cr ." current state does not match need" cr
-        abort
-    then
-;
-
-\ Return a plan for a need.
-: need-get-plan ( ned -- pln t | f )
-    \ Check arg.
-    assert-tos-is-need
-
-    dup need-get-action             \ ned act
-    over need-get-domain            \ ned act dom
-
-    \ Set cur domain.
-    dup                             \ ned act dom dom
-    domain-set-current-xt execute   \ ned act dom
-
-    \ See if a plan is needed.
-    dup domain-get-current-state-xt \ ned act dom dom xt
-    execute                         \ ned act dom d-sta
-    #3 pick need-get-target         \ ned act dom d-sta n-sta
-    =                               \ ned act dom flag
-    abort" no plan needed?"
-                                    \ ned act dom
-    #2 pick need-get-target         \ ned act dom t-sta
-    over                            \ ned act dom t-sta dom
-    domain-get-current-state-xt     \ ned act dom t-sta dom xt
-    execute                         \ ned act dom t-sta d-sta
-    sample-new                      \ ned act dom smpl'
-
-    \ Create from/to regions.
-    dup sample-get-result           \ ned act dom smpl' rslt
-    dup region-new                  \ ned act dom smpl' reg-to'
-    over sample-get-initial         \ ned act dom smpl' reg-to' initial
-    dup region-new                  \ ned act dom smpl' reg-to' reg-from'
-    2dup                            \ ned act dom smpl' reg-to' reg-from' reg-to' reg-from'
-    #5 pick                         \ ned act dom smpl' reg-to' reg-from' reg-to' reg-from' dom
-
-    domain-get-plan-xt execute      \ ned act dom smpl' reg-to' reg-from', plan t | f
-    if                              \ ned act dom smpl' reg-to' reg-from' plan
-        swap region-deallocate      \ ned act dom smpl' reg-to' plan
-        swap region-deallocate      \ ned act dom smpl' plan
-        swap sample-deallocate      \ ned act dom plan
-        2nip                        \ dom plan
-        nip                         \ plan
-        true
-    else                            \ ned act dom smpl' reg-to' reg-from'
-        region-deallocate           \ ned act dom smpl' reg-to'
-        region-deallocate           \ ned act dom smpl'
-        sample-deallocate           \ ned act dom
-        3drop                       \
-        false
-    then
 ;

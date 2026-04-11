@@ -1,7 +1,7 @@
 \ Return true if a number is a valid value.
 : is-value? ( u0 -- flag )
     dup                                 \ u0 u0
-    current-domain                      \ u0 u0 dom
+    current-domain-gbl                  \ u0 u0 dom
     domain-get-all-bits-mask-xt execute \ u0 u0 msk
     and                                 \ u0 u0'
     =                                   \ flag
@@ -10,7 +10,7 @@
 \ Return true if a number is an invalid value.
 : is-not-value? ( u0 -- flag )
     dup                         \ u0 u0
-    current-all-bits-mask       \ u0 u0 msk
+    current-all-bits-mask-gbl   \ u0 u0 msk
     and                         \ u0'
     <>                          \ flag
 ;
@@ -48,15 +48,15 @@
     assert-tos-is-value
 
     \ Setup for bit-position loop.
-    current-ms-bit-mask \ val0 ms-bit
+    current-ms-bit-mask-gbl \ val0 ms-bit
 
     \ Process each bit.
     begin
-      dup               \ val0 ms-bit ms-bit
+      dup                   \ val0 ms-bit ms-bit
     while
       \ Apply msb to value, to get an isolated bit.
       2dup
-      and               \ val0 ms-bit bit
+      and                   \ val0 ms-bit bit
 
       if
         ." 1"
@@ -64,9 +64,9 @@
         ." 0"
       then
 
-      1 rshift          \ val0 ms-bit
+      1 rshift              \ val0 ms-bit
     repeat
-    2drop               \
+    2drop                   \
 ;
 
 \ Isolate a least-significant-bit from a value.
@@ -121,7 +121,7 @@
 \ Return the bitwise "NOT" of an unsigned number,
 \ while remaining within the bounds of allowable bits.
 : !not ( u1 -- u2 )
-    current-all-bits-mask       \ u1 all-bits
+    current-all-bits-mask-gbl   \ u1 all-bits
     tuck                        \ all u1 all
     xor                         \ all u1'
     and                         \ u1'' just to make sure.

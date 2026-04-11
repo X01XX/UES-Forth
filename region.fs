@@ -182,7 +182,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     \ Setup for trit-position loop.
     dup  region-get-state-1         \ reg0 sta1
     swap region-get-state-0         \ sta1 sta0
-    current-ms-bit-mask             \ sta1 sta0 ms-bit
+    current-ms-bit-mask-gbl         \ sta1 sta0 ms-bit
 
     \ Process each trit.
     begin
@@ -646,7 +646,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
                             \ c-addr cnt sta1 sta0
     \ Check counter.
     rot                     \ c-addr sta1 sta0 cnt
-    current-num-bits        \ c-addr sta1 sta0 cnt nb
+    current-num-bits-gbl    \ c-addr sta1 sta0 cnt nb
     <> if                   \ c-addr sta1 sta0
         3drop
         false

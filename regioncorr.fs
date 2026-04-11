@@ -100,7 +100,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     assert-tos-is-region-list
 
     dup list-get-length
-    current-session session-get-number-domains-xt execute
+    number-domains-gbl
     <> abort" regioncorr-new: invalid list length?"
 
     \ Allocate space.
@@ -133,8 +133,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     regioncorr-get-list             \ lst
     list-get-links                  \ link0
-    cur-session-get-domain-list-xt  \ link0 xt
-    execute                         \ link0 dom-lst
+    get-domain-list-gbl             \ link0 dom-lst
     list-get-links                  \ link0 d-link
     ." ("
     begin
@@ -142,8 +141,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     while
         \ Set current domain.
         dup link-get-data           \ link0 d-link domx
-        domain-set-current-xt
-        execute                     \ link0 d-link
+        domain-set-current-gbl      \ link0 d-link
 
         over link-get-data          \ link0 d-link reg0
         .region                     \ link0 d-link
@@ -192,8 +190,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap \ link0 regc1
     regioncorr-get-list list-get-links swap \ link1 link0
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ link1 link0 d-link
+    get-domain-list-gbl list-get-links      \ link1 link0 d-link
 
     begin
         ?dup
@@ -202,8 +199,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
         \ Set current domain.
         dup link-get-data           \ link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ link1 link0 d-link
+        domain-set-current-gbl      \ link1 link0 d-link
 
         \ Compare regions.
         #2 pick link-get-data       \ link1 link0 d-link reg2
@@ -243,8 +239,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ link0 regc1
     regioncorr-get-list list-get-links swap   \ link1 link0
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ link1 link0 d-link
+    get-domain-list-gbl list-get-links        \ link1 link0 d-link
 
     begin
         ?dup
@@ -253,8 +248,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
         \ Set current domain.
         dup link-get-data           \ link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ link1 link0 d-link
+        domain-set-current-gbl      \ link1 link0 d-link
 
         \ Check regions
         #2 pick link-get-data       \ link1 link0 d-link reg1
@@ -321,8 +315,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ regc0 ret-lst link0 regc1
     regioncorr-get-list list-get-links swap   \ regc0 ret-lst link1 link0
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ regc0 ret-lst link1 link0 d-link
+    get-domain-list-gbl list-get-links        \ regc0 ret-lst link1 link0 d-link
 
     begin
         ?dup
@@ -331,8 +324,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
         \ Set current domain.
         dup link-get-data           \ regc0 ret-lst link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ regc0 ret-lst link1 link0 d-link
+        domain-set-current-gbl      \ regc0 ret-lst link1 link0 d-link
 
         \ Subtract two regioncorrs.
         #2 pick link-get-data       \ regc0 ret-lst link1 link0 d-link reg1
@@ -398,9 +390,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     \ Check number tokens.
     dup list-get-length         \ tkn-lst0 cnt
-    current-session
-    session-get-number-domains-xt
-    execute                     \ tkn-lst0 cnt domain-count
+    number-domains-gbl          \ tkn-lst0 cnt domain-count
     <> if                       \ tkn-lst0
         drop
         false
@@ -413,8 +403,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     \ Prep for loop.
     swap list-get-links                     \ reg-lst tkn-lnk
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ reg-lst tkn-lnk d-lnk
+    get-domain-list-gbl list-get-links      \ reg-lst tkn-lnk d-lnk
 
     \ Process each token.
     begin
@@ -422,8 +411,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     while
         \ Set current domain.
         dup link-get-data           \ reg-lst tkn-lnk d-lnk domx
-        domain-set-current-xt
-        execute                     \ reg-lst tkn-lnk d-lnk
+        domain-set-current-gbl      \ reg-lst tkn-lnk d-lnk
 
         \ Get one region.
         over link-get-data          \ reg-lst tkn-lnk d-lnk tknx
@@ -507,7 +495,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Check arg.
     assert-tos-is-regioncorr
 
-    current-session                     \ regc0 sess
+    current-session-gbl                 \ regc0 sess
     session-calc-max-regions-xt execute \ regc0 lst-max
     tuck                                \ lst-max regc0 lst-max
     regioncorr-subtract                 \ lst-max, lst t | f
@@ -570,8 +558,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap \ reg-lst link0 regc1
     regioncorr-get-list list-get-links swap \ reg-lst link1 link0
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ reg-lst link1 link0 d-link
+    get-domain-list-gbl list-get-links      \ reg-lst link1 link0 d-link
 
     begin
         ?dup
@@ -580,8 +567,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
         \ Set current domain.
         dup link-get-data           \ reg-lst link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ reg-lst link1 link0 d-link
+        domain-set-current-gbl      \ reg-lst link1 link0 d-link
 
         \ Check regions
         #2 pick link-get-data       \ reg-lst link1 link0 d-link reg1
@@ -618,8 +604,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ link0 regc1
     regioncorr-get-list list-get-links swap   \ link1 link0
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ link1 link0 d-link
+    get-domain-list-gbl list-get-links        \ link1 link0 d-link
 
     begin
         ?dup
@@ -628,8 +613,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
         \ Set current domain.
         dup link-get-data           \ link1 link0 d-link domx
-        domain-set-current-xt
-        execute                     \ link1 link0 d-link
+        domain-set-current-gbl      \ link1 link0 d-link
 
         \ Check regions
         #2 pick link-get-data       \ link1 link0 d-link reg1

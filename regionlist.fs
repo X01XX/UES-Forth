@@ -387,7 +387,7 @@
     assert-tos-is-region-list
 
     list-new                    \ lst0 lst1
-    current-max-region          \ lst0 lst1 regM
+    current-max-region-gbl      \ lst0 lst1 regM
     over region-list-push       \ lst0 lst1
     2dup                        \ lst0 lst1 lst0 lst1
     region-list-subtract        \ lst0 lst1 lst2

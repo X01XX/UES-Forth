@@ -495,8 +495,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
         drop                            \ rf sqr0
     else                                \ rf sqr0 pn-new
         \ Handle pn change.
-        cr  ." Dom: " current-domain-id #3 dec.r space
-            ." Act: " current-action-id #3 dec.r space
+        cr  ." Dom: " current-domain-id-gbl #3 dec.r space
+            ." Act: " current-action-id-gbl #3 dec.r space
             over square-get-state
             ." square " .value
             over square-get-pn
@@ -524,8 +524,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
         2drop                           \ rf
     else
         \ Handle pnc change.
-        cr  ." Dom: " current-domain-id #3 dec.r space
-            ." Act: " current-action-id #3 dec.r space
+        cr  ." Dom: " current-domain-id-gbl #3 dec.r space
+            ." Act: " current-action-id-gbl #3 dec.r space
         over square-get-state
         ." square " .value
         over square-get-pnc

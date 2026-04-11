@@ -74,7 +74,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     \ check arg.
     assert-tos-is-rule-list
     dup list-get-length
-    current-session session-get-number-domains-xt execute
+    number-domains-gbl
     <> abort" rulecorr-new: invalid list length?"
 
     \ Allocate space.
@@ -98,8 +98,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
     rulecorr-get-list               \ rul-lst
     list-get-links                  \ rc-link
-    cur-session-get-domain-list-xt  \ rc-link xt
-    execute                         \ rc-link dom-lst
+    get-domain-list-gbl             \ rc-link dom-lst
     list-get-links                  \ rc-link d-link
     ." ("
     begin
@@ -107,8 +106,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ rc-link d-link domx
-        domain-set-current-xt
-        execute                     \ rc-link d-link
+        domain-set-current-gbl      \ rc-link d-link
 
         over link-get-data          \ rc-link d-link reg0
         .rule                       \ rc-link d-link
@@ -157,16 +155,14 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     \ Prep for loop.
     regioncorr-get-list list-get-links swap     \ rul-lst link-from regc-to
     regioncorr-get-list list-get-links swap     \ rul-lst link-to link-from
-    cur-session-get-domain-list-xt              \ rul-lst link-to link-from xt
-    execute list-get-links                      \ rul-lst link-to link-from dom-link
+    get-domain-list-gbl list-get-links          \ rul-lst link-to link-from dom-link
 
     begin
         ?dup
     while
         \ Set current domain.
         dup link-get-data                       \ rul-lst link-to link-from dom-link dom
-        current-session                         \ rul-lst link-to link-from dom-link dom sess
-        session-set-current-domain-xt execute   \ rul-lst link-to link-from dom-link
+        domain-set-current-gbl                  \ rul-lst link-to link-from dom-link
 
         \ Calc next rule.
         #2 pick link-get-data                   \ rul-lst link-to link-from dom-link reg-to
@@ -194,8 +190,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     \ Prep for loop.
     rulecorr-get-list               \ reg-lst rul-lst
     list-get-links                  \ reg-lst rc-link
-    cur-session-get-domain-list-xt  \ reg-lst rc-link xt
-    execute                         \ reg-lst rc-link dom-lst
+    get-domain-list-gbl             \ reg-lst rc-link dom-lst
     list-get-links                  \ reg-lst rc-link d-link
 
     begin
@@ -203,8 +198,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ reg-lst rc-link d-link domx
-        domain-set-current-xt
-        execute                     \ reg-lst rc-link d-link
+        domain-set-current-gbl      \ reg-lst rc-link d-link
 
         \ Calc initial region.
         over link-get-data          \ reg-lst rc-link d-link rulx
@@ -232,8 +226,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     \ Prep for loop.
     rulecorr-get-list               \ reg-lst rul-lst
     list-get-links                  \ reg-lst rul-link
-    cur-session-get-domain-list-xt  \ reg-lst rul-link xt
-    execute                         \ reg-lst rul-link dom-lst
+    get-domain-list-gbl             \ reg-lst rul-link dom-lst
     list-get-links                  \ reg-lst rul-link d-link
 
     begin
@@ -241,8 +234,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ reg-lst rul-link d-link domx
-        domain-set-current-xt
-        execute                     \ reg-lst rul-link d-link
+        domain-set-current-gbl      \ reg-lst rul-link d-link
 
         \ Calc result region.
         over link-get-data          \ reg-lst rul-link d-link rulx
@@ -307,8 +299,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     list-get-links                  \ reg-lst rul-link reg-link
     swap                            \ reg-lst reg-link rul-link
 
-    cur-session-get-domain-list-xt  \ reg-lst reg-link rul-link xt
-    execute                         \ reg-lst reg-link rul-link dom-lst
+    get-domain-list-gbl             \ reg-lst reg-link rul-link dom-lst
     list-get-links                  \ reg-lst reg-link rul-link d-link
 
     begin
@@ -316,8 +307,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ reg-lst reg-link rul-link d-link domx
-        domain-set-current-xt
-        execute                     \ reg-lst reg-link rul-link d-link
+        domain-set-current-gbl      \ reg-lst reg-link rul-link d-link
 
         \ Calc result of applying rule.
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx
@@ -362,8 +352,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     list-get-links                  \ reg-lst rul-link reg-link
     swap                            \ reg-lst reg-link rul-link
 
-    cur-session-get-domain-list-xt  \ reg-lst reg-link rul-link xt
-    execute                         \ reg-lst reg-link rul-link dom-lst
+    get-domain-list-gbl             \ reg-lst reg-link rul-link dom-lst
     list-get-links                  \ reg-lst reg-link rul-link d-link
 
     begin
@@ -371,8 +360,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ reg-lst reg-link rul-link d-link domx
-        domain-set-current-xt
-        execute                     \ reg-lst reg-link rul-link d-link
+        domain-set-current-gbl      \ reg-lst reg-link rul-link d-link
 
         \ Calc result of applying rule.
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx
@@ -414,8 +402,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     swap rulecorr-get-list          \ sub-link sup-lst
     list-get-links                  \ sub-link sup-link
 
-    cur-session-get-domain-list-xt  \ sub-link sup-link xt
-    execute                         \ sub-link sup-link dom-lst
+    get-domain-list-gbl             \ sub-link sup-link dom-lst
     list-get-links                  \ sub-link sup-link d-link
 
     begin
@@ -423,8 +410,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ sub-link sup-link d-link domx
-        domain-set-current-xt
-        execute                     \ sub-link sup-link d-link
+        domain-set-current-gbl      \ sub-link sup-link d-link
 
         \ Get curent rules.
         #2 pick link-get-data       \ sub-link sup-link d-link sub-rul
@@ -456,9 +442,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
     \ Check number tokens.
     dup list-get-length         \ tkn-lst0 cnt
-    current-session
-    session-get-number-domains-xt
-    execute                     \ tkn-lst0 cnt domain-count
+    number-domains-gbl          \ tkn-lst0 cnt domain-count
     <> if                       \ tkn-lst0
         drop
         false
@@ -471,8 +455,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
     \ Prep for loop.
     swap list-get-links                     \ rul-lst tkn-lnk
-    cur-session-get-domain-list-xt execute
-    list-get-links                          \ rul-lst tkn-lnk d-lnk
+    get-domain-list-gbl list-get-links      \ rul-lst tkn-lnk d-lnk
 
     \ Process each token.
     begin
@@ -480,8 +463,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ rul-lst tkn-lnk d-lnk domx
-        domain-set-current-xt
-        execute                     \ rul-lst tkn-lnk d-lnk
+        domain-set-current-gbl      \ rul-lst tkn-lnk d-lnk
 
         \ Get one region.
         over link-get-data          \ rul-lst tkn-lnk d-lnk tknx
@@ -549,8 +531,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     swap rulecorr-get-list          \ rul-lst-cmb to-link from-lst
     list-get-links                  \ rul-lst-cmb to-link from-link
 
-    cur-session-get-domain-list-xt  \ rul-lst-cmb to-link from-link xt
-    execute                         \ rul-lst-cmb to-link from-link dom-lst
+    get-domain-list-gbl             \ rul-lst-cmb to-link from-link dom-lst
     list-get-links                  \ rul-lst-cmb to-link from-link d-link
 
     begin
@@ -558,8 +539,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ rul-lst-cmb to-link from-link d-link domx
-        domain-set-current-xt
-        execute                     \ rul-lst-cmb to-link from-link d-link
+        domain-set-current-gbl      \ rul-lst-cmb to-link from-link d-link
 
         \ Get curent rules.
         #2 pick link-get-data       \ rul-lst-cmb to-link from-link d-link to-rul
@@ -598,8 +578,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     swap rulecorr-get-list          \ rul-lst-rst regc1-link rulc0-lst
     list-get-links                  \ rul-lst-rst regc1-link rulc0-link
 
-    cur-session-get-domain-list-xt  \ rul-lst-rst regc1-link rulc0-link xt
-    execute                         \ rul-lst-rst regc1-link rulc0-link dom-lst
+    get-domain-list-gbl             \ rul-lst-rst regc1-link rulc0-link dom-lst
     list-get-links                  \ rul-lst-rst regc1-link rulc0-link d-link
 
     begin
@@ -607,8 +586,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     while
         \ Set current domain.
         dup link-get-data           \ rul-lst-rst regc1-link rulc0-link d-link domx
-        domain-set-current-xt
-        execute                     \ rul-lst-rst regc1-link rulc0-link d-link
+        domain-set-current-gbl      \ rul-lst-rst regc1-link rulc0-link d-link
 
         \ Get curent rules.
         #2 pick link-get-data       \ rul-lst-rst regc1-link rulc0-link d-link regc1-regx

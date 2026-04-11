@@ -496,7 +496,7 @@
 
     \ Max list of maximum regions.
     list-new                            \ regc-lst0 max-regc-lst
-    current-session                     \ regc-lst0 max-regc-lst sess
+    current-session-gbl                 \ regc-lst0 max-regc-lst sess
     session-calc-max-regions-xt execute \ regc-lst0 max-regc-lst regc-max
     over                                \ regc-lst0 max-regc-lst regc-max max-regc-lst
     regioncorr-list-push                \ regc-lst0 max-regc-lst

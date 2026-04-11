@@ -1074,14 +1074,6 @@ session-points-disp                     cell+   constant session-previous-points
     session-process-regioncorrrates        \ recalc with new regioncorrrate.
 ;
 
-\ Return the session domain list.
-: cur-session-get-domain-list ( -- link )
-    current-session     \ sess
-    session-get-domains \ dom-lst
-;
-
-' cur-session-get-domain-list to cur-session-get-domain-list-xt
-
 \ Return the rate and regc list for a path to satisfy a desired regioncorr.
 : session-regc-rate ( regc1 sess0 -- regc rate )
     \ Check args.
@@ -2011,7 +2003,8 @@ session-points-disp                     cell+   constant session-previous-points
 
     \ Set cur domain.
     dup                             \ ned1 sess0 act dom dom
-    domain-set-current              \ ned1 sess0 act dom
+    #3 pick                         \ ned1 sess0 act dom dom sess0
+    session-set-current-domain      \ ned1 sess0 act dom
 
     \ See if a plan is needed.
     dup domain-get-current-state    \ ned1 sess0 act dom d-sta
@@ -2180,6 +2173,52 @@ session-points-disp                     cell+   constant session-previous-points
     drop
 ;
 
+\ Return a plan for a need.
+: session-get-plan-for-need ( ned1 sess0 -- pln t | f )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-need
+
+    \ Make need domain the current domain.
+    over need-get-domain        \ ned1 sess0 dom
+    tuck swap                   \ ned1 dom dom sess
+    session-set-current-domain  \ ned1 dom
+
+    domain-get-plan-for-need    \ pln t | f
+;
+
+\ Return a sample for a need.
+: session-get-sample-for-need ( ned1 sess0 -- )
+    \ Check args.
+    assert-tos-is-session
+    assert-nos-is-need
+
+    \ Make need domain the current domain.
+    over need-get-domain        \ ned1 sess0 dom
+    tuck swap                   \ ned1 dom dom sess
+    session-set-current-domain  \ ned1 dom
+
+    \ Check at target.
+    over need-get-target        \ ned1 dom n-sta
+    over                        \ ned1 dom n-sta dom
+    domain-get-current-state    \ ned1 dom n-sta d-sta
+    <> abort" current state does not match need"
+
+    \ Get sample.
+                                \ ned1 dom0
+    over                        \ ned1 dom0 ned1
+    need-get-action             \ ned1 dom0 act
+    over                        \ ned1 dom0 act dom0
+    domain-get-sample           \ ned1 dom0 smpl
+    sample-deallocate           \ ned1 dom0
+
+    \ Print info.
+    cr ." Dom: "
+    domain-get-inst-id #3 dec.r \ ned1
+    need-get-action             \ act
+    .action
+;
+
 \ Process a list of needs.
 \ Return true if any need was processed,
 \ false if no need matched the domain current state and/or
@@ -2204,11 +2243,19 @@ session-points-disp                     cell+   constant session-previous-points
         cr ." Need chosen: " space dup .need
 
         \ Check if no plan needed.
-        dup need-current-state-satisfies        \ ned-lst1 sess0 inx-lst' rnd-inx nedx bool
+        dup need-get-domain                     \ ned-lst1 sess0 inx-lst' rnd-inx nedx dom
+        #4 pick                                 \ ned-lst1 sess0 inx-lst' rnd-inx nedx dom sess0
+        session-set-current-domain              \ ned-lst1 sess0 inx-lst' rnd-inx nedx
+        dup need-get-domain                     \ ned-lst1 sess0 inx-lst' rnd-inx nedx dom
+        domain-get-current-state                \ ned-lst1 sess0 inx-lst' rnd-inx nedx d-sta
+        swap tuck                               \ ned-lst1 sess0 inx-lst' rnd-inx nedx d-sta nedx
+        need-current-state-satisfies            \ ned-lst1 sess0 inx-lst' rnd-inx nedx bool
         if
             \ No plan needed.
             cr
-            need-take-sample                    \ ned-lst1 sess0 inx-lst' rnd-inx
+            #3 pick                             \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0
+            session-get-sample-for-need         \ ned-lst1 sess0 inx-lst' rnd-inx
+
             \ Need satisfied, done.
             drop
             list-deallocate
@@ -2258,7 +2305,8 @@ session-points-disp                     cell+   constant session-previous-points
 
                     if
                         cr ." plan suceeded" cr
-                        need-take-sample            \ ned-lst1 sess0 inx-lst' rnd-inx
+                        #3 pick                     \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0
+                        session-get-sample-for-need \ ned-lst1 sess0 inx-lst' rnd-inx
                         drop                        \ ned-lst1 sess0 inx-lst'
                         list-deallocate             \ ned-lst1 sess0
                         2drop
@@ -2288,16 +2336,18 @@ session-points-disp                     cell+   constant session-previous-points
             then
 
             \ Try unsafe plan.
-            dup need-get-plan               \ ned-lst1 sess0 inx-lst' rnd-inx nedx, pln t | f
+            dup                             \ ned-lst1 sess0 inx-lst' rnd-inx nedx nedx
+            #4 pick                         \ ned-lst1 sess0 inx-lst' rnd-inx nedx nedx sess0
+            session-get-plan-for-need       \ ned-lst1 sess0 inx-lst' rnd-inx nedx, pln t | f
             if                              \ ned-lst1 sess0 inx-lst' rnd-inx nedx pln'
                 cr cr ." plan found: " dup .plan cr
-                dup                         \ ned-lst1 sess0 inx-lst' rnd-inx nedx pln' pln'
-                plan-run                    \ ned-lst1 sess0 inx-lst' rnd-inx nedx pln' bool
+                dup plan-run                \ ned-lst1 sess0 inx-lst' rnd-inx nedx pln' bool
                 if
                     cr ." plan suceeded" cr
                     plan-deallocate             \ ned-lst1 sess0 inx-lst' rnd-inx nedx
                     \ TODO check if need requires final sample?
-                    need-take-sample            \ ned-lst1 sess0 inx-lst' rnd-inx
+                    #3 pick                     \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0
+                    session-get-sample-for-need \ ned-lst1 sess0 inx-lst' rnd-inx
                     drop                        \ ned-lst1 sess0 inx-lst'
                     list-deallocate             \ ned-lst1 sess0
                     2drop
@@ -2339,7 +2389,7 @@ session-points-disp                     cell+   constant session-previous-points
 : session-do-zero-token-command ( sess0 -- true ) \ Zero-token logic, get/show/act-on needs.
     \ Check arg.
     assert-tos-is-session
-    
+
     dup session-get-needs           \ sess0 ned-lst
 
     dup list-get-length             \ sess0 ned-lst len
@@ -2832,7 +2882,7 @@ session-points-disp                     cell+   constant session-previous-points
     #2 pick list-get-third-item                 \ tkn-lst1 sess0 dom tkn2
     token-get-string                            \ tkn-lst1 sess0 dom c-addr u
     snumber?                                    \ tkn-lst1 sess0 dom, act-id t | f
-    if                                          \ tkn-lst1 sess0 dom act-id 
+    if                                          \ tkn-lst1 sess0 dom act-id
         \ cr ." action " dup . cr
         over domain-find-action                 \ tkn-lst1 sess0 dom, act t | f
         if
@@ -3160,16 +3210,16 @@ session-points-disp                     cell+   constant session-previous-points
 \ If this aborts, various things can be done:
 \
 \ Print all domains, and actions.
-\   current-session  .session
+\   current-session-gbl  .session
 \
 \ Print Domain 1.
-\    1  current-session  session-find-domain  drop  .domain
+\    1  current-session-gbl  session-find-domain  drop  .domain
 \
 \ Print Domain 1, Act 4.
-\    1  current-session  session-find-domain  drop  4  swap  domain-find-action  drop  .action
+\    1  current-session-gbl  session-find-domain  drop  4  swap  domain-find-action  drop  .action
 \
 \ Print the squares of domain 1 action 4.
-\    1  current-session  session-find-domain  drop  4  swap  domain-find-action  drop  action-get-squares  .square-list
+\    1  current-session-gbl  session-find-domain  drop  4  swap  domain-find-action  drop  action-get-squares  .square-list
 \
 \ Return a bool for continuing the REP loop.
 \ Return false if the user enterd the q (quit) command, else true.

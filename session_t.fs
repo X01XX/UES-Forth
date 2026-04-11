@@ -32,8 +32,8 @@
     session-new                         \ ses
 
     \ Init domain.
-    #4 current-session domain-new dup   \ sess dom dom
-    #2 pick                             \ sess dom dom sess
+    #4 over domain-new                  \ ses dom
+    2dup swap                           \ ses dom dom ses
     session-add-domain                  \ ses dom
 
     \ Add act1, act2 and act3.
@@ -102,8 +102,8 @@
     session-new                         \ ses
 
     \ Init domain.
-    #4 current-session domain-new dup   \ ses dom dom
-    #2 pick                             \ ses dom dom ses
+    #4 over domain-new                  \ ses dom
+    2dup swap                           \ ses dom dom ses
     session-add-domain                  \ ses dom
 
     \ Add act1, act2 and act3.
@@ -135,7 +135,7 @@
     %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act3
     %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
-    current-session .session
+    over .session
 
     %0111 %0111 region-new                      \ ses dom reg-to
     %0100 %0100 region-new                      \ ses dom reg-to reg-from
@@ -169,9 +169,8 @@
     session-new                         \ ses
 
     \ Init domain.
-    #4 over                             \ ses #4 ses
-    domain-new dup                      \ ses dom dom
-    #2 pick                             \ ses dom dom ses
+    #4 over domain-new                  \ ses dom
+    2dup swap                           \ ses dom dom ses
     session-add-domain                  \ ses dom
 
     \ Add act1, act2 and act3.
@@ -203,7 +202,7 @@
     %0110 %0010 sample-new dup #2 pick action-add-sample sample-deallocate  \ ses dom act3
     %0111 %0011 sample-new dup rot action-add-sample sample-deallocate      \ ses dom
 
-    current-session .session
+    over .session
 
     %0111 %0111 region-new                      \ ses dom reg-to
     %0100 %0100 region-new                      \ ses dom reg-to reg-from
@@ -236,8 +235,8 @@
     session-new                                     \ ses
 
     \ Init domain 0.
-    #4 current-session domain-new dup               \ ses dom0 dom0
-    #2 pick                                         \ ses dom0 dom0 sess
+    #4 over domain-new                              \ ses dom0
+    2dup swap                                       \ ses dom0 dom0 sess
     session-add-domain                              \ ses dom0
 
     \ Add act1, act2, act3, and act4.
@@ -272,8 +271,8 @@
     drop
 
     \ Init domain 1.
-    #5 current-session domain-new dup               \ ses dom1 dom1
-    current-session                                 \ ses dom1 dom1 sess
+    #5 over domain-new                              \ ses dom1
+    2dup swap                                       \ ses dom1 dom1 sess
     session-add-domain                              \ ses dom1
 
     \ Add act1, act2, act3, act4 and act5.
@@ -394,8 +393,8 @@
     session-new                                     \ ses
 
     \ Init domain 0.
-    #4 current-session domain-new dup               \ ses dom0 dom0
-    #2 pick                                         \ ses dom0 dom0 sess
+    #4 over domain-new                              \ ses dom0
+    2dup swap                                       \ ses dom0 dom0 ses
     session-add-domain                              \ ses dom0
 
     \ Add act1, act2, act3, and act4.
@@ -477,8 +476,8 @@
     session-new                                     \ ses
 
     \ Init domain 0.
-    #4 current-session domain-new dup               \ ses dom0 dom0
-    #2 pick                                         \ ses dom0 dom0 sess
+    #4 over domain-new                              \ ses dom0
+    2dup swap                                       \ ses dom0 dom0 sess
     session-add-domain                              \ ses dom0
 
     \ Add act1, act2, act3, and act4.
@@ -584,8 +583,8 @@
     session-new                                     \ ses
 
     \ Init domain 0.
-    #4 current-session domain-new dup               \ ses dom0 dom0
-    #2 pick                                         \ ses dom0 dom0 sess
+    #4 over domain-new                              \ ses dom0
+    2dup swap                                       \ ses dom0 dom0 sess
     session-add-domain                              \ ses dom0
 
     \ Add act1, act2, act3, and act4.

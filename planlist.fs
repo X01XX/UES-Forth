@@ -34,20 +34,17 @@
     assert-tos-is-plan-list
 
     ." ("
-    current-session swap                \ sess list0
-    list-get-links                      \ sess link
+    list-get-links                      \ link
 
     begin
         ?dup
     while
-        dup link-get-data               \ sess link plnx
-        dup plan-get-domain             \ sess link plnx domx
-        #3 pick                         \ sess link plnx domx sess
-        session-set-current-domain-xt   \ sess link plnx sess xt
-        execute                         \ sess link plnx
-        .plan                           \ sess link
+        dup link-get-data               \ link plnx
+        dup plan-get-domain             \ link plnx domx
+        domain-set-current-gbl          \ link plnx
+        .plan                           \ link
 
-        link-get-next                   \ sess link
+        link-get-next                   \ link
         dup 0<> if
             space
         then

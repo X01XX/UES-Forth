@@ -19,8 +19,6 @@
 
 ' xtabort value session-get-number-domains-xt
 
-' xtabort value cur-session-get-domain-list-xt
-
 ' xtabort value session-calc-max-regions-xt
 
 ' xtabort value session-get-current-domain-xt
@@ -39,8 +37,6 @@
 ' xtabort value domain-get-inst-id-xt
 
 ' xtabort value domain-get-max-region-xt
-
-' xtabort value domain-set-current-xt
 
 ' xtabort value domain-get-current-state-xt
 
@@ -64,7 +60,7 @@
 
 ' xtabort value domain-get-sample-xt
 
-' xtabort value domain-get-plan-xt
+' xtabort value domain-get-parent-session-xt
 
 
 ' xtabort value action-get-inst-id-xt

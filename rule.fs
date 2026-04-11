@@ -236,7 +236,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Set up masks and most-significant-bit,
     \ the basis of each cycle.
     rule-get-masks                      \ m00 m01 m11 m10
-    current-ms-bit-mask                 \ m00 m01 m11 m10 ms
+    current-ms-bit-mask-gbl             \ m00 m01 m11 m10 ms
 
     begin
         dup
@@ -387,7 +387,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     or or or                \ m-all
 
     \ Check that all bit positions are used.
-    current-all-bits-mask   \ m-all msk
+    current-all-bits-mask-gbl   \ m-all msk
     =
 ;
 
@@ -814,7 +814,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     drop                            \ cnt rul
 
     swap                            \ rul cnt
-    current-num-bits                \ rul cnt num-bits
+    current-num-bits-gbl            \ rul cnt num-bits
     = if
         true
     else
@@ -1106,7 +1106,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     dup rule-get-m11 swap       \ m00 m01 m11 rul0
     rule-get-m10                \ m00 m01 m11 m10
     or or or                    \ mxx
-    current-all-bits-mask       \ mxx dxx
+    current-all-bits-mask-gbl   \ mxx dxx
     \ cr ." mxx: " over .value space ." dxx : " dup .value cr
 
     =                           \ bool
