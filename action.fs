@@ -632,7 +632,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Init use count.
     0 over struct-set-use-count         \ xt1 dom0 act
 
-    \ Set instance ID.
+    \ Set instance ID, based on it's position in the domain action list.
     over                                \ xt1 dom0 act dom0
     domain-get-number-actions-xt        \ xt1 dom0 act dom0 xt
     execute                             \ xt1 dom0 act na
@@ -2352,6 +2352,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Init return need list.
     list-new                                        \ sta1 act0 | ret-lst
+
+    \ Chck for action zero.
+    over action-get-inst-id                         \ sta1 act0 ret-lst id
+    0= if
+        nip nip                                     \ ret-lst
+        exit
+    then
 
     \ Check for incompatible-pair needs.
     over                                            \ sta1 act0 | ret-lst act0

@@ -92,3 +92,9 @@
     current-session-gbl
     session-get-domains-xt execute
 ;
+
+\ Return a list of maximum domain regions.
+: regioncorr-max-regions-gbl
+    current-session-gbl
+    session-calc-max-regions-xt execute
+;

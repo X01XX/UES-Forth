@@ -491,18 +491,17 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return the complement of a regioncorr, a list of regioncorr.
-: regioncorr-complement ( regc0 -- lst )
+: regioncorr-complement ( regc0 -- cmp-regc-lst )
     \ Check arg.
     assert-tos-is-regioncorr
 
-    current-session-gbl                 \ regc0 sess
-    session-calc-max-regions-xt execute \ regc0 lst-max
-    tuck                                \ lst-max regc0 lst-max
-    regioncorr-subtract                 \ lst-max, lst t | f
+    regioncorr-max-regions-gbl          \ regc0 regc-max
+    tuck                                \ regc-max regc0 regc-max
+    regioncorr-subtract                 \ regc-max, cmp-regc-lst t | f
     false? abort" subtract failed?"
 
-    swap                                \ lst lst-max
-    regioncorr-deallocate               \ lst
+    swap                                \ cmp-regc-lst regc-max
+    regioncorr-deallocate               \ cmp-regc-lst
 ;
 
 \ Return the numbr of bits different between two regioncorr.

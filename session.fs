@@ -875,7 +875,7 @@ session-points-disp                     cell+   constant session-previous-points
     \ cr
     \ Clean up.                                     \ ret-lst sess0 rcllist-link
     2drop                                           \ ret-lst
-    \ cr ." session-calc-pathstep-lol: end: " .stack-structs-xt execute cr
+    \ cr ." session-calc-pathstep-lol: end: " .stack-gbl cr
 ;
 
 \ Process the given regioncorrrates.
@@ -1049,7 +1049,7 @@ session-points-disp                     cell+   constant session-previous-points
     \ Check args.
     assert-tos-is-session
     assert-nos-is-domain
-    \ cr ." session-add-domain: start " .stack-structs-xt execute cr
+    \ cr ." session-add-domain: start " .stack-gbl execute cr
 
     \ Add domain
     2dup                                \ dom1 sess0 dom1 sess0
@@ -1721,24 +1721,24 @@ session-points-disp                     cell+   constant session-previous-points
     begin
         ?dup
     while
-        \ cr ." at top while: " .stack-structs-xt execute cr
+        \ cr ." at top while: " .stack-gbl cr
         \ Set current domain.
         dup link-get-data                   \ plnc-lst sess0 link-to link-from link-dom domx
         #4 pick                             \ plnc-lst sess0 link-to link-from link-dom domx sess0
         session-set-current-domain          \ plnc-lst sess0 link-to link-from link-dom
-        \ cr ." after set domain: " .stack-structs-xt execute cr
+        \ cr ." after set domain: " .stack-gbl cr
 
         \ Get plan
         #2 pick link-get-data               \ plnc-lst sess0 link-to link-from link-dom reg-to
         #2 pick link-get-data               \ plnc-lst sess0 link-to link-from link-dom reg-to reg-from
         #2 pick link-get-data               \ plnc-lst sess0 link-to link-from link-dom reg-to reg-from domx
-        \ cr ." before get plan: " .stack-structs-xt execute cr
+        \ cr ." before get plan: " .stack-gbl cr
         domain-get-plan                     \ plnc-lst sess0 link-to link-from link-dom, plnx t | f
-        \  cr ." after get plan: " .stack-structs-xt execute cr
+        \  cr ." after get plan: " .stack-gbl cr
         if                                  \ plnc-lst sess0 link-to link-from link-dom plnx
             \ Add domain-plan to plan-list.
             #5 pick                         \ plnc-lst sess0 link-to link-from link-dom plnx plnc-lst
-            \ cr ." at xx: " .stack-structs-xt execute cr
+            \ cr ." at xx: " .stack-gbl cr
             plan-list-push-end              \ plnc-lst sess0 link-to link-from link-dom
         else                                \ plnc-lst sess0 link-to link-from link-dom
             \ No plan, exit.

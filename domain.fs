@@ -279,8 +279,10 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ Init use count
     0 over struct-set-use-count     \ nb1 ses0 dom
 
-    \ Set instance ID.
-    number-domains-gbl              \ nb1 ses0 dom nd
+    \ Set instance ID, based on its position in the session domain list.
+    over                            \ nb1 ses0 dom sess0
+    session-get-number-domains-xt   \ nb1 ses0 dom sess0 xt
+    execute                         \ nb1 ses0 dom nd
     over                            \ nb1 ses0 dom nd dom
     domain-set-inst-id              \ nb1 ses0 dom
 
@@ -298,6 +300,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     _domain-set-actions             \ dom lst
 
     \ Add action 0.
+    \ When making multi-step plans of all regions, a no-op for one domain preserves
+    \ knowledge of all result states for subsequent steps.
     [ ' act-0-get-sample ] literal  \ dom lst xt
     #2 pick                         \ dom lst xt dom
     action-new dup                  \ dom lst act act
@@ -383,6 +387,16 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     domain-set-current-action   \
 ;
 
+\ Update parent session points counter.
+: domain-update-session-points ( dom -- )
+    \ Check args.
+    assert-tos-is-domain
+
+    domain-get-parent-session       \ sess
+    session-update-points-xt        \ xt
+    execute                         \
+;
+
 \ Get a sample from an action in a domain.
 \ Call only from session-get-sample, since current-domain in set there.
 : domain-get-sample ( act1 dom0 -- smpl )
@@ -410,9 +424,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \    cr
 
     swap                            \ act1 smpl dom
-    domain-get-parent-session       \ act1 smpl sess
-    session-update-points-xt        \ act1 smpl sess xt
-    execute                         \ act1 smpl
+    domain-update-session-points    \ act1 smpl
 
     nip
 ;
@@ -439,9 +451,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     domain-set-current-state        \ act1 dom0 | smpl
 
     swap                            \ act1 smpl dom
-    domain-get-parent-session       \ act1 smpl sess
-    session-update-points-xt        \ act1 smpl sess xt
-    execute                         \ act1 smpl
+    domain-update-session-points    \ act1 smpl
 
 \    cr
 \    over domain-get-inst-id cr ." Dom: " #3 dec.r   \ act1 dom0 | smpl
@@ -1012,7 +1022,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         #4 pick                                     \ depth reg-to reg-from dom0 | pln reg-to | reg-to reg-from
         #4 pick                                     \ depth reg-to reg-from dom0 | pln reg-to | reg-to reg-from dom0
         domain-calc-step-bc                         \ depth reg-to reg-from dom0 | pln reg-to | stpx t | f
-        \ cr ." after calc-step-bc: " .stack-structs-xt execute cr
+        \ cr ." after calc-step-bc: " .stack-gbl cr
 
         false? if                                   \ depth reg-to reg-from dom0 | pln reg-to |
             \ No step found, done.

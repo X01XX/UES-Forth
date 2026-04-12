@@ -46,7 +46,7 @@
 
 \ Deallocate an regc list.
 : regioncorr-list-deallocate ( regc-lst0 -- )
-    \ cr ." regioncorr-list-deallocate: " .stack-structs-xt execute cr
+    \ cr ." regioncorr-list-deallocate: " .stack-gbl execute cr
     \ Check arg.
     assert-tos-is-regioncorr-list
 
@@ -67,7 +67,7 @@
 ' regioncorr-list-deallocate to regioncorr-list-deallocate-xt
 
 : regioncorr-lol-deallocate ( lst0 -- )
-    \ cr ." regioncorr-lol-deallocate: " .stack-structs-xt execute cr
+    \ cr ." regioncorr-lol-deallocate: " .stack-gbl cr
     \ Check arg.
     assert-tos-is-list
 
@@ -494,18 +494,17 @@
     \ Check arg.
     assert-tos-is-regioncorr-list
 
-    \ Max list of maximum regions.
-    list-new                            \ regc-lst0 max-regc-lst
-    current-session-gbl                 \ regc-lst0 max-regc-lst sess
-    session-calc-max-regions-xt execute \ regc-lst0 max-regc-lst regc-max
-    over                                \ regc-lst0 max-regc-lst regc-max max-regc-lst
-    regioncorr-list-push                \ regc-lst0 max-regc-lst
+    \ Make list of maximum regions.
+    list-new                            \ regc-lst0 max-regc-lst'
+    regioncorr-max-regions-gbl          \ regc-lst0 max-regc-lst' regc-max
+    over                                \ regc-lst0 max-regc-lst' regc-max max-regc-lst'
+    regioncorr-list-push                \ regc-lst0 max-regc-lst'
 
-    \ Save max regc
-    tuck                                \ max-regc-lst regc-lst0 max-regc-lst
+    \ Save max regc list.
+    tuck                                \ max-regc-lst' regc-lst0 max-regc-lst'
 
     \ Subtract regc from max regions.
-    regioncorr-list-subtract            \ max-regc-lst ret-regc-lst
+    regioncorr-list-subtract            \ max-regc-lst' ret-regc-lst
 
     \ Clean up.
     swap regioncorr-list-deallocate     \ ret-regc-lst
