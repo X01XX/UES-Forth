@@ -178,26 +178,63 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     regioncorr-new
 ;
 
-\ Run a platcorr.
-: plancorr-run ( plnc -- bool )
+\ Return initial regions of a plancorr.
+: plancorr-calc-initial-regions ( plnc -- regc )
     \ Check arg.
     assert-tos-is-plancorr
 
+    \ Init reg list.
+    list-new swap                   \ reg-lst plsc
+
     \ Prep for loop.
-    plancorr-get-list               \  pln-lst
-    list-get-links                  \  plnc-link
-    get-domain-list-gbl             \  plnc-link dom-lst
-    list-get-links                  \  plnc-link d-link
+    plancorr-get-list               \ reg-lst pln-lst
+    list-get-links                  \ reg-lst plnc-link
+    get-domain-list-gbl             \ reg-lst plnc-link dom-lst
+    list-get-links                  \ reg-lst plnc-link d-link
 
     begin
         ?dup
     while
         \ Set current domain.
-        dup link-get-data           \  plnc-link d-link domx
-        domain-set-current-gbl      \  plnc-link d-link
+        dup link-get-data           \ reg-lst plnc-link d-link domx
+        domain-set-current-gbl      \ reg-lst plnc-link d-link
 
         \ Get planx result.
-        over link-get-data          \  plnc-link d-link plnx
+        over link-get-data          \ reg-lst plnc-link d-link plnx
+        plan-get-initial-region     \ reg-lst plnc-link d-link regx
+
+        \ Store region.
+        #3 pick                     \ reg-lst plnc-link d-link regx reg-lst
+        region-list-push-end        \ reg-lst plnc-link d-link
+
+        swap link-get-next
+        swap link-get-next
+    repeat
+                                    \ reg-lst plnc-link
+    drop                            \ reg-lst
+    regioncorr-new
+;
+
+\ Run a plancorr.
+: plancorr-run ( plnc0 -- bool )
+    \ Check arg.
+    assert-tos-is-plancorr
+
+    \ Prep for loop.
+    plancorr-get-list               \ pln-lst
+    list-get-links                  \ plnc-link
+    get-domain-list-gbl             \ plnc-link dom-lst
+    list-get-links                  \ plnc-link d-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ plnc-link d-link domx
+        domain-set-current-gbl      \ plnc-link d-link
+
+        \ Get planx result.
+        over link-get-data          \ plnc-link d-link plnx
 
         \ Run plan.
         plan-run                    \ plnc-link d-link, t | f
@@ -210,7 +247,50 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
         swap link-get-next
         swap link-get-next
     repeat
-                                    \  plnc-link
+                                    \ plnc-link
     drop                            \
+    true
+;
+
+\ Return true if a plancorr stays within a given regioncorr.
+: plancorr-within-regc? ( regc1 plnc0 -- bool )
+    \ Check args.
+    assert-tos-is-plancorr
+    assert-nos-is-regioncorr
+
+    \ Prep for loop.
+    swap regioncorr-get-list        \ plnc0 regc1-lst
+    list-get-links swap             \ regc1-link plstc0
+
+    plancorr-get-list               \ regc1-link pln-lst
+    list-get-links                  \ regc1-link plnc-link
+
+    get-domain-list-gbl             \ regc1-link plnc-link dom-lst
+    list-get-links                  \ regc1-link plnc-link d-link
+
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ regc1-link plnc-link d-link domx
+        domain-set-current-gbl      \ regc1-link plnc-link d-link
+
+        \ Check plan.
+        #2 pick link-get-data       \ regc1-link plnc-link d-link regx
+        #2 pick link-get-data       \ regc1-link plnc-link d-link regx plnx
+        plan-within-region?         \ regc1-link plnc-link d-link bool
+        if
+        else
+            2drop drop
+            false
+            exit
+        then
+
+        rot link-get-next
+        rot link-get-next
+        rot link-get-next
+    repeat
+                                    \ regc1-link plnc-link
+    2drop                           \
     true
 ;

@@ -739,7 +739,7 @@ session-points-disp                     cell+   constant session-previous-points
     while
         #3 pick                         \ regc1 sess0 rate-link regclst-link regc1
         over link-get-data              \ regc1 sess0 rate-link regclst-link regc1 regclst
-        regioncorr-list-any-superset    \ regc1 sess0 rate-link regclst-link bool
+        regioncorr-list-any-superset?   \ regc1 sess0 rate-link regclst-link bool
         if                              \ regc1 sess0 rate-link regclst-link
             over link-get-data          \ regc1 sess0 rate-link regclst-link rate
             2nip                        \ regc1 regclst-link rate
@@ -1090,7 +1090,7 @@ session-points-disp                     cell+   constant session-previous-points
     while
         #2 pick                             \ regc1 rt-lnk regc-lnk regc1
         over link-get-data                  \ regc1 rt-lnk regc-lnk regc1 regc-lstx
-        regioncorr-list-any-superset        \ regc1 rt-lnk regc-lnk bool
+        regioncorr-list-any-superset?       \ regc1 rt-lnk regc-lnk bool
         if
             link-get-data                   \ regc1 rt-lnk regcx
             swap link-get-data              \ regc1 regcx rate
@@ -1128,16 +1128,16 @@ session-points-disp                     cell+   constant session-previous-points
         #5 pick                     \ regc-to regc-from sess0 ret-plc to-link from-link dom-link domx sess0
         session-set-current-domain  \ regc-to regc-from sess0 ret-plc to-link from-link dom-link
 
-        \ Check for noop plan.
+        \ Check for no-op plan.
         #2 pick link-get-data       \ regc-to regc-from sess0 ret-plc to-link from-link dom-link reg-to
         #2 pick link-get-data       \ regc-to regc-from sess0 ret-plc to-link from-link dom-link reg-to reg-from
-        region-subset-of            \ regc-to regc-from sess0 ret-plc to-link from-link dom-link bool
+        region-subset?              \ regc-to regc-from sess0 ret-plc to-link from-link dom-link bool
         if
-            \ Make noop plan.
+            \ Make no-op plan.
             dup link-get-data       \ regc-to regc-from sess0 ret-plc to-link from-link dom-link dom
             plan-new                \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx
-            #3 pick link-get-data   \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx reg-to
-            #3 pick link-get-data   \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx reg-to reg-from
+            #2 pick link-get-data   \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx reg-from
+            dup                     \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx reg-from reg-from
             rule-new-region-to-region   \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx rul'
 
             0                       \ regc-to regc-from sess0 ret-plc to-link from-link dom-link plnx rul' 0
@@ -1220,6 +1220,7 @@ session-points-disp                     cell+   constant session-previous-points
 : session-find-highest-le-zero-rate ( regc1 sess0 -- rate )
     assert-tos-is-session
     assert-nos-is-regioncorr
+    \ cr ." session-find-highest-le-zero-rate: regc1: " over .regioncorr
 
     \ Find highest rate.
     dup session-get-regioncorr-lol-by-rate  \ | regc-lol
@@ -1233,11 +1234,12 @@ session-points-disp                     cell+   constant session-previous-points
         ?dup
     while
         #3 pick                             \ | regc-lol-link rates-link regc1
-        #2 pick link-get-data               \ | regc-lol-link rates-link regc-to regc-from regclst
-        regioncorr-list-intersects          \ | regc-lol-link rates-link bool
+        #2 pick link-get-data               \ | regc-lol-link rates-link regc1 regc-lst
+        regioncorr-list-any-intersection?   \ | regc-lol-link rates-link bool
         if
-            link-get-data                   \ | regc-lol-link rate
+            link-get-data                   \ regc1 sess0 | regc-lol-link rate
             2nip nip                        \ rate
+            \ space ." rate: " dup dec. cr
             exit
         then
 
@@ -1650,27 +1652,38 @@ session-points-disp                     cell+   constant session-previous-points
     session-find-highest-le-zero-rate           \ regc-to regc-from sess0 | rate-to rate-from
 
     min                                         \ regc-to regc-from sess0 | rate-min
+    \ cr ." path rate: " dup dec. cr
 
     \ Get pathstep-list for rate.
     over                                        \ regc-to regc-from sess0 | rate-min sess0
     session-find-pathstep-list-by-rate          \ regc-to regc-from sess0 | pthstp-lst
-    #3                                          \ regc-to regc-from sess0 | pthstp-lst depth
-    #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to
-    #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from
-    #3 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from pthstp-lst
-   \ cr ." pathsteps picked: " dup .pathstep-list cr
-    #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from pthstp-lst sess0
+
+    \ Get reg-to, restricted if needed.
+    #3 pick over pathstep-list-intersection     \ regc-to regc-from sess0 | pthstp-lst, regc-to' t | f
+    false? abort" intersection failed?"
+
+    \ Get reg-from, restrictid if needed.
+    #3 pick #2 pick pathstep-list-intersection  \ regc-to regc-from sess0 | pthstp-lst regc-to', regc-from' t | f
+    false? abort" intersection failed?"
+
+    #3                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth
+    #2 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to'
+    #2 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to regc-from'
+    #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to regc-from pthstp-lst
+    #7 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to regc-from pthstp-lst sess0
 
     \ Try forward chaining.
-    session-calc-path-fc                        \ regc-to regc-from sess0 | pthstp-lst, pthstp-lst2 t | f
-    if
+    session-calc-path-fc                        \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from', pthstp-lst2 t | f
+    if                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' pthstp-lst2
+        swap regioncorr-deallocate
+        swap regioncorr-deallocate              \ regc-to regc-from sess0 | pthstp-lst pthstp-lst2
         2nip                                    \ regc-to | pthstp-lst pthstp-lst2
         nip nip                                 \ pthstp-lst2
         true
         exit
     then
 
-                                                \ regc-to regc-from sess0 | pthstp-lst
+                                                \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from'
     \ Try backward chaining.
 \   #3                                          \ regc-to regc-from sess0 | pthstp-lst depth
 \   #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to
@@ -1684,7 +1697,9 @@ session-points-disp                     cell+   constant session-previous-points
 \       exit
 \   then
 
-                                                \ regc-to regc-from sess0 | rate-min
+                                                \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from'
+    regioncorr-deallocate                       \ regc-to regc-from sess0 | pthstp-lst regc-to'
+    regioncorr-deallocate                       \ regc-to regc-from sess0 | pthstp-lst
     2drop                                       \ regc-to regc-from
     2drop
     false
@@ -1777,7 +1792,6 @@ session-points-disp                     cell+   constant session-previous-points
     swap                        \ plnc-lst regc-lst regc-to sess0 regc-from
 
     \ In the loop, regc-from is temporary, so protect the passed regc-from from deallocation.
-    \ dup struct-one-free-deallocate
     regioncorr-copy                     \ plnc-lst regc-lst regc-to sess0 regc-from'
 
     \ Prep for loop.
@@ -1797,19 +1811,34 @@ session-points-disp                     cell+   constant session-previous-points
         if                              \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx
             \ The end, get plancorr for regc-from to regc-to.
             #4 pick #3 pick #5 pick     \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx regc-to regc-from sess0
+            \ cr ." get plan1 from: " over .regioncorr space ." to: " #2 pick .regioncorr
             session-calc-plancorr       \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx, plancorr t | f
             if
+                \ space ." found: " dup .plancorr
+                \ cr ." at 1: " .stack-gbl cr
+                \ #5 pick                 \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-to
+                \ #4 pick                 \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-to regc-from
+                \ regioncorr-union        \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-limit'
+                \ dup                     \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-limit' regc-limit'
+                \ #2 pick                 \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-limit' regc-limit' plancorr
+                \ plancorr-within-regc?   \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-limit' bool
+                \ if
+                \     space ." within: " dup .regioncorr space ." true" cr
+                \ else
+                \     space ." within: " dup .regioncorr space ." false" cr
+                \ then
+                \ regioncorr-deallocate
+
                 #7 pick                 \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr plnc-lst
                 plancorr-list-push-end  \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx
                 2drop                   \ plnc-lst regc-lst regc-to sess0 regc-from
-                \ cr ." at deall 1: " cr
                 regioncorr-deallocate   \ plnc-lst regc-lst regc-to sess0
                 3drop                   \ plnc-lst
                 true
                 exit
             else                        \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx
+                \ space ." not found" cr
                 2drop                   \ plnc-lst regc-lst regc-to sess0 regc-from
-                \ cr ." at deall 2: " cr
                 regioncorr-deallocate   \ plnc-lst regc-lst regc-to sess0
                 3drop                   \ plnc-lst
                 plancorr-list-deallocate
@@ -1818,10 +1847,25 @@ session-points-disp                     cell+   constant session-previous-points
             then
         else                            \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx
             \ Not the end, get plancorr for regc-from to pathstepx result-regions.
-            #2 pick                     \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx-r regc-from
-            #4 pick                     \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx-r regc-from sess0
+            #2 pick                     \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx regc-from
+            #4 pick                     \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx regc-from sess0
+            \ cr ." get plan2 from: " over .regioncorr space ." to: " #2 pick .regioncorr
             session-calc-plancorr       \ plnc-lst regc-lst regc-to sess0 regc-from regc-link, plancorr t | f
             if                          \ plnc-lst regc-lst regc-to sess0 regc-from regc-link plancorr
+                \ space ." found: " dup .plancorr
+                \ over link-get-data      \ plnc-lst regc-lst regc-to sess0 regc-from regc-link plancorr regcx
+                \ #3 pick                 \ plnc-lst regc-lst regc-to sess0 regc-from regc-link plancorr regcx regc-from
+                \ regioncorr-union        \ plnc-lst regc-lst regc-to sess0 regc-from regc-link plancorr regc-limit'
+                \ dup                     \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-limit' regc-limit'
+                \ #2 pick                 \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-limit' regc-limit' plancorr
+                \ plancorr-within-regc?   \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx plancorr regc-limit' bool
+                \ if
+                \     space ." within: " dup .regioncorr space ." true" cr
+                \ else
+                \     space ." within: " dup .regioncorr space ." false" cr
+                \ then
+                \ regioncorr-deallocate
+
                 \ Calc new regc-from
                 dup plancorr-calc-result-regions    \ plnc-lst regc-lst regc-to sess0 regc-from regc-link plancorr regc-from'
                 swap                                \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regc-from' plancorr
@@ -1831,11 +1875,11 @@ session-points-disp                     cell+   constant session-previous-points
                 plancorr-list-push-end  \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regc-from'
 
                 \ Replace previous regc-from.
-                \ cr ." at deall 3: " cr
                 rot regioncorr-deallocate   \ plnc-lst regc-lst regc-to sess0 regc-link regc-from'
                 swap                        \ plnc-lst regc-lst regc-to sess0 regc-from' regc-link
 
             else                        \ plnc-lst regc-lst regc-to sess0 regc-from regc-link
+                space ." not found" cr
                 drop                    \ plnc-lst regc-lst regc-to sess0 regc-from
                 \ cr ." at deall 4: " cr
                 regioncorr-deallocate   \ plnc-lst regc-lst regc-to sess0
@@ -2285,7 +2329,7 @@ session-points-disp                     cell+   constant session-previous-points
             session-find-highest-le-zero-rate   \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-to rate-from
 
             min                                 \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-min
-            \ cr ." path: rate: " dup dec. cr
+            \ cr ." plan rate: " dup dec. cr
 
             #3 pick                             \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-min sess
             session-get-regioncorrrate-nq       \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-min nq-lst

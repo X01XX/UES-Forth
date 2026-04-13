@@ -436,6 +436,20 @@
     region-deallocate
     region-deallocate
 
+    \ Test3.
+    %1001 %1001 region-new                  \ reg-to
+    %1011 %1011 region-new                  \ reg-to reg-from
+    s" Xx/Xx/Xx/Xx/" rule-from-string-a     \ reg-to reg-from rulx
+
+    #2 pick #2 pick #2 pick                 \ reg-to reg-from rulx reg-to reg-from rulx
+    rule-number-unwanted-changes            \ reg-to reg-from rulx u
+    cr ." Number unwanted changes: " dup .
+    #3 <> abort" Number unwanted changes ne 3?"
+
+    rule-deallocate
+    region-deallocate
+    region-deallocate
+
     cr ." rule-test-number-unwanted-changes: Ok" cr
 ;
 

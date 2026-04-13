@@ -204,7 +204,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         \ Compare regions.
         #2 pick link-get-data       \ link1 link0 d-link reg2
         #2 pick link-get-data       \ link1 link0 d-link reg2 reg1
-        region-superset-of          \ link1 link0 d-link bool
+        region-superset?            \ link1 link0 d-link bool
         if
         else
             \ Non-superset found.
@@ -332,7 +332,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
         \ Check for superset subtrahend.
         2dup swap                   \ regc0 ret-lst link1 link0 d-link reg1 reg0 reg0 reg1
-        region-superset-of          \ regc0 ret-lst link1 link0 d-link reg1 reg0 bool
+        region-superset?            \ regc0 ret-lst link1 link0 d-link reg1 reg0 bool
         if
             \ No action on superset subtrahend.
             \ But it is known that not all subtrahend regions are supersets,
@@ -634,4 +634,46 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
                                     \ link1 link0
     2drop                           \
     true
+;
+
+: regioncorr-union ( regc1 regc0 -- regc )
+    \ Check args.
+    assert-tos-is-regioncorr
+    assert-nos-is-regioncorr
+    \ cr ." regioncorr-union: " over .regioncorr space ." and: " dup .regioncorr
+
+    \ Init return list.
+    list-new -rot                           \ reg-lst regc1 regc0
+
+    \ Init links for loop.
+    regioncorr-get-list list-get-links swap \ reg-lst link0 regc1
+    regioncorr-get-list list-get-links swap \ reg-lst link1 link0
+    get-domain-list-gbl list-get-links      \ reg-lst link1 link0 d-link
+
+    begin
+        ?dup
+    while
+                                    \ reg-lst link1 link0 d-link
+
+        \ Set current domain.
+        dup link-get-data           \ reg-lst link1 link0 d-link domx
+        domain-set-current-gbl      \ reg-lst link1 link0 d-link
+
+        \ Check regions
+        #2 pick link-get-data       \ reg-lst link1 link0 d-link reg1
+        #2 pick link-get-data       \ reg-lst link1 link0 d-link reg1 reg0
+        region-union                \ reg-lst link1 link0 d-link reg-int'
+        #4 pick                     \ reg-lst link1 link0 d-link reg-int' reg-lst
+        region-list-push-end        \ reg-lst link1 link0 d-link
+
+        \ Prep for next cycle.
+                                    \ reg-lst link1 link0 d-link
+        rot link-get-next           \ reg-lst link0 d-link link1
+        rot link-get-next           \ reg-lst d-link link1 link0
+        rot link-get-next           \ reg-lst link1 link0 d-link
+    repeat
+                                    \ reg-lst link1 link0
+    2drop                           \ reg-lst
+    regioncorr-new
+    \ space ." = " dup .regioncorr cr
 ;

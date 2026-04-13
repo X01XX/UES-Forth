@@ -952,6 +952,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-nos-is-region
     assert-3os-is-region
 
+    \ cr ." rule-number-unwanted-changes: reg-to: " #2 pick .region space ." reg-from: " over .region space dup .rule
+
     \ Get reg-from to rul0 initial region, restrict rule, then get rule result region.
     over                            \ reg-to reg-from rul0 reg-from
     over rule-calc-initial-region   \ reg-to reg-from rul0 reg-from rul-i'
@@ -988,6 +990,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Get unwanted changes.
     dup changes-number-changes      \ cngs-from-rul'' u
     swap changes-deallocate         \ u
+
+     \ space ." = " dup . cr
 ;
 
 : rule-can-be-used-first  ( reg-to reg-from rul0 -- bool )    \ Return true if reg-from to rule initial region involves no needed changes.

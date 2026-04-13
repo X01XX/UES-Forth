@@ -137,7 +137,7 @@
 
 \ Return true if a regioncorr-list (list of lists) contains
 \ a superset of a given regc.
-: regioncorr-list-any-superset ( regc1 regc-lst0 -- bool )
+: regioncorr-list-any-superset? ( regc1 regc-lst0 -- bool )
     \ Check args.
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr
@@ -229,7 +229,7 @@
     assert-nos-is-regioncorr
 
     \ Skip if any supersets/eq are in the list.
-    2dup regioncorr-list-any-superset      \ regc1 regc-lst0 bool
+    2dup regioncorr-list-any-superset?     \ regc1 regc-lst0 bool
     if
         2drop
         false
@@ -252,7 +252,7 @@
     assert-nos-is-regioncorr
 
     \ Skip if any supersets/eq are in the list.
-    2dup regioncorr-list-any-superset      \ regc1 regc-lst0 bool
+    2dup regioncorr-list-any-superset?     \ regc1 regc-lst0 bool
     if
         2drop
         false
@@ -275,7 +275,7 @@
     assert-nos-is-regioncorr
 
     \ Skip if any supersets/eq are in the list.
-    2dup regioncorr-list-any-superset      \ regc1 regc-lst0 bool
+    2dup regioncorr-list-any-superset?     \ regc1 regc-lst0 bool
     if
         2drop
         false
@@ -362,7 +362,7 @@
 
 \ Return true if a regioncorr-list contains at least one regc
 \ that intersects with a given regc.
-: regioncorr-list-any-intersection-regc ( regc1 regc-lst0 -- bool )
+: regioncorr-list-any-intersection? ( regc1 regc-lst0 -- bool )
     \ Check args.
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr

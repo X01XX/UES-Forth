@@ -2409,30 +2409,33 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Return a step, given reg-to, reg-from, and a rule.
-: action-make-planstep ( reg-to reg-from alt-rul rul1 act0 -- stp )
+: action-make-planstep ( reg-to4 reg-from3 alt-rul2 rul1 act0 -- stp )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-rule
-    #2 pick 0<>
+    #2 pick
     if
         assert-3os-is-rule
     then
     assert-4os-is-region
     assert-5os-is-region
 
-    \ Bring alt-rule forward.
-    rot                                     \ reg-to reg-from rul1 act0 | alt-rul
+                                            \ reg-to4 reg-from3 alt-rul2 rul1 act0 |
 
-    \ Get number unwanted changes.
-    #4 pick #4 pick #4 pick                 \ | alt-rul reg-to reg-from rul1
-    rule-number-unwanted-changes            \ | alt-rul u-unw
-    \ Add 2 if there is an alt-rul
-    over 0<> if #2 + then
-    swap                                    \ | u-unw alt-rul
+    \ Get number unwanted changes for rul1.
+    #4 pick #4 pick #3 pick                 \ | reg-to4 reg-from3 rul1
+    rule-number-unwanted-changes            \ | u-unw
+
+    \ Check alt-rul.
+    #3 pick if
+        \ Add alt-rule unwanted changes.
+        #5 pick #5 pick #5 pick             \ | u-unw reg-to4 reg-from3 alt-rul2
+        rule-number-unwanted-changes        \ | u-unw u-unw-alt
+        +                                   \ | u-unw
+    then
 
     \ Make step.
-    #3 pick                                 \ | u-unw alt-rul rul1
-    #3 pick                                 \ | u-unw alt-rul rul1 act0
+    #3 pick #3 pick #3 pick                 \ | u-unw alt-rul2 rul1 act0
     planstep-new                            \ | u-unw stp
 
     \ Set number unwanted changes.
@@ -2440,8 +2443,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     planstep-set-number-unwanted-changes    \ | stp
 
     \ Clean up.
-    2nip                                    \ reg-to act0 stp
-    nip nip                                 \ stp
+    2nip                                    \ reg-to4 reg-from3 act0 stp
+    2nip                                    \ act0 stp
+    nip                                     \ stp
 ;
 
 \ Return a planstep list, given reg-to, reg-from, and a rule list.
@@ -2561,7 +2565,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-3os-is-region
     assert-4os-is-changes
     #2 pick #2 pick                                 \ | reg-to reg-from
-    swap region-superset-of                         \ | bool
+    swap region-superset?                           \ | bool
     abort" action-calc-plansteps-by-changes: region subset?"    \ |
 
     \ cr ." action-calc-plansteps-by-changes: Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r

@@ -506,7 +506,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 ;
 
 \ Return true if a TOS region is a superset of the NOS region.
-: region-superset-of ( reg1 reg-sup -- flag )
+: region-superset? ( reg1 reg-sup -- flag )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region
@@ -527,7 +527,7 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
 ;
 
 \ Return true if a TOS region is a subset of the NOS region.
-: region-subset-of ( reg1 reg-sub -- flag )
+: region-subset? ( reg1 reg-sub -- flag )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-region

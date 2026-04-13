@@ -430,7 +430,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         then
 
                                                 \ pln reg1 stp-link stpx reg1 stp-i-reg
-        region-subset-of                       \ pln reg1 stp-link stpx bool ( includes region-eq )
+        region-subset?                          \ pln reg1 stp-link stpx bool ( includes region-eq )
         false? if                               \ pln reg1 stp-link stpx
             \ Restrict step initial region.
             #2 pick                             \ pln reg1 stp-link stpx reg1
@@ -496,7 +496,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         then
 
                                             \ plnplnstp-lst' pln reg1 link plnplnstpx reg1 plnplnstp-r-reg
-        region-subset-of                    \ plnplnstp-lst' pln reg1 link plnplnstpx bool ( includes region-eq )
+        region-subset?                      \ plnplnstp-lst' pln reg1 link plnplnstpx bool ( includes region-eq )
         false? if                           \ plnplnstp-lst' pln reg1 link plnplnstpx
             \ Restrict step result region.
             #2 pick                         \ plnplnstp-lst' pln reg1 link plnplnstpx reg1
@@ -732,3 +732,46 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     true
 ;
 
+\ Return true if a plan stays within a given region.
+: plan-within-region? ( reg1 pln0 -- bool )
+    \ Check args.
+    assert-tos-is-plan
+    assert-nos-is-region
+
+    \ Prep for loop.
+    plan-get-step-list              \ reg1 stp-lst
+    list-get-links                  \ reg1 stp-lnk
+
+    \ Check first initial region.
+    dup link-get-data               \ reg1 stp-lnk stpx
+    planstep-get-initial-region     \ reg1 stp-lnk reg-i
+    #2 pick                         \ reg1 stp-lnk reg-i reg1
+    region-superset?                \ reg1 stp-lnk bool
+    if
+    else
+        2drop
+        false
+        exit
+    then
+
+    \ Check each step's result region.
+    begin
+        ?dup
+    while
+        dup link-get-data           \ reg1 stp-lnk stpx
+        planstep-get-result-region  \ reg1 stp-lnk reg-i
+        #2 pick                     \ reg1 stp-lnk reg-i reg1
+        region-superset?            \ reg1 stp-lnk bool
+        if
+        else
+            2drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                            \ reg1
+    drop
+    true
+;

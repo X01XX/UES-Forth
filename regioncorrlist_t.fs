@@ -8,13 +8,13 @@
     s" (xxx1 XX0XX)" regioncorr-from-string-a
     swap                                \ regc regc-lst
 
-    2dup regioncorr-list-any-superset   \ regc regc-lst bool
+    2dup regioncorr-list-any-superset?  \ regc regc-lst bool
     abort" Superset found?"
 
     s" (xxx1 XX0XX)" regioncorr-from-string-a
     over regioncorr-list-push           \ regc regc-lst
 
-    2dup regioncorr-list-any-superset   \ regc regc-lst bool
+    2dup regioncorr-list-any-superset?  \ regc regc-lst bool
     false? abort" Superset not found?"
 
                                         \ regc regc-lst

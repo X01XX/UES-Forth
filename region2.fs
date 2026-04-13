@@ -15,7 +15,7 @@
 
     \ Check if the result is nothing.
     2dup swap                       \ reg1 reg0 reg0 reg1
-    region-superset-of              \ reg1 reg0 flag
+    region-superset?                \ reg1 reg0 flag
     if
         2drop
         list-new

@@ -523,7 +523,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ cr ." domain-calc-possible-steps: reg-to: " #2 pick .region space ." reg-from: " over .region cr
 
     #2 pick #2 pick swap                    \ | reg-to reg-from
-    region-superset-of                      \ | bool
+    region-superset?                        \ | bool
     abort" domain-calc-possible-steps: region subset?"
 
     \ Calc changes needed.
@@ -588,7 +588,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-3os-is-region
 
     #2 pick #2 pick                         \ reg-to reg-from dom0 | reg-to reg-from
-    region-subset-of                        \ reg-to reg-from dom0 | bool
+    region-subset?                          \ reg-to reg-from dom0 | bool
     if
         \ cr ." region: " over .region space ." subset of: " #2 pick .region cr
         3drop
@@ -694,7 +694,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-3os-is-region
     #3 pick 0 < abort" invalid depth?"
     #2 pick #2 pick                                 \ | reg-to reg-from
-    swap region-subset-of                           \ | bool
+    swap region-subset?                             \ | bool
     abort" domain-get-plan2-fc: Already at goal"    \ |
     \ cr ." domain-get-plan2-fc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
@@ -842,7 +842,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         over                                \ depth reg-to reg-from dom0 | pln' reg-from | reg-to reg-from
         swap                                \ depth reg-to reg-from dom0 | pln' reg-from | reg-from reg-to
         \ cr ." reg-from: " over .region space ." reg-to: " dup .region cr
-        region-superset-of                  \ depth reg-to reg-from dom0 | pln' reg-from | bool
+        region-superset?                    \ depth reg-to reg-from dom0 | pln' reg-from | bool
         if
             \ Plan finished.
             drop                            \ depth reg-to reg-from dom0 | pln'
@@ -851,7 +851,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             \ Check results.
             #2 pick                         \ depth reg-to reg-from dom0 | pln' reg-from
             over plan-get-initial-region    \ depth reg-to reg-from dom0 | pln' reg-from pln-i
-            region-superset-of              \ depth reg-to reg-from dom0 | pln' bool
+            region-superset?                \ depth reg-to reg-from dom0 | pln' bool
             if
             else
                 ." domain-get-plan2-fc: invalid plan initial region."
@@ -860,7 +860,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
             dup plan-get-result-region      \ depth reg-to reg-from dom0 | pln' pln-r
             #4 pick                         \ depth reg-to reg-from dom0 | pln' pln-r reg-to
-            region-superset-of              \ depth reg-to reg-from dom0 | pln' bool
+            region-superset?                \ depth reg-to reg-from dom0 | pln' bool
             if
             else
                 ." domain-get-plan2-fc: invalid plan result region."
@@ -919,7 +919,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
 
     over #3 pick                           \ reg-to reg-from dom0 | reg-from reg-to
-    region-subset-of                       \ reg-to reg-from dom0 | bool
+    region-subset?                         \ reg-to reg-from dom0 | bool
     if
         cr ." region: " #2 pick .region space ." subset of: " over .region cr
         3drop
@@ -996,7 +996,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-3os-is-region
     #3 pick 0 < abort" invalid depth?"
     #2 pick #2 pick                                 \ | reg-to reg-from
-    swap region-subset-of                           \ | bool
+    swap region-subset?                             \ | bool
     abort" domain-get-plan2-bc: Already at goal"    \ |
     \ cr ." domain-get-plan2-bc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
@@ -1157,7 +1157,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             \ Check results.
             #2 pick                         \ depth reg-to reg-from dom0 | pln' reg-from
             over plan-get-initial-region    \ depth reg-to reg-from dom0 | pln' reg-from pln-i
-            region-subset-of                \ depth reg-to reg-from dom0 | pln' bool
+            region-subset?                  \ depth reg-to reg-from dom0 | pln' bool
             if
             else
                 ." domain-get-plan2-bc: invalid plan initial region."
@@ -1167,7 +1167,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
             dup plan-get-result-region      \ depth reg-to reg-from dom0 | pln' pln-r
             #4 pick                         \ depth reg-to reg-from dom0 | pln' pln-r reg-to
-            region-superset-of              \ depth reg-to reg-from dom0 | pln' bool
+            region-superset?                \ depth reg-to reg-from dom0 | pln' bool
             if
             else
                 cr dup .plan cr
@@ -1455,9 +1455,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
     \ Check for no plan needed.
     #2 pick #2 pick swap                        \ | reg-from reg-to
-    region-superset-of                          \ | bool
+    region-superset?                            \ | bool
     if
-        \ Make planstep.
+        \ Make no-change planstep.
         0                                       \ | alt-rul
         #3 pick #3 pick                         \ | alt-rul reg-to reg-from
         rule-new-region-to-region               \ | alt-rul rul

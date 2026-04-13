@@ -173,7 +173,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-subset-of ] literal      \ reg1 list0  xt
+    [ ' region-subset? ] literal        \ reg1 list0  xt
     -rot                                \ xt reg1 list0
 
     list-remove                         \ reg2 t | f
@@ -193,7 +193,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-superset-of ] literal    \ reg1 list0  xt
+    [ ' region-superset? ] literal      \ reg1 list0  xt
     -rot                                \ xt reg1 list0
 
     list-remove                         \ reg2 t | f
@@ -215,7 +215,7 @@
 
     \ Return if any region in the list is a superset of reg1.
     2dup                                    \ reg1 list0 reg1 list0
-    [ ' region-superset-of ] literal        \ reg1 list0 reg1 list0 xt
+    [ ' region-superset? ] literal          \ reg1 list0 reg1 list0 xt
     -rot                                    \ reg1 list0 xt reg1 list0
     list-member                             \ reg1 list0 flag
     if
@@ -247,7 +247,7 @@
 
     \ Return if any region in the list is a superset of reg1.
     2dup                                    \ reg1 list0 reg1 list0
-    [ ' region-subset-of ] literal          \ reg1 list0 reg1 list0 xt
+    [ ' region-subset? ] literal            \ reg1 list0 reg1 list0 xt
     -rot                                    \ reg1 list0 xt reg1 list0
     list-member                             \ reg1 list0 flag
     if
@@ -309,7 +309,7 @@
         over link-get-data          \ ret-lst reg1 link reg1 reg2
 
         \ Test if equal
-        2dup region-subset-of       \ ret-lst reg1 link reg1 reg2 flag
+        2dup region-subset?         \ ret-lst reg1 link reg1 reg2 flag
         if
             \ Skip, region does not appear in the result.
             2drop
@@ -471,7 +471,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-superset-of ] literal -rot list-member
+    [ ' region-superset? ] literal -rot list-member
 ;
 
 \ Return true if a region-list contains a subset, or equal, region.
@@ -480,7 +480,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-subset-of ] literal -rot list-member
+    [ ' region-subset? ] literal -rot list-member
 ;
 
 \ Return true if a region-list contains a intersection of a region.

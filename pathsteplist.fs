@@ -1126,7 +1126,7 @@
         regioncorr-distance             \ regc1 pthstp-lst0 ret-lst pthstp-link min dist
 
         \ Set minimum distance.
-        min                             \ regc1 pthstp-lst0 ret-lst pthstp-link min
+        min                            \ regc1 pthstp-lst0 ret-lst pthstp-link min
 
         \ Prep for next cycle.
         swap                            \ regc1 pthstp-lst0 ret-lst min pthstp-link
@@ -1162,4 +1162,33 @@
                                         \ regc1 pthstp-lst0 ret-lst min
     drop                                \ regc1 pthstp-lst0 ret-lst
     nip nip
+;
+
+\ Return the an intersection of a regioncorr and a pathstep-list.
+: pathstep-list-intersection ( regc1 pthstp-lst0 -- regc t | f )
+    \ Check args.
+    assert-tos-is-pathstep-list
+    assert-nos-is-regioncorr
+
+    list-get-links                      \ regc1 pthstp-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ regc1 pthstp-link pthstpx
+        pathstep-get-initial-regions    \ regc1 pthstp-link regc-i
+        #2 pick                         \ regc1 pthstp-link regc-i regc1
+        regioncorr-intersection         \ regc1 pthstp-link, regc-int t | f
+        if
+            \ cr ." pathstep-list-intersection: regc1: " #2 pick .regioncorr space ." to: " dup .regioncorr cr
+            nip nip
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+                                        \ regc1
+    drop
+    false
 ;
