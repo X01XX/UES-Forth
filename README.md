@@ -36,7 +36,7 @@ When a corner is well developed, all adjacent dissimilar samples tested, the anc
 will be in only one region, a defining region, else it will not be a valid corner.
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
 
-One of a region's corners may be better than another, to be part of a corner cluster.
+One of a region's corners may be better to keep than another, to be part of a corner cluster.
 Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor cannot be in more than one region. 
 After corners are established and tested, some data accumulated in the process can be deleted.
 The corners are the most data-efficent way to describe the regions.
