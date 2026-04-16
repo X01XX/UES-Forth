@@ -44,7 +44,7 @@ vocabulary UES
 UES definitions
 
 decimal
-\ #2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
+#2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
 
 \ 0 value structinfo-list-store   \ Storage for a list containing info on all structs.
                                 \ Used for memory use print, memory leak checking,
@@ -166,71 +166,71 @@ list-new to structinfo-list-store
 ' structinfo-list-deallocate-struct-list ' structinfo-list-print-struct-list s" List" list-mma list-id structinfo-new structinfo-list-store structinfo-list-push-end
 ' structinfo-deallocate ' .structinfo s" StructInfo" structinfo-mma structinfo-id structinfo-new structinfo-list-store structinfo-list-push-end
 
-#100  token-mma-init
-' token-deallocate ' .token s" Token" token-mma token-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#3003 region-mma-init
-' region-deallocate ' .region s" Region" region-mma region-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0600 regioncorr-mma-init
-' regioncorr-deallocate ' .regioncorr s" RegionCorr" regioncorr-mma regioncorr-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0904 rule-mma-init
-' rule-deallocate ' .rule s" Rule" rule-mma rule-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0505 rulestore-mma-init
-' rulestore-deallocate ' .rulestore s" RuleStore" rulestore-mma rulestore-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0404 rulecorr-mma-init
-' rulecorr-deallocate ' .rulecorr s" RuleCorr" rulecorr-mma rulecorr-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0406 square-mma-init
-' square-deallocate ' .square s" Square" square-mma square-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0200 corner-mma-init
-' corner-deallocate ' .corner s" Corner" corner-mma corner-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0250 sample-mma-init
-' sample-deallocate ' .sample s" Sample" sample-mma sample-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0650 changes-mma-init
-' changes-deallocate ' .changes s" Changes" changes-mma changes-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0450 changescorr-mma-init
-' changescorr-deallocate ' .changescorr s" ChangesCorr" changescorr-mma changescorr-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0100 group-mma-init
-' group-deallocate ' .group s" Group" group-mma group-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0200 need-mma-init
-' need-deallocate ' .need s" Need" need-mma need-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0150 planstep-mma-init
-' planstep-deallocate ' .planstep s" PlanStep" planstep-mma planstep-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0370 pathstep-mma-init
-' pathstep-deallocate ' .pathstep s" PathStep" pathstep-mma pathstep-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0150 plan-mma-init
-' plan-deallocate ' .plan s" Plan" plan-mma plan-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0040 plancorr-mma-init
-' plancorr-deallocate ' .plancorr s" PlanCorr" plancorr-mma plancorr-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0100 rate-mma-init
-' rate-deallocate ' .rate s" Rate" rate-mma rate-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0100 regioncorrrate-mma-init
-' regioncorrrate-deallocate ' .regioncorrrate s" RegionCorrRate" regioncorrrate-mma regioncorrrate-id structinfo-new structinfo-list-store structinfo-list-push-end
-
-#0050 action-mma-init
-' action-deallocate ' .action s" Action" action-mma action-id structinfo-new structinfo-list-store structinfo-list-push-end
+#0001 session-mma-init
+' session-deallocate ' .session s" Session" session-mma session-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0025 domain-mma-init
 ' domain-deallocate ' .domain s" Domain" domain-mma domain-id structinfo-new structinfo-list-store structinfo-list-push-end
 
-#0001 session-mma-init
-' session-deallocate ' .session s" Session" session-mma session-id structinfo-new structinfo-list-store structinfo-list-push-end
+#0050 action-mma-init
+' action-deallocate ' .action s" Action" action-mma action-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0100 group-mma-init
+' group-deallocate ' .group s" Group" group-mma group-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0406 square-mma-init
+' square-deallocate ' .square s" Square" square-mma square-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0370 pathstep-mma-init
+' pathstep-deallocate ' .pathstep s" PathStep" pathstep-mma pathstep-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0040 plancorr-mma-init
+' plancorr-deallocate ' .plancorr s" PlanCorr" plancorr-mma plancorr-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0150 plan-mma-init
+' plan-deallocate ' .plan s" Plan" plan-mma plan-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0150 planstep-mma-init
+' planstep-deallocate ' .planstep s" PlanStep" planstep-mma planstep-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0100 regioncorrrate-mma-init
+' regioncorrrate-deallocate ' .regioncorrrate s" RegionCorrRate" regioncorrrate-mma regioncorrrate-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0600 regioncorr-mma-init
+' regioncorr-deallocate ' .regioncorr s" RegionCorr" regioncorr-mma regioncorr-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0450 changescorr-mma-init
+' changescorr-deallocate ' .changescorr s" ChangesCorr" changescorr-mma changescorr-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0404 rulecorr-mma-init
+' rulecorr-deallocate ' .rulecorr s" RuleCorr" rulecorr-mma rulecorr-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0505 rulestore-mma-init
+' rulestore-deallocate ' .rulestore s" RuleStore" rulestore-mma rulestore-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0200 corner-mma-init
+' corner-deallocate ' .corner s" Corner" corner-mma corner-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0200 need-mma-init
+' need-deallocate ' .need s" Need" need-mma need-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0250 sample-mma-init
+' sample-deallocate ' .sample s" Sample" sample-mma sample-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0100 rate-mma-init
+' rate-deallocate ' .rate s" Rate" rate-mma rate-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0650 changes-mma-init
+' changes-deallocate ' .changes s" Changes" changes-mma changes-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#0904 rule-mma-init
+' rule-deallocate ' .rule s" Rule" rule-mma rule-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#3003 region-mma-init
+' region-deallocate ' .region s" Region" region-mma region-id structinfo-new structinfo-list-store structinfo-list-push-end
+
+#100  token-mma-init
+' token-deallocate ' .token s" Token" token-mma token-id structinfo-new structinfo-list-store structinfo-list-push-end
 cr
 
 : init-main ( -- sess )
@@ -409,24 +409,24 @@ cr
 : all-tests
     structinfo-list-store structinfo-list-project-deallocated-xt execute
 
-    square-tests
-    square-list-tests
     region-tests
     region-list-tests
     rule-tests
-    action-tests
     rulestore-tests
     token-list-tests
+    square-tests
+    square-list-tests
     regioncorr-tests
     regioncorr-list-tests
     plan-tests
-    domain-tests
     structinfolist-tests
     list-tests
     corner-tests
-    session-tests
     pathstep-tests
     pathsteplist-tests
+    action-tests
+    domain-tests
+    session-tests
 
     structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;

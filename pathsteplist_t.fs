@@ -60,57 +60,35 @@
 
     \ Check direct steps.
     #2 pick #2 pick #2 pick                     \ sess regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
-    pathstep-list-next-steps-direct             \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2'
-    \ cr ." direct returns: " dup .pathstep-list cr
+    pathstep-list-possible-next-steps           \ sess regc-to' regc-from' pthstp-lst', pthstp-lst2' t | f
+    false? abort" No steps found?"
+    \ cr ." possible steps: " dup .pathstep-list cr
 
     \ Check result.
-    dup list-get-length 1 <> abort" result list length ne 1?"
+    dup list-get-length #2 <> abort" result list length ne 2?"
 
-    \ Check first pathstep in list.
-    dup list-get-first-item                     \ sess pthstp-lst2' item0
-    dup pathstep-get-initial-regions            \ sess pthstp-lst2' item0 initial0
-    s" (0100)" regioncorr-from-string-a         \ sess pthstp-lst2' item0 initial0 regcorr4'
-    2dup regioncorr-eq?                         \ sess pthstp-lst2' item0 initial0 regcorr4' bool
-    if
-        \ Initial regions is ( 0100 )
-        regioncorr-deallocate                   \ sess pthstp-lst2' item0 initial0
-        drop                                    \ sess pthstp-lst2' item0
-        pathstep-get-number-unwanted-changes    \ sess pthstp-lst2' num-unw
-        0<> abort" invalid number unwanted changes for 0100->0101?"
-    else
-        cr ." invalid pathstep in list?" cr
-        abort
-    then
+    s" (0100)" regioncorr-from-string-a         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100'
+    dup                                         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100'
+    #2 pick                                     \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100' pthstp-lst2'
+    pathstep-list-find                          \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100', pthstpx t | f
+    false? abort" pathstep 0100 not found?"
 
+    swap regioncorr-deallocate                  \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' pthstpx
+    pathstep-get-number-unwanted-changes        \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' num-unw
+    0<> abort" invalid number unwanted changes for 0100->0101?"
+
+    s" (0000)" regioncorr-from-string-a         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100'
+    dup                                         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100'
+    #2 pick                                     \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100' pthstp-lst2'
+    pathstep-list-find                          \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100', pthstpx t | f
+    false? abort" pathstep 0000 not found?"
+
+    swap regioncorr-deallocate                  \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' pthstpx
+    pathstep-get-number-unwanted-changes        \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' num-unw
+    1 <> abort" invalid number unwanted changes for 0000->0001?"
+
+    \ Clean up.                                 \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2'
     pathstep-list-deallocate                    \ sess regc-to' regc-from' pthstp-lst'
-
-    \ Check indirect steps.
-    #2 pick #2 pick #2 pick                     \ sess regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
-    pathstep-list-next-steps-indirect           \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' pthstp-lst3'
-    \ cr ." indirect returns: " dup .pathstep-list cr
-
-    \ Check result.
-    dup list-get-length 1 <> abort" result list length ne 1?"
-
-    \ Check first pathstep in list.
-    dup list-get-first-item                     \ sess pthstp-lst2' item0
-    dup pathstep-get-initial-regions            \ sess pthstp-lst2' item0 initial0
-    s" (0000)" regioncorr-from-string-a         \ sess pthstp-lst2' item0 initial0 regcorr4'
-    2dup regioncorr-eq?                         \ sess pthstp-lst2' item0 initial0 regcorr4' bool
-    if
-        \ Initial regions is ( 0100 )
-        regioncorr-deallocate                   \ sess pthstp-lst2' item0 initial0
-        drop                                    \ sess pthstp-lst2' item0
-        pathstep-get-number-unwanted-changes    \ sess pthstp-lst2' num-unw
-        1 <> abort" invalid number unwanted changes for 0000->0001?"
-    else
-        cr ." invalid pathstep in list?" cr
-        abort
-    then
-
-    pathstep-list-deallocate                    \ sess regc-to' regc-from' pthstp-lst'
-
-    \ Clean up.
     pathstep-list-deallocate                    \ sess regc-to' regc-from'
     regioncorr-deallocate                       \ sess regc-to'
     regioncorr-deallocate                       \ sess

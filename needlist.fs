@@ -39,17 +39,6 @@
     list-deallocate                                 \
 ;
 
-\ Return the union of two need lists.
-: ?need-list-set-union ( list1 list0 -- list-result )
-    \ Check args.
-    assert-tos-is-need-list
-    assert-nos-is-need-list
-
-    [ ' need-eq ] literal -rot        \ xt list1 list0
-    list-union-struct                 \ list-result
-;
-
-
 \ Print a need-list
 : .need-list ( list0 -- )
     \ Check args.

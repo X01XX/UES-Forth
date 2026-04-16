@@ -5,7 +5,7 @@
 
 \ Struct fields
 0                                   constant domain-header-disp         \ 16-bits [0] struct id, [1] use count, [2] instance id (8 bits), num-bits (8 bits)
-domain-header-disp          cell+   constant domain-parent-session-disp \ A session.
+domain-header-disp          cell+   constant domain-parent-session-disp \ A session.  Domain does not change its use count.
 domain-parent-session-disp  cell+   constant domain-actions-disp        \ A action-list
 domain-actions-disp         cell+   constant domain-current-state-disp  \ A state/value.
 domain-current-state-disp   cell+   constant domain-current-action-disp \ An action addr.

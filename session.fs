@@ -504,8 +504,6 @@ session-points-disp                     cell+   constant session-previous-points
     session-mma mma-deallocate
 
     0 to current-session-store
-
-    structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;
 
 : session-get-sample ( act2 dom1 sess0 -- sample )  \ Get a sample from an action in a domain.
@@ -1215,9 +1213,10 @@ session-points-disp                     cell+   constant session-previous-points
 ;
 
 
-\ Return highest rate negative number, le 0, with regc-list having interserctions with a any regioncorr
-\ in a rated regioncorr list stored in the session struct.
-: session-find-highest-le-zero-rate ( regc1 sess0 -- rate )
+\ Return highest rate negative number, le 0, having an item
+\ in a rated regioncorr list stored in the session struct, which
+\ intersects a given regioncorr, regc1.
+: session-find-highest-le-zero-rate-intersecting ( regc1 sess0 -- rate )
     assert-tos-is-session
     assert-nos-is-regioncorr
     \ cr ." session-find-highest-le-zero-rate: regc1: " over .regioncorr
@@ -1246,8 +1245,41 @@ session-points-disp                     cell+   constant session-previous-points
         link-get-next swap
         link-get-next swap
     repeat
-    cr ." session-find-highest-le-zero-rate: Drop through?"
-    abort
+;
+
+
+\ Return highest rate negative number, le 0, having an item
+\ in a rated regioncorr list stored in the session struct, which
+\ is a superset of a given regioncorr, regc1.
+: session-find-highest-le-zero-rate-superset ( regc1 sess0 -- rate )
+    assert-tos-is-session
+    assert-nos-is-regioncorr
+    \ cr ." session-find-highest-le-zero-rate: regc1: " over .regioncorr
+
+    \ Find highest rate.
+    dup session-get-regioncorr-lol-by-rate  \ | regc-lol
+    list-get-links                          \ | regc-lol-link
+
+    over session-get-regioncorrrate-nq      \ | regc-lol-link rates-lst
+    list-get-links                          \ | regc-lol-link rates-link
+
+    \ Check each rate and list.
+    begin
+        ?dup
+    while
+        #3 pick                             \ | regc-lol-link rates-link regc1
+        #2 pick link-get-data               \ | regc-lol-link rates-link regc1 regc-lst
+        regioncorr-list-any-superset?       \ | regc-lol-link rates-link bool
+        if
+            link-get-data                   \ regc1 sess0 | regc-lol-link rate
+            2nip nip                        \ rate
+            \ space ." rate: " dup dec. cr
+            exit
+        then
+
+        link-get-next swap
+        link-get-next swap
+    repeat
 ;
 
 \ Return a regc-list for a given rate (number, le 0).
@@ -1321,20 +1353,46 @@ session-points-disp                     cell+   constant session-previous-points
     #4 pick 0< abort" 5OS is not a valid depth"
 ;
 
-\ Calculate a path, for from/to regioncorrs, given a rated pathstep list.
-\ The logic is random depth-first.
+\ Do semi-random depth-first search for a path from a regioncorr to another regioncorr.
+\ Its semi-random because next steps can be chosen based on having the needed changes,
+\ and intersecting the current from regioncorr, or being reachable without additional
+\ needed changes.  Needing additional changes to reach a step indicates it would be premature.
 \
-\ Check all possibilites for linking a pathstep, having a needed change, to
-\ another pathstep, having another needed change, in a loop, until there is
-\ an intersection with the to-regions.
+\ Pseudo code
+\   Is regc-from a subset regc-to? y -> Abort.
+\   Is depth == 0 ? y -> Done, fail.
+\   let cur-from = regc-from.
+\   begin
+\       Get next possible steps. That is, steps that are superset regc-from, or are reachable without requiring a needed change.
+\       None found? y -> Done, fail.
 \
-\ If the current from-regions intersect a pathstep that does not provide a needed change,
-\ and that step does not intersect a pathstep that has a needed change, take the
-\ intersecting pathstep's result-regions as a possible next current-from, and recurse.
+\       Randomly select one.
+\       Are the next step initial-regions superset regc-from?
+\       if
+\           Apply selected step to cur-from to get next-from.
+\           Add cur-from to return list.
+\       else
+\           Recurse for path of cur-from to step initial regions.
+\           Failed? y -> done, fail.
 \
-\ So, given a intersecting pathstep, without a needed change, separated from a pathstep,
-\ having a needed change, there would be a recursion for each pathstep, without a needed change,
-\ that is between them.
+\           Append returned regc-seq to return list.
+\           Get return list last item, apply selected pathstep for next-from.
+\       then
+\
+\       \ Check for success.
+\       Is cur-from a subset of regc-to?
+\       if
+\           Append cur-from to return list.
+\           Done, success.
+\       then
+\
+\       Are both regc-from and regc-to in one pathstep?
+\       if
+\           Append regc-to to return list.
+\           Done, success.
+\       then
+\   again
+\
 : session-calc-path-fc ( depth regc-to regc-from pthstp-lst sess0 -- regc-seq t | f )
     \ cr ." session-calc-path-fc: start: depth: " #4 pick dec. space ." from " #2 pick .regioncorr space ." to " #3 pick .regioncorr cr
     \ cr .stack-gbl cr
@@ -1345,6 +1403,9 @@ session-points-disp                     cell+   constant session-previous-points
     assert-3os-is-regioncorr
     assert-4os-is-regioncorr
     assert-5os-is-valid-depth
+
+    #3 pick #3 pick regioncorr-subset?
+    abort" session-calc-path-fc: regc-from subset regc-to?"
 
     \ Check depth.
     #4 pick 0=
@@ -1358,275 +1419,123 @@ session-points-disp                     cell+   constant session-previous-points
     \ cr ." at 0: from: " #2 pick .regioncorr space ." to: " #3 pick .regioncorr cr
 
     \ Init return list.
-    list-new                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
+    list-new                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
 
     \ Prep for loop.
-    #3 pick                              \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from
+    #3 pick regioncorr-copy                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from'
 
     \ One RegionCorr step forward per cycle, except for recursion.
     begin
+        \ Get next step(s) forward.
+
         \ cr ." begin: cur path: " over .regioncorr-list space ." cur-from: " dup .regioncorr cr
+        \ cr .stack-gbl cr
 
-        \ Check if at end.
-        #5 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from regc-to
-        over                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from regc-to cur-from
-        regioncorr-intersects?              \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from bool
-        if
-            #5 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from regc-to
-            regioncorr-intersection         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst, int-from t | f
-            false? abort" intersection failed?"
-            over regioncorr-list-push-end   \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
-            2nip                            \ depth regc-to sess0 | ret-lst
-            2nip                            \ sess0 | ret-lst
-            nip
-
-            \ Get rid of dups that may have been added due to recursion.
-            \ The cur-from from a recursion needs to be deallocated, while other cur-froms
-            \ are passed, or the result regions of a pathstep, that do not need to be deallocated.
-            \ This discontinuity is solved here.
-            dup regioncorr-list-copy-nosups \ ret-lst ret-lst2
-            swap regioncorr-list-deallocate \ ret-lst2
-
-            true
-            \ cr ." true exit 1: " .stack-gbl cr
-            exit
-        then
-
-        \ Check for a pathstep that intersects regc-from and regc-to.
-        #5 pick over #5 pick                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from regc-to cur-from pthstp-lst
-        pathstep-list-intersects-both       \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from, pthstpx t | f
-        if
-            \ cr ." regc-to and regc-from in one pathstep" cr
-            \ Add regc-from intersection to the return list.
-            pathstep-get-initial-regions    \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from initial
-            over                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from initial cur-from
-            over                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from initial cur-from initial
-            regioncorr-intersection         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from initial, from-int
-            false? abort" intersection failed?"
-            #3 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from initial from-int ret-lst
-            regioncorr-list-push-end        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from initial
-
-            \ Add regc-to intersection to the return list.
-            #6 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from initial regc-to
-            regioncorr-intersection         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from, to-int
-            false? abort" intersection failed?"
-            #2 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from to-int ret-lst
-            regioncorr-list-push-end        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from
-
-            \ Clean up.
-            drop
-            2nip                            \ depth regc-to sess0 | ret-lst
-            2nip                            \ sess0 ret-lst
-            nip                             \ ret-lst
-
-            \ Get rid of dups that may have been added due to recursion.
-            \ The cur-from from a recursion needs to be deallocated, while other cur-froms
-            \ are passed, or the result regions of a pathstep, that do not need to be deallocated.
-            \ This discontinuity is solved here.
-            dup regioncorr-list-copy-nosups \ ret-lst ret-lst2
-            swap regioncorr-list-deallocate \ ret-lst2
-
-            true
-            \ cr ." true exit 2: " .stack-gbl cr
-            exit
-        then
-
-        \ Get pathsteps that cur-from intersects.
-        dup                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from cur-from
-        #4 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from cur-from pthstp-lst
-        pathstep-list-intersecting-fc   \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from, pthstp-lst-int' t | f
-        if
-        else
-            \ None found, return false.
-            drop
-            regioncorr-list-deallocate
+        #5 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' cur-to
+        over                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' cur-to cur-from
+        #5 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' cur-to cur-from pthstp-lst
+        pathstep-list-possible-next-steps   \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from', pthstp-nxt-lst' t | f
+        false? if
+            regioncorr-deallocate           \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
+            regioncorr-list-deallocate      \ depth regc-to regc-from pthstp-lst sess0
             2drop 2drop drop
             false
-            \ cr ." false exit 3: " .stack-gbl cr
             exit
         then
 
-        \ Check if any intersecting pathsteps have a needed change.
-                                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int'
-        #6 pick #2 pick                     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' regc-to cur-from
-        changescorr-new-regc-to-regc        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs'
-        dup                                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs' cngs'
-        #2 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs' cngs' pthstp-lst-int'
-        pathstep-list-has-needed-change     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs', pthstp-lst-cngs' t | f
+        \ Select one.
+        dup list-get-length                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstp-nxt-lst' len
+        random                              \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstp-nxt-lst' inx
+        over list-remove-item-struct        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstp-nxt-lst' pthstpx
+        swap pathstep-list-deallocate       \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx
+
+        \ Check it selected pathstep is superset regc-from.
+        2dup                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx cur-from' pthstpx
+        pathstep-get-initial-regions        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx cur-from' pthstp-init
+        regioncorr-superset?                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx bool
         if
-            \ Best solution, loop continues.
-            swap changescorr-deallocate     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs'
-            \ cr ." take pathstep that has a needed change" cr
+            \ Calc next-from.
+            over swap                           \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' cur-from' pthstpx
+            pathstep-apply-to-regioncorr-fc     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from', nxt-from' t | f
+            false? abort" apply failed?"
 
-            \ Choose a pathstep.
-            dup list-get-length             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' len
-            random                          \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' inx
-            over list-remove-item-struct    \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pathstpx
-            \ cr ." pathstep used 1: " dup .pathstep cr
+            \ Store cur-from.
+            swap                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst nxt-from' cur-from'
+            #2 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst nxt-from' cur-from' ret-lst
+            list-push-end-struct                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst nxt-from'
 
-            \ Clean up.
-            swap pathstep-list-deallocate   \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' patshpx
-            swap pathstep-list-deallocate   \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from patshpx
+        else                                    \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx
+            \ cr ." selected step: " dup .pathstep cr
+            \ Prep for recursion.
+            dup                                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx pthstpx
+            pathstep-get-initial-regions        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx regc-to
+            #8 pick 1 - swap                    \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to
+            #3 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to cur-from'
+            #7 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to cur-from' pthstp-lst
+            #7 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to cur-from' pthstp-lst sess0
 
-            \ Save cur-from.
-            swap                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst patshpx cur-from
-            over                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst patshpx cur-from pthstpx
-            pathstep-get-initial-regions    \ depth regc-to regc-from pthstp-lst sess0 | ret-lst patshpx cur-from stp-initial
-            regioncorr-intersection         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst patshpx, cur-from-int t | f
-            false? abort" intersection failed?"
-            #2 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst patshpx cur-from-int ret-lst
-            regioncorr-list-push-end        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst patshpx
-
-            \ Get next cur-from.
-            dup pathstep-get-result-regions \ depth regc-to regc-from pthstp-lst sess0 | ret-lst patshpx nxt-from
-            nip                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst nxt-from
-        else
-            \ cr ." Check if any pathsteps intersecting cur-from have results that intersect pathsteps that have needed changes" cr
-                                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs'
-            \ Find any pathsteps that have a needed change.
-            dup                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs' cngs'
-            #6 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs' cngs' pthstp-lst
-            pathstep-list-has-needed-change \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' cngs', pthstp-lst-cngs' t | f
-            if
-                swap changescorr-deallocate     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs'
-
-                \ cr .stack-gbl
-                \ cr ." intersecting pthstps: " over .pathstep-list space ." pthstps w/needed cng: " dup .pathstep-list cr
-
-                \ Init list of pathstep-intersecting-results, that intersect at least one pathstep with needed changes.
-                list-new                        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst'
-
-                \ For each pathstep cur-from intersects with, pair with pathsteps having a needed change.
-                #2 pick list-get-links          \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link
-                begin
-                    ?dup
-                while
-                    \ Get cur-from intersecting pathstep result regions.
-                    dup link-get-data           \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-stp
-                    pathstep-get-result-regions \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt
-
-                    \ Compare one cur-from intersecting pathstep results with pathsteps having at least one needed change.
-                    #2 pick                     \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt pthstp-lst-cngs'
-                    list-get-links              \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt cng-link
-
-                    begin
-                        ?dup
-                    while
-                        dup link-get-data               \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt cng-link cng-pthstpx
-                        pathstep-get-initial-regions    \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt cng-link cng-initial
-                        #2 pick                         \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt cng-link cng-initial int-rslt
-                        \ cr ." comparing " over .regioncorr space ." and " dup .regioncorr cr
-                        regioncorr-intersection         \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt cng-link, cng-int t | f
-                        if
-                            #4 pick                     \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt cng-link cng-int pairing-lst'
-                            list-push-struct            \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt cng-link
-                        then
-
-                        link-get-next
-                    repeat
-                                                        \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link int-rslt
-                    drop                                \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs' pairing-lst' int-link
-
-                    link-get-next
-                repeat
-                                                \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2' pairing-lst'
-                dup list-is-empty?
-                if
-                    \ Third solution, loop is paused to recurse.
-                    \ cr ." pairing list is empty" cr
-                    list-deallocate                     \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2'
-                    pathstep-list-deallocate            \ | ret-lst cur-from pthstp-lst-int'
-
-                    \ Get closest to regc-to possibilities.
-                    #6 pick                                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int' regc-to
-                    over                                    \ | ret-lst cur-from pthstp-lst-int' regc-to pthstp-lst-int'
-                    pathstep-list-closest-result-regions    \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cls'
-                    swap pathstep-list-deallocate           \ | ret-lst cur-from pthstp-lst-cls'
-
-                    \ Select one, cur-from intersecting, closest to regc-to, pathstep.
-                    dup list-get-length                 \ | ret-lst cur-from pthstp-lst-cls' len
-                    random                              \ | ret-lst cur-from pthstp-lst-cls' inx
-                    over                                \ | ret-lst cur-from pthstp-lst-cls' inx pthstp-lst-int'
-                    list-remove-item-struct             \ | ret-lst cur-from pthstp-lst-cls' pthstpx
-                    swap                                \ | ret-lst cur-from pthstpx pthstp-lst-cls'
-                    pathstep-list-deallocate            \ | ret-lst cur-from pthstpx
-                    \ cr ." pathstep used 2: " dup .pathstep cr
-
-                    \ Step cur-from into result list.
-                    dup pathstep-get-initial-regions    \ | ret-lst cur-from pthstpx stp-init
-                    #2 pick                             \ | ret-lst cur-from pthstpx stp-init cur-from
-                    regioncorr-intersection             \ | ret-lst cur-from pthstpx, cur-from' t | f
-                    false? abort" intersection did not work?"
-                    #3 pick                             \ | ret-lst cur-from pthstpx cur-from' ret-lst
-                    list-push-end-struct                \ | ret-lst cur-from pthstpx
-
-                    \ Get next cur-from, from the pathstep result regions.
-                    pathstep-get-result-regions         \ | ret-lst cur-from nxt-from
-                    nip                                 \ | ret-lst nxt-from
-
-                    \ Prep for recursion.
-                                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst nxt-from
-                    #6 pick 1 - swap            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst depth nxt-from
-                    #6 pick swap                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst depth regc-to nxt-from
-                    #5 pick                     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst depth regc-to nxt-from pthstp-lst
-                    #5 pick                     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst depth regc-to nxt-from pthstp-lst sess0
-                    recurse                     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst, ret-lst2 t | f
-                    if
-                        \ cr ." recursion worked" dup .regioncorr-list cr
-                        \ cr ." cur path: " over .regioncorr-list cr
-                        \ Add partial path to current path.
-                        2dup swap regioncorr-list-append
-                        regioncorr-list-deallocate
-                        \ cr ." appended: " dup .regioncorr-list cr
-
-                        \ Get last item in list for new cur-from.
-                        \ The cur-from from a recursion needs to be deallocated, while other cur-froms
-                        \ are passed, or the result regions of a pathstep, that do not need to be deallocated.
-                        \ Taking an intersection of cur-from and a pathstep's initial regions,
-                        \ the result being equal or a subset of cur-from, then storing the
-                        \ intersection in the return list, causes the original cur-from to be undeallocated.
-                        \ So keep the new cur-from in the list here, get-last-item instead of pop-end.
-                        dup list-get-last-item  \ depth regc-to regc-from pthstp-lst sess0 | ret-lst, cur-from
-                    else
-                        \ cr ." recursion did NOT work" cr
-                        regioncorr-list-deallocate
-                        2drop 2drop drop
-                        false
-                        \ cr ." false exit 4: " .stack-gbl cr
-                        exit
-                    then
-                else
-                    \ Second best solution, loop continues.
-                    \ cr ." pairing list is not empty" cr
-                    cr dup .regioncorr-list cr
-                    \ Choose one.
-                    dup list-get-length             \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2' pair-lst' len
-                    random                          \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2' pair-lst' inx
-                    over                            \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2' pair-lst' inx pair-lst'
-                    list-remove-item-struct         \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2' pair-lst' next-from
-                    \ cr ." next-from chosen: " dup .regioncorr cr
-                    \ Clean up.
-                    swap regioncorr-list-deallocate \ | ret-lst cur-from pthstp-lst-int' pthstp-lst-cngs2' next-from
-                    swap pathstep-list-deallocate   \ | ret-lst cur-from pthstp-lst-int' next-from
-                    swap pathstep-list-deallocate   \ | ret-lst cur-from next-from
-                    swap                            \ | ret-lst next-from cur-from
-
-                    \ Store cur-from.
-                    #2 pick                         \ | ret-lst next-from cur-from ret-lst
-                    regioncorr-list-push-end        \ | ret-lst next-from
-                then
-            else
-                changescorr-deallocate      \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from pthstp-lst-int'
-                pathstep-list-deallocate    \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from
-                drop                        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
-                regioncorr-list-deallocate  \ depth regc-to regc-from pthstp-lst sess0
-                2drop 2drop drop
+            recurse                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx, regc-seq' t | f
+            if                                  \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx regc-seq'
+                \ Store regc-seq
+                dup                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx regc-seq' regc-seq'
+                #4 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx regc-seq' regc-seq' ret-lst
+                regioncorr-list-append          \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx regc-seq'
+                regioncorr-list-deallocate      \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx
+                \ Add selected step.
+                swap regioncorr-deallocate      \ depth regc-to regc-from pthstp-lst sess0 | ret-lst pthstpx
+                over list-get-last-item         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst pthstpx last-item
+                swap                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst last-item pthstpx
+                pathstep-apply-to-regioncorr-fc \ depth regc-to regc-from pthstp-lst sess0 | ret-lst, nxt-from' t | f
+                false? abort" apply failed?"
+            else                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx
+                drop regioncorr-deallocate      \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
+                regioncorr-list-deallocate      \ depth regc-to regc-from pthstp-lst sess0
+                2drop                           \ depth regc-to regc-from
+                2drop                           \ depth
+                drop
                 false
-                \ cr ." false exit 5: " .stack-gbl cr
                 exit
             then
         then
 
+        \ Check if at end, current regc-from is subset regc-to.
+        #5 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' regc-to
+        over                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' regc-to cur-from'
+        regioncorr-subset?                  \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' bool
+        if                                  \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from'
+            \ Add cur-to to return list.
+            over regioncorr-list-push-end   \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
+            2nip                            \ depth regc-to sess0 | ret-lst
+            2nip                            \ sess0 | ret-lst
+            nip
+            true
+            \ cr ." true exi?session-calc-path-fct 1: " over .regioncorr-list cr
+            exit
+        then
+                                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from'
+        \ Check for a pathstep that intersects regc-from and regc-to.
+        #5 pick over #5 pick                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' regc-to cur-from' pthstp-lst
+        pathstep-list-superset-both?        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' bool
+        if
+            \ cr ." regc-to and regc-from in one pathstep" cr
+            \ Add cur-from intersection to the return list.
+            over                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' ret-lst
+            regioncorr-list-push-end        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
+
+            \ Add regc-to intersection to the return list.
+            #4 pick                         \ depth regc-to regc-from pthstp-lst sess0 | ret-lst regc-to
+            regioncorr-copy                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst regc-to'
+            over                            \ depth regc-to regc-from pthstp-lst sess0 | ret-lst regc-to' ret-lst
+            regioncorr-list-push-end        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
+
+            \ Clean up.
+            2nip                            \ depth regc-to sess0 | ret-lst
+            2nip                            \ sess0 ret-lst
+            nip                             \ ret-lst
+            true
+            \ cr ." true exit 2: " over .regioncorr-list cr
+            exit
+        then
     again
 ;
 
@@ -1645,11 +1554,11 @@ session-points-disp                     cell+   constant session-previous-points
     abort" session-calc-plan: from/to intersect?"
 
     \ Get the lowest rate from reg-to and reg-from highest rates.
-    #2 pick over                                \ regc-to regc-from sess0 | regc-to sess0
-    session-find-highest-le-zero-rate           \ regc-to regc-from sess0 | rate-to
+    #2 pick over                                    \ regc-to regc-from sess0 | regc-to sess0
+    session-find-highest-le-zero-rate-intersecting  \ regc-to regc-from sess0 | rate-to
 
     #2 pick #2 pick                             \ regc-to regc-from sess0 | rate-to regc-from sess0
-    session-find-highest-le-zero-rate           \ regc-to regc-from sess0 | rate-to rate-from
+    session-find-highest-le-zero-rate-superset  \ regc-to regc-from sess0 | rate-to rate-from
 
     min                                         \ regc-to regc-from sess0 | rate-min
     \ cr ." path rate: " dup dec. cr
@@ -1660,28 +1569,38 @@ session-points-disp                     cell+   constant session-previous-points
 
     \ Get reg-to, restricted if needed.
     #3 pick over pathstep-list-intersection     \ regc-to regc-from sess0 | pthstp-lst, regc-to' t | f
-    false? abort" intersection failed?"
-
-    \ Get reg-from, restrictid if needed.
-    #3 pick #2 pick pathstep-list-intersection  \ regc-to regc-from sess0 | pthstp-lst regc-to', regc-from' t | f
-    false? abort" intersection failed?"
-
-    #3                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth
-    #2 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to'
-    #2 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to regc-from'
-    #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to regc-from pthstp-lst
-    #7 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' depth regc-to regc-from pthstp-lst sess0
-
-    \ Try forward chaining.
-    session-calc-path-fc                        \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from', pthstp-lst2 t | f
-    if                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from' pthstp-lst2
-        swap regioncorr-deallocate
-        swap regioncorr-deallocate              \ regc-to regc-from sess0 | pthstp-lst pthstp-lst2
-        2nip                                    \ regc-to | pthstp-lst pthstp-lst2
-        nip nip                                 \ pthstp-lst2
-        true
+    false? if
+        cr ." session-calc-path: problem: intersection failed?" cr
+        cr ." regc-to: " #3 pick .regioncorr space ." pthstp-lst: " dup .pathstep-list cr
+        2drop
+        2drop
+        false
         exit
     then
+
+    \ The search is semi-random depth-first, so give it a few tries.
+    \ Its semi-random because next steps can be chosen based on having the needed changes,
+    \ and intersecting the current from regioncorr, or being reachable without additional
+    \ needed changes.  Needing additional changes to reach a step indicates it would be premature.
+                                                    \ regc-to regc-from sess0 | pthstp-lst regc-to'
+    #3 0 do
+        #3                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' depth
+        over                                        \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to'
+        #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to' regc-from
+        #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to' regc-from pthstp-lst
+        #6 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to' regc-from pthstp-lst sess0
+
+        \ Try forward chaining.
+        session-calc-path-fc                        \ regc-to regc-from sess0 | pthstp-lst regc-to', pthstp-lst2 t | f
+        if                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' pthstp-lst2
+            swap regioncorr-deallocate              \ regc-to regc-from sess0 | pthstp-lst pthstp-lst2
+            2nip                                    \ regc-to | pthstp-lst pthstp-lst2
+            nip nip                                 \ pthstp-lst2
+            true
+            unloop
+            exit
+        then
+    loop
 
                                                 \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from'
     \ Try backward chaining.
@@ -1697,12 +1616,12 @@ session-points-disp                     cell+   constant session-previous-points
 \       exit
 \   then
 
-                                                \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from'
-    regioncorr-deallocate                       \ regc-to regc-from sess0 | pthstp-lst regc-to'
+                                                \ regc-to regc-from sess0 | pthstp-lst regc-to'
     regioncorr-deallocate                       \ regc-to regc-from sess0 | pthstp-lst
     2drop                                       \ regc-to regc-from
     2drop
     false
+    \ cr ." session-calc-path: end: "
 ;
 
 \ Return a plan to change from one regioncorr to another.
@@ -1714,13 +1633,15 @@ session-points-disp                     cell+   constant session-previous-points
     assert-3os-is-regioncorr
     \ cr ." session-calc-plancorr: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
-    #2 pick #2 pick regioncorr-intersects?
+    #2 pick #2 pick regioncorr-subset?
     if
-        cr
-        ." session-calc-plancorr: from/to intersect? "
-        space ." from: " over .regioncorr
-        space ." to: " #2 pick .regioncorr
-        cr
+        \ cr
+        \ ." session-calc-plancorr: from/to intersect? "
+        \ space ." from: " over .regioncorr
+        \ space ." to: " #2 pick .regioncorr
+        \ cr
+        2drop drop false
+        exit
     then
 
     \ Init planlist.
@@ -1879,7 +1800,7 @@ session-points-disp                     cell+   constant session-previous-points
                 swap                        \ plnc-lst regc-lst regc-to sess0 regc-from' regc-link
 
             else                        \ plnc-lst regc-lst regc-to sess0 regc-from regc-link
-                space ." not found" cr
+                \ space ." not found" cr
                 drop                    \ plnc-lst regc-lst regc-to sess0 regc-from
                 \ cr ." at deall 4: " cr
                 regioncorr-deallocate   \ plnc-lst regc-lst regc-to sess0
@@ -1948,7 +1869,7 @@ session-points-disp                     cell+   constant session-previous-points
     \ Check args.
     assert-tos-is-session
     assert-nos-is-regioncorr
-    \ cr ." session-change-to-plans: " over .regioncorr cr
+    \ cr ." session-change-to-plans: start: " over .regioncorr cr
 
     tuck                                            \ sess0 regc-to sses0
 
@@ -1960,11 +1881,12 @@ session-points-disp                     cell+   constant session-previous-points
     session-calc-path                               \ sess0 regc-to regc-from', regc-lst' t | f
     if
         \ cr ." path found: " dup .regioncorr-list cr
-        dup                                         \ sess0 regc-to regc-from' regc-lst' regc-lst'
-        #3 pick                                     \ sess0 regc-to regc-from' regc-lst' regc-lst' regc-to
-        #3 pick                                     \ sess0 regc-to regc-from' regc-lst' regc-lst' regc-to regc-from'
-        #6 pick                                     \ sess0 regc-to regc-from' regc-lst' regc-lst' regc-to regc-from' sess0
-        session-calc-plnclst-from-regc-lst          \ sess0 regc-to regc-from' regc-lst', plnc-lst t | f
+        \ cr ." at xx: " cr
+        dup                                         \ sess0 regc-to regc-from' regc-seq' regc-seq'
+        #3 pick                                     \ sess0 regc-to regc-from' regc-seq' regc-seq' regc-to
+        #3 pick                                     \ sess0 regc-to regc-from' regc-seq' regc-seq' regc-to regc-from'
+        #6 pick                                     \ sess0 regc-to regc-from' regc-seq' regc-seq' regc-to regc-from' sess0
+        session-calc-plnclst-from-regc-lst          \ sess0 regc-to regc-from' regc-seq', plnc-lst t | f
         if
             \ cr ." session-change-to-plans: plans found: " dup .plancorr-list
             swap regioncorr-list-deallocate         \ sess0 regc-to regc-from' plnc-lst
@@ -1983,6 +1905,7 @@ session-points-disp                     cell+   constant session-previous-points
     regioncorr-deallocate                           \ sess0 regc-to
     2drop
     false
+    \ cr ." session-change-to-plans: end: " cr
 ;
 
 : session-get-current-rate ( sess0 -- rate ) \ Return the rate of current domain states, based on being subset of regioncorrrates.
@@ -2323,10 +2246,10 @@ session-points-disp                     cell+   constant session-previous-points
 
             \ Get the lowest rate from reg-to and reg-from highest rates.
             over #3 pick                        \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' regc-to' sess
-            session-find-highest-le-zero-rate   \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-to
+            session-find-highest-le-zero-rate-intersecting  \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-to
 
             over #4 pick                        \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-to regc-from' sess0
-            session-find-highest-le-zero-rate   \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-to rate-from
+            session-find-highest-le-zero-rate-superset  \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-to rate-from
 
             min                                 \ ned-lst1 sess0 inx-lst' rnd-inx nedx sess0 regc-to' regc-from' rate-min
             \ cr ." plan rate: " dup dec. cr

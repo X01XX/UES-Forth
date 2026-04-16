@@ -230,7 +230,7 @@
     cr ." session-test-domain-asymmetric-chaining: Ok" cr
 ;
 
-: session-test-change-to
+: session-test-change-to-plans
     \ Init session.
     session-new                                     \ ses
 
@@ -361,10 +361,10 @@
     over                                            \ ses regc-to regc-from regc-to
     #3 pick                                         \ ses regc-to regc-from regc-to sess
 
-    session-change-to-plans                         \ ses regc-to regc-from, planc-lst t | f
+    session-change-to-plans                         \ ses regc-to regc-from, plnc-lst t | f
     if
         cr ." Plan found: " dup .plancorr-list cr
-        dup plancorr-list-run-plans                 \ ses regc-to regc-from planc-lst' bool
+        dup plancorr-list-run-plans                 \ ses regc-to regc-from plnc-lst' bool
         if
             cr ." Plan suceeded" cr
         else
@@ -383,7 +383,7 @@
 
     session-deallocate
 
-    cr ." session-test-change-to: Ok" cr
+    cr ." session-test-change-to-plans: Ok" cr
 ;
 
 \ Test navigation around negative regions to get for 0 to 7.
@@ -470,8 +470,8 @@
     cr ." session-test-change-to-plans: Ok" cr
 ;
 
-: session-test-calc-path-fc
-    cr ." session-test-calc-path-fc: Start" cr
+: session-test-calc-path
+    cr ." session-test-calc-path: Start" cr
     \ Init session.
     session-new                                     \ ses
 
@@ -540,7 +540,7 @@
     session-find-pathstep-list-by-rate              \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst
     #6 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst ses
     \ cr .s cr
-    session-calc-path-fc                            \ dom0 ses regc-to' regc-from' | regc-seq' t | f
+    session-calc-path                               \ dom0 ses regc-to' regc-from' | regc-seq' t | f
     \ cr .s cr
     if                                              \ dom0 ses regc-to' regc-from' | regc-seq'
         cr ." Path: " dup .regioncorr-list-as-path-fc cr
@@ -574,7 +574,7 @@
 
     session-deallocate
 
-    cr ." session-test-calc-path-fc: Ok" cr
+    cr ." session-test-calc-path: Ok" cr
 ;
 
 : session-test-calc-path-bc
@@ -685,7 +685,7 @@
     session-test-domain-get-plan-fc
     session-test-domain-get-plan-bc
     session-test-domain-asymmetric-chaining
-    session-test-change-to
-    session-test-calc-path-fc
+    session-test-change-to-plans
+    \ session-test-calc-path
     \ session-test-calc-path-bc
 ;

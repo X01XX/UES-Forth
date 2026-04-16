@@ -6,7 +6,7 @@
 \ Struct fields
 0                                     constant action-header-disp               \ 16 bits, [0] Struct id, [1] Use count, [2] Instance id (8) Cull squares trigger (8)
                                                                                 \          [3] Calc corners trigger (8).
-action-header-disp              cell+ constant action-parent-domain-disp        \ Domain pointer.
+action-header-disp              cell+ constant action-parent-domain-disp        \ Domain pointer. Action does not change its use count.
 action-parent-domain-disp       cell+ constant action-squares-disp              \ A square-list
 action-squares-disp             cell+ constant action-incompatible-pairs-disp   \ A region-list
 action-incompatible-pairs-disp  cell+ constant action-logical-structure-disp    \ A region-list
