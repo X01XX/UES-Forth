@@ -2448,6 +2448,27 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     nip                                     \ stp
 ;
 
+: action-rule-valid-step? ( cngs4 reg-to reg-from rul act0 -- bool )
+    \ Check args.
+    assert-tos-is-action
+    assert-nos-is-rule
+    assert-3os-is-region
+    assert-4os-is-region
+    assert-5os-is-changes
+
+    \ Check changes.
+    #4 pick                         \ cngs4 reg-to reg-from rul act0 cngs4
+    #2 pick                         \ cngs4 reg-to reg-from rul act0 cngs4 rul
+    rule-intersects-changes?        \ cngs4 reg-to reg-from rul act0 bool
+    if
+        2drop 2drop drop
+        true
+    else
+        2drop 2drop drop
+        false
+    then
+;
+
 \ Return a planstep list, given reg-to, reg-from, and a rule list.
 \ Rule list is from a single group, with one, or two rules.
 : action-planstep-list-from-rule-list ( cngs4 reg-to reg-from rul-lst1 act0 -- plnstp-lst )
@@ -2471,19 +2492,24 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     1 =                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst bool
     if
-        \ Build plan-step with zero alternate rule.
+        \ Check if its a valid rule.
+        #5 pick #5 pick #5 pick         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from
+        #5 pick list-get-first-item     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from rul
+        #5 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from rul act0
+        action-rule-valid-step?         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | bool
 
-        \ Get from-to regions.
-        #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from
-        \ Get null alternate rule.
-        0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul
-        \ Get rule from list.
-        #5 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
-        \ Get action.
-        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0 act0
-        \ Make new planstep.
-        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst stp
-        over list-push-struct       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
+        if
+            \ Build plan-step with zero alternate rule.
+            #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from
+            0                           \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from alt-rul
+            #5 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from alt-rul rul0
+            #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from alt-rul rul0 act0
+            action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | stp'
+
+            \ Store planstep.
+            over list-push-struct       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
+        then
+
         \ Return
         2nip                        \ cngs4 reg-to act0 plnstp-lst
         2nip nip                    \ plnstp-lst
@@ -2492,61 +2518,56 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Must be two rules.
 
-    \ Get the first rule changes.
-    #5 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4
-    #3 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx rul-lst1
-    list-get-first-item             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0
-    rule-get-changes                \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0-cngs'
+    \ Check the first rule.
+    #5 pick #5 pick #5 pick         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from
+    #5 pick list-get-first-item     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from rul0
+    #5 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from rul0 act0
+    action-rule-valid-step?         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | bool
 
-    \ Check for non-null intersection.
-    2dup changes-intersection       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0-cngs' cngs-int'
-    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int'
-    dup                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int' cngs-int'
-    changes-not-null?               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int' bool
-    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 bool
-
-    if                              \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4
+    if                              \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
         \ Build planstep from first rule.
 
-        \ Get second rule from list.
-        #5 pick #5 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from
-        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from inx rul-lst1
-        list-get-second-item        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul
+        \ Get from and to,
+        #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from
+
+        \ Get second rule.
+        #4 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from rul-lst1
+        list-get-second-item        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from alt-rul
+
         \ Get first rule from list.
-        #6 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul rul0
+        #5 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from alt-rul rul0
+
         \ Get action.
-        #6 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 reg-to reg-from alt-rul rul0 act0
+        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from alt-rul rul0 act0
+
         \ Make and save new planstep.
-        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 stp
-        #2 pick list-push-struct    \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4
+        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | stp
+        over list-push-struct       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
     then
 
-    \ Get the second rule changes.
-    #3 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 inx plnstp-lst
-    list-get-second-item            \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul1
-    rule-get-changes                \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul1-cngs'
-
-    \ Check for non-null intersection.
-    2dup changes-intersection       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 rul0-cngs' cngs-int'
-    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs4 cngs-int'
-    nip                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs-int'
-    dup                             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs-int' cngs-ist'
-    changes-not-null?               \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst cngs-int' bool
-    swap changes-deallocate         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst bool
+    \ Check the second rule.
+    #5 pick #5 pick #5 pick         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from
+    #5 pick list-get-second-item    \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from rul2
+    #5 pick                         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | cngs4 reg-to reg-from rul2 act0
+    action-rule-valid-step?         \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | bool
 
     if
         \ Build plan-step for the second rule in the list.
 
         \ Get from-to regions.
-        #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from
-        \ Get first rule from list.
-        #4 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul
+        #4 pick #4 pick             \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from
+
+        \ Get first rule from list, as alt rule.
+        #4 pick list-get-first-item \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | reg-to reg-from alt-rul
+
         \ Get second rule from list.
-        #5 pick list-get-second-item    \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0
+        #5 pick list-get-second-item    \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul1
+
         \ Get action.
-        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul0 act0
+        #5 pick                     \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst reg-to reg-from alt-rul rul1 act0
+
         \ Make and save new planstep.
-        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst stp
+        action-make-planstep        \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst | stp
         over list-push-struct       \ cngs4 reg-to reg-from rul-lst1 act0 plnstp-lst
     then
 
@@ -2557,7 +2578,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 \ Return a list of possible plansteps, given to/from regions.
 \ Steps may, or may not, intersect the to/from regions.
-\ If they do not intersect, there are no restrictions.
 : action-calc-possible-steps ( cngs3 reg-to reg-from act0 -- plnstp-lst )
     \ Check args.
     assert-tos-is-action

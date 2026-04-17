@@ -44,7 +44,7 @@ vocabulary UES
 UES definitions
 
 decimal
-#2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
+\ #2 base !  \ Test all numbers GT 1, LT -1, have a base prefix.
 
 \ 0 value structinfo-list-store   \ Storage for a list containing info on all structs.
                                 \ Used for memory use print, memory leak checking,
