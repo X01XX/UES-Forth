@@ -504,6 +504,8 @@ session-points-disp                     cell+   constant session-previous-points
     session-mma mma-deallocate
 
     0 to current-session-store
+
+    structinfo-list-store structinfo-list-project-deallocated-xt execute
 ;
 
 : session-get-sample ( act2 dom1 sess0 -- sample )  \ Get a sample from an action in a domain.
@@ -1542,7 +1544,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a pathstep-list for changing state from a regioncorr to a goal regioncorr.
 \ Early steps will change a regioncorr to an intersection with another regioncorr,
 \ until the last regioncorr intersects the goal.
-: session-calc-path ( regc-to regc-from sess0 -- pthstp-lst t | f )
+: session-calc-path ( regc-to regc-from sess0 -- regc-seq t | f )
     \ Check args.
     assert-tos-is-session
     assert-nos-is-regioncorr
@@ -1570,11 +1572,12 @@ session-points-disp                     cell+   constant session-previous-points
     \ Get reg-to, restricted if needed.
     #3 pick over pathstep-list-intersection     \ regc-to regc-from sess0 | pthstp-lst, regc-to' t | f
     false? if
-        cr ." session-calc-path: problem: intersection failed?" cr
-        cr ." regc-to: " #3 pick .regioncorr space ." pthstp-lst: " dup .pathstep-list cr
+        \ cr ." session-calc-path: problem: intersection failed?" cr
+        \ cr ." regc-to: " #3 pick .regioncorr space ." pthstp-lst: " dup .pathstep-list cr
         2drop
         2drop
         false
+        \ cr ." session-calc-path: exit 1, false" cr
         exit
     then
 
@@ -1583,44 +1586,110 @@ session-points-disp                     cell+   constant session-previous-points
     \ and intersecting the current from regioncorr, or being reachable without additional
     \ needed changes.  Needing additional changes to reach a step indicates it would be premature.
                                                     \ regc-to regc-from sess0 | pthstp-lst regc-to'
-    #3 0 do
-        #3                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' depth
-        over                                        \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to'
-        #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to' regc-from
-        #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to' regc-from pthstp-lst
-        #6 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' depth regc-to' regc-from pthstp-lst sess0
+    \ Init results store.
+    list-new                                        \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst'
+    #6 0 do
+        #3                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth
+        #2 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to'
+        #6 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to' regc-from
+        #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to' regc-from pthstp-lst
+        #7 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to' regc-from pthstp-lst sess0
 
         \ Try forward chaining.
-        session-calc-path-fc                        \ regc-to regc-from sess0 | pthstp-lst regc-to', pthstp-lst2 t | f
-        if                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' pthstp-lst2
-            swap regioncorr-deallocate              \ regc-to regc-from sess0 | pthstp-lst pthstp-lst2
-            2nip                                    \ regc-to | pthstp-lst pthstp-lst2
-            nip nip                                 \ pthstp-lst2
-            true
-            unloop
-            exit
+        session-calc-path-fc                        \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst', pthstp-lst2' t | f
+        if                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' pthstp-lst2'
+            over list-push-struct                   \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst'
         then
+
+                                                    \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst'
+        \ Try backward chaining.
+\       #3                                          \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth
+\       #2 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to'
+\       #6 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to regc-from
+\       #5 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to regc-from pthstp-lst
+\       #7 pick                                     \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst' depth regc-to' regc-from pthstp-lst sess0
+\       session-calc-path-bc                        \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst', pthstp-lst2 t | f
+\       if
+\           over list-push-struct                   \ regc-to regc-from sess0 | pthstp-lst regc-to' rslts-lst'
+\       then
     loop
 
-                                                \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-from'
-    \ Try backward chaining.
-\   #3                                          \ regc-to regc-from sess0 | pthstp-lst depth
-\   #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to
-\   #4 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from
-\   #3 pick                                     \ regc-to regc-from sess0 | pthstp-lst depth regc-to regc-from, pthstp-lst2 t | f
-\   session-calc-path-bc                        \ regc-to regc-from sess0 | pthstp-lst, pthstp-lst2 t | f
-\   if
-\       2nip                                    \ regc-to pthstp-lst pthstp-lst2
-\       nip nip                                 \ pthstp-lst
-\       true
-\       exit
-\   then
+    \ Clean up.
+    swap regioncorr-deallocate                      \ regc-to regc-from sess0 | pthstp-lst rslts-lst'
+    2nip                                            \ regc-to pthstp-lst rslts-lst'
+    nip nip                                         \ rslts-lst'
 
-                                                \ regc-to regc-from sess0 | pthstp-lst regc-to'
-    regioncorr-deallocate                       \ regc-to regc-from sess0 | pthstp-lst
-    2drop                                       \ regc-to regc-from
-    2drop
-    false
+    \ Check if list is empty.
+    dup list-is-empty?
+    if
+        list-deallocate                             \
+        false
+        \ cr ." session-calc-path: exit 2, false" cr
+        exit
+    then
+
+    \ Get minimum option length.
+    #9999                                           \ rslts-lst' min-len
+    over list-get-links                             \ rslts-lst' min-len rslts-lnk
+
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ rslts-lst' min-len rslts-lnk pthslstx
+        list-get-length                             \ rslts-lst' min-len rslts-lnk lenx
+        rot                                         \ rslts-lst' rslts-lnk lenx min-len
+        min                                         \ rslts-lst' rslts-lnk min-len-nxt
+        swap                                        \ rslts-lst' min-len-nxt rslts-lnk
+
+        link-get-next
+    repeat
+                                                    \ rslts-lst' min-len
+    \ Init minimum option length list.
+    list-new                                        \ rslts-lst' min-len min-lst'
+
+    \ Load minimum length options.
+    #2 pick list-get-links                          \ rslts-lst' min-len min-lst' rslts-lnk
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ rslts-lst' min-len min-lst' rslts-lnk pthstp-lstx
+        list-get-length                             \ rslts-lst' min-len min-lst' rslts-lnk lenx
+        #3 pick                                     \ rslts-lst' min-len min-lst' rslts-lnk lenx min-len
+        = if
+            \ Store option.
+            dup link-get-data                       \ rslts-lst' min-len min-lst' rslts-lnk pthstp-lstx
+            #2 pick                                 \ rslts-lst' min-len min-lst' rslts-lnk pthstp-lstx min-lst'
+            list-push-end-struct                    \ rslts-lst' min-len min-lst' rslts-lnk
+        then
+
+        link-get-next
+    repeat
+
+    \ Clean up                                      \ rslts-lst' min-len min-lst'
+    nip                                             \ rslts-lst' min-lst'
+    swap                                            \ min-lst' rslts-lst'
+
+    [ ' regioncorr-list-deallocate ] literal        \ min-lst' rslts-lst' xt
+    over                                            \ min-lst' rslts-lst' xt rslts-lst'
+    list-apply                                      \ min-lst' rslts-lst'
+    list-deallocate                                 \ min-lst'
+
+    \ Choose one option.
+    dup list-get-length                             \ min-lst' len
+    random                                          \ min-lst' inx
+    over                                            \ min-lst' inx min-lst'
+    list-remove-item-struct                         \ min-lst' pthstp-lstx
+
+    \ Clean up.
+    swap                                            \ pthstp-lstx min-lst'
+    [ ' regioncorr-list-deallocate ] literal        \ pthstp-lstx min-lst' xt
+    over                                            \ pthstp-lstx min-lst' xt min-lst'
+    list-apply                                      \ pthstp-lstx min-lst'
+    list-deallocate                                 \ pthlst-lstx
+
+    \ Return.
+    true
+
     \ cr ." session-calc-path: end: "
 ;
 

@@ -119,6 +119,7 @@
     \ Check args.
     assert-tos-is-group-list
     assert-nos-is-square
+    \ cr ." group-list-add-square: start" cr
 
     list-get-links              \ sqr1 link
     begin
@@ -140,6 +141,7 @@
     repeat
                                     \ sqr1
     drop
+    \ cr ." group-list-add-square: end" cr
 ;
 
 \  Have appropriate groups check a changed square.
@@ -148,6 +150,7 @@
     \ Check args.
     assert-tos-is-group-list
     assert-nos-is-square
+    \ cr ." group-list-check-square: start" cr
 
     list-get-links              \ sqr1 link
     begin

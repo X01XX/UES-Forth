@@ -629,6 +629,39 @@ list-header-disp    cell+   constant list-links-disp
             dup link-get-next       \ lst0 lst-link lst-link-next
             swap                    \ lst0 lst-link-next lst-link
 
+            \ Process link.
+            link-deallocate         \ lst0 lst-link-next
+        repeat
+                                    \ lst0
+        \ Clear fields.
+        0 over _list-set-length
+        0 over _list-set-links
+
+        \ Deallocate list instance.
+        list-mma mma-deallocate
+    else
+        struct-dec-use-count
+    then
+;
+
+: list-deallocate-recursive ( lst0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
+    dup struct-get-use-count        \ lst0 uc
+
+    dup 0 < abort" invalid use count"
+
+    #2 <                            \ lst0 bool
+    if
+        \ Deallocate links.
+        dup list-get-links          \ lst0 lst-link
+        begin
+            ?dup
+        while
+            dup link-get-next       \ lst0 lst-link lst-link-next
+            swap                    \ lst0 lst-link-next lst-link
+
             \ Check for sub-list.
             dup link-get-data       \ lst0 lst-link-next lst-link link-data
             is-allocated-list       \ lst0 lst-link-next lst-link bool
@@ -808,9 +841,9 @@ list-header-disp    cell+   constant list-links-disp
     drop nip                    \ list-ret
 ;
 
-\ Apply a function to each item in a list.
+\ Apply a function to each item in a list, and sub-lists.
 \ xt signature is ( link-data -- )
-: list-apply ( xt list0 -- )
+: list-apply-recursive ( xt list0 -- )
     \ Check arg.
     assert-tos-is-list
 
@@ -830,6 +863,26 @@ list-header-disp    cell+   constant list-links-disp
             #2 pick             \ xt link0 data0 xt
             execute             \ xt link0
         then
+
+        link-get-next           \ xt link-next
+    repeat
+                                \ xt
+    drop
+;
+
+\ Apply a function to each item in a list.
+\ xt signature is ( link-data -- )
+: list-apply ( xt list0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-get-links              \ xt links0
+    begin
+        ?dup
+    while
+        dup link-get-data       \ xt link0 data0
+        #2 pick                 \ xt link0 data0 xt
+        execute                 \ xt link0
 
         link-get-next           \ xt link-next
     repeat
@@ -1137,7 +1190,7 @@ list-header-disp    cell+   constant list-links-disp
 
         \ Swap tmp-old-lst with tmp-new-lst
         rot                         \ link lst-next tmp-lst
-        list-deallocate             \ link lst-next
+        list-deallocate-recursive   \ link lst-next
         swap                        \ lst-next link
 
         link-get-next

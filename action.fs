@@ -912,6 +912,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : action-calc-corners ( act0 -- )
     \ Check arg.
     assert-tos-is-action
+    \ cr ." action-calc-corners: start" cr
 \    cr
 \    ." Dom: " current-domain-id-gbl execute #3 dec.r
 \    space ." Act: " dup action-get-inst-id #3 dec.r
@@ -935,6 +936,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             space ." action-calc-corners: too few defining regions"
             cr
         then
+        \ cr ." action-calc-corners: end 1" cr
         exit
     then
 
@@ -1021,7 +1023,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     repeat
                                             \ act0 crn-lol' max
     \ cr ." action-calc-corners: max number corners in one list: crmax: " dup . cr
-
     1 =
     \ cr ." action-calc-corners: number corners: " cr
     if                                      \ act0 crn-lol'
@@ -1094,6 +1095,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
             drop                                \ act0 crn-lol' crn-lol2'
             corner-lol-deallocate               \ act0 crn-lol'
         then
+
         \ Avoid too many corner permutations.
                                                 \ act0 crn-lol'
         dup list-number-permutations            \ act0 crn-lol' u
@@ -1110,6 +1112,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
                                                 \ act0
     drop
+    \ cr ." action-calc-corners: end 2" cr
 ;
 
 \ Return squares in a given region list.
@@ -1240,6 +1243,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         \ cr ." _action-check-square: list is empty" cr
         list-deallocate
         drop
+        \ cr ." _action-check-square: exit 1" cr
         exit
     then
 
@@ -1599,10 +1603,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check args.
     assert-tos-is-action
     assert-nos-is-sample
-
+\    cr ." action-add-sample: start" cr
 \    cr
-\    ." Dom: " current-domain-id #3 dec.r
-\    space ." Act: " dup action-get-inst-id #3 dec.r
+\    ." Dom: " current-domain-idsgbl #3 dec.r
+\    space ." Act: " dup current-action-id-gbl #3 dec.r
 \    space ." adding sample: " over .sample
 \    cr
 
@@ -2586,7 +2590,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-4os-is-changes
     #2 pick #2 pick                                 \ | reg-to reg-from
     swap region-superset?                           \ | bool
-    abort" action-calc-plansteps-by-changes: region subset?"    \ |
+    abort" action-calc-possible-steps: region subset?"    \ |
 
     \ cr ." action-calc-plansteps-by-changes: Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
     \ space ." Act: " dup action-get-inst-id #3 dec.r

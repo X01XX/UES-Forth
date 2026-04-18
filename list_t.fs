@@ -28,13 +28,14 @@
     \ Check results.
     dup list-get-length #4 <> abort" List len not 4?"
 
-    list-deallocate
-    list-deallocate
+    list-deallocate-recursive
+    list-deallocate-recursive
 
     cr ." list-test-one-of-each: Ok" cr
 ;
 
 : list-tests
     list-test-one-of-each
+    cr ." at 1" cr
 ;
 

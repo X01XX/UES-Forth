@@ -75,7 +75,7 @@
     dup struct-get-use-count                        \ lst0 uc
     #2 < if
         \ Deallocate regc instances in the list.
-        [ ' regioncorr-deallocate ] literal over    \ lst0 xt lst0
+        [ ' regioncorr-list-deallocate ] literal over    \ lst0 xt lst0
         list-apply                                  \ lst0
 
         \ Deallocate the list.

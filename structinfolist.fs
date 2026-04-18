@@ -210,56 +210,62 @@
     assert-tos-is-structinfo-list
     \ cr ." structinfo-list-project-deallocated" cr
 
-    dup list-get-links                      \ snf-lst0 snf-link
+    \ Init error flag.
+    0                                           \ snf-lst0 flg
+    over list-get-links                         \ snf-lst0 flg snf-link
 
     begin
         ?dup
     while
-        dup link-get-data                   \ snf-lst0 snf-link snfx
-        dup structinfo-get-mma             \ snf-lst0 snf-link snfx snf-mma
-        swap structinfo-get-inst-id        \ snf-lst0 snf-link snf-mma snf-id
+        dup link-get-data                       \ snf-lst0 flg snf-link snfx
+        dup structinfo-get-mma                  \ snf-lst0 flg snf-link snfx snf-mma
+        swap structinfo-get-inst-id             \ snf-lst0 flg snf-link snf-mma snf-id
         case
             \ Handle lists, except the list defining structinfo-list-store.
             #17971  of
-                        dup mma-in-use      \ snf-lst0 snf-link snf-mma in-use
+                        dup mma-in-use          \ snf-lst0 flg snf-link snf-mma in-use
                         1 <> if
                             cr ." List instances not fully deallocated" cr
-                            .mma-in-use-except
+                            .mma-in-use-except  \ snf-lst0 flg snf-link
+                            nip true swap
                         else
                             drop
                         then
                     endof
             \ Handle links, except the links in structinfo-list-store.
             #17137  of
-                        dup mma-in-use          \ snf-lst0 snf-link snf-mma in-use
-                        #3 pick                 \ snf-lst0 snf-link snf-mma in-use snf-lst0
-                        list-get-length         \ snf-lst0 snf-link snf-mma in-use lst-len
+                        dup mma-in-use          \ snf-lst0 flg snf-link snf-mma in-use
+                        #4 pick                 \ snf-lst0 flg snf-link snf-mma in-use snf-lst0
+                        list-get-length         \ snf-lst0 flg snf-link snf-mma in-use lst-len
                         <> if
                             cr ." Link instances not fully deallocated" cr
                             .mma-in-use-except
+                            nip true swap
                         else
                             drop
                         then
                     endof
             \ Handle structinfo, except the instances in structinfo-list-store.
             #53731  of
-                        dup mma-in-use          \ snf-lst0 snf-link snf-mma in-use
-                        #3 pick                 \ snf-lst0 snf-link snf-mma in-use snf-lst0
-                        list-get-length         \ snf-lst0 snf-link snf-mma in-use lst-len
+                        dup mma-in-use          \ snf-lst0 flg snf-link snf-mma in-use
+                        #4 pick                 \ snf-lst0 flg snf-link snf-mma in-use snf-lst0
+                        list-get-length         \ snf-lst0 flg snf-link snf-mma in-use lst-len
                         <> if
                             cr ." structinfo instances not fully deallocated" cr
                             .mma-in-use-except
+                            nip true swap
                         else
                             drop
                         then
                     endof
             \ Handle other structs.
-                                            \ snf-lst0 snf-link snf-mma snf-id
-            over mma-in-use                 \ snf-lst0 snf-link snf-mma snf-id u
+                                            \ snf-lst0 flg snf-link snf-mma snf-id
+            over mma-in-use                 \ snf-lst0 flg snf-link snf-mma snf-id u
             0<> if
                 #2 pick link-get-data
                 structinfo-get-name cr type space ." instances not fully deallocated" cr
                 swap .mma-in-use
+                rot drop true -rot
             else
                 drop
             then
@@ -267,7 +273,8 @@
 
         link-get-next
     repeat
-                                    \ snf-lst
+                                    \ snf-lst flg
+    abort" errors found"
 
     drop
     assert-forth-stack-empty

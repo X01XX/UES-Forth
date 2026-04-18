@@ -264,7 +264,7 @@
         repeat
 
         \ Deallocate the list.
-        list-deallocate                         \
+        list-deallocate-recursive               \
     else
         struct-dec-use-count
     then

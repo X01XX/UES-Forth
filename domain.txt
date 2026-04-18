@@ -589,6 +589,17 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-4os-is-region
     assert-5os-is-changes
 
+    \ Check changes.
+\    #4 pick                         \ cngs4 reg-to reg-from plnstp1 dom0 cngs4
+\    #2 pick planstep-get-rule       \ cngs4 reg-to reg-from plnstp1 dom0 cngs4 rul
+\    rule-intersects-changes?        \ cngs4 reg-to reg-from plnstp1 dom0 bool
+\    if
+\    else
+\        2drop 2drop drop
+\        false
+\        exit
+\    then
+
     \ Check if rule initial region includes reg-from.
     over planstep-get-rule          \ cngs4 reg-to reg-from plnstp1 dom0 rul
     rule-calc-initial-region        \ cngs4 reg-to reg-from plnstp1 dom0 rul-i'
@@ -990,6 +1001,17 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-4os-is-region
     assert-5os-is-changes
 
+    \ Check changes.
+\    #4 pick                         \ cngs4 reg-to reg-from plnstp1 dom0 cngs4
+\    #2 pick planstep-get-rule       \ cngs4 reg-to reg-from plnstp1 dom0 cngs4 rul
+\    rule-intersects-changes?        \ cngs4 reg-to reg-from plnstp1 dom0 bool
+\    if
+\    else
+\        2drop 2drop drop
+\        false
+\        exit
+\    then
+
     \ Check if rule result region intersects reg-to.
     over planstep-get-rule          \ cngs4 reg-to reg-from plnstp1 dom0 rul
     rule-calc-result-region         \ cngs4 reg-to reg-from plnstp1 dom0 rul-r'
@@ -1000,7 +1022,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     if
         2drop 2drop drop
         true
-        \ cr ." domain-rule-valid-previous-step?: found direct planstep." cr
+        cr ." domain-rule-valid-previous-step?: found direct planstep." cr
         exit
     then
 
@@ -1027,7 +1049,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     else
         2drop 2drop drop
         true
-        \ cr ." domain-rule-valid-previous-step?: found indirect planstep." cr
+        cr ." domain-rule-valid-previous-step?: found indirect planstep." cr
     then
 ;
 
@@ -1051,74 +1073,63 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         exit
     then
 
-    #2 pick #2 pick #2 pick                 \ reg-to reg-from dom0 | reg-to reg-from dom0
-    domain-calc-possible-steps              \ reg-to reg-from dom0 | stp-lst t | f
+    domain-calc-possible-steps              \ stp-lst t | f
 
     \ Check for no steps.
     false?
     if
-        2drop drop
         false
         exit
     then
 
-    \ Find valid next steps.                \ reg-to reg-from dom0 | stp-lst'
-
-    \ Get changes needed.
-    #3 pick #3 pick                         \ reg-to reg-from dom0 | stp-lst' reg-to reg-from
-    changes-new-region-to-region            \ reg-to reg-from dom0 | stp-lst' cngs'
-
-    \ Init list for valid steps.
-    list-new                                \ reg-to reg-from dom0 | spt-lst' cngs' vld-stps'
-
-    \ Prep for loop.
-    #2 pick list-get-links                  \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk
-
+    \ Generate a list of each different number of unwanted changes in steps.
+    list-new                                \ stp-lst lst-unw
+    over list-get-links                     \ stp-lst lst-unw link
     begin
         ?dup
     while
-        #2 pick                             \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk | cngs'
-        #7 pick #7 pick                     \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk | cngs' reg-to reg-from
-        #3 pick link-get-data               \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk | cngs' reg-to reg-from plnstpx
-        #8 pick                             \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk | cngs' reg-to reg-from plnstpx dom0
-        domain-rule-valid-previous-step?    \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk | bool
-        if
-            dup link-get-data               \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk | plnstpx
-            #2 pick                         \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk | plnstpx val-stps'
-            list-push-struct                \ reg-to reg-from dom0 | spt-lst' cngs' val-stps' stp-lnk
+        dup link-get-data                       \ stp-lst lst-unw link stpx
+        planstep-get-number-unwanted-changes    \ stp-lst lst-unw link u-unw
+
+        \ Check if the number is already in the list.
+        [ ' = ] literal                     \ stp-lst lst-unw link u-uw xt
+        over                                \ stp-lst lst-unw link u-uw xt u-unw
+        #4 pick                             \ stp-lst lst-unw link u-uw xt u-unw lst-unw
+        list-member                         \ stp-lst lst-unw link u-uw bool
+        if                                  \ stp-lst lst-unw link u-uw
+            drop                            \ stp-lst lst-unw link
+        else                                \ stp-lst lst-unw link u-uw
+            #2 pick                         \ stp-lst lst-unw link u-uw  lst-unw
+            list-push                       \ stp-lst lst-unw link
         then
 
-        link-get-next
+        link-get-next                       \ stp-lst lst-unw link
     repeat
 
-    \ Clean up.                             \ reg-to reg-from dom0 | spt-lst' cngs' val-stps'
-    swap changes-deallocate                 \ reg-to reg-from dom0 | spt-lst' val-stps'
-    swap planstep-list-deallocate           \ reg-to reg-from dom0 | val-stps'
+    \ Sort the list of numbers, ascending   \ stp-lst lst-unw
+    [ ' > ] literal over list-sort          \ stp-lst lst-unw
 
-   \ Check if any valid next steps found.
-    dup list-is-empty?
-    if
-        list-deallocate
-        2drop drop
-        false
-        exit
-    then
+    \ Get first, lowest, number.
+    dup list-get-first-item                 \ stp-lst lst-unw u-unw
+    swap list-deallocate                    \ stp-lst u-unw
+
+    \ Get steps with lowest number unwanted changes.
+    over planstep-list-match-number-unwanted-changes    \ stp-lst stp-lst2
+    swap planstep-list-deallocate                       \ stp-lst2
 
     \ Pick a step.
-    dup list-get-length                     \ reg-to reg-from dom0 | stp-lst2 len
-    random                                  \ reg-to reg-from dom0 | stp-lst2 inx
-    over                                    \ reg-to reg-from dom0 | stp-lst2 inx stp-lst
+    dup list-get-length             \ stp-lst2 len
+    random                          \ stp-lst2 inx
+    over                            \ stp-lst2 inx stp-lst
 
     \ Extract step.
-    planstep-list-remove-item               \ reg-to reg-from dom0 | stp-lst2 stpx
+    planstep-list-remove-item           \ stp-lst2 stpx
 
-    \ Clean up.                             \ reg-to reg-from dom0 | stp-lst2 stpx
-    swap planstep-list-deallocate           \ reg-to reg-from dom0 | stpx
+    \ Clean up.                     \ stp-lst2 stpx
+    swap planstep-list-deallocate   \ stpx
     \ cr ." domain-calc-step-bc: returning: " dup .step cr
 
     \ Return.
-    2nip                                    \ dom0 | stpx
-    nip                                     \ stpx
     true
 ;
 
@@ -1653,9 +1664,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             unloop
             exit
         then
-    loop
 
-    #3 0 do
         3dup domain-asymmetric-chaining      \ plan t | f
         if
             \ cr ." plan found (asm) " dup .plan cr

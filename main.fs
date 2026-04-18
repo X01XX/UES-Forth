@@ -156,7 +156,7 @@ include pathsteplist_t.fs
 cr ." main.fs"
 
 \ Init array-stacks.
-#3500 link-mma-init
+#6500 link-mma-init
 #1902 list-mma-init
 list-new to structinfo-list-store
 
@@ -335,7 +335,7 @@ cr
 
         \ Print header.
         cr ." ***************************"
-        cr ." Step: " step-num .
+        cr ." Step: " step-num dec.
         space ." Current state: "
         dup .session-current-states                     \ sess
 

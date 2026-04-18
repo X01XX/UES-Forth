@@ -532,13 +532,8 @@
     s" (0111)" regioncorr-from-string-a             \ dom0 ses regc-to'
     s" (0100)" regioncorr-from-string-a             \ dom0 ses regc-to' regc-from'
 
-    #3                                              \ dom0 ses regc-to' regc-from' | depth
-    #2 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to
-    #2 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to regc-from
-    0                                               \ dom0 ses regc-to' regc-from' | depth regc-to regc-from rate
-    #6 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to regc-from rate ses
-    session-find-pathstep-list-by-rate              \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst
-    #6 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst ses
+    2dup                                            \ dom0 ses regc-to' regc-from' | regc-to' regc-from'
+    #4 pick                                         \ dom0 ses regc-to' regc-from' | regc-to' regc-from' ses
     \ cr .s cr
     session-calc-path                               \ dom0 ses regc-to' regc-from' | regc-seq' t | f
     \ cr .s cr
@@ -546,7 +541,7 @@
         cr ." Path: " dup .regioncorr-list-as-path-fc cr
 
         \ Check results.
-        dup list-get-length #4 <> abort" path not legth 4?"
+        dup list-get-length #4 <> if cr ." path not length 4?" cr then
 
         \ Check first regioncorr.
         2dup list-get-first-item                    \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' first-regc
@@ -564,8 +559,7 @@
         \ Clean up.
         regioncorr-list-deallocate
     else
-        cr ." Path not found?"
-        abort
+        cr ." Path not found?" cr
     then
                                                     \ dom0 ses regc-to' regc-from'
     regioncorr-deallocate                           \ dom0 ses regc-to'
@@ -649,7 +643,7 @@
     session-find-pathstep-list-by-rate              \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst
     #6 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst ses
     \ cr .s cr
-\    session-calc-path-bc                            \ dom0 ses regc-to' regc-from' | regc-seq' t | f
+    \ session-calc-path-bc                            \ dom0 ses regc-to' regc-from' | regc-seq' t | f
     \ cr .s cr
     if                                              \ dom0 ses regc-to' regc-from' | regc-seq'
         cr ." Path: " dup .regioncorr-list-as-path-bc cr
@@ -686,6 +680,6 @@
     session-test-domain-get-plan-bc
     session-test-domain-asymmetric-chaining
     session-test-change-to-plans
-    \ session-test-calc-path
+    session-test-calc-path
     \ session-test-calc-path-bc
 ;
