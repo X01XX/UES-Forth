@@ -37,9 +37,9 @@ will be in only one region, a defining region, else it will not be a valid corne
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
 
 One of a region's corners may be better to keep than another, to be part of a corner cluster.
-Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor cannot be in more than one region. 
-After corners are established and tested, some data accumulated in the process can be deleted.
+Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor cannot be in more than one region.
 
+After corners are established and tested, some data accumulated in the process can be deleted.
 The corners are the most data-efficent way to describe the regions, based on my experience.
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
 
