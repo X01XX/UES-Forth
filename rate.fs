@@ -119,9 +119,10 @@
 
     ." ("
     dup rate-get-positive   \ rt0 u
-    .                       \ rt0
+    dec.                    \ rt0
 
     rate-get-negative       \ n
+
     dup abs 0               \ n u 0
     <# #S rot sign #> type  \
     ." )"

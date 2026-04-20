@@ -231,7 +231,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     assert-nos-is-changes
 
     pathstep-get-changes            \ cngsc1 s-cngsc
-    changescorr-intersect           \ flag
+    changescorr-intersect?          \ flag
 ;
 
 \ Return true if two pathsteps can be linked pstp1 result region to pstp0 initial region.
@@ -368,4 +368,14 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
     pathstep-get-rules                  \ regc2 rulc
     rulecorr-apply-to-regioncorr-bc     \ regc-rslt t | f
+;
+
+\ Return true if a pathstep's changescorr intersect a given changescorr.
+: pathstep-intersect-changes? ( cngs1 pthstp0 -- bool )
+    \ Check args.
+    assert-tos-is-pathstep
+    assert-nos-is-changescorr
+
+    pathstep-get-changes        \ cngs1 stp-cngs
+    changescorr-intersect?      \ bool
 ;

@@ -702,6 +702,10 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         exit
     then
 
+    \ Find least-bad options
+    dup planstep-list-filter-min-number-unwanted-changes
+    swap planstep-list-deallocate
+
     \ Pick a step.
     dup list-get-length                     \ reg-to reg-from dom0 | val-stps' len
     random                                  \ reg-to reg-from dom0 | val-stps' inx
@@ -1104,6 +1108,10 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         exit
     then
 
+    \ Find least-bad options
+    dup planstep-list-filter-min-number-unwanted-changes
+    swap planstep-list-deallocate
+
     \ Pick a step.
     dup list-get-length                     \ reg-to reg-from dom0 | stp-lst2 len
     random                                  \ reg-to reg-from dom0 | stp-lst2 inx
@@ -1367,7 +1375,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Try forward and backward chaining to make a plan
 \ for going from an initial region to a non-intersecting result region.
-: domain-get-plan-fb ( reg-to reg-from dom0 -- plan t | f )
+: domain-get-plan-fb ( reg-to reg-from dom0 -domain-get-plan-bc- plan t | f )
     \ Check args.
     assert-tos-is-domain
     assert-nos-is-region

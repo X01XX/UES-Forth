@@ -156,3 +156,14 @@
     [ ' struct-inc-use-count ] literal  \ ret-lst xt
     over list-apply                     \ ret-lst
 ;
+
+\ Return a list with elements reversed.
+: list-reverse-struct ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-reverse                        \ ret-list
+
+    [ ' struct-inc-use-count ] literal  \ ret-lst xt
+    over list-apply                     \ ret-lst
+;

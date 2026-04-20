@@ -156,7 +156,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 ;
 
 \ Return true if at least one bit set-to-1 is the same between two changescorr.
-: changescorr-intersect ( cngsc1 cngsc0 -- bool )
+: changescorr-intersect? ( cngsc1 cngsc0 -- bool )
     \ Check args.
     assert-tos-is-changescorr
     assert-nos-is-changescorr

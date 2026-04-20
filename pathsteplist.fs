@@ -163,7 +163,7 @@
         dup pathstep-get-changes    \ regc-to cngsc-needed' regc-from ret-lst pthstp-lst-link pthstpx pthstp-cngsc
         #5 pick                     \ regc-to cngsc-needed' regc-from ret-lst pthstp-lst-link pthstpx pthstp-cngsc cngsc-needed
         cr ." compare changes: path: " over .changescorr space ." needed: " dup .changescorr space ." to " #2 pick .pathstep cr
-        changescorr-intersect       \ regc-to cngsc-needed' regc-from ret-lst pthstp-lst-link pthstpx bool
+        changescorr-intersect?      \ regc-to cngsc-needed' regc-from ret-lst pthstp-lst-link pthstpx bool
 
         if
             dup pathstep-get-initial-regions    \ regc-to cngsc-needed' regc-from ret-lst pthstp-lst-link pthstpx pthstp-i-regsc
@@ -275,34 +275,6 @@
 
     list-remove-item        \ pthstpx
     dup struct-dec-use-count
-;
-
-: pathstep-list-remove-eq-initial-subset-result ( pthstp1 pthstp-lst0 -- bool )
-    \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-pathstep
-
-    [ ' pathstep-eq-initial-subset-result? ] literal    \ pthstp1 pthstp-lst0  xt
-    -rot                                                \ xt pthstp1 pthstp-lst0
-
-    list-remove                                         \ pthstp2' t | f
-    if
-        pathstep-deallocate
-        true
-    else
-        false
-    then
-;
-
-: pathstep-list-any-eq-initial-superset-result? ( pthstp1 pthstp-lst0 -- bool )
-    \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-pathstep
-
-    [ ' pathstep-eq-initial-superset-result? ] literal  \ pthstp1 pthstp-lst0  xt
-    -rot                                                \ xt pthstp1 pthstp-lst0
-
-    list-member                                         \ pthstp2 t | f
 ;
 
 : pathstep-list-any-eq-initial-subset-result? ( pthstp1 pthstp-lst0 -- bool )
@@ -519,6 +491,13 @@
     3drop                                   \
 ;
 
+\ Return a list of pathsteps that could be a next step from the current regions
+\ to the goal regions.
+\ 1) They contain at least one needed change from start to goal regions and
+\ 2) Pathstep initial regions are a superset of the start regions, or
+\    moving from the start regions to the pathstep's initial regions does not require
+\    changes needed to get from the start regions to the goal regions,
+\    which would make use of the step premature.
 : pathstep-list-possible-next-steps ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst t | f )
     \ Check args.
     assert-tos-is-pathstep-list
@@ -542,65 +521,63 @@
     begin
         ?dup
     while
-        \ Compare regc-from to pathstep initial regions.
-        #4 pick                                 \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1
-        over link-get-data                      \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 pthstpx
-        pathstep-get-initial-regions            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 regc-stp
-        regioncorr-superset?                    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+        \ Check for needed changes.
+        #2 pick                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-ned'
+        over link-get-data                  \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-ned' pthstpx
+        pathstep-intersect-changes?         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
         if
-            \ Check if regc-from is a subset of pathstep result regions.
-            #4 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1
-            over link-get-data              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 pthstpx
-            pathstep-get-result-regions     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 regc-stp-rslt
-            regioncorr-superset?            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+            \ Compare regc-from to pathstep initial regions.
+            #4 pick                                 \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1
+            over link-get-data                      \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 pthstpx
+            pathstep-get-initial-regions            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 regc-stp
+            regioncorr-superset?                    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
             if
-            else
-                \ Result regions do not intersect, check for needed changes.
-                dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
-                pathstep-get-changes        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstp-cngsc
-                #3 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstp-cngsc cngsc-ned'
-                changescorr-intersection    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-int'
-                dup changescorr-null?       \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-int' bool
-                swap changescorr-deallocate \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+                \ Check if regc-from is a subset of pathstep result regions.
+                #4 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1
+                over link-get-data              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 pthstpx
+                pathstep-get-result-regions     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-from1 regc-stp-rslt
+                regioncorr-superset?            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
                 if
                 else
+                    \ Result regions do not intersect.
                     \ Add pathstep.
                     dup link-get-data       \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
                     #2 pick                 \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
                     list-push-struct        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
                 then
-            then
-        else
-            dup link-get-data                   \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
-
-            \ Check if pathstep contains needed changes.
-            pathstep-get-changes                \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs
-            #3 pick                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs cngs-ned'
-            changescorr-intersection            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs-ned'
-            dup changescorr-null?               \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs-ned' bool
-            swap changescorr-deallocate         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
-            if
             else
-                \ Get changes needed from regc-from to pathstep initial regions.
-                dup link-get-data               \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
-                pathstep-get-initial-regions    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-initial
-                #5 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-initial regc-from1
-                changescorr-new-regc-to-regc    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1'
+                dup link-get-data                   \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
 
-                \ Check if any needed changes are required.
-                dup                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1' cngsc-from1'
-                #4 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1' cngsc-from1' cngsc-ned'
-                changescorr-intersection        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1' cngsc-from-int'
-                swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from-int'
-                dup changescorr-null?           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from-int' bool
-                swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+                \ Check if pathstep contains needed changes.
+                pathstep-get-changes                \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs
+                #3 pick                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs cngs-ned'
+                changescorr-intersection            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs-ned'
+                dup changescorr-null?               \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-cngs-ned' bool
+                swap changescorr-deallocate         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
                 if
-                    \ No needed changes are required to get to the pathstep initial regions, save it
-                    dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
-                    #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
-                    list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
+                else
+                    \ Get changes needed from regc-from to pathstep initial regions.
+                    dup link-get-data               \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
+                    pathstep-get-initial-regions    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-initial
+                    #5 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx-initial regc-from1
+                    changescorr-new-regc-to-regc    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1'
+
+                    \ Check if any needed changes are required.
+                    dup                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1' cngsc-from1'
+                    #4 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1' cngsc-from1' cngsc-ned'
+                    changescorr-intersection        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from1' cngsc-from-int'
+                    swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from-int'
+                    dup changescorr-null?           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-from-int' bool
+                    swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+                    if
+                        \ No needed changes are required to get to the pathstep initial regions, save it
+                        dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
+                        #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
+                        list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
+                    then
                 then
             then
+
         then
 
         link-get-next
@@ -622,23 +599,31 @@
         list-deallocate
         false
     else
+        \ Find least-bad options.
+        dup pathstep-list-filter-min-number-unwanted-changes    \ ret-lst ret-lst2
+        swap pathstep-list-deallocate                           \ ret-lst2
         true
     then
     \ cr ." pathstep-list-possible-next-steps: end: " .stack-gbl cr
 ;
 
-\ Return a list of pathsteps that have,
-\ result regions that are superset of regc-from,
-\ at least one needed change.
-: pathstep-list-previous-steps-direct ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst )
+\ Return a list of pathsteps that could be a previous step before ataining the goal regions.
+\ 1) They contain at least one needed change from start to goal regions and
+\ 2) Pathstep result regions intersect the goal region, or
+\    moving from the pathstep's result regions to the goal regions does not require
+\    changes needed to get from the start regions to the goal regions,
+\    which would make use of the step premature, or ... postmature?
+: ?pathstep-list-possible-previous-steps ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst t | f )
     \ Check args.
     assert-tos-is-pathstep-list
     assert-nos-is-regioncorr
     assert-3os-is-regioncorr
+    cr ." pathstep-list-possible-previous-steps: from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     \ Get needed changes.
     #2 pick #2 pick                         \ regc-to2 regc-from1 pthstp-lst0 | regc-to2 regc-from1
     changescorr-new-regc-to-regc            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned'
+    cr ." pathstep-list-possible-previous-steps: changes needed: " dup .changescorr cr
 
     \ Init return list.
     list-new                                \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst
@@ -651,25 +636,44 @@
     begin
         ?dup
     while
-        \ Compare regc-to to pathstep result regions.
-        #5 pick                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2
-        over link-get-data                  \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx
-        pathstep-get-result-regions         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 regc-stp
-        regioncorr-intersects?              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+        \ Check for needed changes.
+        #2 pick                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-ned'
+        over link-get-data                  \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-ned' pthstpx
+        pathstep-intersect-changes?         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
         if
-            \ Regions intersect, check for needed changes.
-            dup link-get-data               \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
-            pathstep-get-changes            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstp-cngs
-            #3 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstp-cngs cngsc-ned'
-            changescorr-intersection        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngs-int'
-            dup                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-int' cngsc-int'
-            changescorr-null?               \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-int' bool
-            swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+            \ Compare regc-from to pathstep initial regions.
+            #5 pick                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2
+            over link-get-data                  \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx
+            pathstep-get-result-regions         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 regc-stp
+            regioncorr-intersects?              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
             if
+                cr ." at 1: " cr
+                \ Regions intersect.
+                dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
+                #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
+                list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
             else
-                dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
-                #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
-                list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
+                cr ." at 2: " cr
+                #5 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2
+                over link-get-data              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx
+                pathstep-get-result-regions     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx-result
+
+                \ Get changes needed from regc-from to pathstep initial regions.
+                changescorr-new-regc-to-regc    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2'
+
+                \ Check if any needed changes are required.
+                dup                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2' cngsc-to2'
+                #4 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2' cngsc-to2' cngsc-ned'
+                changescorr-intersection        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2' cngsc-to-int'
+                swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to-int'
+                dup changescorr-null?           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to-int' bool
+                swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
+                if
+                    \ No needed changes are required, save it
+                    dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
+                    #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
+                    list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
+                then
             then
         then
 
@@ -686,79 +690,20 @@
     swap changescorr-deallocate             \ regc-to2 regc-from1 pthstp-lst0 | ret-lst
     2nip                                    \ pthstp-lst0 | ret-lst
     nip                                     \ ret-lst
+
+    dup list-is-empty?
+    if
+        list-deallocate
+        false
+    else
+        true
+    then
+    \ cr ." pathstep-list-possible-previous-steps: end: " .stack-gbl cr
 ;
 
-\ Return a list of pathsteps that have result regions that are
-\ NOT superset of regc-to,
-\ contain at least one needed change and
-\ do not reguire needed changes to get from thep pathstep's result regions to regc-to.
-: pathstep-list-previous-steps-indirect ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst )
-    \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
-
-    \ Get needed changes.
-    #2 pick #2 pick                         \ regc-to2 regc-from1 pthstp-lst0 | regc-to2 regc-from1
-    changescorr-new-regc-to-regc            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned'
-
-    \ Init return list.
-    list-new                                \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst
-
-    \ Prep for loop.
-    #2 pick                                 \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-lst0
-    list-get-links                          \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
-
-    \ For each list pathstep.
-    begin
-        ?dup
-    while
-        \ Compare regc-from to pathstep initial regions.
-        #5 pick                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2
-        over link-get-data                  \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx
-        pathstep-get-result-regions         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 regc-stp
-        regioncorr-intersects?              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
-        if
-        else
-            #5 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2
-            over link-get-data              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx
-            pathstep-get-result-regions     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx-result
-
-            \ Get changes needed from regc-from to pathstep initial regions.
-            changescorr-new-regc-to-regc    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2'
-
-            \ Check if any needed changes are required.
-            dup                             \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2' cngsc-to2'
-            #4 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2' cngsc-to2' cngsc-ned'
-            changescorr-intersection        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to2' cngsc-to-int'
-            swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to-int'
-            dup changescorr-null?           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link cngsc-to-int' bool
-            swap changescorr-deallocate     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
-            if
-                \ No needed changes are required, save it
-                dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
-                #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
-                list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
-            then
-        then
-
-        link-get-next
-    repeat
-                                            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst
-
-    \ Set number unwanted changes.
-    #4 pick #4 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst regc-to2 regc-from1
-    #2 pick                                 \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst regc-to2 regc-from1 ret-lst
-    pathstep-list-set-number-unwanted-changes-bc
-
-    \ Return.                               \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst
-    swap changescorr-deallocate             \ regc-to2 regc-from1 pthstp-lst0 | ret-lst
-    2nip                                    \ pthstp-lst0 | ret-lst
-    nip                                     \ ret-lst
-;
 
 \ Return true if two regioncorrs both intersect at least one pathstep initial regions.
-: pathstep-list-intersects-both ( regc2 regc1 pthstp-lst0 -- pthstp t | f )
+: pathstep-list-intersects-both? ( regc2 regc1 pthstp-lst0 -- bool )
     \ Check args.
     assert-tos-is-pathstep-list
     assert-nos-is-regioncorr
@@ -781,9 +726,7 @@
             pathstep-get-initial-regions    \ regc2 regc1 pthstp-link regc2 pthstp-init
             regioncorr-intersects?          \ regc2 regc1 pthstp-link bool
             if
-                dup link-get-data           \ regc2 regc1 pthstp-link pthstpx
-                2nip                        \ pthstp-link pthstp
-                nip                         \ pthstp
+                2drop drop
                 true
                 exit
             then
@@ -848,51 +791,6 @@
     else
         true
     then
-;
-
-\ Return true if a given regioncorr intersects
-\ any pathstep's initial regions, while the intersection is not
-\ a subset of the pathstep's result regions.
-\ For pathstep forward-chaining.
-: ?pathstep-list-any-intersecting-fc? ( regc1 pthstp-lst0 -- pthstp-lst t | f )
-    \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-
-    \ Prep for loop.
-    list-get-links                          \ regc1 pthstp-link
-
-    begin
-        ?dup
-    while
-        over                                \ regc1 pthstp-link regc1
-        over link-get-data                  \ regc1 pthstp-link regc1 pthstpx
-        pathstep-get-initial-regions        \ regc1 pthstp-link regc1 pthstp-init
-        regioncorr-intersection             \ regc1 pthstp-link, regc-int' t | f
-        if
-            \ Check result regions.
-            dup                             \ regc1 pthstp-link regc-int' regc-int'
-            #2 pick                         \ regc1 pthstp-link regc-int' regc-int' link
-            link-get-data                   \ regc1 pthstp-link regc-int' regc-int' pthstpx
-            pathstep-get-result-regions     \ regc1 pthstp-link regc-int' regc-int' rslts
-            regioncorr-superset?            \ regc1 pthstp-link regc-int' bool
-            swap regioncorr-deallocate      \ regc1 pthstp-link bool
-            if
-            else
-                2drop
-                true
-                exit
-            then
-        then
-
-        link-get-next
-    repeat
-                                            \ regc1
-    \ Clean up.
-    drop
-
-    \ Return.
-    false
 ;
 
 \ Return pathsteps, from a given list, that have at least one change that is in

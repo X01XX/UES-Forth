@@ -334,20 +334,6 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     then
 ;
 
-\ Return a rule constructed a square state and the first result.
-: _square-calc-rule-0 ( sqr0 -- rul )
-    0 over square-get-result    \ sqr0 r0
-    swap square-get-state       \ r0 sta
-    rule-new
-;
-
-\ Return a rule constructed a square state and second result.
-: _square-calc-rule-1 ( sqr0 -- rul )
-    1 over square-get-result    \ sqr0 r1
-    swap square-get-state       \ r1 sta
-    rule-new
-;
-
 \ Return pn for a square, calculated from the result array.
 : _square-calc-pn ( sqr0 -- pn )
 

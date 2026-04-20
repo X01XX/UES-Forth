@@ -374,7 +374,7 @@ cr
         space ." points: " dup dec.
         over session-get-previous-points                \ sess pnts ppnts
         -                                               \ sess dif
-        space ." change: " dec.                         \ sess
+        ." change: " dec.                               \ sess
         dup session-set-previous-points                 \ sess
         cr
 

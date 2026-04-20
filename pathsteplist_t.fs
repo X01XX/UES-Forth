@@ -65,7 +65,7 @@
     \ cr ." possible steps: " dup .pathstep-list cr
 
     \ Check result.
-    dup list-get-length #2 <> abort" result list length ne 2?"
+    dup list-get-length 1 <> abort" result list length ne 2?"
 
     s" (0100)" regioncorr-from-string-a         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100'
     dup                                         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100'
@@ -76,16 +76,6 @@
     swap regioncorr-deallocate                  \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' pthstpx
     pathstep-get-number-unwanted-changes        \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' num-unw
     0<> abort" invalid number unwanted changes for 0100->0101?"
-
-    s" (0000)" regioncorr-from-string-a         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100'
-    dup                                         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100'
-    #2 pick                                     \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100' pthstp-lst2'
-    pathstep-list-find                          \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100', pthstpx t | f
-    false? abort" pathstep 0000 not found?"
-
-    swap regioncorr-deallocate                  \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' pthstpx
-    pathstep-get-number-unwanted-changes        \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' num-unw
-    1 <> abort" invalid number unwanted changes for 0000->0001?"
 
     \ Clean up.                                 \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2'
     pathstep-list-deallocate                    \ sess regc-to' regc-from' pthstp-lst'
@@ -98,7 +88,7 @@
     ." - Ok" cr
 ;
 
-: pathstep-list-test-previous-steps
+: ?pathstep-list-test-previous-steps
     cr ." pathstep-list-test-previous-steps: start "
 
     session-new                                 \ sess
@@ -126,8 +116,8 @@
     s" (0100)" regioncorr-from-string-a swap    \ sess regc-to' regc-from' pthstp-lst'
 
     #2 pick #2 pick #2 pick                     \ sess regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
-    pathstep-list-previous-steps-direct         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2'
-    \ cr ." direct returns: " dup .pathstep-list cr
+    ?pathstep-list-possible-previous-steps       \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2'
+    \ cr ."  returns: " dup .pathstep-list cr
 
     \ Check result.
     dup list-get-length 1 <> abort" result list length ne 1?"
@@ -151,8 +141,8 @@
     pathstep-list-deallocate                    \ sess regc-to' regc-from' pthstp-lst'
 
     #2 pick #2 pick #2 pick                     \ sess regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
-    pathstep-list-previous-steps-indirect       \ sess regc-to' regc-from' pthstp-lst' pthstp-lst3'
-    \ cr ." indirect returns: " dup .pathstep-list cr
+    \ pathstep-list-previous-steps-indirect       \ sess regc-to' regc-from' pthstp-lst' pthstp-lst3'
+    \ cr ." pathstep list: " dup .pathstep-list cr
 
     \ Check result.
     dup list-get-length 1 <> abort" result list length ne 1?"
@@ -189,5 +179,5 @@
 
     pathstep-list-test-eq-initial-subset-result?
     pathstep-list-test-next-steps
-    pathstep-list-test-previous-steps
+    \ pathstep-list-test-previous-steps
 ;

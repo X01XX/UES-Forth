@@ -1257,3 +1257,26 @@ list-header-disp    cell+   constant list-links-disp
         link-get-next
     repeat
 ;
+
+\ Return a list with elements reversed.
+: list-reverse ( lst0 -- lst )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Init return list.
+    list-new swap               \ ret-lst lst0
+
+    \ Prep for loop.
+    list-get-links              \ ret-lst lst-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data       \ ret-lst lst-link elemx
+        #2 pick                 \ ret-lst lst-link elemx ret-lst
+        list-push               \ ret-lst lst-link
+
+        link-get-next
+    repeat
+                                \ ret-lst
+;

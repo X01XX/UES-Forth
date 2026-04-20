@@ -157,7 +157,7 @@
     region-deallocate
     drop
 
-    dup .session
+    \ dup .session
 
     session-deallocate
 
@@ -643,22 +643,22 @@
     session-find-pathstep-list-by-rate              \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst
     #6 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to regc-from pthstp-lst ses
     \ cr .s cr
-    \ session-calc-path-bc                            \ dom0 ses regc-to' regc-from' | regc-seq' t | f
+    session-calc-path-bc                            \ dom0 ses regc-to' regc-from' | regc-seq' t | f
     \ cr .s cr
     if                                              \ dom0 ses regc-to' regc-from' | regc-seq'
-        cr ." Path: " dup .regioncorr-list-as-path-bc cr
+        cr ." BC Path: " dup .regioncorr-list-as-path-bc cr
 
         \ Check results.
-\        dup list-get-length 4 <> abort" path not legth 4?"
-\
-\        2dup regioncorr-list-get-first              \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' first-regc
-\        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
-\        false? abort" first item is not regc-from?"
+        dup list-get-length #4 <> abort" path not legth 4?"
 
-\        #2 pick over                                \ dom0 ses regc-to' regc-from' | regc-seq' regc-to' regc-seq'
-\        regioncorr-list-get-last                    \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' last-regc
-\        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
-\        false? abort" last item is not regc-to?"
+        2dup list-get-first-item                    \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' first-regc
+        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
+        false? abort" first item is not regc-from?"
+
+        #2 pick over                                \ dom0 ses regc-to' regc-from' | regc-seq' regc-to' regc-seq'
+        list-get-last-item                          \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' last-regc
+        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
+        false? abort" last item is not regc-to?"
 
         \ Clean up.
         regioncorr-list-deallocate
@@ -681,5 +681,5 @@
     session-test-domain-asymmetric-chaining
     session-test-change-to-plans
     session-test-calc-path
-    \ session-test-calc-path-bc
+    session-test-calc-path-bc   \ Also tests session-test-calc-path-fc
 ;

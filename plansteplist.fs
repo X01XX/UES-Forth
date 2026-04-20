@@ -146,38 +146,6 @@
     repeat
 ;
 
-: planstep-list-match-number-unwanted-changes ( u-unw1 plnstp-lst0 -- plnstp-lst )
-    \ Check arg.
-    assert-tos-is-planstep-list
-
-    \ Init return list.
-    list-new swap               \ u-unw1 ret-lst plnstp-lst0
-
-    \ Prep for loop.
-    list-get-links              \ u-unw1 ret-lst link
-
-    begin
-        ?dup
-    while
-        dup link-get-data       \ u-unw1 ret-lst link plnstpx
-        dup                     \ u-unw1 ret-lst link plnstpx plnstpx
-        planstep-get-number-unwanted-changes    \ u-unw1 ret-lst link plnstpx plnstp-unw
-        #4 pick                 \ u-unw1 ret-lst link plnstpx u-unw1 u-unw1
-        =                       \ u-unw1 ret-lst link plnstpx bool
-        if                      \ u-unw1 ret-lst link plnstpx
-            #2 pick             \ u-unw1 ret-lst link plnstpx ret-lst
-            planstep-list-push  \ u-unw1 ret-lst link
-        else                    \ u-unw1 ret-lst link plnstpx
-            drop                \ u-unw1 ret-lst link
-        then
-
-        link-get-next
-    repeat
-
-    \ Clean up, return.         \ u-unw1 ret-lst
-    nip                         \ ret-lst
-;
-
 \ Pop the first planstep from a planstep-list.
 : planstep-list-pop ( plnstp-lst0 -- plnstp t | f )
     \ Check arg.
@@ -257,49 +225,6 @@
                                 \ ret-cngs
 ;
 
-: ?planstep-list-non-intersecting ( reg-to reg-from plnstp-lst0 -- plnstp-lst t | f )
-    \ Check args.
-    assert-tos-is-planstep-list
-    assert-nos-is-region
-    assert-3os-is-region
-
-    \ Init return list.
-    list-new                 \ reg-to reg-from plnstp-lst0 | ret-lst
-
-    \ Prep for loop.
-    over list-get-links      \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk
-
-    begin
-        ?dup
-    while
-        dup link-get-data               \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk
-        #4 pick #4 pick                 \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk reg-to reg-from
-        #2 pick                         \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk reg-to reg-from plnstp-lnk
-        link-get-data                   \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk reg-to reg-from plnstpx
-        planstep-any-intersection?      \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk bool
-        if
-        else
-            link-get-data               \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk plnstpx
-            #2 pick                     \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk plnstpx ret-lst
-            list-push-struct            \ reg-to reg-from plnstp-lst0 | ret-lst plnstp-lnk
-        then
-
-        link-get-next
-    repeat
-                            \ reg-to reg-from plnstp-lst0 | ret-lst
-    dup list-is-empty?
-    if
-        list-deallocate
-        2drop drop
-        false
-        exit
-    then
-
-    2nip                    \ plnstp-lst0 | ret-lst
-    nip
-    true
-;
-
 : planstep-list-change-intersection ( cngs1 plnstp-lst0 -- plnstp-lst t | f )
     \ Check args.
     assert-tos-is-planstep-list
@@ -336,4 +261,53 @@
         nip nip
         true
     then
+;
+
+\ Return a planstep-list, containing plansteps with the minimum number unwanted changen.
+: planstep-list-filter-min-number-unwanted-changes ( plnstp-lst0 -- plnstp )
+    \ Check arg.
+    assert-tos-is-planstep-list
+
+    \ Init return list.
+    list-new swap               \ ret-lst plnstp-lst0
+
+    \ Init min-num.
+    #9999                       \ ret-lst plnstp-lst0 min
+
+    \ Prep for loop.
+    over list-get-links         \ ret-lst plnstp-lst0 min link
+
+    \ Find minimum number-unwanted-changes.
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ ret-lst plnstp-lst0 min link plnstpx
+        planstep-get-number-unwanted-changes    \ ret-lst plnstp-lst0 min link num
+        rot min swap                            \ ret-lst plnstp-lst0 min link
+
+        link-get-next
+    repeat
+
+                                                \ ret-lst plnstp-lst0 min
+    \ Get pathsteps with min number-unwanted-changes.
+    swap list-get-links                         \ ret-lst min link
+
+    begin
+        ?dup
+    while
+        dup link-get-data                       \ ret-lst min link plnstpx
+        dup
+        planstep-get-number-unwanted-changes    \ ret-lst min link plnstpx num
+        #3 pick =                               \ ret-lst min link plnstpx bool
+        if                                      \ ret-lst min link plnstepx
+            #3 pick                             \ ret-lst min link plnstepx ret-lst
+            planstep-list-push                  \ ret-lst min link
+        else
+            drop                                \ ret-lst min link
+        then
+
+        link-get-next
+    repeat
+                                                \ ret-lst min
+    drop
 ;
