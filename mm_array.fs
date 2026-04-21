@@ -59,7 +59,8 @@ include stack.fs
 
 \ Struct fields.
 0                           constant array-header-disp  \ Stack address.
-array-header-disp   cell+   constant array-info-disp    \ 16 bits, [1] Item size in bytes, [1] Min-free, how close did we get to using the whole stack.
+array-header-disp   cell+   constant array-info-disp    \ 16 bits, [0] Item size in bytes, [1] Min-free, how close did we get to using the whole stack.
+                                                        \ [2][3] Number allocations.
 array-info-disp     cell+   constant array-end-disp     \ Address of the end of the array.
 array-end-disp      cell+   constant array-items-disp   \ The start of the array items.
 
@@ -104,6 +105,23 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
 : mma-get-min-free ( mma-addr -- item-size )
     array-info-disp +
     1w@
+;
+
+: _mma-set-num-allocations ( u mma-addr -- )
+    array-info-disp + #4 +
+    l!
+;
+
+: _mma-get-num-allocations ( mma-addr -- u )
+    array-info-disp + #4 +
+    l@
+;
+
+: _mma-inc-num-allocations ( mma-addr -- )
+    dup _mma-get-num-allocations    \ mma-addr u
+    1+                              \ mma-add u+
+    swap                            \ u+ mma-addr
+    _mma-set-num-allocations
 ;
 
 : _mma-set-end-addr ( end-addr mma-addr -- )
@@ -153,8 +171,11 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
 \ Run like: <struct name>-mma mma-allocate
 : mma-allocate ( mma-addr -- item-addr )
     \ Get item from stack.
-    dup _mma-get-stack  \ a-addr s-addr
-    dup stack-pop       \ a-addr s-addr item-addr
+    dup _mma-get-stack              \ a-addr s-addr
+    dup stack-pop                   \ a-addr s-addr item-addr
+
+    \ Inc allocation counter.
+    #2 pick _mma-inc-num-allocations
 
     \ Check min free
     swap stack-get-num-on-stack     \ a-addr item-addr num
@@ -234,9 +255,16 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
     \ Clean up.
     2drop                       \ array-addr
 
+    \ Set min free counter.
     dup _mma-get-stack          \ a-addr s-addr
     stack-get-num-on-stack      \ a-addr num
     over _mma-set-min-free      \ a-addr
+
+    \ Set allocation counter.
+    \ At end, with no memory leaks, deallocations will match allocations.
+    \ With the exception of lists (1), links (number structures), stackinfo (number structures)
+    \ due to the structinfo-list-store.
+    0 over _mma-set-num-allocations
 ;
 
 \ Free heap memory when done.
@@ -330,6 +358,10 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
    ." Cells: "
    cell /                   \ mma-addr stack-addr | num-cells
    #6 dec.r
+
+   space ." Allocs"
+   over _mma-get-num-allocations
+   #10 dec.r
 
    2drop
 ;

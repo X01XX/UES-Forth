@@ -70,47 +70,67 @@
     cr ." Memory use:"
     \ Get/store longest name length.
     dup structinfo-list-max-name-length     \ si-lst0 max
-    swap                                    \ max si-lst0
+    over                                    \ si-lst0 max si-lst0
 
    \ cr ." At mid 1: " .stack-structs cr
     \ Init total counter.
-    0 swap                                  \ max tot si-lst0
+    0 swap                                  \ si-lst0 max tot si-lst0
 
     \ Prep for loop.
-    list-get-links                          \ max tot si-link
+    list-get-links                          \ si-lst0 max tot si-link
 
     begin
         ?dup
     while
-        dup link-get-data                   \ max tot si-link six
+        dup link-get-data                   \ si-lst0 max tot si-link six
 
         \ Print struct name, and filler.
-        dup                         \ max tot si-link six six
-        structinfo-get-name         \ max tot si-link six c-addr u
-        tuck                        \ max tot si-link six u c-addr u
-        cr #4 spaces type           \ max tot si-link six u
+        dup                         \ si-lst0 max tot si-link six six
+        structinfo-get-name         \ si-lst0 max tot si-link six c-addr u
+        tuck                        \ si-lst0 max tot si-link six u c-addr u
+        cr #4 spaces type           \ si-lst0 max tot si-link six u
         [char] : emit space
-        #4 pick swap  - spaces      \ max tot si-link six
+        #4 pick swap  - spaces      \ si-lst0 max tot si-link six
 
         \ Print memory use.
-        structinfo-get-mma          \ max tot si-link mmax
-        .mma-usage                  \ max tot si-link
+        structinfo-get-mma          \ si-lst0 max tot si-link mmax
+        .mma-usage                  \ si-lst0 max tot si-link
 
-        swap                        \ max si-link tot
-        over link-get-data          \ max si-link tot six
-        structinfo-get-mma          \ max si-link tot mma
-        mma-get-total-memory-use    \ max si-link tot mem-use
-        +                           \ max si-link tot
-        swap                        \ max tot si-link
+        swap                        \ si-lst0 max si-link tot
+        over link-get-data          \ si-lst0 max si-link tot six
+        structinfo-get-mma          \ si-lst0 max si-link tot mma
+        mma-get-total-memory-use    \ si-lst0 max si-link tot mem-use
+        +                           \ si-lst0 max si-link tot
+        swap                        \ si-lst0 max tot si-link
 
         link-get-next
     repeat
-                                    \ max tot
+                                    \ si-lst0 max tot
     cr
     swap spaces
     #116 spaces ." Total: " dup #8 dec.r
     cell / #9 spaces #6 dec.r
-    cr .stack-gbl cr
+
+    \ Sum number allocations.
+    0 over list-get-links           \ si-lst0 cnt si-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ si-lst0 cnt si-link six
+        structinfo-get-mma          \ si-lst0 cnt si-link mmax
+        _mma-get-num-allocations    \ si-lst0 cnt si-link allocx
+        rot                         \ si-lst0 si-link allocx cnt
+        + swap                      \ si-lst0 cnt+ si-link
+
+        link-get-next
+    repeat
+
+    \ Print number allocations.
+    #7 spaces #10 dec.r
+
+    drop
+    cr .stack-gbl cr                \ si-lst0
 ;
 
 ' structinfo-list-print-memory-use to structinfo-list-print-memory-use-xt
