@@ -138,6 +138,26 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
     array-items-disp +
 ;
 
+\ Return array memory use in bytes.
+: mma-get-array-memory-use ( mma-addr -- u )
+    dup                     \ mma-addr mma-addr
+    mma-get-item-size       \ mma-addr i-size
+    swap _mma-get-stack     \ i-size stack-addr
+    stack-get-capacity      \ i-size capacity
+    *                       \ a-size
+;
+
+\ Return overhead memory use in bytes.
+: mma-get-overhead-memory-use ( mma-addr -- u )
+    _mma-get-stack          \ stack-addr
+    stack-get-capacity      \ s-cells
+    cells                   \ s-bytes
+    \ Add stack overhead
+    #2 cells +
+    \ Add mma overhead
+    #3 cells +               \ o-bytes
+;
+
 \ Return true if an address is within an array, its a valid address and could be an instance.
 \ So the caller will avoid fetching from a random number, causing an invalid address abort.
 : mma-within-array ( addr mma-addr -- flag )
@@ -324,19 +344,12 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
 
     ." Array size: "
     over                    \ mma-addr stack-addr | mma-addr
-    mma-get-item-size       \ mma-addr stack-addr | i-size
-    over                    \ mma-addr stack-addr | i-size stack-addr
-    stack-get-capacity      \ mma-addr stack-addr | i-size capacity
-    *                       \ mma-addr stack-addr | a-size
-    #6 dec.r #2 spaces      \ mma-addr stack-addr |
+    mma-get-array-memory-use
+    #7 dec.r #2 spaces      \ mma-addr stack-addr |
 
    ." Overhead: "
-   dup stack-get-capacity   \ mma-addr stack-addr | s-cells
-   cells                    \ mma-addr stack-addr | s-bytes
-   \ Add stack overhead
-   #2 cells +
-   \ Add mma overhead
-   #3 cells +               \ mma-addr stack-addr | o-bytes
+   over                    \ mma-addr stack-addr | mma-addr
+   mma-get-overhead-memory-use
    #6 dec.r  #2 spaces      \ mma-addr stack-addr |
 
    ." Total: "
@@ -359,7 +372,7 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
    cell /                   \ mma-addr stack-addr | num-cells
    #6 dec.r
 
-   space ." Allocs"
+   space ." Allocs:"
    over _mma-get-num-allocations
    #10 dec.r
 
