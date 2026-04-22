@@ -16,6 +16,9 @@ To run:
 A program that can learn (at a low level), avoid negative states, seek positive states, and run
 on a Raspberry Pi class computer.
 
+Some operations, like depth-first plan searches, and getting needs for each action, can theoretically be run in parallel, with no mutex,
+although UES-Forth is not doing that.
+
 Showing the power of roll-your-own Memory Management, I added an allocation counter, an hour after having the idea.
 It turns out UES-Forth does literally Millions of struct Allocation/Deallocation operations, with no apparent slowness.
 At end, everything is accounted for, no memory leaks, nothing left on the Forth stack.
