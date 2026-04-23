@@ -245,26 +245,38 @@
     then
 ;
 
+: corner-list-deallocate ( crn-lst0 -- )
+    \ Check arg.
+    assert-tos-is-corner-list
+
+    \ Check if the list will be deallocated for the last time.
+    dup struct-get-use-count                        \ crn-lst0 uc
+    #2 < if
+        \ Deallocate pathsteps in the list.
+        [ ' corner-deallocate ] literal over        \ crn-lst0 xt crn-lst0
+        list-apply                                  \ crn-lst0
+
+        \ Deallocate the list.
+        list-deallocate
+    else
+        struct-dec-use-count
+    then
+;
+
 \ Deallocate a list of corner lists.
 : corner-lol-deallocate ( crn-lol0 -- )
     \ Check arg.
     assert-tos-is-corner-lol
 
     \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                    \ crn-lol0 uc
+    dup struct-get-use-count                        \ crn-lol0 uc
     #2 < if
-        dup list-get-links                      \ crn-lol0 crn-link
-        begin
-            ?dup
-        while
-            dup link-get-data                   \ crn-lol0 crn-link data
-            corner-list-deallocate              \ crn-lol0 crn-link
-
-            link-get-next
-        repeat
+        \ Deallocate pathstep instances in the list.
+        [ ' corner-list-deallocate ] literal over   \ crn-lol0 xt crn-lol0
+        list-apply                                  \ crn-lol0
 
         \ Deallocate the list.
-        list-deallocate-recursive               \
+        list-deallocate                             \
     else
         struct-dec-use-count
     then

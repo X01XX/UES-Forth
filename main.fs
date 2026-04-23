@@ -233,11 +233,12 @@ list-new to structinfo-list-store
 ' token-deallocate ' .token s" Token" token-mma token-id structinfo-new structinfo-list-store structinfo-list-push-end
 cr
 
+\ Init a session.  
 : init-main ( -- sess )
     \ Set up session.
     session-new                                 \ sess
 
-    \ Add domain 0square_t
+    \ Add domain 0
     #4 over  domain-new                         \ sess dom
 
     \ Add actions to domain 0

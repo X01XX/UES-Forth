@@ -372,7 +372,7 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
    cell /                   \ mma-addr stack-addr | num-cells
    #6 dec.r
 
-   space ." Allocs:"
+   space ."  Allocs:"
    over _mma-get-num-allocations
    #10 dec.r
 

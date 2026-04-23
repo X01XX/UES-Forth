@@ -185,16 +185,11 @@ structinfo-deallocate-xt-disp   cell+   constant structinfo-name-disp           
     dup struct-get-use-count    \ structinfo-addr count
     dup 0< abort" invalid use count"
 
-    dup 1 <
+    #2 <
     if
-        ." invalid use count" abort
+        structinfo-mma mma-deallocate  \ Deallocate instance.
     else
-        #2 <
-        if
-            structinfo-mma mma-deallocate  \ Deallocate instance.
-        else
-            struct-dec-use-count
-        then
+        struct-dec-use-count
     then
 ;
 

@@ -1702,24 +1702,17 @@ session-points-disp                     cell+   constant session-previous-points
     \ Clean up                                      \ rslts-lst' min-len min-lst'
     nip                                             \ rslts-lst' min-lst'
     swap                                            \ min-lst' rslts-lst'
-
-    [ ' regioncorr-list-deallocate ] literal        \ min-lst' rslts-lst' xt
-    over                                            \ min-lst' rslts-lst' xt rslts-lst'
-    list-apply                                      \ min-lst' rslts-lst'
-    list-deallocate                                 \ min-lst'
+    regioncorr-lol-deallocate                       \ min-lst'
 
     \ Choose one option.
     dup list-get-length                             \ min-lst' len
     random                                          \ min-lst' inx
     over                                            \ min-lst' inx min-lst'
-    list-remove-item-struct                         \ min-lst' pthstp-lstx
+    list-remove-item-struct                         \ min-lst' regc-lstx
 
     \ Clean up.
-    swap                                            \ pthstp-lstx min-lst'
-    [ ' regioncorr-list-deallocate ] literal        \ pthstp-lstx min-lst' xt
-    over                                            \ pthstp-lstx min-lst' xt min-lst'
-    list-apply                                      \ pthstp-lstx min-lst'
-    list-deallocate                                 \ pthlst-lstx
+    swap
+    regioncorr-lol-deallocate
 
     \ Return.
     true

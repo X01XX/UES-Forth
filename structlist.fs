@@ -75,6 +75,17 @@
     list-apply                                      \ ret-list
 ;
 
+\ Return a list of items that return true for a given xt and data.
+: list-find-all-struct-recursive ( xt data list0 -- list )
+    \ Check args.
+    assert-tos-is-list
+
+    list-find-all-recursive                         \ ret-list
+    [ ' struct-inc-use-count ] literal over         \ ret-list xt ret-list
+    list-apply-recursive                            \ ret-list
+;
+
+\ Return a list that is a copy of a given list, but with a specific item replaced by a given struct item.
 \ Return a list that is a copy of a given list, but with a specific item replaced by a given struct item.
 : list-copy-except-struct ( new-item2 index1 lst0 -- lst )
      \ Check args.
@@ -113,7 +124,7 @@
     list-copy                           \ ret-lst
 
     [ ' struct-inc-use-count ] literal  \ ret-lst xt
-    over list-apply                     \ ret-lst
+    over list-apply-recursive           \ ret-lst
 ;
 
 \ Return a flattened struct list.
@@ -134,7 +145,7 @@
     list-one-of-each                    \ ret-list
 
     [ ' struct-inc-use-count ] literal  \ ret-lst xt
-    over list-apply                     \ ret-lst
+    over list-apply-recursive           \ ret-lst
 ;
 
 \ Remove a struct item based on index.

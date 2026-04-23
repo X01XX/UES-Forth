@@ -1258,14 +1258,14 @@
     assert-tos-is-region-lol
 
     \ Check if the list will be deallocated for the last time.
-    dup struct-get-use-count                    \ reg-lol0 uc
+    dup struct-get-use-count                        \ reg-lol0 uc
     #2 < if
         \ Deallocate region-list instances in the list.
-        [ ' region-deallocate ] literal over    \ reg-lol0 xt reg-lol0
-        list-apply                              \ reg-lol0
+        [ ' region-list-deallocate ] literal over   \ reg-lol0 xt reg-lol0
+        list-apply                                  \ reg-lol0
 
         \ Deallocate the list.
-        list-deallocate                         \
+        list-deallocate                             \
     else
         struct-dec-use-count
     then

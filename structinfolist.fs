@@ -63,7 +63,6 @@
 
 \ Print memory use of structs.
 : structinfo-list-print-memory-use ( si-lst0 -- )
-   \ cr ." At start: " .stack-structs cr
     \ Check args.
     assert-tos-is-structinfo-list
 
@@ -119,8 +118,6 @@
     \ Print array memory use.
     #7 dec.r
 
-
-
     \ Sum overhead memory use.
     0 over list-get-links           \ si-lst0 cnt si-link
 
@@ -137,7 +134,7 @@
     repeat
 
     \ Print overhead memory use.
-    #12 spaces #6 dec.r
+    #11 spaces #7 dec.r
 
     \ Sum total memory use.
     0 over list-get-links           \ si-lst0 cnt si-link
@@ -155,9 +152,9 @@
     repeat
 
     \ Print total memory use.
-    #9 spaces
-    dup #8 dec.r
-    cell / #9 spaces #6 dec.r
+    #8 spaces
+    dup #9 dec.r
+    cell / #8 spaces #7 dec.r
 
     \ Sum number allocations.
     0 over list-get-links           \ si-lst0 cnt si-link
@@ -175,7 +172,7 @@
     repeat
 
     \ Print number allocations.
-    #7 spaces #11 dec.r
+    #7 spaces #12 dec.r
 
     drop
     cr .stack-gbl cr                \ si-lst0
@@ -342,7 +339,7 @@
         link-get-next
     repeat
                                     \ snf-lst flg
-    abort" errors found"
+    abort" Memory leaks found!"
 
     drop
     assert-forth-stack-empty

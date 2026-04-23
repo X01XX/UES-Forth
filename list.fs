@@ -39,7 +39,7 @@ list-header-disp    cell+   constant list-links-disp
 
 0 value list-mma  \ Storage for list mma struct instance.
 
-\ Init lisp, and lisk, mma.
+\ Init list mma.
 : list-mma-init ( num-items -- ) \ Sets list-mma
     dup 1 <
     abort" list-mma-init: Invalid number items."
@@ -290,7 +290,7 @@ list-header-disp    cell+   constant list-links-disp
         if
             \ Process sub-list.
             #2 pick             \ xt lst-link link-data xt
-            swap                \ xt lst-lisk xt link-data
+            swap                \ xt lst-link xt link-data
             recurse             \ xt lst-link
         else
             #2 pick             \ xt lst-link link-data xt
@@ -312,6 +312,37 @@ list-header-disp    cell+   constant list-links-disp
 \ e.g. TOS is a list of numbers.
 \ [ ' = ] literal over #5 swap list-member
 : list-member ( xt item list -- flag )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-get-links              \ xt item link
+    begin
+        ?dup
+    while                       \ xt item link
+        dup link-get-data       \ xt item link link-data
+
+        \ Check for sub-list.
+        dup is-allocated-list  abort" should use list-member-recursive?" 
+
+        #2 pick swap            \ xt item link item link-data
+        #4 pick                 \ xt item link item link-data xt
+        execute                 \ xt item link flag
+        if
+            \ Return true.
+            2drop drop
+            true
+            exit
+        then
+
+        link-get-next       \ xt item link-next
+    repeat
+
+    \ Cleanup, return.      \ xt item
+    2drop
+    false
+;
+
+: list-member-recursive ( xt item list -- flag )
     \ Check arg.
     assert-tos-is-list
 
@@ -358,6 +389,48 @@ list-header-disp    cell+   constant list-links-disp
 \ e.g. TOS is a list of numbers.
 \ [ ' = ] literal over #5 swap list-find
 : list-find ( xt item list -- cell t | f )
+    \ Check arg.
+    assert-tos-is-list
+
+    \ Check for an empty list.
+    dup list-get-length
+    0=
+    if
+        \ Return false.
+        2drop drop
+        false
+        exit
+    then
+
+    list-get-links              \ xt item link
+    begin
+        ?dup
+    while                       \ xt item link
+        2dup                    \ xt item link item link
+        link-get-data           \ xt item link item link-data
+
+        \ Check for sub-list.
+        dup is-allocated-list abort" should use list-find-recursive?"
+
+        #4 pick             \ xt item link item link-data xt
+        execute             \ xt item link flag
+        if
+            \ Return cell true.
+            link-get-data   \ xt item data
+            nip nip
+            true
+            exit
+        then
+
+        link-get-next           \ xt item link
+    repeat
+
+    \ Cleanup, return false.    \ xt item
+    2drop
+    false
+;
+
+: list-find-recursive ( xt item list -- cell t | f )
     \ Check arg.
     assert-tos-is-list
 
@@ -611,6 +684,8 @@ list-header-disp    cell+   constant list-links-disp
 \
 \ e.g. TOS is a list.
 \ dup struct-get-use-count #2 < if [ ' <struct-name>-deallocate ] literal over list-apply then
+\
+\ Abort if sub-lists.
 : list-deallocate ( lst0 -- )
     \ Check arg.
     assert-tos-is-list
@@ -644,6 +719,8 @@ list-header-disp    cell+   constant list-links-disp
     then
 ;
 
+\ Deallocate a list.
+\ Process sub-lists.
 : list-deallocate-recursive ( lst0 -- )
     \ Check arg.
     assert-tos-is-list
@@ -692,6 +769,50 @@ list-header-disp    cell+   constant list-links-disp
 \ e.g. TOS is a list of numbers.
 \ [ ' < ] literal over #5 swap list-find-all
 : list-find-all ( xt item list -- list )
+    \ Check arg.
+    assert-tos-is-list
+
+                        \ xt item list
+    rot                 \ item list xt
+    list-new            \ item list xt ret
+    swap                \ item list ret xt
+    2swap               \ ret xt item list
+
+    \ Check for an empty list.
+    dup list-get-length
+    0=
+    if
+        \ Return false.
+        2drop drop
+        exit
+    then
+
+    list-get-links          \ ret xt item first-link
+    begin
+        dup                 \ ret xt item link link
+    while                   \ ret xt item link
+        2dup                \ ret xt item link item link
+        link-get-data       \ ret xt item link item link-data
+
+        \ Check for sub-list.
+        dup is-allocated-list abort" should use list-find-all-recursive?"
+        #4 pick             \ ret xt item link item link-data xt
+        execute             \ ret xt item link flag
+        if
+            \ Get data.
+            dup link-get-data   \ ret xt item link data
+            #4 pick             \ ret xt item link data ret
+            list-push           \ ret xt item link
+        then
+
+        link-get-next       \ ret xt item link-next
+    repeat
+
+    \ Cleanup.
+    drop 2drop              \ ret-list
+;
+
+: list-find-all-recursive ( xt item list -- list )
     \ Check arg.
     assert-tos-is-list
 
@@ -841,6 +962,27 @@ list-header-disp    cell+   constant list-links-disp
     drop nip                    \ list-ret
 ;
 
+\ Apply a function to each item in a list.
+\ xt signature is ( link-data -- )
+: list-apply ( xt list0 -- )
+    \ Check arg.
+    assert-tos-is-list
+
+    list-get-links              \ xt links0
+    begin
+        ?dup
+    while
+        dup link-get-data       \ xt link0 data0
+
+        #2 pick                 \ xt link0 data0 xt
+        execute                 \ xt link0
+
+        link-get-next           \ xt link-next
+    repeat
+                                \ xt
+    drop
+;
+
 \ Apply a function to each item in a list, and sub-lists.
 \ xt signature is ( link-data -- )
 : list-apply-recursive ( xt list0 -- )
@@ -870,25 +1012,6 @@ list-header-disp    cell+   constant list-links-disp
     drop
 ;
 
-\ Apply a function to each item in a list.
-\ xt signature is ( link-data -- )
-: list-apply ( xt list0 -- )
-    \ Check arg.
-    assert-tos-is-list
-
-    list-get-links              \ xt links0
-    begin
-        ?dup
-    while
-        dup link-get-data       \ xt link0 data0
-        #2 pick                 \ xt link0 data0 xt
-        execute                 \ xt link0
-
-        link-get-next           \ xt link-next
-    repeat
-                                \ xt
-    drop
-;
 
 \ Return the intersection of two lists.
 \ xt signature is ( link-data link-data -- flag )
@@ -1207,7 +1330,7 @@ list-header-disp    cell+   constant list-links-disp
     [ ' 2drop-true ] literal    \ lst0 xt
     0                           \ lst0 xt 0
     rot                         \ xt 0 lst0
-    list-find-all               \ lst
+    list-find-all-recursive     \ lst
 ;
 
 \ Return a product of each sublist's length.

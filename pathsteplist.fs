@@ -60,7 +60,7 @@
     dup struct-get-use-count                        \ plnstp-lol0 uc
     #2 < if
         \ Deallocate pathstep instances in the list.
-        [ ' pathstep-list-deallocate ] literal over      \ plnstp-lol0 xt plnstp-lol0
+        [ ' pathstep-list-deallocate ] literal over \ plnstp-lol0 xt plnstp-lol0
         list-apply                                  \ plnstp-lol0
 
         \ Deallocate the list.
@@ -647,13 +647,11 @@
             pathstep-get-result-regions         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 regc-stp
             regioncorr-intersects?              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link bool
             if
-                cr ." at 1: " cr
                 \ Regions intersect.
                 dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
                 #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
                 list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
             else
-                cr ." at 2: " cr
                 #5 pick                         \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2
                 over link-get-data              \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx
                 pathstep-get-result-regions     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link regc-to2 pthstpx-result
