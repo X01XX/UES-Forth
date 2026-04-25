@@ -98,14 +98,8 @@
 : rate-new ( neg-u1 pos-u0 -- addr)
 
     \ Allocate space.
-    rate-mma mma-allocate   \ nu1 pu0 addr
-
-    \ Store id.
-    rate-id over            \ nu1 pu0 addr id addr
-    struct-set-id           \ nu1 pu0 addr
-
-    \ Init use count.
-    0 over struct-set-use-count
+    rate-id rate-mma
+    struct-allocate         \ nu1 pu0 addr
 
     \ Store values.
     swap over _rate-set-positive    \ nu1 addr

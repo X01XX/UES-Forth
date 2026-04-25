@@ -89,14 +89,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     assert-tos-is-domain-xt execute
 
    \ Allocate space.
-    plan-mma mma-allocate           \  d0 addr
-
-    \ Store id.
-    plan-id over                    \  d0 addr id addr
-    struct-set-id                   \  d0 addr
-
-    \ Init use count.
-    0 over struct-set-use-count     \  d0 addr
+    plan-id plan-mma
+    struct-allocate                 \  d0 addr
 
     \ Set domain.
     tuck                            \  addr d0 addr

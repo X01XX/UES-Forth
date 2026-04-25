@@ -145,15 +145,14 @@ list-header-disp    cell+   constant list-links-disp
 \ End accessors.
 
 \ Return an new list struct instance address.
-: list-new ( -- addr )
+: list-new ( -- list )
     \ Allocate space.
-    list-mma mma-allocate       \ list-addr
+    list-id list-mma
+    struct-allocate             \ list
 
     \ Init fields.
-    list-id over struct-set-id  \ list-addr
-    0 over _list-set-length     \ list-addr
-    0 over _list-set-links      \ list-addr
-    0 over struct-set-use-count \ list-addr
+    0 over _list-set-length     \ list
+    0 over _list-set-links      \ list
     \ cr ." list-new: " dup hex. cr
 ;
 
@@ -322,7 +321,7 @@ list-header-disp    cell+   constant list-links-disp
         dup link-get-data       \ xt item link link-data
 
         \ Check for sub-list.
-        dup is-allocated-list  abort" should use list-member-recursive?" 
+        dup is-allocated-list  abort" should use list-member-recursive?"
 
         #2 pick swap            \ xt item link item link-data
         #4 pick                 \ xt item link item link-data xt

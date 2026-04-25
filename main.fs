@@ -54,9 +54,9 @@ include xtindirect.fs
 include bool.fs
 
 include tools.fs
-include struct.fs
 
 include mm_array.fs     \ includes stack.fs
+include struct.fs
 include link.fs
 include list.fs
 include structlist.fs
@@ -233,7 +233,7 @@ list-new to structinfo-list-store
 ' token-deallocate ' .token s" Token" token-mma token-id structinfo-new structinfo-list-store structinfo-list-push-end
 cr
 
-\ Init a session.  
+\ Init a session.
 : init-main ( -- sess )
     \ Set up session.
     session-new                                 \ sess

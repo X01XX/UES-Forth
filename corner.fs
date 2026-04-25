@@ -137,29 +137,23 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 : corner-new ( reg2 sta1 act0 -- crn )
     \ Check args.
 
-        assert-tos-is-action-xt execute
-        assert-nos-is-value
-        assert-3os-is-region
+    assert-tos-is-action-xt execute
+    assert-nos-is-value
+    assert-3os-is-region
 
-        \ cr ." Dom: " current-domain-id #3 dec.r space
-        \    ." Act: " current-action-id #3 dec.r space
-        \    ." corner-new: " over .state space #2 pick .value cr
+    \ cr ." Dom: " current-domain-id #3 dec.r space
+    \    ." Act: " current-action-id #3 dec.r space
+    \    ." corner-new: " over .state space #2 pick .value cr
 
-        \ Check that anchor state is in region.
-        over                                \ reg2 sta1 act0 sta1
-        #3 pick                             \ reg2 sta1 act0 sta1 reg2
-        region-superset-of-state?           \ reg2 sta1 act0 bool
-        false? abort" Anchor square not in region?"
+    \ Check that anchor state is in region.
+    over                                \ reg2 sta1 act0 sta1
+    #3 pick                             \ reg2 sta1 act0 sta1 reg2
+    region-superset-of-state?           \ reg2 sta1 act0 bool
+    false? abort" Anchor square not in region?"
 
     \ Allocate space.
-    corner-mma mma-allocate             \ reg2 sta1 act0 crn
-
-    \ Store id.
-    corner-id over                      \ reg2 sta1 act0 crn id crn
-    struct-set-id                       \ reg2 sta1 act0 crn
-
-    \ Init use count.
-    0 over struct-set-use-count         \ reg2 sta1 act0 crn
+    corner-id corner-mma                \ reg2 sta1 act0 id mma
+    struct-allocate                     \ reg2 sta1 act0 crn
 
     \ Set parent action.
     tuck                                \ reg2 sta1 crn act0 crn

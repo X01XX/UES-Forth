@@ -984,38 +984,3 @@
     2nip drop                           \ ret-lst
 ;
 
-\ Return intersections of a regioncorr list with a given regioncorr.
-: regioncorr-list-calc-intersections ( regc1 regc-lst0 -- regc-lst )
-    \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
-
-    \ Init return list.
-    list-new                            \ regc1 regc-lst0 ret-lst
-
-    \ Prep for loop.
-    over list-get-links                 \ regc1 regc-lst0 ret-lst regc-link
-
-    \ For each regioncorr in list.
-    begin
-        ?dup
-    while
-        dup link-get-data               \ regc1 regc-lst0 ret-lst regc-link regcx
-        #4 pick                         \ regc1 regc-lst0 ret-lst regc-link regcx regc1
-        regioncorr-intersection         \ regc1 regc-lst0 ret-lst regc-link, regc-i t | f
-        if
-            dup                         \ regc1 regc-lst0 ret-lst regc-link regc-i regc-i
-            #3 pick                     \ regc1 regc-lst0 ret-lst regc-link regc-i regc-i ret-lst
-            regioncorr-list-push-nosubs \ regc1 regc-lst0 ret-lst regc-link regc-i bool
-            if
-                drop
-            else
-                regioncorr-deallocate
-            then
-        then
-
-        link-get-next
-    repeat
-                                        \ regc1 regc-lst0 ret-lst
-    nip nip                             \ ret-lst
-;

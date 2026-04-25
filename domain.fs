@@ -269,15 +269,16 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ Check arg.
     assert-tos-is-session-xt execute
 
+    \ Check number bits.
+    over 1 < abort" Number bits < 1?"
+    over
+    \ Get max num bits.
+    1 cells #8 *
+    > abort" Number bits too large?"
+
     \ Allocate space.
-    domain-mma mma-allocate         \ nb1 ses0 dom
-
-    \ Store struct id.
-    domain-id over                  \ nb1 ses0 dom id dom
-    struct-set-id                   \ nb1 ses0 dom
-
-    \ Init use count
-    0 over struct-set-use-count     \ nb1 ses0 dom
+    domain-id domain-mma            \ nb1 ses0 id mma
+    struct-allocate                 \ nb1 ses0 dom
 
     \ Set instance ID, based on its position in the session domain list.
     over                            \ nb1 ses0 dom sess0
@@ -341,10 +342,10 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     dup domain-get-inst-id
     cr cr ." Dom: " dec.
 
-    dup domain-get-num-bits ." num-bits: " . space
+    dup domain-get-num-bits ." num-bits: " dec. space
     dup domain-get-actions
     list-get-length
-    ."  num actions: " .
+    ."  num actions: " dec.
     dup domain-get-current-state ." cur: " .value
     cr
     domain-get-actions .action-list

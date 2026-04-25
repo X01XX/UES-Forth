@@ -113,24 +113,14 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 \ End accessors.
 
-: _rule-allocate ( -- rul0 )    \ Allocate a rule, setting id and use count only, use only in this file.
-    \ Allocate space.
-    rule-mma mma-allocate   \ addr
-
-    \ Store id.
-    rule-id over            \ addr id addr
-    struct-set-id           \ addr
-
-    \ Init use count.
-    0 over struct-set-use-count \ addr
-;
-
 : rule-new ( u-result u-initial -- rul )    \ Create a rule from two numbers on the stack.
     \ Check args.
     assert-tos-is-value
     assert-nos-is-value
 
-    _rule-allocate          \ u-r u-i rul
+    \ Allocate instance.
+    rule-id rule-mma
+    struct-allocate         \ u-r u-i rul
 
     \ Store fields.
     over !not               \ u-r u-i rul u-i-not
@@ -423,7 +413,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     and                     \ m00 m01 m11 m10
 
     \ Start new rule.
-    _rule-allocate          \ m00 m01 m11 m10 rul
+    rule-id rule-mma
+    struct-allocate         \ m00 m01 m11 m10 rul
 
     \ Set each field.
     tuck _rule-set-m10      \ m00 m01 m11 rul
@@ -480,7 +471,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     or                      \ m00 m01 m11 m10
 
     \ Start new rule.
-    _rule-allocate          \ m00 m01 m11 m10 rul
+    rule-id rule-mma
+    struct-allocate         \ m00 m01 m11 m10 rul
 
     \ Set each field.
     tuck _rule-set-m10      \ m00 m01 m11 rul
@@ -572,7 +564,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
      rot drop                           \ r10 r01 r00 r11
 
     \ Init rule
-    _rule-allocate                      \ r10 r01 r00 r11 rul
+    rule-id rule-mma
+    struct-allocate                     \ r10 r01 r00 r11 rul
 
     \ Build rule.
     tuck _rule-set-m11                  \ r10 r01 r00 rul
@@ -612,7 +605,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap                        \ n00 n01 n11 ones rul0
     rule-get-m10 and            \ n00 n01 n11 n10
 
-    _rule-allocate              \ n00 n01 n11 n10 rul
+    rule-id rule-mma
+    struct-allocate             \ n00 n01 n11 n10 rul
 
     tuck                        \ n00 n01 n11 rul r10 rul
     _rule-set-m10               \ n00 n01 n11 rul
@@ -658,7 +652,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap                        \ n00 n10 n11 ones rul0
     rule-get-m01 and            \ n00 n10 n11 n01
 
-    _rule-allocate              \ n00 n10 n11 n01 rul
+    rule-id rule-mma
+    struct-allocate             \ n00 n10 n11 n01 rul
 
     tuck                        \ n00 n10 n11 rul r01 rul
     _rule-set-m01               \ n00 n10 n11 rul
@@ -777,7 +772,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0 -rot                          \ cnt c-addr u
 
     \ Init rule.
-    _rule-allocate                  \ cnt addr n rul
+    rule-id rule-mma
+    struct-allocate                 \ cnt addr n rul
     0 over _rule-set-m00
     0 over _rule-set-m01
     0 over _rule-set-m11
@@ -935,9 +931,12 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     and                             \ m00 m01 m11 rul1 rul0 m10-a m10-b
     or                              \ m00 m01 m11 rul1 rul0 m10
     -rot                            \ m00 m01 m11 m10 rul1 rul0
+    2drop                           \ m00 m01 m11 m10
 
     \ Make new rule.
-    2drop _rule-allocate            \ m00 m01 m11 m10 rul
+    rule-id rule-mma
+    struct-allocate                 \ m00 m01 m11 m10 rul
+
     tuck _rule-set-m10              \ m00 m01 m11 rul
     tuck _rule-set-m11              \ m00 m01 rul
     tuck _rule-set-m01              \ m00 rul

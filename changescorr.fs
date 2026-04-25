@@ -90,17 +90,11 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     <> abort" changescorr-new: invalid list length?"
 
     \ Allocate space.
-    changescorr-mma mma-allocate   \ lst0 cngsc
+    changescorr-id changescorr-mma  \ lst0 id mma
+    struct-allocate                 \ lst0 cngsc
 
-    \ Store id.
-    changescorr-id over            \ lst0 cngsc id cngsc
-    struct-set-id                  \ lst0 cngsc
-
-    \ Init use count.
-    0 over struct-set-use-count    \ lst0 cngsc
-
-    tuck                           \ cngsc lst0 cngsc
-    _changescorr-set-list          \ cngsc
+    tuck                            \ cngsc lst0 cngsc
+    _changescorr-set-list           \ cngsc
 ;
 
 \ Print a changescorr list, corresponding to the session domain list.

@@ -623,14 +623,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-domain-xt execute
 
     \ Allocate space.
-    action-mma mma-allocate             \ xt1 dom0 actr
-
-    \ Store struct id.
-    action-id over                      \ xt1 dom0 act id act
-    struct-set-id                       \ xt1 dom0 act
-
-    \ Init use count.
-    0 over struct-set-use-count         \ xt1 dom0 act
+    action-id action-mma                \ xt1 dom0 id mma
+    struct-allocate                     \ xt1 dom0 act
 
     \ Set instance ID, based on it's position in the domain action list.
     over                                \ xt1 dom0 act dom0
@@ -741,7 +735,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     assert-tos-is-action
 
     dup action-get-inst-id
-    cr #5 spaces ." Act: " .
+    cr #5 spaces ." Act: " dec.
 
     dup action-get-squares
     dup list-get-length

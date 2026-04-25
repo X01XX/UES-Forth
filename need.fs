@@ -188,13 +188,8 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     assert-4os-is-need-number
 
     \ Allocate space.
-    need-mma mma-allocate           \ typ3 u2 act1 dom0 ned
-
-    \ Store id.
-    need-id over struct-set-id      \ typ3 u2 act1 dom0 ned
-
-    \ Init use count.
-    0 over struct-set-use-count     \ typ3 u2 act1 dom0 ned
+    need-id need-mma
+    struct-allocate             \ typ3 u2 act1 dom0 ned
 
     \ Store domain
     tuck _need-set-domain           \ typ3 u2 act1 ned

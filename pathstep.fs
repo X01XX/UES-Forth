@@ -151,14 +151,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     assert-tos-is-rulecorr
 
    \ Allocate space.
-    pathstep-mma mma-allocate               \ rulc1 pstp
-
-    \ Store id.
-    pathstep-id over                        \ rulc1 pstp id pstp
-    struct-set-id                           \ rulc1 pstp
-
-    \ Init use count.
-    0 over struct-set-use-count             \ rulc1 pstp
+    pathstep-id pathstep-mma
+    struct-allocate                         \ rulc1 pstp
 
     \ Set initial-region.
     over rulecorr-calc-initial-regions      \ rulc1 pstp reg

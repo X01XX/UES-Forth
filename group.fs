@@ -157,7 +157,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ End accessors.
 
 \ Return a new group, given a region and square-list.
-: group-new    ( sqrs1 reg0 -- group )
+: group-new    ( sqrs1 reg0 -- grp )
     \ Check args.
     assert-tos-is-region
     assert-nos-is-list
@@ -169,52 +169,44 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     then
 
    \ Allocate space.
-    group-mma mma-allocate      \ s r addr
-
-    \ Store id.
-    group-id over               \ s r addr id addr
-    struct-set-id               \ s r addr
-
-    \ Init use count.
-    0 over                      \ s r addr 0 addr
-    struct-set-use-count        \ s r addr
-
+    group-id group-mma          \ sqrs1 reg0 id mma
+    struct-allocate             \ sqrs1 reg0 grp
 
     \ Set region.
-    tuck                        \ s addr r addr
-    _group-set-region           \ s addr
+    tuck                        \ sqrs1 grp  r grp
+    _group-set-region           \ sqrs1 grp
 
     \ Set r-region
-    over square-list-region     \ s addr, reg t | f
+    over square-list-region     \ sqrs1 grp , reg t | f
     0= abort" region not found?"
-    over _group-set-r-region    \ s addr
+    over _group-set-r-region    \ sqrs1 grp
 
     \ Set rules
-    over square-list-get-rules  \ s addr, ruls t | f
+    over square-list-get-rules  \ sqrs1 grp , ruls t | f
     0=
     if  dup group-get-region cr ." Group: " .region
         space ." Group squares cannot form rules."
         space over .square-list cr
         abort
     then
-                                \ s addr rules
-    over _group-set-rules       \ s addr
+                                \ sqrs1 grp  rules
+    over _group-set-rules       \ sqrs1 grp
 
     \ Set pnc
-    \ over square-list-pnc        \ s addr pnc
+    \ over square-list-pnc      \ sqrs1 grp  pnc
     false
-    over _group-set-pnc         \ s addr
+    over _group-set-pnc         \ sqrs1 grp
 
     \ Set squares
-    tuck                        \ addr s addr
-    _group-set-squares          \ addr
+    tuck                        \ grp  sqrs1 grp
+    _group-set-squares          \ grp
 ;
 
 : group-deallocate ( grp0 -- )
     \ Check arg.
     assert-tos-is-group
 
-    dup struct-get-use-count      \ grp0 count
+    dup struct-get-use-count    \ grp0 count
     dup 0< abort" invalid use count"
 
     #2 <

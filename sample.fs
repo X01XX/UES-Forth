@@ -102,11 +102,8 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
     assert-nos-is-value
 
     \ Allocate space.
-    sample-mma mma-allocate     \ u1 u2 smp
-
-    \ Store id.
-    sample-id over              \ u1 u2 smp id smp
-    struct-set-id               \ u1 u2 smp
+    sample-id sample-mma
+    struct-allocate             \ u1 u2 smp
 
     \ Store states
     tuck _sample-set-initial   \ u1  smp

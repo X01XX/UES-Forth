@@ -364,14 +364,8 @@ session-points-disp                     cell+   constant session-previous-points
 
     \ cr ." session-new: start " .s cr
     \ Allocate space.
-    session-mma mma-allocate        \ ses
-
-    \ Store id.
-    session-id over                 \ ses id ses
-    struct-set-id                   \ ses
-
-    \ Init use count.
-    0 over struct-set-use-count     \ ses
+    session-id session-mma
+    struct-allocate                 \ ses
 
     \ Set domains list.
     list-new                        \ ses lst
@@ -416,7 +410,7 @@ session-points-disp                     cell+   constant session-previous-points
     cr ." Sess: "
     dup session-get-domains
     dup list-get-length
-    ."  num domains: " .
+    ."  num domains: " dec.
     ." domains "
 
                                                 \ sess0 dom-lst

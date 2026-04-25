@@ -78,11 +78,8 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     <> abort" plancorr-new: invalid list length?"
 
     \ Allocate space.
-    plancorr-mma mma-allocate   \ pln-lst0 plnc
-
-    \ Store id.
-    plancorr-id over            \ pln-lst0 plnc id plnc
-    struct-set-id               \ pln-lst0 plnc
+    plancorr-id plancorr-mma
+    struct-allocate             \ pln-lst0 plnc
 
     \ Store plan list.
     tuck                        \ plnc pln-lst0 plnc

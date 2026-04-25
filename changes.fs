@@ -122,16 +122,10 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ End accessors.
 
 \ Allocate a changes, setting id and use count only, use only in this file.
-: _changes-allocate ( -- cngs0 )
+: _changes-allocate ( -- cngs )
     \ Allocate space.
-    changes-mma mma-allocate   \ addr
-
-    \ Store id.
-    changes-id over            \ addr id addr
-    struct-set-id           \ addr
-
-    \ Init use count.
-    0 over struct-set-use-count \ addr
+    changes-id changes-mma      \ id mma
+    struct-allocate             \ cngs
 ;
 
 \ Create a changes from two numbers on the stack.

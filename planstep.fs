@@ -184,14 +184,8 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     then
 
    \ Allocate space.
-    planstep-mma mma-allocate               \ alt-rul2 rul1 act0 plnstpx
-
-    \ Store id.
-    planstep-id over                        \ alt-rul2 rul1 act0 plnstpx id plnstpx
-    struct-set-id                           \ alt-rul2 rul1 act0 plnstpx
-
-    \ Init use count.
-    0 over struct-set-use-count             \ alt-rul2 rul1 act0 plnstpx
+    planstep-id planstep-mma
+    struct-allocate                         \ alt-rul2 rul1 act0 plnstpx
 
     \ Set action.
     tuck                                    \ alt-rul2 rul1 plnstpx act0 plnstpx

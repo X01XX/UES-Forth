@@ -110,23 +110,16 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return a new rulestore instance, with no rules.
 : rulestore-new-0  ( -- rulstr )
     \ Allocate space.
-    rulestore-mma mma-allocate  \ addr
-
-    \ Store id.
-    rulestore-id over           \ addr id addr
-    struct-set-id               \ addr
-
-    \ Init use count.
-    0 over                      \ addr 0 addr
-    struct-set-use-count        \ addr
+    rulestore-id rulestore-mma
+    struct-allocate             \ rulstr
 
     \ Init rule 0
-    0 over                      \ addr 0 addr
-    _rulestore-set-rule-0       \ addr
+    0 over                      \ rulstr 0 rulstr
+    _rulestore-set-rule-0       \ rulstr
 
     \ Init rule 1
-    0 over                      \ addr 0 addr
-    _rulestore-set-rule-1       \ addr
+    0 over                      \ rulstr 0 rulstr
+    _rulestore-set-rule-1       \ rulstr
 ;
 
 \ Return a new rulestore instance, with one rule.
@@ -135,15 +128,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     assert-tos-is-rule
 
     \ Allocate space.
-    rulestore-mma mma-allocate  \ rul0 addr
-
-    \ Store id.
-    rulestore-id over           \ rul0 addr id addr
-    struct-set-id               \ rul0 addr
-
-    \ Init use count.
-    0 over                      \ rul0 addr 0 addr
-    struct-set-use-count        \ rul0 addr
+    rulestore-id rulestore-mma
+    struct-allocate             \ rul0 addr
 
     \ Store rule 0
     tuck                        \ addr rul0 addr
@@ -174,19 +160,14 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     region-deallocate
 
     \ Allocate space.
-    rulestore-mma mma-allocate  \ rul1 rul0 addr
+    rulestore-id rulestore-mma
+    struct-allocate             \ rul1 rul0 addr
 
-    \ Store id.
-    rulestore-id over           \ rul1 rul0 addr id addr
-    struct-set-id               \ rul1 rul0 addr
-
-    \ Init use count.
-    0 over                      \ rul1 rul0 addr 0 addr
-    struct-set-use-count        \ rul1 rul0 addr
-
+    \ Store rule 0.
     swap                            \ rul1 addr rul0
     over _rulestore-set-rule-0      \ rul1 addr
 
+    \ Store rule 1.
     swap                            \ addr rul1
     over _rulestore-set-rule-1      \ addr
 ;

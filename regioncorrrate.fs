@@ -101,14 +101,8 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     assert-nos-is-regioncorr
 
     \ Allocate space.
-    regioncorrrate-mma mma-allocate     \ regc1 rate regcr
-
-    \ Store id.
-    regioncorrrate-id over              \ regc1 rate regcr id regcr
-    struct-set-id                       \ regc1 rate regcre
-
-    \ Init use count.
-    0 over struct-set-use-count         \ regc1 rate regcr
+    regioncorrrate-id regioncorrrate-mma
+    struct-allocate                     \ regc1 rate regcr
 
     \ Store rate.
     swap                                \ regc1 regcr rate

@@ -78,15 +78,10 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     <> abort" rulecorr-new: invalid list length?"
 
     \ Allocate space.
-    rulecorr-mma mma-allocate   \ rul-lst0 rulc
+    rulecorr-id rulecorr-mma
+    struct-allocate             \ rul-lst0 rulc
 
-    \ Store id.
-    rulecorr-id over            \ rul-lst0 rulc id rulc
-    struct-set-id               \ rul-lst0 rulc
-
-    \ Init use count.
-    0 over struct-set-use-count \ rul-lst0 rulc
-
+    \ Store list.
     tuck                        \ rulc rul-lst0 rulc
     _rulecorr-set-list          \ rulc
 ;

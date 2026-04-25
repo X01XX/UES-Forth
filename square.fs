@@ -212,14 +212,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     assert-nos-is-value
 
    \ Allocate space.
-    square-mma mma-allocate     \ r s addr
-
-    \ Store id.
-    square-id over              \ r s addr id addr
-    struct-set-id               \ r s addr
-
-    \ Init use count.
-    0 over struct-set-use-count \ r s addr
+    square-id square-mma
+    struct-allocate             \ r s addr
 
     \ Set result count.
     1 over _square-set-result-count     \ r s addr

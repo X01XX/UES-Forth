@@ -104,15 +104,10 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     <> abort" regioncorr-new: invalid list length?"
 
     \ Allocate space.
-    regioncorr-mma mma-allocate   \ reg-lst0 regc
+    regioncorr-id regioncorr-mma
+    struct-allocate             \ reg-lst0 regc
 
-    \ Store id.
-    regioncorr-id over            \ reg-lst0 regc id regc
-    struct-set-id                 \ reg-lst0 regc
-
-    \ Init use count.
-    0 over struct-set-use-count   \ reg-lst0 regc
-
+    \ Store list.
     tuck                          \ regc reg-lst0 regc
     _regioncorr-set-list          \ regc
 ;

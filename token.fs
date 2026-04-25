@@ -66,12 +66,10 @@ token-header-disp cell+ constant token-string-disp
 
 \ Return a new token struct instance address, with given data value.
 : token-new ( string-addr length -- token-addr )
-    token-mma mma-allocate      \ str-addr len token-addr
-    token-id over               \ str-addr len token-addr id token-addr
-    struct-set-id               \ str-addr len token-addr
-    0 over                      \ str-addr len token-addr 1 addr
-    struct-set-use-count        \ str-addr len token-addr
+    token-id token-mma
+    struct-allocate             \ str-addr len token-addr
 
+    \ Store string.
     -rot                        \ token-addr str-addr len
     #2 pick                     \ token-addr str-addr len token-addr
     token-set-string            \ token-addr

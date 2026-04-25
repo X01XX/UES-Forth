@@ -144,14 +144,8 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     depth #2 < abort" Too few argements"
 
     \ Allocate space.
-    region-mma mma-allocate     \ u1 u0 reg
-
-    \ Store id.
-    region-id over              \ u1 u0 reg id reg
-    struct-set-id               \ u1 u0 reg
-
-    \ Init use count.
-    0 over struct-set-use-count
+    region-id region-mma
+    struct-allocate             \ u1 u0 reg
 
     \ Prepare to store states.
     -rot                        \ reg u1 u0
