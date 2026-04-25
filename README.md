@@ -51,5 +51,6 @@ After corners are established and tested, some data accumulated in the process c
 The corners are the most data-efficent way to describe the regions, based on my experience.
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
 
-Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL. 
+Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
+Poor selection of data, or inability to select, can still result in understanding, it just takes longer.
 </pre>
