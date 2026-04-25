@@ -33,10 +33,12 @@
         \ Deallocate region instances in the list.
         [ ' regioncorrrate-deallocate ] literal over       \ lst0 xt lst0
         list-apply                                  \ lst0
-    then
 
-    \ Deallocate the list.
-    list-deallocate                                 \
+        \ Deallocate the list.
+        list-deallocate                              \
+    else
+        struct-dec-use-count
+    then
 ;
 
 \ Return true if a regioncorrrate is a member of a list.

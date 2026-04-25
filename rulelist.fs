@@ -33,10 +33,12 @@
         \ Deallocate rule instances in the list.
         [ ' rule-deallocate ] literal over          \ lst0 xt lst0
         list-apply                                  \ lst0
-    then
 
-    \ Deallocate the list.
-    list-deallocate                                 \
+        \ Deallocate the list.
+        list-deallocate                             \
+    else
+        struct-dec-use-count
+    then
 ;
 
 \ Push a rule to the end of a rule-list.

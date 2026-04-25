@@ -6,8 +6,11 @@
     #2 < if
         [ ' token-deallocate ] literal over     \ token-lst xt token-lst
         list-apply                              \ Deallocate token instances in the list.
+
+        list-deallocate                             \ Deallocate list and links.
+    else
+        struct-dec-use-count
     then
-    list-deallocate                             \ Deallocate list and links.
 ;
 
 \ Check if tos is an empty list, or has a token instance as its first item.

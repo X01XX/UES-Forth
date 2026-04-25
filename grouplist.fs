@@ -33,10 +33,12 @@
         \ Deallocate group instances in the list.
         [ ' group-deallocate ] literal over         \ lst0 xt lst0
         list-apply                                  \ lst0
-    then
 
-    \ Deallocate the list.
-    list-deallocate                                 \
+        \ Deallocate the list.
+        list-deallocate                             \
+    else
+        struct-dec-use-count
+    then
 ;
 
 \ Find a group in a list, by state, if any.
