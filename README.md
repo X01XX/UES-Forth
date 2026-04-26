@@ -37,6 +37,7 @@ The results are better with adjacent pairs, points on a logical <i>Edge</i>.
 The results are even better with multiple adjacencies, like (~A + ~B) & (~A + ~C), a logical <i>Corner</i>.
 The results are even better with a cluster of corners, like (~A + ~B) & (~A + ~C) & (~C + ~D).
 The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>Anchors</i>.
+Note that I added a corner by adding a single item, ~D.
 The number of adjacent, dissimilar, terms used for a corner, equals the number of edges of the region the anchor is in.  
 
 In the results, regions not completely overlapped by other regions are <i>Defining</i> regions, others are <i>Placeholders</i>.
@@ -52,5 +53,5 @@ The corners are the most data-efficent way to describe the regions, based on my 
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
 
 Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
-Poor selection of data, or inability to select, can still result in understanding, it just takes longer.
+Poor selection of data, or inability to select, can still result in understanding, it takes longer, requires more data.
 </pre>
