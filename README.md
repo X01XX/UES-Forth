@@ -30,7 +30,7 @@ A is different from B in some way.
   
 ~A + ~B covers everything, with regions containing A, regions containing B, regions containing neither,
 NO regions containing A and B.
-Similar calculations of other pairs, exhibiting the same difference, can be intersected for a finer understanding.
+Similar calculations of other pairs, exhibiting the same difference, can be intersected for an improved understanding.
 Everything intersecting everything, is still everything. The arrangement of the underlying regions changes.
 
 The results are better with adjacent pairs, points on a logical <i>Edge</i>.
@@ -48,10 +48,11 @@ Each defining region will have a corner.  Having more than one corner is possibl
 One of a region's corners may be better to keep than another, to be part of a corner cluster.
 Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor cannot be in more than one region.
 
-After corners are established and tested, some data accumulated in the process can be deleted.
-The corners are the most data-efficent way to describe the regions, based on my experience.
+After corners are established and tested, accumulated data, not part of the final corners, can be deleted.
+The corners are the most data-efficient way to describe the regions, based on my experience.
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
 
 Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
-Poor selection of data, or inability to select, can still result in understanding, it takes longer, requires more data.
+Poor selection of data, or inability to select, can still result in improved understanding, it requires more time, data input,
+and data storage, to haphazardly discover corners.
 </pre>
