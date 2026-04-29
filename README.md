@@ -57,9 +57,11 @@ Poor selection of data, or inability to select, can still result in improved und
 and data storage, to haphazardly discover corners.
 
 The program starts in the inability-to-select mode, taking samples as available.
-After 75, or so, samples (you can lean on the Enter key), a few short, single-step, plans become possible to allow seeking corners.
+After 75, or so, samples (you can lean on the Enter key), a few short, single-step,
+plans become possible to start to control selection.
 Early plans have a tendency to fail, but failure provides data, understanding improves.
-Plans become easier to find, more steps, more likely to succeed.
+
+With more samples, plans become easier to find, more steps per plan, more likely to succeed.
 Corners are found, corner clusters are calculated.
 The corner cluster algorithm can be slowed by too much data, maybe there's a better way?
 Corner clusters, sharing data, can go as low as one state per region, depending on how regularly the regions are arranged.
