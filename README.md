@@ -56,7 +56,7 @@ Understanding is tenuous at first, then improves with more data, selected judici
 Poor selection of data, or inability to select, can still result in improved understanding, it requires more time, data input,
 and data storage, to haphazardly discover corners.
 
-The program starts in the inability-to-select mode, taking samples as available.
+The program starts in the poor-selection mode, taking samples as available.
 After 75, or so, samples (you can lean on the Enter key), a few short, single-step, plans become possible to allow seeking corners.
 Early plans have a tendency to fail, but failure provides data, understanding improves.
 Plans become easier to find, more steps, more likely to succeed.
