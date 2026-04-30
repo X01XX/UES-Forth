@@ -64,6 +64,7 @@ Early plans have a tendency to fail, but failure provides data, understanding im
 With more samples, plans become easier to find, more steps per plan, more likely to succeed.
 Corners are found, corner clusters are calculated.
 The corner cluster algorithm can be slowed by too much data, maybe there's a better way?
-Corner clusters, sharing data, can go as low as one state per region, depending on how regularly the regions are arranged.
+Corner clusters, sharing data, can go as low as one state per region,
+depending on how regularly the regions are found to be arranged.
 Excess data is then deleted.
 </pre>
