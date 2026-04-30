@@ -51,6 +51,7 @@ Placeholder regions suppress anchors in overlapped parts of defining regions, si
 After corners are established and tested, accumulated data, not part of the final corners, can be deleted.
 The corners are the most data-efficient way to describe the regions, based on my experience.
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
+Corner clusters, sharing data, can go as low as one state per region, depending on how regularly the regions are found to be arranged.
 
 Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
 Poor selection of data, or inability to select, can still result in improved understanding, it requires more time, data input,
@@ -64,7 +65,5 @@ Early plans have a tendency to fail, but failure provides data, understanding im
 With more samples, plans become easier to find, more steps per plan, more likely to succeed.
 Corners are found, corner clusters are calculated.
 The corner cluster algorithm can be slowed by too much data, maybe there's a better way?
-Corner clusters, sharing data, can go as low as one state per region,
-depending on how regularly the regions are found to be arranged.
 Excess data is then deleted.
 </pre>
