@@ -71,7 +71,7 @@
 
 \ Isolate a least-significant-bit from a value.
 : value-isolate-lsb ( val0 -- val' bit )
-    dup 1 < abort" invalid number"
+    dup 0= abort" invalid number"
     dup 1- over and     \ val0 val'  Remove lsb from val0.
     swap                \ val' val0
     over xor            \ val' lsb   Get lsb.

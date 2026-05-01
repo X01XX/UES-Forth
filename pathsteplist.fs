@@ -503,12 +503,12 @@
     assert-tos-is-pathstep-list
     assert-nos-is-regioncorr
     assert-3os-is-regioncorr
-    \ cr ." pathstep-list-possible-next-steps: start: " .stack-gbl cr
+    \ cr ." pathstep-list-possible-next-steps: start: from: "  over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     \ Get needed changes.
     #2 pick #2 pick                             \ regc-to2 regc-from1 pthstp-lst0 | regc-to2 regc-from1
     changescorr-new-regc-to-regc                \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned'
-    \ cr ." pathstep-list-next-steps-indirect: changes needed: " dup .changescorr cr
+    \ cr ." pathstep-list-possible-next-steps: changes needed: " dup .changescorr cr
 
     \ Init return list.
     list-new                                    \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst
@@ -542,6 +542,7 @@
                     \ Result regions do not intersect.
                     \ Add pathstep.
                     dup link-get-data       \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
+                    \ cr ." pathstep-list-possible-next-steps: pathstep accepted: " dup .pathstep cr
                     #2 pick                 \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
                     list-push-struct        \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
                 then
@@ -572,6 +573,7 @@
                     if
                         \ No needed changes are required to get to the pathstep initial regions, save it
                         dup link-get-data           \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx
+                        \ cr ." pathstep-list-possible-next-steps: pathstep accepted: " dup .pathstep cr
                         #2 pick                     \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link pthstpx ret-lst
                         list-push-struct            \ regc-to2 regc-from1 pthstp-lst0 | cngsc-ned' ret-lst | pthstp-link
                     then
@@ -598,11 +600,13 @@
     if
         list-deallocate
         false
+        \ cr ." pathstep-list-possible-next-steps: false exit 1" cr
     else
         \ Find least-bad options.
         dup pathstep-list-filter-min-number-unwanted-changes    \ ret-lst ret-lst2
         swap pathstep-list-deallocate                           \ ret-lst2
         true
+        \ cr ." pathstep-list-possible-next-steps: true exit 2" cr
     then
     \ cr ." pathstep-list-possible-next-steps: end: " .stack-gbl cr
 ;

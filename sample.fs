@@ -82,7 +82,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
     !                       \ Set initial field.
 ;
 
-\ Set the result field from a sample instance, use only in this file.
+\ Set the result field of a sample instance, use only in this file.
 : _sample-set-result ( u1 smp0 -- )
     \ Check args.
     assert-tos-is-sample

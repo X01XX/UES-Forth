@@ -619,18 +619,18 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
             [char] X of
                         \ Set bit positions to 1/0.
                         \ Update sta1
-                        swap 1 lshift 1+
-                        \ Update sta0
                         swap 1 lshift
+                        \ Update sta0
+                        swap 1 lshift 1+
                         \ Update char counter.
                         rot 1+ -rot
                     endof
             [char] x of
                         \ Set bit positions to 0/1.
                         \ Update sta1
-                        swap 1 lshift
-                        \ Update sta0
                         swap 1 lshift 1+
+                        \ Update sta0
+                        swap 1 lshift
                         \ Update char counter.
                         rot 1+ -rot
                     endof

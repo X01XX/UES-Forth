@@ -121,6 +121,9 @@
     region-test-states-in
     region-test-translate-to-region
 
+    s" XxX1" region-from-string-a           \ reg
+    region-deallocate
+
     session-deallocate
 ;
 

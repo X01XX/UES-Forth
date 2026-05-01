@@ -181,7 +181,7 @@ list-new to structinfo-list-store
 #0406 square-mma-init
 ' square-deallocate ' .square s" Square" square-mma square-id structinfo-new structinfo-list-store structinfo-list-push-end
 
-#0370 pathstep-mma-init
+#0870 pathstep-mma-init
 ' pathstep-deallocate ' .pathstep s" PathStep" pathstep-mma pathstep-id structinfo-new structinfo-list-store structinfo-list-push-end
 
 #0040 plancorr-mma-init

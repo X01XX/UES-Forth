@@ -1401,6 +1401,7 @@ session-points-disp                     cell+   constant session-previous-points
     assert-3os-is-regioncorr
     assert-4os-is-regioncorr
     assert-5os-is-valid-depth
+    over list-is-empty? abort" pathstep list should not be empty"
 
     #3 pick #3 pick regioncorr-subset?
     abort" session-calc-path-fc: regc-from subset regc-to?"
@@ -1438,6 +1439,7 @@ session-points-disp                     cell+   constant session-previous-points
             regioncorr-list-deallocate      \ depth regc-to regc-from pthstp-lst sess0
             2drop 2drop drop
             false
+            \ cr ." false exit 1: " cr
             exit
         then
 
@@ -1492,6 +1494,7 @@ session-points-disp                     cell+   constant session-previous-points
                 2drop                           \ depth
                 drop
                 false
+                \ cr ." false exit 2: " cr
                 exit
             then
         then
@@ -1507,7 +1510,7 @@ session-points-disp                     cell+   constant session-previous-points
             2nip                            \ sess0 | ret-lst
             nip
             true
-            \ cr ." true exit 1: " over .regioncorr-list cr
+            \ cr ." true exit 3: " over .regioncorr-list cr
             exit
         then
                                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from'
@@ -1531,7 +1534,7 @@ session-points-disp                     cell+   constant session-previous-points
             2nip                            \ sess0 ret-lst
             nip                             \ ret-lst
             true
-            \ cr ." true exit 2: " over .regioncorr-list cr
+            \ cr ." true exit 4: " over .regioncorr-list cr
             exit
         then
     again
@@ -1561,6 +1564,7 @@ session-points-disp                     cell+   constant session-previous-points
         2nip                                    \ sess0 | regc-seq2
         nip                                     \ regc-seq2
         true
+        \ cr ." -bc true exit 5: " over .regioncorr-list cr
     else
         2drop 2drop drop
         false
@@ -1604,6 +1608,23 @@ session-points-disp                     cell+   constant session-previous-points
         2drop
         false
         \ cr ." session-calc-path: exit 1, false" cr
+        exit
+    then
+
+    \ Check if straight path is possible.
+    dup                                             \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-to'
+    #4 pick                                         \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-to' regc-from
+    #3 pick                                         \ regc-to regc-from sess0 | pthstp-lst regc-to' regc-to' regc-from pthstp-lst
+    pathstep-list-superset-both?                    \ regc-to regc-from sess0 | pthstp-lst regc-to' bool
+    if
+        nip nip                                     \ regc-to regc-from regc-to'
+        list-new                                    \ regc-to regc-from regc-to' ret-lst
+        tuck list-push-struct                       \ regc-to regc-from ret-lst
+        swap regioncorr-copy
+        over list-push-struct                       \ regc-to ret-lst
+        nip                                         \ ret-lst
+        true
+        \ cr ." session-calc-path: exit 2, true" cr
         exit
     then
 
@@ -1652,7 +1673,7 @@ session-points-disp                     cell+   constant session-previous-points
     if
         list-deallocate                             \
         false
-        \ cr ." session-calc-path: exit 2, false" cr
+        \ cr ." session-calc-path: exit 3, false" cr
         exit
     then
 
@@ -1706,12 +1727,12 @@ session-points-disp                     cell+   constant session-previous-points
 
     \ Clean up.
     swap
-    regioncorr-lol-deallocate
+    regioncorr-lol-deallocate                       \ regc-lstx
 
     \ Return.
     true
 
-    \ cr ." session-calc-path: end: "
+    \ cr ." session-calc-path: end: " over .regioncorr-list cr
 ;
 
 \ Return a plan to change from one regioncorr to another.
@@ -1846,6 +1867,7 @@ session-points-disp                     cell+   constant session-previous-points
                 regioncorr-deallocate   \ plnc-lst regc-lst regc-to sess0
                 3drop                   \ plnc-lst
                 true
+                \ cr ." session-calc-plnclst-from-pthstplst: true exit 1" cr
                 exit
             else                        \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx
                 \ space ." not found" cr
@@ -1854,6 +1876,7 @@ session-points-disp                     cell+   constant session-previous-points
                 3drop                   \ plnc-lst
                 plancorr-list-deallocate
                 false
+                \ cr ." session-calc-plnclst-from-pthstplst: false exit 2" cr
                 exit
             then
         else                            \ plnc-lst regc-lst regc-to sess0 regc-from regc-link regcx
@@ -1897,6 +1920,7 @@ session-points-disp                     cell+   constant session-previous-points
                 3drop                   \ plnc-lst
                 plancorr-list-deallocate
                 false
+                \ cr ." session-calc-plnclst-from-pthstplst: false exit 3" cr
                 exit
             then
         then
@@ -1907,6 +1931,7 @@ session-points-disp                     cell+   constant session-previous-points
     regioncorr-deallocate       \ plnc-lst regc-lst regc-to sess0
     3drop                       \ plnc-lst
     true
+    \ cr ." session-calc-plnclst-from-pthstplst: true exit 4" cr
 ;
 
 \ Return a target regioncorr for a need.
@@ -1968,7 +1993,7 @@ session-points-disp                     cell+   constant session-previous-points
     2dup                                            \ sess0 regc-to regc-from' regc-to regc-from'
     #4 pick                                         \ sess0 regc-to regc-from' regc-to regc-from' sess0
 
-    session-calc-path                               \ sess0 regc-to regc-from', regc-lst' t | f
+    session-calc-path                               \ sess0 regc-to regc-from', regc-seq' t | f
     if
         \ cr ." path found: " dup .regioncorr-list cr
         \ cr ." at xx: " cr
@@ -1985,7 +2010,7 @@ session-points-disp                     cell+   constant session-previous-points
             true
             exit
         else
-            \ cr ." session-change-to-plans: plans not found"
+            \ cr ." session-change-to-plans: session-calc-plnclst-from-regc-lst failed"
         then
         regioncorr-list-deallocate                  \ sess0 regc-to regc-from'
     else
@@ -3099,7 +3124,7 @@ session-points-disp                     cell+   constant session-previous-points
 ;
 
 \ Do commands from user input.
-\ Return true if the read-eval loop should continue.
+\ Return true if the read-eval loop should continue.session-do-to-command
 : session-eval-user-input ( tkn-lst1 sess0 -- bool )
     \ Check args.
     assert-tos-is-session
@@ -3309,7 +3334,7 @@ session-points-disp                     cell+   constant session-previous-points
     cr ." sas <domain id> <action id> <state> - Sample an Arbitrary State. Change domain current state, then sample with an action."
     cr ." dn <number> - Do Need number."
     cr ." mu - Display Memory Use."
-    cr ." tos <domain ID> <state> - TO domain State, from the current state, to an arbtrary value, by finding and executing a plan."
+    cr ." tos <domain ID> <state> - TO domain State, from the current state, to an arbitrary value, by finding and executing a plan."
     cr ." to - Change all domain states, like: to (0X00 000X1). Leading zeros are required."
     cr
     cr ." <state> will usually be like: %0101, leading zeros can be ommitted."
