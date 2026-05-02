@@ -49,7 +49,7 @@ One of a region's corners may be better to keep than another, to be part of a co
 Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor cannot be in more than one region.
 
 After corners are established and tested, accumulated data, not part of the final corners, can be deleted.
-The corners are the most data-efficient way to describe the regions, based on my experience.
+Corner clusters are the most data-efficient way to describe the regions, based on my experience.
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
 Corner clusters, sharing data, can go as low as one state per region, depending on how regularly the regions are found to be arranged.
 
@@ -62,8 +62,9 @@ After 75, or so, samples (you can lean on the Enter key), a few short, single-st
 plans become possible to start to control selection.
 Early plans have a tendency to fail, but failure provides data, understanding improves.
 
-With more samples, plans become easier to find, more steps per plan, more likely to succeed.
-Corners are found, corner clusters are calculated.
+With more actively selected samples, corners are found.
+Plans become easier to find, more steps per plan, more likely to succeed.
+Corner clusters are calculated.
 The corner cluster algorithm can be slowed by too much data, maybe there's a better way?
 Excess data is then deleted.
 </pre>
