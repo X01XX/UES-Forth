@@ -54,8 +54,8 @@ There may be an opportunity for a mathematical proof here, but I don't have that
 Corner clusters, sharing data, can go as low as one state per region, depending on how regularly the regions are found to be arranged.
 
 Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
-Poor selection of data, or inability to select, can still result in improved understanding, it requires more time, data input,
-and data storage, to haphazardly discover corners.
+Poor selection of data (like me, doing this), or inability to select, can still result in improved understanding,
+it requires more time, data input, and data storage, to haphazardly discover corners.
 
 The program starts in the inability-to-select mode, taking samples as available.
 After 75, or so, samples (you can lean on the Enter key), a few short, single-step,
