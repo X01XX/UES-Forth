@@ -32,13 +32,16 @@ A is different from B in some way.
 NO regions containing A and B.
 Similar calculations of other pairs, exhibiting the same difference, can be intersected for an improved understanding.
 Everything intersecting everything, is still everything. The arrangement of the underlying regions changes.
+
 Commonly, there are a lot of overlaps between regions, where there is no data.
 Overlaps are a measure of uncertainty.
+You could seek data in overlapped areas, producing smaller, more numerous, overlaps.  Thats ineffective.
 
 The results are better with adjacent pairs, points on a logical <i>Edge</i>.
 The results are even better with multiple adjacencies, like (~A + ~B) & (~A + ~C), a logical <i>Corner</i>.
 The results are even better with a cluster of corners, like (~A + ~B) & (~A + ~C) & (~C + ~D).
 "Better" can be defined as fewer overlaps, less uncertainty.
+
 The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>Anchors</i>.
 Note that I added a corner by adding a single item, ~D.
 The number of adjacent, dissimilar, terms used for a corner, equals the number of edges of the region the anchor is in.  
