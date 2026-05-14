@@ -32,7 +32,8 @@ A is different from B in some way.
 NO regions containing A and B.
 Similar calculations of other pairs, exhibiting the same difference, can be intersected for an improved understanding.
 Everything intersecting everything, is still everything. The arrangement of the underlying regions changes.
-Commonly, there are a lot of overlaps between regions.  Overlaps are a measure of uncertainty.
+Commonly, there are a lot of overlaps between regions, where there is no data.
+Overlaps are a measure of uncertainty.
 
 The results are better with adjacent pairs, points on a logical <i>Edge</i>.
 The results are even better with multiple adjacencies, like (~A + ~B) & (~A + ~C), a logical <i>Corner</i>.
