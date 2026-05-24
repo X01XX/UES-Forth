@@ -131,8 +131,12 @@ stack-header-disp   cell+   constant stack-items-disp   \ Item on the stack.
     if
         cr
        ." stack-pop stack is empty, one leaked address: "
-        dup stack-items-disp + @ hex. cr
-        #-24 throw
+       stack-items-disp + @ dup hex. cr
+       get-first-word
+       if
+          space ." first word: " .
+       then
+       #-24 throw
     then                        \ stack-addr
 
     dup                         \ stack-addr stack-addr
