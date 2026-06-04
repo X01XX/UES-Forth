@@ -33,18 +33,20 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 \ Check instance type.
 
-: is-allocated-changes ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-changes? ( addr -- bool )
+    dup changes-mma mma-is-item \ addr bool
     if
-        changes-id =
+        struct-get-id
+        changes-id =            \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for changes, unconventional, leaves stack unchanged.
 : assert-tos-is-changes ( tos -- tos )
-    dup is-allocated-changes
+    dup is-allocated-changes?
     false? if
         s" TOS is not an allocated changes."
        .abort-xt execute
@@ -53,7 +55,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 \ Check NOS for changes, unconventional, leaves stack unchanged.
 : assert-nos-is-changes ( nos tos -- nos tos )
-    over is-allocated-changes
+    over is-allocated-changes?
     false? if
         s" NOS is not an allocated changes."
        .abort-xt execute
@@ -62,7 +64,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 \ Check 3OS for changes, unconventional, leaves stack unchanged.
 : assert-3os-is-changes ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-changes
+    #2 pick is-allocated-changes?
     false? if
         s" 3OS is not an allocated changes."
        .abort-xt execute
@@ -71,7 +73,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 \ Check 4OS for changes, unconventional, leaves stack unchanged.
 : assert-4os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick is-allocated-changes
+    #3 pick is-allocated-changes?
     false? if
         s" 4OS is not an allocated changes."
        .abort-xt execute
@@ -80,7 +82,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 \ Check 5OS for changes, unconventional, leaves stack unchanged.
 : assert-5os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
-    #4 pick is-allocated-changes
+    #4 pick is-allocated-changes?
     false? if
         s" 5OS is not an allocated changes."
        .abort-xt execute

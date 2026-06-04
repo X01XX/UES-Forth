@@ -25,18 +25,20 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 ;
 
 \ Check instance type.
-: is-allocated-regioncorrrate ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-regioncorrrate? ( addr -- bool )
+    dup regioncorrrate-mma mma-is-item  \ addr bool
     if
-        regioncorrrate-id =
+        struct-get-id
+        regioncorrrate-id =             \ bool
     else
-        false
+        drop
+        false                           \ f
     then
 ;
 
 \ Check TOS for regioncorrrate, unconventional, leaves stack unchanged.
 : assert-tos-is-regioncorrrate ( tos -- tos )
-    dup is-allocated-regioncorrrate
+    dup is-allocated-regioncorrrate?
     false? if
         s" TOS is not an allocated regioncorrrate"
         .abort-xt execute
@@ -45,7 +47,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 
 \ Check NOS for regioncorrrate, unconventional, leaves stack unchanged.
 : assert-nos-is-regioncorrrate ( nos tos -- nos tos )
-    over is-allocated-regioncorrrate
+    over is-allocated-regioncorrrate?
     false? if
         s" NOS is not an allocated regioncorrrate"
         .abort-xt execute
@@ -173,5 +175,5 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     swap                            \ regc0 regcr1
     regioncorrrate-get-regioncorr   \ regc0 regc1
 
-    regioncorr-eq
+    regioncorrs-eq?
 ;

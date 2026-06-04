@@ -20,19 +20,20 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 ;
 
 \ Check instance type.
-: is-allocated-changescorr ( addr -- flag )
-    \ Insure the given addr cannot be an invalid addr.
-    get-first-word          \ w t | f
+: is-allocated-changescorr? ( addr -- bool )
+    dup changescorr-mma mma-is-item \ addr bool
     if
-        changescorr-id =
+        struct-get-id
+        changescorr-id =            \ bool
     else
-        false
+        drop
+        false                       \ f
     then
 ;
 
 \ Check TOS for changescorr, unconventional, leaves stack unchanged.
 : assert-tos-is-changescorr ( tos -- tos )
-    dup is-allocated-changescorr
+    dup is-allocated-changescorr?
     false? if
         s" TOS is not an allocated changescorr"
         .abort-xt execute
@@ -41,7 +42,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
 \ Check NOS for changescorr, unconventional, leaves stack unchanged.
 : assert-nos-is-changescorr ( nos tos -- nos tos )
-    over is-allocated-changescorr
+    over is-allocated-changescorr?
     false? if
         s" NOS is not an allocated changescorr"
         .abort-xt execute
@@ -50,7 +51,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
 \ Check 3OS for changescorr, unconventional, leaves stack unchanged.
 : assert-3os-is-changescorr ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-changescorr
+    #2 pick is-allocated-changescorr?
     false? if
         s" 3OS is not an allocated changescorr"
         .abort-xt execute

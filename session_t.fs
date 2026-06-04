@@ -274,19 +274,19 @@
     swap                                            \ dom0 ses
 
     \ Set negative region 0011.
-    s" (0011)" regioncorr-from-string-a             \ dom0 ses regc
+    s" (r0011)" regioncorr-from-string-a            \ dom0 ses regc
     -1 0 rate-new                                   \ dom0 ses regc rt
     regioncorrrate-new                              \ dom0 ses regc-rt
     over session-add-regioncorrrate                 \ dom0 ses
 
     \ Set negative region X101
-    s" (X101)" regioncorr-from-string-a             \ dom0 ses regc
+    s" (rX101)" regioncorr-from-string-a            \ dom0 ses regc
     -1 0 rate-new                                   \ dom0 ses regc rt
     regioncorrrate-new                              \ dom0 ses regc-rt
     over session-add-regioncorrrate                 \ dom0 ses
 
     \ Set negative region X110.
-    s" (X110)" regioncorr-from-string-a             \ dom0 ses regc
+    s" (rX110)" regioncorr-from-string-a            \ dom0 ses regc
     -1 0 rate-new                                   \ dom0 ses regc rt
     regioncorrrate-new                              \ dom0 ses regc-rt
     over session-add-regioncorrrate                 \ dom0 ses
@@ -297,7 +297,7 @@
     dup .session
 
     \ Get plans for 0->7.
-    s" (0111)" regioncorr-from-string-a             \ dom0 ses regc'
+    s" (r0111)" regioncorr-from-string-a            \ dom0 ses regc'
     dup                                             \ dom0 ses regc' regc'
     #2 pick session-change-to-plans                 \ dom0 ses regc', plnc-lst t | f
     if
@@ -357,13 +357,13 @@
     swap                                            \ dom0 ses
 
     \ Set negative region X101.
-    s" (0110)" regioncorr-from-string-a             \ dom0 ses regc
+    s" (r0110)" regioncorr-from-string-a            \ dom0 ses regc
     -1 0 rate-new                                   \ dom0 ses regc rt
     regioncorrrate-new                              \ dom0 ses regc-rt
     over session-add-regioncorrrate                 \ dom0 ses
 
     \ Set negative region X110
-    s" (0101)" regioncorr-from-string-a             \ dom0 ses regc
+    s" (r0101)" regioncorr-from-string-a            \ dom0 ses regc
     -1 0 rate-new                                   \ dom0 ses regc rt
     regioncorrrate-new                              \ dom0 ses regc-rt
     over session-add-regioncorrrate                 \ dom0 ses
@@ -373,8 +373,8 @@
 
     dup .session
 
-    s" (0111)" regioncorr-from-string-a             \ dom0 ses regc-to'
-    s" (0100)" regioncorr-from-string-a             \ dom0 ses regc-to' regc-from'
+    s" (r0111)" regioncorr-from-string-a            \ dom0 ses regc-to'
+    s" (r0100)" regioncorr-from-string-a            \ dom0 ses regc-to' regc-from'
 
     2dup                                            \ dom0 ses regc-to' regc-from' | regc-to' regc-from'
     #4 pick                                         \ dom0 ses regc-to' regc-from' | regc-to' regc-from' ses
@@ -389,7 +389,7 @@
 
         \ Check first regioncorr.
         2dup list-get-first-item                    \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' first-regc
-        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
+        regioncorrs-eq?                             \ dom0 ses regc-to' regc-from' | regc-seq' bool
         false? abort" first item is not regc-from?"
 
         \ The two intermediate regioncorrs can vary. 1X00->1X11, 1000->X011, 1000->1X11, X000->X011.
@@ -397,7 +397,7 @@
         \ Check last regioncorr.
         #2 pick over                                \ dom0 ses regc-to' regc-from' | regc-seq' regc-to' regc-seq'
         list-get-last-item                          \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' last-regc
-        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
+        regioncorrs-eq?                             \ dom0 ses regc-to' regc-from' | regc-seq' bool
         false? abort" last item is not regc-to?"
 
         \ Clean up.
@@ -458,13 +458,13 @@
     swap                                            \ dom0 ses
 
     \ Set negative region X101.
-    s" (X110)" regioncorr-from-string-a             \ dom0 ses regc
+    s" (rX110)" regioncorr-from-string-a            \ dom0 ses regc
     -1 0 rate-new                                   \ dom0 ses regc rt
     regioncorrrate-new                              \ dom0 ses regc-rt
     over session-add-regioncorrrate                 \ dom0 ses
 
     \ Set negative region X110
-    s" (X101)" regioncorr-from-string-a             \ dom0 ses regc
+    s" (rX101)" regioncorr-from-string-a            \ dom0 ses regc
     -1 0 rate-new                                   \ dom0 ses regc rt
     regioncorrrate-new                              \ dom0 ses regc-rt
     over session-add-regioncorrrate                 \ dom0 ses
@@ -474,10 +474,10 @@
 
     dup .session
 
-\   s" (0000)" regioncorr-from-string-a             \ dom0 ses regc-to'
-\   s" (0011)" regioncorr-from-string-a             \ dom0 ses regc-to'
-    s" (0111)" regioncorr-from-string-a             \ dom0 ses regc-to'
-    s" (0100)" regioncorr-from-string-a             \ dom0 ses regc-to' regc-from'
+\   s" (r0000)" regioncorr-from-string-a            \ dom0 ses regc-to'
+\   s" (r0011)" regioncorr-from-string-a            \ dom0 ses regc-to'
+    s" (r0111)" regioncorr-from-string-a            \ dom0 ses regc-to'
+    s" (r0100)" regioncorr-from-string-a            \ dom0 ses regc-to' regc-from'
 
     #3                                              \ dom0 ses regc-to' regc-from' | depth
     #2 pick                                         \ dom0 ses regc-to' regc-from' | depth regc-to
@@ -496,12 +496,12 @@
         dup list-get-length #4 <> abort" path not legth 4?"
 
         2dup list-get-first-item                    \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' first-regc
-        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
+        regioncorrs-eq?                             \ dom0 ses regc-to' regc-from' | regc-seq' bool
         false? abort" first item is not regc-from?"
 
         #2 pick over                                \ dom0 ses regc-to' regc-from' | regc-seq' regc-to' regc-seq'
         list-get-last-item                          \ dom0 ses regc-to' regc-from' | regc-seq' regc-from' last-regc
-        regioncorr-eq?                              \ dom0 ses regc-to' regc-from' | regc-seq' bool
+        regioncorrs-eq?                             \ dom0 ses regc-to' regc-from' | regc-seq' bool
         false? abort" last item is not regc-to?"
 
         \ Clean up.

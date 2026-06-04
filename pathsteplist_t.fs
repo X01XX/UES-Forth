@@ -55,8 +55,8 @@
     over pathstep-list-push                     \ sess pthstp-lst'
 
     \ Make to/from regioncorrs.
-    s" (0111)" regioncorr-from-string-a swap    \ sess regc-to' pthstp-lst'
-    s" (0100)" regioncorr-from-string-a swap    \ sess regc-to' regc-from' pthstp-lst'
+    s" (r0111)" regioncorr-from-string-a swap   \ sess regc-to' pthstp-lst'
+    s" (r0100)" regioncorr-from-string-a swap   \ sess regc-to' regc-from' pthstp-lst'
 
     \ Check direct steps.
     #2 pick #2 pick #2 pick                     \ sess regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
@@ -67,7 +67,7 @@
     \ Check result.
     dup list-get-length 1 <> abort" result list length ne 2?"
 
-    s" (0100)" regioncorr-from-string-a         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100'
+    s" (r0100)" regioncorr-from-string-a        \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100'
     dup                                         \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100'
     #2 pick                                     \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100' recgc-0100' pthstp-lst2'
     pathstep-list-find                          \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2' regc-0100', pthstpx t | f
@@ -112,8 +112,8 @@
     over pathstep-list-push                     \ sess pthstp-lst'
 
     \ Make to/from regioncorrs.
-    s" (0111)" regioncorr-from-string-a swap    \ sess regc-to' pthstp-lst'
-    s" (0100)" regioncorr-from-string-a swap    \ sess regc-to' regc-from' pthstp-lst'
+    s" (r0111)" regioncorr-from-string-a swap   \ sess regc-to' pthstp-lst'
+    s" (r0100)" regioncorr-from-string-a swap   \ sess regc-to' regc-from' pthstp-lst'
 
     #2 pick #2 pick #2 pick                     \ sess regc-to' regc-from' pthstp-lst' regc-to' regc-from' pthstp-lst'
     ?pathstep-list-possible-previous-steps       \ sess regc-to' regc-from' pthstp-lst' pthstp-lst2'
@@ -125,8 +125,8 @@
     \ Check first pathstep in list.
     dup list-get-first-item                     \ sess pthstp-lst2' item0
     dup pathstep-get-result-regions             \ sess pthstp-lst2' item0 initial0
-    s" (0111)" regioncorr-from-string-a         \ sess pthstp-lst2' item0 initial0 regcorr4'
-    2dup regioncorr-eq?                         \ sess pthstp-lst2' item0 initial0 regcorr4' bool
+    s" (r0111)" regioncorr-from-string-a        \ sess pthstp-lst2' item0 initial0 regcorr4'
+    2dup regioncorrs-eq?                        \ sess pthstp-lst2' item0 initial0 regcorr4' bool
     if
         \ Initial regions is ( 0100 )
         regioncorr-deallocate                   \ sess pthstp-lst2' item0 initial0
@@ -150,8 +150,8 @@
     \ Check first pathstep in list.
     dup list-get-first-item                     \ sess pthstp-lst2' item0
     dup pathstep-get-result-regions             \ sess pthstp-lst2' item0 initial0
-    s" (0011)" regioncorr-from-string-a         \ sess pthstp-lst2' item0 initial0 regcorr4'
-    2dup regioncorr-eq?                         \ sess pthstp-lst2' item0 initial0 regcorr4' bool
+    s" (r0011)" regioncorr-from-string-a        \ sess pthstp-lst2' item0 initial0 regcorr4'
+    2dup regioncorrs-eq?                        \ sess pthstp-lst2' item0 initial0 regcorr4' bool
     if
         \ Initial regions is ( 0100 )
         regioncorr-deallocate                   \ sess pthstp-lst2' item0 initial0

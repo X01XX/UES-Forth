@@ -26,18 +26,20 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 ;
 
 \ Check instance type.
-: is-allocated-domain ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-domain? ( addr -- bool )
+    dup domain-mma mma-is-item  \ addr bool
     if
-        domain-id =
+        struct-get-id
+        domain-id =             \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for domain, unconventional, leaves stack unchanged.
 : assert-tos-is-domain ( tos -- tos )
-    dup is-allocated-domain
+    dup is-allocated-domain?
     false? if
         s" TOS is not an allocated domain"
        .abort-xt execute
@@ -48,7 +50,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Check NOS for domain, unconventional, leaves stack unchanged.
 : assert-nos-is-domain ( nos tos -- nos tos )
-    over is-allocated-domain
+    over is-allocated-domain?
     false? if
         s" NOS is not an allocated domain"
        .abort-xt execute
@@ -312,21 +314,19 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
     \ Set all bits mask.
     dup domain-get-num-bits \ dom u
-    1-                      \ dom u'    Don't just take 2^n, as it might be the maximum number of bits.
-    1 swap lshift           \ dom u''   Get most-significant-bit.
-    1-                      \ dom u'''  Get all bits 1 except the msb.
-    1 lshift                \ dom u'''' Get all bits 1 except the least-significant-bit.
-    1+                      \ dom mask  Make lsb 1.
+    all-bits                \ dom mask
     over _domain-set-all-bits-mask
 
     \ Set max region.
     dup domain-get-all-bits-mask    \ dom msk
-    0 region-new2                   \ dom regx
+    0                               \ dom msk 0
+    #2 pick domain-get-num-bits     \ dom msk 0 nb
+    region-new2                     \ dom regx
     over _domain-set-max-region     \ dom
 
     \ Set the most significant bit mask.
     dup domain-get-num-bits \ dom u
-    1-                      \ dom u'    Don't just take 2^n, as it might be the maximum number of bits.
+    1-                      \ dom u'
     1 swap lshift           \ dom mask
     over _domain-set-ms-bit-mask    \ dom
 
@@ -735,7 +735,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ cr ." domain-find-action: Dom: " dup domain-get-inst-id . space over . cr
     \ Check args.
     assert-tos-is-domain
-    over 0 < if
+    over 0< if
         2drop
         false
         exit
@@ -762,7 +762,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 < abort" invalid depth?"
+    #3 pick 0< abort" invalid depth?"
     #2 pick #2 pick                                 \ | reg-to reg-from
     swap region-subset?                             \ | bool
     abort" domain-get-plan2-fc: Already at goal"    \ |
@@ -827,7 +827,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
             \ Check if this is the first step.
             #2 pick                                 \ depth reg-to reg-from dom0 | pln reg-from | stpx2 pln
-            plan-is-empty                           \ depth reg-to reg-from dom0 | pln reg-from | stpx2 bool
+            plan-is-empty?                          \ depth reg-to reg-from dom0 | pln reg-from | stpx2 bool
             if                                      \ depth reg-to reg-from dom0 | pln reg-from | stpx2
                 \ Restrict step.
                 2dup                                \ depth reg-to reg-from dom0 | pln reg-from | stpx reg-from stpx
@@ -869,7 +869,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             if                                      \ depth reg-to reg-from dom0 | pln reg-from | stpx | pln2
                 \ cr ." returned from domain-get-plan-fc: t " dup .plan space ." depth: " #7 pick . space ." continuing" cr
                 swap planstep-deallocate            \ depth reg-to reg-from dom0 | pln reg-from | pln2
-                #2 pick plan-is-empty               \ depth reg-to reg-from dom0 | pln reg-from | pln2 bool
+                #2 pick plan-is-empty?              \ depth reg-to reg-from dom0 | pln reg-from | pln2 bool
                 if                                  \ depth reg-to reg-from dom0 | pln reg-from | pln2
                     \ pln2 replaces pln.
                     nip                             \ depth reg-to reg-from dom0 | pln pln3
@@ -958,7 +958,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 < abort" Invalid depth?"
+    #3 pick 0< abort" Invalid depth?"
     \ cr ." domain-get-plan-fc:  start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     #3 0 do
@@ -1138,7 +1138,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 < abort" invalid depth?"
+    #3 pick 0< abort" invalid depth?"
     #2 pick #2 pick                                 \ | reg-to reg-from
     swap region-subset?                             \ | bool
     abort" domain-get-plan2-bc: Already at goal"    \ |
@@ -1187,7 +1187,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             \ Add intersecting step to plan.
             #2 pick                                 \ depth reg-to reg-from dom0 | pln reg-to | stpx pln
             \ Check if this is the first step.
-            plan-is-empty                           \ depth reg-to reg-from dom0 | pln reg-to | stpx bool
+            plan-is-empty?                          \ depth reg-to reg-from dom0 | pln reg-to | stpx bool
             if
                 \ Restrict step.
                 2dup                                \ depth reg-to reg-from dom0 | pln reg-to | stpx reg-to stpx
@@ -1231,7 +1231,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
             recurse                                 \ depth reg-to reg-from dom0 | pln reg-to | stpx | pln2 t | f
             if                                      \ depth reg-to reg-from dom0 | pln reg-to | stpx | pln2
                 swap planstep-deallocate            \ depth reg-to reg-from dom0 | pln reg-to | pln2
-                #2 pick plan-is-empty               \ depth reg-to reg-from dom0 | pln reg-to | pln2 bool
+                #2 pick plan-is-empty?              \ depth reg-to reg-from dom0 | pln reg-to | pln2 bool
                 if                                  \ depth reg-to reg-from dom0 | pln reg-to | pln2
                     \ Restrict plan2
                     tuck                            \ depth reg-to reg-from dom0 | pln pln2 reg-to pln2
@@ -1349,7 +1349,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     assert-tos-is-domain
     assert-nos-is-region
     assert-3os-is-region
-    #3 pick 0 < abort" Invalid depth?"
+    #3 pick 0< abort" Invalid depth?"
     \ cr ." domain-get-plan-bc:  start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     #3 0 do

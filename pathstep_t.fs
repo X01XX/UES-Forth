@@ -78,7 +78,7 @@
 ;
 
 : pathstep-tests
-
     pathstep-test-eq-initial-subset-result?
     pathstep-test-eq-initial-superset-result?
+
 ;

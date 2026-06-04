@@ -18,18 +18,20 @@ link-next-disp      cell+   constant link-data-disp
 ;
 
 \ Return true if TOS is an allocated link.
-: is-allocated-link ( link -- flag )
-    get-first-word          \ w t | f
+: is-allocated-link? ( link -- bool )
+    dup link-mma mma-is-item    \ addr bool
     if
-        link-id =
+        struct-get-id
+        link-id =               \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for link, unconventional, leaves stack unchanged.
 : assert-tos-is-link ( tos -- tos )
-    dup is-allocated-link
+    dup is-allocated-link?
     0= if
         s" TOS is not an allocated link."
        .abort-xt execute
@@ -101,7 +103,7 @@ link-next-disp      cell+   constant link-data-disp
 
     dup struct-get-use-count    \ link-addr count
 
-    dup 0 < abort" invalid use count"
+    dup 0< abort" invalid use count"
 
     #2 <
     if

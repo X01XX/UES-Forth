@@ -25,18 +25,20 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 ;
 
 \ Check instance type.
-: is-allocated-group ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-group? ( addr -- bool )
+    dup group-mma mma-is-item   \ addr bool
     if
-        group-id =
+        struct-get-id
+        group-id =              \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for group, unconventional, leaves stack unchanged.
 : assert-tos-is-group ( tos -- tos )
-    dup is-allocated-group
+    dup is-allocated-group?
     false? if
         s" TOS is not an allocated group"
        .abort-xt execute
@@ -45,7 +47,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 \ Check NOS for group, unconventional, leaves stack unchanged.
 : assert-nos-is-group ( nos tos -- nos tos )
-    over is-allocated-group
+    over is-allocated-group?
     false? if
         s" NOS is not an allocated group"
        .abort-xt execute
@@ -229,7 +231,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     assert-nos-is-region
 
     group-get-region
-    region-eq?
+    regions-eq?
 ;
 
 : .group ( grp -- )
@@ -371,7 +373,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     group-get-region
     swap
     group-get-region
-    region-eq?
+    regions-eq?
 ;
 
 \ Return true, if a state is in a group region.

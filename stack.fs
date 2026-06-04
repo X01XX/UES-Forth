@@ -134,7 +134,7 @@ stack-header-disp   cell+   constant stack-items-disp   \ Item on the stack.
        stack-items-disp + @ dup hex. cr
        get-first-word
        if
-          space ." first word: " .
+          space ." first word: " dec.
        then
        #-24 throw
     then                        \ stack-addr

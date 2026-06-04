@@ -322,7 +322,7 @@
     begin
         ?dup
     while
-        [ ' regioncorr-eq ] literal     \ ret-lst link xt
+        [ ' regioncorrs-eq? ] literal   \ ret-lst link xt
         over link-get-data              \ ret-lst link xt regcx
         #3 pick                         \ ret-lst link xt regcx ret-lst
         list-member                     \ ret-lst link bool
@@ -511,7 +511,7 @@
 ;
 
 \ Return true if two regioncorr-lists are equal.
-: regioncorr-list-eq ( regc-lst1 regc-lst0 -- bool )
+: regioncorr-lists-eq? ( regc-lst1 regc-lst0 -- bool )
     \ Check args.
     assert-tos-is-regioncorr-list
     assert-nos-is-regioncorr-list
@@ -531,7 +531,7 @@
     begin
         ?dup
     while
-        [ ' regioncorr-eq ] literal   \ regc-lst1 regc-link xt
+        [ ' regioncorrs-eq? ] literal       \ regc-lst1 regc-link xt
         over link-get-data                  \ regc-lst1 regc-link xt regc0
         #3 pick                             \ regc-lst1 regc-link xt regc0 regc-lst1
         list-member                         \ regc-lst1 regc-link bool
@@ -571,7 +571,7 @@
 
     \ Return if any regc in the list is a duplicate of regc1.
     2dup                                    \ regc1 regc-lst0 regc1 regc-lst0
-    [ ' regioncorr-eq ] literal             \ regc1 regc-lst0 regc1 regc-lst0 xt
+    [ ' regioncorrs-eq? ] literal           \ regc1 regc-lst0 regc1 regc-lst0 xt
     -rot                                    \ regc1 regc-lst0 xt regc1 regc-lst0
     list-member                             \ regc1 regc-lst0 flag
     if
@@ -878,7 +878,7 @@
 : regioncorr-list-copy-except ( regc2 inx1 lst0 -- lst )
     \ Check args.
     assert-tos-is-regioncorr-list
-    over 0 < abort" index out of range"
+    over 0< abort" index out of range"
     over over list-get-length < false? abort" index out of range"
     assert-3os-is-regioncorr
 
@@ -984,3 +984,48 @@
     2nip drop                           \ ret-lst
 ;
 
+\ Return a regioncorr-list from a string.
+: regioncorr-list-from-string ( c-addr u -- regc-lst t | f )
+    list-from-string-xt execute \ lst t | f
+    if
+    else
+        false
+        exit
+    then
+    \ If correct, list will be a list of region lists,
+    \ where each region list passes the corresponding test.
+
+    \ Init return list.
+    list-new swap               \ ret-lst reg-lol
+    dup list-get-links          \ ret-lst reg-lol lnk
+
+    begin
+        ?dup
+    while
+        dup link-get-data                           \ ret-lst reg-lol lnk reg-lst
+
+        dup region-list-corresponding?              \ ret-lst reg-lol lnk reg-lst bool
+        if
+            regioncorr-new                          \ ret-lst reg-lol lnk regcx
+            #3 pick                                 \ ret-lst reg-lol lnk regcx ret-lst
+            list-push-end-struct                    \ ret-lst reg-lol lnk
+        else
+            drop                                    \ ret-lst reg-lol
+            structinfo-list-deallocate-struct-list-xt execute
+            regioncorr-list-deallocate
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ ret-lst reg-lol
+    structinfo-list-deallocate-struct-list-xt execute
+    true
+;
+
+\ Return a regioncorr-list from a string, or abort.
+: regioncorr-list-from-string-a ( c-addr u -- regc-lst )
+    regioncorr-list-from-string     \ regc-lst t | f
+    false? abort" regioncorr-list-from-string: failed?"
+;

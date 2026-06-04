@@ -6,7 +6,7 @@
     #5 constant rule-struct-number-cells
 
 \ Struct fields.
-0                       constant rule-header-disp   \ 16-bits, [0] struct id, [1] use count.
+0                       constant rule-header-disp   \ 16-bits, [0] struct id, [1] use count, [2] Number bits ( 8 bits )
 rule-header-disp cell+  constant rule-m00-disp      \ 0->0 mask.
 rule-m00-disp    cell+  constant rule-m01-disp      \ 0->1 mask.
 rule-m01-disp    cell+  constant rule-m11-disp      \ 1->1 mask.
@@ -24,17 +24,19 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 \ Check instance type.
 
-: is-allocated-rule ( addr -- flag )    \ Check if an address is within the rule array.
-    get-first-word          \ w t | f
+: is-allocated-rule? ( addr -- bool )    \ Check if an address is within the rule array.
+    dup rule-mma mma-is-item    \ addr bool
     if
-        rule-id =
+        struct-get-id
+        rule-id =               \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 : assert-tos-is-rule ( tos -- tos ) \ Check TOS for rule, unconventional, leaves stack unchanged.
-    dup is-allocated-rule
+    dup is-allocated-rule?
     false? if
         s" TOS is not an allocated rule."
         .abort-xt execute
@@ -42,7 +44,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 ;
 
 : assert-nos-is-rule ( nos tos -- nos tos ) \ Check NOS for rule, unconventional, leaves stack unchanged.
-    over is-allocated-rule
+    over is-allocated-rule?
     false? if
         s" NOS is not an allocated rule."
         .abort-xt execute
@@ -50,7 +52,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 ;
 
 : assert-3os-is-rule ( 3os nos tos -- 3os nos tos ) \ Check 3OS for rule, unconventional, leaves stack unchanged.
-    #2 pick is-allocated-rule
+    #2 pick is-allocated-rule?
     false? if
         s" 3OS is not an allocated rule."
         .abort-xt execute
@@ -111,16 +113,40 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     !               \ Set the field.
 ;
 
+\ Get the number of bits.
+: rule-get-num-bits ( rul0 -- nb )
+    \ Check arg.
+    assert-tos-is-rule
+
+    4c@
+;
+
+\ Set the number of bits.
+: _rule-set-num-bits ( nb rul0 -- )
+    4c!
+;
+
 \ End accessors.
 
-: rule-new ( u-result u-initial -- rul )    \ Create a rule from two numbers on the stack.
-    \ Check args.
-    assert-tos-is-value
-    assert-nos-is-value
+: rule-new2 ( u-result u-initial nb -- rul )    \ Create a rule from two numbers on the stack.
+    dup 1 <
+    if
+        cr ." rule-new2: " .s cr
+        abort
+    then
+
+    dup #64 >
+    if
+        cr ." rule-new2: " .s cr
+        abort
+    then
 
     \ Allocate instance.
     rule-id rule-mma
-    struct-allocate         \ u-r u-i rul
+    struct-allocate         \ u-r u-i nb rul
+
+    \ Set number bits.
+    tuck _rule-set-num-bits \ u-r u-i rul
 
     \ Store fields.
     over !not               \ u-r u-i rul u-i-not
@@ -145,6 +171,17 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ Return result.
     nip nip                 \ rul
+;
+
+: rule-new ( u-result u-initial -- rul )    \ Create a rule from two numbers on the stack.
+    \ Check args.
+    assert-tos-is-value
+    assert-nos-is-value
+
+    \ Get current number bits, from current domain.
+    current-num-bits-gbl    \ u-result u-initial nb
+
+    rule-new2               \ rul
 ;
 
 : rule-get-masks ( rul0 -- m00 m01 m11 m10 )    \ Push all four masks onto stack.
@@ -177,10 +214,23 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     and
 ;
 
-: rule-eq ( rul1 rul0 -- flag ) \ Return true if two rules are equal.
+\ Return true if two rules have a different number of bits.
+: rules-dif-num-bits? ( rul1 rul0 -- flag )
+    \ Check args.
+    assert-tos-is-rule
+    assert-nos-is-rule
+
+    rule-get-num-bits   \ rul1 nb0
+    swap                \ nb0 rul1
+    rule-get-num-bits   \ nb0 nb1
+    <>
+;
+
+: rules-eq? ( rul1 rul0 -- flag ) \ Return true if two rules are equal.
     \ Check arg.
     assert-tos-is-rule
     assert-nos-is-rule
+    2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
     \ Check m00
     2dup rule-get-m00           \ rul1 rul0 rul1 0m00
@@ -225,8 +275,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
     \ Set up masks and most-significant-bit,
     \ the basis of each cycle.
-    rule-get-masks                      \ m00 m01 m11 m10
-    current-ms-bit-mask-gbl             \ m00 m01 m11 m10 ms
+    dup rule-get-num-bits ms-bit        \ rul ms
+
+    >r                                  \ rul rs: nb
+    rule-get-masks                      \ m00 m01 m11 m10 rs: nb
+    r>                                  \ m00 m01 m11 m10 ms
 
     begin
         dup
@@ -315,21 +368,27 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check arg.
     assert-tos-is-rule
 
-    rule-get-masks      \ m00 m01 m11 m10
-    or -rot             \ most-ones m00 m01
-    or !not             \ most-ones most-zeros
-    region-new
+    \ Save number bits.
+    dup rule-get-num-bits swap  \ nb rul0
+
+    rule-get-masks      \ nb m00 m01 m11 m10
+    or -rot             \ nb most-ones m00 m01
+    or !not             \ nb most-ones most-zeros
+    rot region-new2
 ;
 
 : rule-calc-result-region ( rul0 -- reg0 )  \ Return rule result region.
     \ Check arg.
     assert-tos-is-rule
 
-    rule-get-masks      \ m00 m01 m11 m10
-    -rot                \ m00 m10 m01 m11
-    or -rot             \ most-ones m00 m10
-    or !not             \ most-ones most-zeros
-    region-new
+    \ Save number bits.
+    dup rule-get-num-bits swap  \ nb rul0
+
+    rule-get-masks      \ nb m00 m01 m11 m10
+    -rot                \ nb m00 m10 m01 m11
+    or -rot             \ nb most-ones m00 m10
+    or !not             \ nb most-ones most-zeros
+    rot region-new2
 ;
 
 : rule-intersects-changes? ( csgs1 rul0 -- flag )    \ Return true if a rule's change intersects a changes' changes.
@@ -348,7 +407,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0<>
 ;
 
-: rule-initial-region-intersects ( reg1 rul0 -- bool )  \ Return true if a rule's initial region intersects a region.
+: rule-initial-region-intersects ( reg1 rul0 -- bool )  \ Return trdiff regioncorrlist_t.fs /media/earl/Archive/fs2/regioncorrlist_t.fsue if a rule's initial region intersects a region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
@@ -372,55 +431,64 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check arg.
     assert-tos-is-rule
 
+    dup rule-get-num-bits   \ rul0 nb
+    all-bits swap           \ all rul0
+
     \ Or all mask bits.
-    rule-get-masks          \ m00 m01 m11 m10
-    or or or                \ m-all
+    rule-get-masks          \ all m00 m01 m11 m10
+    or or or                \ all m-all
 
     \ Check that all bit positions are used.
-    current-all-bits-mask-gbl   \ m-all msk
     =
 ;
 
 \ A valid intersection may not have the same initial region as the intersection
 \ of the two rules initial regions.
 \ As X1 & Xx = 01, X1 & XX = 11, X0 & Xx = 10, X0 & XX = 00.
-: rule-intersection ( rul1 rul0 -- result t | f )    \ Return the valid result of a rule intersection, or false.
+: rule-intersection ( rul1 rul0 -- rul t | f )    \ Return the valid result of a rule intersection, or false.
     \ Check arg.
     assert-tos-is-rule
     assert-nos-is-rule
+    2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
-    \ Intersect m00         \ rul1 rul0
-    dup rule-get-m00        \ rul1 rul0 | 0m00
-    #2 pick rule-get-m00    \ rul1 rul0 | 0m00 1m00
-    and                     \ rul1 rul0 | m00
-    -rot                    \ m00 | rul1 rul0
+    \ Save number bits.
+    dup rule-get-num-bits -rot  \ nb rul1 rul0
 
-    \ Intersect m01         \ m00 | rul1 rul0
-    dup rule-get-m01        \ m00 | rul1 rul0 | 0m01
-    #2 pick rule-get-m01    \ m00 | rul1 rul0 | 0m01 1m01
-    and                     \ m00 | rul1 rul0 | m01
-    -rot                    \ m00 m01 | rul1 rul0
+    \ Intersect m00         \ nb rul1 rul0
+    dup rule-get-m00        \ nb rul1 rul0 | 0m00
+    #2 pick rule-get-m00    \ nb rul1 rul0 | 0m00 1m00
+    and                     \ nb rul1 rul0 | m00
+    -rot                    \ nb m00 | rul1 rul0
 
-    \ Intersect m11         \ m00 m01 | rul1 rul0
-    dup rule-get-m11        \ m00 m01 | rul1 rul0 | 0m11
-    #2 pick rule-get-m11    \ m00 m01 | rul1 rul0 | 0m11 1m11
-    and                     \ m00 m01 | rul1 rul0 | m11
-    -rot                    \ m00 m01 m11 | rul1 rul0
+    \ Intersect m01         \ nb m00 | rul1 rul0
+    dup rule-get-m01        \ nb m00 | rul1 rul0 | 0m01
+    #2 pick rule-get-m01    \ nb m00 | rul1 rul0 | 0m01 1m01
+    and                     \ nb m00 | rul1 rul0 | m01
+    -rot                    \ nb m00 m01 | rul1 rul0
 
-    \ Intersect m01         \ m00 m01 m11 | rul1 rul0
-    rule-get-m01            \ m00 m01 m11 | rul1 0m01
-    swap rule-get-m01       \ m00 m01 m11 | 0m11 1m01
-    and                     \ m00 m01 m11 m10
+    \ Intersect m11         \ nb m00 m01 | rul1 rul0
+    dup rule-get-m11        \ nb m00 m01 | rul1 rul0 | 0m11
+    #2 pick rule-get-m11    \ nb m00 m01 | rul1 rul0 | 0m11 1m11
+    and                     \ nb m00 m01 | rul1 rul0 | m11
+    -rot                    \ nb m00 m01 m11 | rul1 rul0
+
+    \ Intersect m01         \ nb m00 m01 m11 | rul1 rul0
+    rule-get-m01            \ nb m00 m01 m11 | rul1 0m01
+    swap rule-get-m01       \ nb m00 m01 m11 | 0m11 1m01
+    and                     \ nb m00 m01 m11 m10
 
     \ Start new rule.
     rule-id rule-mma
-    struct-allocate         \ m00 m01 m11 m10 rul
+    struct-allocate         \ nb m00 m01 m11 m10 rul
 
     \ Set each field.
-    tuck _rule-set-m10      \ m00 m01 m11 rul
-    tuck _rule-set-m11      \ m00 m01 rul
-    tuck _rule-set-m01      \ m00 rul
-    tuck _rule-set-m00      \ rul
+    tuck _rule-set-m10      \ nb m00 m01 m11 rul
+    tuck _rule-set-m11      \ nb m00 m01 rul
+    tuck _rule-set-m01      \ nb m00 rul
+    tuck _rule-set-m00      \ nb rul
+
+    \ Set num bits.
+    tuck _rule-set-num-bits \ rul
 
     \ Check rule.
     dup rule-all-bits-set   \ rul flag
@@ -442,43 +510,50 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     or                      \ mask
 ;
 
-: rule-union ( rul1 rul0 -- result t | f )   \ Return the result of a rule union, if valid.
+: rule-union ( rul1 rul0 -- rul t | f )   \ Return the result of a rule union, if valid.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
+    2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
-    \ Combine m00           \ rul1 rul0
-    over rule-get-m00       \ rul1 rul0 | 1m00
-    over rule-get-m00       \ rul1 rul0 | 1m00 0m00
-    or                      \ rul1 rul0 | m00
-    -rot                    \ m00 | rul1 rul0
+    \ Save number bits.
+    dup rule-get-num-bits -rot  \ nb rul1 rul0
 
-    \ Combine m01           \ m00 | rul1 rul0
-    over rule-get-m01       \ m00 | rul1 rul0 | 1m01
-    over rule-get-m01       \ m00 | rul1 rul0 | 1m01 0m01
-    or                      \ m00 | rul1 rul0 | m01
-    -rot                    \ m00 m01 | rul1 rul0
+    \ Combine m00           \ nb rul1 rul0
+    over rule-get-m00       \ nb rul1 rul0 | 1m00
+    over rule-get-m00       \ nb rul1 rul0 | 1m00 0m00
+    or                      \ nb rul1 rul0 | m00
+    -rot                    \ nb m00 | rul1 rul0
 
-    \ Combine m11           \ m00 m01 | rul1 rul0
-    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11
-    over rule-get-m11       \ m00 m01 | rul1 rul0 | 1m11 0m11
-    or                      \ m00 m01 | rul1 rul0 | m11
-    -rot                    \ m00 m01 m11 | rul1 rul0
+    \ Combine m01           \ nb m00 | rul1 rul0
+    over rule-get-m01       \ nb m00 | rul1 rul0 | 1m01
+    over rule-get-m01       \ nb m00 | rul1 rul0 | 1m01 0m01
+    or                      \ nb m00 | rul1 rul0 | m01
+    -rot                    \ nb m00 m01 | rul1 rul0
 
-    \ Combine m10           \ m00 m01 m11 | rul1 rul0
-    rule-get-m10            \ m00 m01 m11 | rul1 0m10
-    swap rule-get-m10       \ m00 m01 m11 | 0m10 1m10
-    or                      \ m00 m01 m11 m10
+    \ Combine m11           \ nb m00 m01 | rul1 rul0
+    over rule-get-m11       \ nb m00 m01 | rul1 rul0 | 1m11
+    over rule-get-m11       \ nb m00 m01 | rul1 rul0 | 1m11 0m11
+    or                      \ nb m00 m01 | rul1 rul0 | m11
+    -rot                    \ nb m00 m01 m11 | rul1 rul0
+
+    \ Combine m10           \ nb m00 m01 m11 | rul1 rul0
+    rule-get-m10            \ nb m00 m01 m11 | rul1 0m10
+    swap rule-get-m10       \ nb m00 m01 m11 | 0m10 1m10
+    or                      \ nb m00 m01 m11 m10
 
     \ Start new rule.
     rule-id rule-mma
-    struct-allocate         \ m00 m01 m11 m10 rul
+    struct-allocate         \ nb m00 m01 m11 m10 rul
 
     \ Set each field.
-    tuck _rule-set-m10      \ m00 m01 m11 rul
-    tuck _rule-set-m11      \ m00 m01 rul
-    tuck _rule-set-m01      \ m00 rul
-    tuck _rule-set-m00      \ rul
+    tuck _rule-set-m10      \ nb m00 m01 m11 rul
+    tuck _rule-set-m11      \ nb m00 m01 rul
+    tuck _rule-set-m01      \ nb m00 rul
+    tuck _rule-set-m00      \ nb rul
+
+    \ Set num bits.
+    tuck _rule-set-num-bits \ rul
 
     \ Check for 0->X.
     dup rule-get-m00
@@ -502,7 +577,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 ;
 
-: rule-union-by-changes ( rul1 rul0 -- result t | f )    \ If two rule changes (m01, m10) are equal, form a union.
+: rule-union-by-changes ( rul1 rul0 -- rul t | f )    \ If two rule changes (m01, m10) are equal, form a union.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
@@ -526,58 +601,68 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check arg.
     assert-tos-is-region
     assert-nos-is-region
+    2dup regions-dif-num-bits? abort" regions do not have the same number bits?"
 
     \ 2dup cr .region space .region cr
 
-    2dup change-masks-region-to-region  \ reg-to reg-from r10 r01
-    2swap                               \ r10 r01 reg-to reg-from
+    \ Save number bits.
+    dup region-get-num-bits -rot        \ nb reg-to reg-from
+
+    2dup change-masks-region-to-region  \ nb reg-to reg-from r10 r01
+    2swap                               \ nb r10 r01 reg-to reg-from
 
     \ Get reg-from masks.
-    dup region-x-mask -rot              \ r10 r01 fx reg-to reg-from
-    dup region-edge-0-mask -rot         \ r10 r01 fx f0 reg-to reg-from
-    region-edge-1-mask swap             \ r10 r01 fx f0 f1 reg-to
+    dup region-x-mask -rot              \ nb r10 r01 fx reg-to reg-from
+    dup region-edge-0-mask -rot         \ nb r10 r01 fx f0 reg-to reg-from
+    region-edge-1-mask swap             \ nb r10 r01 fx f0 f1 reg-to
 
     \ Get reg-to masks.
-    dup region-x-mask swap              \ r10 r01 fx f0 f1 tx reg-to
-    dup region-edge-0-mask swap         \ r10 r01 fx f0 f1 tx t0 reg-to
-    region-edge-1-mask                  \ r10 r01 fx f0 f1 tx t0 t1
+    dup region-x-mask swap              \ nb r10 r01 fx f0 f1 tx reg-to
+    dup region-edge-0-mask swap         \ nb r10 r01 fx f0 f1 tx t0 reg-to
+    region-edge-1-mask                  \ nb r10 r01 fx f0 f1 tx t0 t1
 
     \ Calc combined masks.
-    #5 pick #3 pick and                 \ r10 r01 fx f0 f1 tx t0 t1 | mxx
-    #6 pick #3 pick and                 \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0
-    #7 pick #3 pick and                 \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1
-    #7 pick #6 pick and                 \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x
-    #8 pick #6 pick and                 \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00
-    #8 pick #8 pick and                 \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x
-    #9 pick #7 pick and                 \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11
+    #5 pick #3 pick and                 \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx
+    #6 pick #3 pick and                 \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0
+    #7 pick #3 pick and                 \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1
+    #7 pick #6 pick and                 \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x
+    #8 pick #6 pick and                 \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00
+    #8 pick #8 pick and                 \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x
+    #9 pick #7 pick and                 \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11
 
     \ Calc r00.
-    #2 pick #6 pick #8 pick #6 pick     \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | m00 mx0 mxx m0x
-    or or or                            \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | r00
+    #2 pick #6 pick #8 pick #6 pick     \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | m00 mx0 mxx m0x
+    or or or                            \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | r00
 
     \ Calc r11.
-     over #6 pick #9 pick #5 pick       \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | r00 m11 mx1 mxx m1x
-     or or or                           \ r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | r00 r11
+     over #6 pick #9 pick #5 pick       \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | r00 m11 mx1 mxx m1x
+     or or or                           \ nb r10 r01 fx f0 f1 tx t0 t1 | mxx mx0 mx1 m0x m00 m1x m11 | r00 r11
 
      \ Clean up.
-     2nip 2nip 2nip 2nip 2nip 2nip      \ r10 r01 fx r00 r11
-     rot drop                           \ r10 r01 r00 r11
+     2nip 2nip 2nip 2nip 2nip 2nip      \ nb r10 r01 fx r00 r11
+     rot drop                           \ nb r10 r01 r00 r11
 
     \ Init rule
     rule-id rule-mma
-    struct-allocate                     \ r10 r01 r00 r11 rul
+    struct-allocate                     \ nb r10 r01 r00 r11 rul
 
     \ Build rule.
-    tuck _rule-set-m11                  \ r10 r01 r00 rul
-    tuck _rule-set-m00                  \ r10 r01 rul
-    tuck _rule-set-m01                  \ r10 rul
-    tuck _rule-set-m10                  \ rul
+    tuck _rule-set-m11                  \ nb r10 r01 r00 rul
+    tuck _rule-set-m00                  \ nb r10 r01 rul
+    tuck _rule-set-m01                  \ nb r10 rul
+    tuck _rule-set-m10                  \ nb rul
+
+    \ Set num bits.
+    tuck _rule-set-num-bits             \ rul
 ;
 
 : rule-restrict-initial-region ( reg1 rul0 -- rul t | f )   \ Return a rule restricted to an intersecting initial region.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
+    over region-get-num-bits    \ reg1 rul0 rnb
+    over rule-get-num-bits      \ reg1 rul0 rnb unb
+    <> abort" num bits mismatch?"
     \ cr ." rule-restrict-initial-region: " over .region space dup .rule cr
 
     2dup rule-initial-region-intersects  \ reg1 rul0 bool
@@ -587,38 +672,45 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         exit
     then
 
-    swap                        \ rul0 reg1
-    dup region-high-state swap  \ rul0 high reg1
-    region-low-state            \ rul0 high low
+    \ Save number bits.
+    dup rule-get-num-bits -rot  \ nb reg1 reg0
 
-    !not                        \ rul0 ones zeros
+    swap                        \ nb rul0 reg1
+    dup region-high-state swap  \ nb rul0 high reg1
+    region-low-state            \ nb rul0 high low
 
-    #2 pick rule-get-m00        \ rul0 ones zeros | m00
-    over and                    \ rul0 ones zeros | n00
-    #3 pick rule-get-m01        \ rul0 ones zeros | n00 m01
-    rot and                     \ rul0 ones n00 n01
-    2swap                       \ n00 n01 rul0 ones
+    !not                        \ nb rul0 ones zeros
 
-    over rule-get-m11           \ n00 n01 rul0 ones m11
-    over and                    \ n00 n01 rul0 ones n11
-    -rot                        \ n00 n01 n11 rul0 ones
-    swap                        \ n00 n01 n11 ones rul0
-    rule-get-m10 and            \ n00 n01 n11 n10
+    #2 pick rule-get-m00        \ nb rul0 ones zeros | m00
+    over and                    \ nb rul0 ones zeros | n00
+    #3 pick rule-get-m01        \ nb rul0 ones zeros | n00 m01
+    rot and                     \ nb rul0 ones n00 n01
+    2swap                       \ nb n00 n01 rul0 ones
+
+    over rule-get-m11           \ nb n00 n01 rul0 ones m11
+    over and                    \ nb n00 n01 rul0 ones n11
+    -rot                        \ nb n00 n01 n11 rul0 ones
+    swap                        \ nb n00 n01 n11 ones rul0
+    rule-get-m10 and            \ nb n00 n01 n11 n10
 
     rule-id rule-mma
-    struct-allocate             \ n00 n01 n11 n10 rul
+    struct-allocate             \ nb n00 n01 n11 n10 rul
 
-    tuck                        \ n00 n01 n11 rul r10 rul
-    _rule-set-m10               \ n00 n01 n11 rul
+    tuck                        \ nb n00 n01 n11 rul r10 rul
+    _rule-set-m10               \ nb n00 n01 n11 rul
 
-    tuck                        \ n00 n01 rul n11 rul
-    _rule-set-m11               \ n00 n01 rul
+    tuck                        \ nb n00 n01 rul n11 rul
+    _rule-set-m11               \ nb n00 n01 rul
 
-    tuck                        \ n00 rul n01 rul
-    _rule-set-m01               \ n00 rul
+    tuck                        \ nb n00 rul n01 rul
+    _rule-set-m01               \ nb n00 rul
 
-    tuck                        \ rul n00 rul
-    _rule-set-m00               \ rul
+    tuck                        \ nb rul n00 rul
+    _rule-set-m00               \ nb rul
+
+    \ Set num bits.
+    tuck _rule-set-num-bits             \ rul
+
     true
 ;
 
@@ -626,6 +718,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
+    over region-get-num-bits    \ reg1 rul0 rnb
+    over rule-get-num-bits      \ reg1 rul0 rnb unb
+    <> abort" num bits mismatch?"
 
     2dup rule-result-region-intersects  \ reg1 rul0 bool
     false? if
@@ -634,38 +729,45 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         exit
     then
 
-    swap                        \ rul0 reg1
-    dup region-high-state swap  \ rul0 high reg1
-    region-low-state            \ rul0 high low
+    \ Save number bits.
+    dup rule-get-num-bits -rot  \ nb reg1 reg0
 
-    !not                        \ rul0 ones zeros
+    swap                        \ nb rul0 reg1
+    dup region-high-state swap  \ nb rul0 high reg1
+    region-low-state            \ nb rul0 high low
 
-    #2 pick rule-get-m00        \ rul0 ones zeros | m00
-    over and                    \ rul0 ones zeros | n00
-    #3 pick rule-get-m10        \ rul0 ones zeros | n00 m10
-    rot and                     \ rul0 ones n00 n10
-    2swap                       \ n00 n10 rul0 ones
+    !not                        \ nb rul0 ones zeros
 
-    over rule-get-m11           \ n00 n10 rul0 ones m11
-    over and                    \ n00 n10 rul0 ones n11
-    -rot                        \ n00 n10 n11 rul0 ones
-    swap                        \ n00 n10 n11 ones rul0
-    rule-get-m01 and            \ n00 n10 n11 n01
+    #2 pick rule-get-m00        \ nb rul0 ones zeros | m00
+    over and                    \ nb rul0 ones zeros | n00
+    #3 pick rule-get-m10        \ nb rul0 ones zeros | n00 m10
+    rot and                     \ nb rul0 ones n00 n10
+    2swap                       \ nb n00 n10 rul0 ones
+
+    over rule-get-m11           \ nb n00 n10 rul0 ones m11
+    over and                    \ nb n00 n10 rul0 ones n11
+    -rot                        \ nb n00 n10 n11 rul0 ones
+    swap                        \ nb n00 n10 n11 ones rul0
+    rule-get-m01 and            \ nb n00 n10 n11 n01
 
     rule-id rule-mma
-    struct-allocate             \ n00 n10 n11 n01 rul
+    struct-allocate             \ nb n00 n10 n11 n01 rul
 
-    tuck                        \ n00 n10 n11 rul r01 rul
-    _rule-set-m01               \ n00 n10 n11 rul
+    tuck                        \ nb n00 n10 n11 rul r01 rul
+    _rule-set-m01               \ nb n00 n10 n11 rul
 
-    tuck                        \ n00 n10 rul n11 rul
-    _rule-set-m11               \ n00 n10 rul
+    tuck                        \ nb n00 n10 rul n11 rul
+    _rule-set-m11               \ nb n00 n10 rul
 
-    tuck                        \ n00 rul n10 rul
-    _rule-set-m10               \ n00 rul
+    tuck                        \ nb n00 rul n10 rul
+    _rule-set-m10               \ nb n00 rul
 
-    tuck                        \ rul n00 rul
-    _rule-set-m00               \ rul
+    tuck                        \ nb rul n00 rul
+    _rule-set-m00               \ nb rul
+
+    \ Set num bits.
+    tuck _rule-set-num-bits             \ rul
+
     true
 ;
 
@@ -704,10 +806,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     rule-get-m10 1 lshift over _rule-set-m10
 ;
 
-\ Givin initial and result chars,
+\ Given initial and result chars,
 \ left-shift all rule masks, set the right-most rule mask
 \ bit positions.  For the rule-from-string function.
-: _rule-adjust-masks ( ci cr rul0 -- )  \ Adjust rule, by rule-from-string.
+: _rule-adjust-masks ( ci cr rul0 -- bool )  \ Adjust rule, by rule-from-string.
     \ Check arg
     assert-tos-is-rule
 
@@ -725,7 +827,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
                 [char] 1 of \ process 0->1
                     _rule-adjust-mask-m01
                 endof
-                cr ." unexpected char" abort
+                \ Unexpected char.
+                2drop
+                false
+                exit
             endcase
         endof
         [char] 1 of
@@ -736,7 +841,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
                 [char] 1 of \ process 1->1
                     _rule-adjust-mask-m11
                 endof
-                cr ." unexpected char" abort
+                \ Unexpected char.
+                2drop
+                false
+                exit
             endcase
         endof
         [char] X of
@@ -757,66 +865,120 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
                     dup _rule-adjust-mask-m10
                     _rule-adjust-mask-m01
                 endof
-                cr ." unexpected char" abort
+                \ Unexpected char.
+                2drop
+                false
+                exit
             endcase
         endof
-        cr ." unexpected char" abort
+        \ Unexpected char.
+        2drop drop
+        false
+        exit
     endcase
+    true
 ;
 
 \ The slash (/) characters, *including the last*, are important as separators.
 \ The uderscore (_) character can also be used.
 \ All bit positions must be specified.
 : rule-from-string ( c-addr u -- rule t | f )   \ Return a rule from a string, like 00/01/11/10/XX/Xx/X0/X1/
+
+    \ Try early exit, if possible.
+
+    \ Check min length.
+    dup #3 <
+    if
+        2drop
+        false
+        exit
+    then
+
+    \ Check length is a multiple of 3.
+    dup #3 mod 0<>
+    if
+        2drop
+        false
+        exit
+    then
+
+    \ Check if it ends with slash.
+    2dup                            \ c-addr u c-addr u
+    \ Point to last char.
+    + 1-                            \ c-addr u c-addr+
+    \ Check last char is /.
+    c@                              \ c-addr u chr
+    [char] / =                      \ c-addr u bool
+    if
+    else
+        2drop
+        false
+        exit
+    then
+
     \ Init position counter.
     0 -rot                          \ cnt c-addr u
 
     \ Init rule.
     rule-id rule-mma
-    struct-allocate                 \ cnt addr n rul
+    struct-allocate                 \ cnt c-addr u rul
     0 over _rule-set-m00
     0 over _rule-set-m01
     0 over _rule-set-m11
-    0 over _rule-set-m10            \ cnt addr n rul
+    0 over _rule-set-m10            \ cnt c-addr u rul
 
-    -rot                            \ cnt rul addr n
+    -rot                            \ cnt rul c-addr u
+
     \ Check each pair of characters.
-    0                               \ cnt rul addr n 0
-    do                              \ cnt rul addr
-        dup c@                      \ cnt rul addr ci
+    0                               \ cnt rul c-addr u 0
+    do                              \ cnt rul c-addr
+        dup c@                      \ cnt rul c-addr ci
 
         case
             [char] ( of endof
             [char] ) of endof
-            [char] / of             \ cnt rul ci cr addr
-                -rot                \ cnt rul addr ci cr
-                #3 pick             \ cnt rul addr ci cr rul
-                _rule-adjust-masks  \ cnt rul addr
+            [char] / of             \ cnt rul ci cr c-addr
+                -rot                \ cnt rul c-addr ci cr
+                #3 pick             \ cnt rul c-addr ci cr rul
+                _rule-adjust-masks  \ cnt rul c-addr bool
+                if
+                else
+                    drop
+                    rule-deallocate
+                    drop
+                    false
+                    unloop
+                    exit
+                then
                 \ Inc counter
-                rot 1 + -rot
+                rot 1+ -rot
             endof
             [char] _ of
-                -rot                \ cnt rul addr ci cr
-                #3 pick             \ cnt rul addr ci cr rul
-                _rule-adjust-masks  \ cnt rul addr
+                -rot                \ cnt rul c-addr ci cr
+                #3 pick             \ cnt rul c-addr ci cr rul
+                _rule-adjust-masks  \ cnt rul c-addr bool
+                if
+                else
+                    drop
+                    rule-deallocate
+                    drop
+                    false
+                    unloop
+                    exit
+                then
                 \ Inc counter
-                rot 1 + -rot
+                rot 1+ -rot
             endof
             tuck                    \ cnt rul cx addr
         endcase
         1+
     loop
-                                    \ cnt rul addr+
+                                    \ cnt rul c-addr+
     drop                            \ cnt rul
 
     swap                            \ rul cnt
-    current-num-bits-gbl            \ rul cnt num-bits
-    = if
-        true
-    else
-        rule-deallocate
-        false
-    then
+    over _rule-set-num-bits         \ rul
+    true
 ;
 
 \ Get rule from a string, abort if the attempt failed.
@@ -853,6 +1015,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
+    over region-get-num-bits    \ reg1 rul0 rnb
+    over rule-get-num-bits      \ reg1 rul0 rnb unb
+    <> abort" num bits mismatch?"
 
     \ Restrict the rule's initial region.
     2dup                            \ reg1 rul0 reg1 rul0
@@ -881,66 +1046,73 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
+    2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
-    over rule-calc-initial-region   \ rul1 rul0 rul1-i
-    over rule-calc-result-region    \ rul1 rul0 rul1-i rul0-r
+    \ Save number bits.
+    dup rule-get-num-bits -rot      \ nb reg1 reg0
 
-    2dup region-intersects?         \ rul1 rul0 rul1-i rul0-r bool
+    over rule-calc-initial-region   \ nb rul1 rul0 rul1-i
+    over rule-calc-result-region    \ nb rul1 rul0 rul1-i rul0-r
+
+    2dup region-intersects?         \ nb rul1 rul0 rul1-i rul0-r bool
     false? abort" rules not linked?"
 
-                                    \ rul1 rul0 rul1-i rul0-r
+                                    \ nb rul1 rul0 rul1-i rul0-r
     region-deallocate
-    region-deallocate               \ rul1 rul0
+    region-deallocate               \ nb rul1 rul0
 
     \ Calc m00, (rul0-m00 & rul1-m00) + (rul0-m01 rlu1-m10).
-    dup rule-get-m00                \ rul1 rul0 rul0-m00
-    #2 pick rule-get-m00            \ rul1 rul0 rul0-m00 rul1-m00
-    and                             \ rul1 rul0 m00-a
-    over rule-get-m01               \ rul1 rul0 m00-a rul0-m01
-    #3 pick rule-get-m10            \ rul1 rul0 m00-a rul0-m01 rul1-m10
-    and                             \ rul1 rul0 m00-a m00-b
-    or                              \ rul1 rul0 m00
-    -rot                            \ m00 rul1 rul0
+    dup rule-get-m00                \ nb rul1 rul0 rul0-m00
+    #2 pick rule-get-m00            \ nb rul1 rul0 rul0-m00 rul1-m00
+    and                             \ nb rul1 rul0 m00-a
+    over rule-get-m01               \ nb rul1 rul0 m00-a rul0-m01
+    #3 pick rule-get-m10            \ nb rul1 rul0 m00-a rul0-m01 rul1-m10
+    and                             \ nb rul1 rul0 m00-a m00-b
+    or                              \ nb rul1 rul0 m00
+    -rot                            \ nb m00 rul1 rul0
 
     \ Calc m01, (rul0-m00 & rul1-m01) + (rul0-m01 rlu1-m11).
-    dup rule-get-m00                \ m00 rul1 rul0 rul0-m00
-    #2 pick rule-get-m01            \ m00 rul1 rul0 rul0-m00 rul1-m01
-    and                             \ m00 rul1 rul0 m01-a
-    over rule-get-m01               \ m00 rul1 rul0 m00-a rul0-m01
-    #3 pick rule-get-m11            \ m00 rul1 rul0 m00-a rul0-m01 rul1-m11
-    and                             \ m00 rul1 rul0 m00-a m01-b
-    or                              \ m00 rul1 rul0 m01
-    -rot                            \ m00 m01 rul1 rul0
+    dup rule-get-m00                \ nb m00 rul1 rul0 rul0-m00
+    #2 pick rule-get-m01            \ nb m00 rul1 rul0 rul0-m00 rul1-m01
+    and                             \ nb m00 rul1 rul0 m01-a
+    over rule-get-m01               \ nb m00 rul1 rul0 m00-a rul0-m01
+    #3 pick rule-get-m11            \ nb m00 rul1 rul0 m00-a rul0-m01 rul1-m11
+    and                             \ nb m00 rul1 rul0 m00-a m01-b
+    or                              \ nb m00 rul1 rul0 m01
+    -rot                            \ nb m00 m01 rul1 rul0
 
     \ Calc m011, (rul0-m11 & rul1-m11) + (rul0-m10 rlu1-m01).
-    dup rule-get-m11                \ m00 m01 rul1 rul0 rul0-m11
-    #2 pick rule-get-m11            \ m00 m01 rul1 rul0 rul0-m11 rul1-m11
-    and                             \ m00 m01 rul1 rul0 m11-a
-    over rule-get-m10               \ m00 m01 rul1 rul0 m11-a rul0-m10
-    #3 pick rule-get-m01            \ m00 m01 rul1 rul0 m11-a rul0-m10 rul1-m01
-    and                             \ m00 m01 rul1 rul0 m11-a m11-b
-    or                              \ m00 m01 rul1 rul0 m11
-    -rot                            \ m00 m01 m11 rul1 rul0
+    dup rule-get-m11                \ nb m00 m01 rul1 rul0 rul0-m11
+    #2 pick rule-get-m11            \ nb m00 m01 rul1 rul0 rul0-m11 rul1-m11
+    and                             \ nb m00 m01 rul1 rul0 m11-a
+    over rule-get-m10               \ nb m00 m01 rul1 rul0 m11-a rul0-m10
+    #3 pick rule-get-m01            \ nb m00 m01 rul1 rul0 m11-a rul0-m10 rul1-m01
+    and                             \ nb m00 m01 rul1 rul0 m11-a m11-b
+    or                              \ nb m00 m01 rul1 rul0 m11
+    -rot                            \ nb m00 m01 m11 rul1 rul0
 
     \ Calc m010, (rul0-m11 & rul1-m10) + (rul0-m10 rlu1-m00).
-    dup rule-get-m11                \ m00 m01 m11 rul1 rul0 rul0-m11
-    #2 pick rule-get-m10            \ m00 m01 m11 rul1 rul0 rul0-m11 rul1-m10
-    and                             \ m00 m01 m11 rul1 rul0 m10-a
-    over rule-get-m10               \ m00 m01 m11 rul1 rul0 m10-a rul0-m10
-    #3 pick rule-get-m00            \ m00 m01 m11 rul1 rul0 m10-a rul0-m10 rul1-m00
-    and                             \ m00 m01 m11 rul1 rul0 m10-a m10-b
-    or                              \ m00 m01 m11 rul1 rul0 m10
-    -rot                            \ m00 m01 m11 m10 rul1 rul0
-    2drop                           \ m00 m01 m11 m10
+    dup rule-get-m11                \ nb m00 m01 m11 rul1 rul0 rul0-m11
+    #2 pick rule-get-m10            \ nb m00 m01 m11 rul1 rul0 rul0-m11 rul1-m10
+    and                             \ nb m00 m01 m11 rul1 rul0 m10-a
+    over rule-get-m10               \ nb m00 m01 m11 rul1 rul0 m10-a rul0-m10
+    #3 pick rule-get-m00            \ nb m00 m01 m11 rul1 rul0 m10-a rul0-m10 rul1-m00
+    and                             \ nb m00 m01 m11 rul1 rul0 m10-a m10-b
+    or                              \ nb m00 m01 m11 rul1 rul0 m10
+    -rot                            \ nb m00 m01 m11 m10 rul1 rul0
+    2drop                           \ nb m00 m01 m11 m10
 
     \ Make new rule.
     rule-id rule-mma
-    struct-allocate                 \ m00 m01 m11 m10 rul
+    struct-allocate                 \ nb m00 m01 m11 m10 rul
 
-    tuck _rule-set-m10              \ m00 m01 m11 rul
-    tuck _rule-set-m11              \ m00 m01 rul
-    tuck _rule-set-m01              \ m00 rul
-    tuck _rule-set-m00              \ rul
+    tuck _rule-set-m10              \ nb m00 m01 m11 rul
+    tuck _rule-set-m11              \ nb m00 m01 rul
+    tuck _rule-set-m01              \ nb m00 rul
+    tuck _rule-set-m00              \ nb rul
+
+    \ Set num bits.
+    tuck _rule-set-num-bits             \ rul
 ;
 
 \ Given a rule and reg-to reg-from, return the number of unwanted changes.
@@ -950,6 +1122,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-tos-is-rule
     assert-nos-is-region
     assert-3os-is-region
+    #2 pick region-get-num-bits
+    #2 pick region-get-num-bits
+    #2 pick rule-get-num-bits       \ reg-to reg-from rul0 nb nb nb
+    over <> abort" num bits ne?"    \ reg-to reg-from rul0 nb nb
+    <> abort" num bits ne?"         \ reg-to reg-from rul0
 
     \ cr ." rule-number-unwanted-changes: reg-to: " #2 pick .region space ." reg-from: " over .region space dup .rule
 
@@ -998,6 +1175,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-tos-is-rule
     assert-nos-is-region
     assert-3os-is-region
+    #2 pick region-get-num-bits
+    #2 pick region-get-num-bits
+    #2 pick rule-get-num-bits       \ reg-to reg-from rul0 nb nb nb
+    over <> abort" num bits ne?"    \ reg-to reg-from rul0 nb nb
+    <> abort" num bits ne?"         \ reg-to reg-from rul0
 
     \ Calc reg-from to rule initial-region changes.
     rule-calc-initial-region            \ reg-to reg-from rul-i'
@@ -1023,6 +1205,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert-tos-is-rule
     assert-nos-is-region
     assert-3os-is-region
+    #2 pick region-get-num-bits
+    #2 pick region-get-num-bits
+    #2 pick rule-get-num-bits       \ reg-to reg-from rul0 nb nb nb
+    over <> abort" num bits ne?"    \ reg-to reg-from rul0 nb nb
+    <> abort" num bits ne?"         \ reg-to reg-from rul0
     \ cr ." rule-can-be-used-last: rul0: " dup .rule cr
 
     \ Calc the needed changes, reg-from to reg-to.
@@ -1080,7 +1267,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap rule-deallocate            \ rul-0b1
 ;
 
-: rule-is-valid ( rul0 - bool ) \ Return true if a rule is valid.
+: rule-is-valid? ( rul0 - bool ) \ Return true if a rule is valid.
     \ Check arg.
     assert-tos-is-rule
 
@@ -1119,6 +1306,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
+    over region-get-num-bits
+    over rule-get-num-bits
+    <> abort" num bits ne?"
 
     \ Restrict rule initial region.
     rule-restrict-initial-region        \ rul0' t | f
@@ -1139,6 +1329,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-region
+    over region-get-num-bits
+    over rule-get-num-bits
+    <> abort" num bits ne?"
 
     \ Restrict rule initial region.
     rule-restrict-result-region         \ rul0' t | f
@@ -1182,10 +1375,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Check args.
     assert-tos-is-rule
     assert-nos-is-rule
+    2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
     over rule-intersection      \ rul-sub, rul-int' t | f
     if
-        tuck rule-eq            \ rul-int' bool
+        tuck rules-eq?          \ rul-int' bool
         swap rule-deallocate    \ bool
     else
         drop

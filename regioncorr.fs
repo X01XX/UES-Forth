@@ -20,18 +20,20 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Check instance type.
-: is-allocated-regioncorr ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-regioncorr? ( addr -- bool )
+    dup regioncorr-mma mma-is-item  \ addr bool
     if
-        regioncorr-id =
+        struct-get-id
+        regioncorr-id =             \ bool
     else
-        false
+        drop
+        false                       \ f
     then
 ;
 
 \ Check TOS for regioncorr, unconventional, leaves stack unchanged.
 : assert-tos-is-regioncorr ( tos -- tos )
-    dup is-allocated-regioncorr
+    dup is-allocated-regioncorr?
     false? if
         s" TOS is not an allocated regioncorr"
         .abort-xt execute
@@ -42,7 +44,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Check NOS for regioncorr, unconventional, leaves stack unchanged.
 : assert-nos-is-regioncorr ( nos tos -- nos tos )
-    over is-allocated-regioncorr
+    over is-allocated-regioncorr?
     false? if
         s" NOS is not an allocated regioncorr"
         .abort-xt execute
@@ -53,7 +55,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Check 3OS for regioncorr, unconventional, leaves stack unchanged.
 : assert-3os-is-regioncorr ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-regioncorr
+    #2 pick is-allocated-regioncorr?
     false? if
         s" 3OS is not an allocated regioncorr"
         .abort-xt execute
@@ -62,7 +64,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Check 4OS for regioncorr, unconventional, leaves stack unchanged.
 : assert-4os-is-regioncorr ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick is-allocated-regioncorr
+    #3 pick is-allocated-regioncorr?
     false? if
         s" 4OS is not an allocated regioncorr"
         .abort-xt execute
@@ -378,73 +380,27 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     true
 ;
 
-\ Return a regioncorr from a token-list.
-: regioncorr-from-token-list ( tkn-lst0 -- regc t | f )
-    \ Check arg.
-    assert-tos-is-token-list
-
-    \ Check number tokens.
-    dup list-get-length         \ tkn-lst0 cnt
-    number-domains-gbl          \ tkn-lst0 cnt domain-count
-    <> if                       \ tkn-lst0
-        drop
-        false
-        exit
-    then
-
-    \ Process each region.
-                                            \ tkn-lst0
-    list-new                                \ tkn-lst0 ret-lst
-
-    \ Prep for loop.
-    swap list-get-links                     \ reg-lst tkn-lnk
-    get-domain-list-gbl list-get-links      \ reg-lst tkn-lnk d-lnk
-
-    \ Process each token.
-    begin
-        ?dup
-    while
-        \ Set current domain.
-        dup link-get-data           \ reg-lst tkn-lnk d-lnk domx
-        domain-set-current-gbl      \ reg-lst tkn-lnk d-lnk
-
-        \ Get one region.
-        over link-get-data          \ reg-lst tkn-lnk d-lnk tknx
-        token-get-string            \ reg-lst tkn-lnk d-lnk c-addr u
-        region-from-string          \ reg-lst tkn-lnk d-lnk, regx t | f
-        if
-            #3 pick                 \ reg-lst tkn-lnk d-lnk regx reg-lst
-            region-list-push-end    \ reg-lst tkn-lnk d-lnk
-        else
-            2drop
-            region-list-deallocate
-            false
-            exit
-        then
-
-        swap link-get-next
-        swap link-get-next
-    repeat
-
-    \ Clean up.                     \ reg-lst tkn-lnk
-    drop                            \ reg-lst
-
-    \ Return.
-    regioncorr-new                  \ regcorr
-    true
-;
-
 \ Return a regioncorr from a string.
 : regioncorr-from-string ( str-addr str-n -- regc t | f )
-    \ Get tokens.
-    token-list-from-string          \ tkn-lst'
-
-    dup regioncorr-from-token-list  \ tkn-lst', rec t | f
+    \ cr ." regioncorr-from-string: start: " 2dup type cr
+    list-from-string-xt execute             \ lst t | f
     if
-        swap token-list-deallocate
-        true
+        [ ' is-allocated-region? ] literal
+        over list-apply-all-true?           \ lst bool
+        if
+            dup region-list-corresponding?  \ lst bool
+            if
+                regioncorr-new
+                true
+            else
+                region-list-deallocate
+                false
+            then
+        else
+            structinfo-list-deallocate-struct-list-xt execute
+            false
+        then
     else
-        token-list-deallocate
         false
     then
 ;
@@ -453,36 +409,6 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 : regioncorr-from-string-a ( str-addr str-n -- regc )
     regioncorr-from-string    \ regc t | f
     false? abort" regioncorr-from-string-a failed?"
-;
-
-\ Return true if two regioncorrs are equal.
-: regioncorr-eq ( regc1 regc0 -- bool )
-    \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
-    \ cr ." regioncorr-eq: " over .regioncorr space dup .regioncorr cr
-
-    regioncorr-get-list list-get-links swap   \ link0 regc1
-    regioncorr-get-list list-get-links swap   \ link1 link0
-
-    begin
-        ?dup
-    while
-        over link-get-data  \ link1 link0 reg1
-        over link-get-data  \ link1 link0 reg1 reg0
-        region-eq?          \ link1 link0 bool
-        false? if
-            2drop
-            false
-            exit
-        then
-
-        swap link-get-next
-        swap link-get-next
-    repeat
-                            \ link1
-    drop
-    true
 ;
 
 \ Return the complement of a regioncorr, a list of regioncorr.
@@ -590,7 +516,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return true if two regioncorrs are equal.
-: regioncorr-eq? ( regc1 regc0 -- bool )
+: regioncorrs-eq? ( regc1 regc0 -- bool )
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
@@ -612,7 +538,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         \ Check regions
         #2 pick link-get-data       \ link1 link0 d-link reg1
         #2 pick link-get-data       \ link1 link0 d-link reg1 reg0
-        region-eq?                  \ link1 link0 d-link bool
+        regions-eq?                 \ link1 link0 d-link bool
         if
         else
             3drop
@@ -631,7 +557,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     true
 ;
 
-: regioncorr-union ( regc1 regc0 -- regc )
+: ?regioncorr-union ( regc1 regc0 -- regc )
     \ Check args.
     assert-tos-is-regioncorr
     assert-nos-is-regioncorr
@@ -657,7 +583,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         \ Check regions
         #2 pick link-get-data       \ reg-lst link1 link0 d-link reg1
         #2 pick link-get-data       \ reg-lst link1 link0 d-link reg1 reg0
-        region-union                \ reg-lst link1 link0 d-link reg-int'
+        ?region-union               \ reg-lst link1 link0 d-link reg-int'
         #4 pick                     \ reg-lst link1 link0 d-link reg-int' reg-lst
         region-list-push-end        \ reg-lst link1 link0 d-link
 

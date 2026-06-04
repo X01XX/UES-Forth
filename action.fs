@@ -27,18 +27,20 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 ;
 
 \ Check instance type.
-: is-allocated-action ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-action? ( addr -- bool )
+    dup action-mma mma-is-item  \ addr bool
     if
-        action-id =
+        struct-get-id
+        action-id =             \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for action, unconventional, leaves stack unchanged.
 : assert-tos-is-action ( tos -- tos )
-    dup is-allocated-action
+    dup is-allocated-action?
     false? if
         s" TOS is not an allocated action"
        .abort-xt execute
@@ -49,7 +51,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 \ Check NOS for action, unconventional, leaves stack unchanged.
 : assert-nos-is-action ( nos tos -- nos tos )
-    over is-allocated-action
+    over is-allocated-action?
     false? if
         s" NOS is not an allocated action"
        .abort-xt execute
@@ -60,7 +62,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 \ Check 3OS for action, unconventional, leaves stack unchanged.
 : assert-3os-is-action ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-action
+    #2 pick is-allocated-action?
     false? if
         s" 3OS is not an allocated action"
        .abort-xt execute
@@ -316,7 +318,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ End accessors
 
 \ Return true if a region, in the logical structure, is a defining region.
-: action-region-is-defining ( reg1 act0 -- flag )
+: action-is-region-defining? ( reg1 act0 -- flag )
     \ Check args.
     assert-tos-is-action
     assert-nos-is-region
@@ -331,7 +333,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Get results.
     rot                                 \ act0 LS reg1
     swap                                \ act0 reg1 LS
-    region-list-region-is-defining      \ act0 bool
+    region-list-is-region-defining?     \ act0 bool
     nip
 ;
 
@@ -390,7 +392,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     while
         dup link-get-data                   \ act0 df-lst ls-link regx
         #3 pick                             \ act0 df-lst ls-link regx act0
-        action-region-is-defining           \ act0 df-lst ls-link bool
+        action-is-region-defining?          \ act0 df-lst ls-link bool
         if
             dup link-get-data               \ act0 df-lst ls-link regx
             #2 pick                         \ act0 df-lst ls-link regx df-lst
@@ -646,9 +648,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Get max region.
     over domain-get-num-bits-xt         \ dom0 act xt
-    execute                             \ dom0 act nb
-    all-bits                            \ dom0 act all-bits
-    0 region-new2                       \ dom0 act mx-reg
+    execute all-bits                    \ dom0 act all-bits
+    0                                   \ dom0 act all-bits 0
+    #3 pick domain-get-num-bits-xt      \ dom0 act all-bits 0 xt
+    execute                             \ dom0 act all-bits 0 nb
+    region-new2                         \ dom0 act mx-reg
 
     \ Set logical-structure list.
     dup                                 \ dom0 act mx-reg mx-reg
@@ -1563,7 +1567,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         space ." state " dup region-get-states .value space ." and " .value space ." are no longer incompatible"
         cr
 
-        [ ' region-eq? ] literal swap   \ act0 reg-lst-not-i' link xt region
+        [ ' regions-eq? ] literal swap  \ act0 reg-lst-not-i' link xt region
         #4 pick                         \ act0 reg-lst-not-i' link xt region act0
         action-get-incompatible-pairs   \ act0 reg-lst-not-i' link xt region pair-list
         list-remove                     \ act0 reg-lst-not-i' link reg? flag

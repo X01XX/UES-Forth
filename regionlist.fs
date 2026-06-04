@@ -69,7 +69,7 @@
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    [ ' region-eq? ] literal -rot       \ xt list1 list0
+    [ ' regions-eq? ] literal -rot      \ xt list1 list0
     list-intersection-struct            \ list-result
 ;
 
@@ -79,7 +79,7 @@
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    [ ' region-eq? ] literal -rot       \ xt list1 list0
+    [ ' regions-eq? ] literal -rot      \ xt list1 list0
     list-union-struct                   \ list-result
 ;
 
@@ -91,7 +91,7 @@
     assert-tos-is-region-list
     assert-nos-is-region-list
 
-    [ ' region-eq? ] literal -rot       \ xt list1 list0
+    [ ' regions-eq? ] literal -rot      \ xt list1 list0
     list-difference-struct              \ list-result
 ;
 
@@ -123,7 +123,7 @@
 
     \ Return if any region in the list is a duplicate of reg1.
     2dup                                    \ reg1 list0 reg1 list0
-    [ ' region-eq? ] literal                \ reg1 list0 reg1 list0 xt
+    [ ' regions-eq? ] literal               \ reg1 list0 reg1 list0 xt
     -rot                                    \ reg1 list0 xt reg1 list0
     list-member                             \ reg1 list0 flag
     if
@@ -155,7 +155,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-eq? ] literal    \ reg1 list0  xt
+    [ ' regions-eq? ] literal   \ reg1 list0  xt
     -rot                        \ xt reg1 list0
 
     list-remove                 \ reg2 t | f
@@ -464,7 +464,7 @@
     assert-tos-is-region-list
     assert-nos-is-region
 
-    [ ' region-eq? ] literal -rot list-member
+    [ ' regions-eq? ] literal -rot list-member
 ;
 
 \ Return true if a region-list contains a superset, or equal, region.
@@ -668,7 +668,7 @@
         dup link-get-data               \ lst1 link data
 
         \ Check if its in the other list.
-        [ ' region-eq? ] literal swap    \ lst1 link xt data
+        [ ' regions-eq? ] literal swap   \ lst1 link xt data
         #3 pick                         \ lst1 link xt data lst1
         list-member                     \ lst1 link flag
 
@@ -954,7 +954,7 @@
 : region-list-copy-except ( reg2 inx1 lst0 -- lst )
     \ Check args.
     assert-tos-is-region-list
-    over 0 < abort" index out of range"
+    over 0< abort" index out of range"
     over over list-get-length < false? abort" index out of range"
     assert-3os-is-region
 
@@ -1028,18 +1028,22 @@
     true
 ;
 
-: region-list-from-string ( str-addr str-n -- reg-lst t | f )  \ Return a region-list from a string, like (x000 xx10).
+\ Return a one-d list of all regions, from a string.
+: region-list-from-string ( c-addr u -- reg-lst t | f )  \ Return a region-list from a string, like (x000 xx10).
+    cr ." region-list-from-string: " 2dup type cr
     \ Get tokens.
-    token-list-from-string          \ tkn-lst'
-
-    \ Get region-list.
-    dup                             \ tkn-lst' tkn-lst'
-    region-list-from-token-list     \ tkn-lst', reg-lst t | f
+    list-from-string-xt execute                 \ lst t | f
     if
-        swap token-list-deallocate  \ regc-lst
-        true
+        \ Check all are regions.
+        [ ' is-allocated-region? ] literal over \ lst xt lst
+        list-apply-all-true?                    \ lst bool
+        if
+            true
+        else
+            structinfo-list-deallocate-struct-list-xt execute
+            false
+        then
     else
-        token-list-deallocate
         false
     then
 ;
@@ -1088,7 +1092,7 @@
 ;
 
 \ Check if a region is a defining region.
-: region-list-region-is-defining ( reg1 reg-lst0 -- bool )
+: region-list-is-region-defining? ( reg1 reg-lst0 -- bool )
     \ Check args.
     assert-tos-is-region-list
     assert-nos-is-region
@@ -1108,7 +1112,7 @@
 
         \ Check if the region is the same as the given region. If so, skip it.
         #3 pick                             \ reg1 rem-lst ls-link regx reg1
-        region-eq?                          \ reg1 rem-lst ls-link bool
+        regions-eq?                         \ reg1 rem-lst ls-link bool
         if
         else
             dup link-get-data               \ reg1 rem-lst ls-link regx
@@ -1329,4 +1333,87 @@
     repeat
                                             \ sta-lst1 reg-lst0 ret-lst
     nip nip                                 \ ret-lst
+;
+
+\ Return true if all regions are valid for a given number of bits.
+: region-list-valid? ( nb reg-lst0 -- bool )
+    \ Check args.
+    assert-tos-is-region-list
+    assert-nos-num-bits
+
+    list-get-links              \ nb link
+
+    begin
+        ?dup
+    while
+        2dup                    \ nb link nb link
+        link-get-data           \ nb link nb regx
+        region-get-num-bits     \ nb link nb rnb
+        =
+        if
+        else
+            2drop
+            false
+            exit
+        then
+
+        link-get-next
+    repeat
+                                \ nb
+    drop
+    true
+;
+
+\ Return true if a region-list is valid for corresponding domains.
+: region-list-corresponding? ( reg-lst0 -- bool )
+    \ check arg.
+    assert-tos-is-list
+
+    \ Check list length.
+    dup list-get-length
+    number-domains-gbl
+    <> if
+        drop
+        false
+        exit
+    then
+
+    \ Check all items in the list are regions.
+    [ ' is-allocated-region? ] literal over \ reg-lst0 xt reg-lst0
+    list-apply-all-true?                    \ reg-lst0 bool
+    if
+    else
+        drop
+        false
+        exit
+    then
+
+    \ Prep for loop.
+    list-get-links                          \ reg-lnk
+    get-domain-list-gbl list-get-links      \ reg-lnk d-lnk
+
+    \ Process each token.
+    begin
+        ?dup
+    while
+        \ Set current domain.
+        dup link-get-data           \ reg-lnk d-lnk domx
+        domain-get-num-bits-xt      \ reg-lnk d-lnk xt
+        execute                     \ reg-lnk d-lnk dnb
+        #2 pick link-get-data       \ reg-lnk d-lnk dnb regx
+        region-get-num-bits         \ reg-lnk d-lnk dnb rnb
+        =
+        if
+        else
+            2drop
+            false
+            exit
+        then
+
+        swap link-get-next
+        swap link-get-next
+    repeat
+                                    \ reg-lnk
+    drop
+    true
 ;

@@ -35,18 +35,20 @@ session-points-disp                     cell+   constant session-previous-points
 ;
 
 \ Check instance type.
-: is-allocated-session ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-session? ( addr -- bool )
+    dup session-mma mma-is-item	\ addr bool
     if
-        session-id =
+        struct-get-id
+        session-id =            \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for session, unconventional, leaves stack unchanged.
 : assert-tos-is-session ( tos -- tos )
-    dup is-allocated-session
+    dup is-allocated-session?
     false? if
         s" TOS is not an allocated session"
         .abort-xt execute
@@ -697,7 +699,7 @@ session-points-disp                     cell+   constant session-previous-points
 : session-find-domain ( u1 sess0 -- dom t | f )
     \ Check args.
     assert-tos-is-session
-    over 0 < if
+    over 0< if
         2drop
         false
         exit
@@ -1469,7 +1471,7 @@ session-points-disp                     cell+   constant session-previous-points
             \ Prep for recursion.
             dup                                 \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx pthstpx
             pathstep-get-initial-regions        \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx regc-to
-            #8 pick 1 - swap                    \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to
+            #8 pick 1- swap                     \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to
             #3 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to cur-from'
             #7 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to cur-from' pthstp-lst
             #7 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' pthstpx depth- regc-to cur-from' pthstp-lst sess0
@@ -2156,7 +2158,7 @@ session-points-disp                     cell+   constant session-previous-points
 
     dup session-get-current-rate                        \ sess0 rate'
 
-    dup rate-is-negative                                \ sess0 rate' bool
+    dup rate-is-negative?                               \ sess0 rate' bool
     if
         cr ." current states are negative, seek closest non-negative states" cr
         rate-deallocate                                 \ sess0
@@ -2578,162 +2580,125 @@ session-points-disp                     cell+   constant session-previous-points
     true
 ;
 
-: session-do-dn-command ( tkn-lst1 sess0 -- )   \ Do the "dn" command. Do a need, given it's number in the displayed list.
+: session-do-dn-command ( cmd-lst1 sess0 -- )   \ Do the "dn" command. Do a need, given it's number in the displayed list.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length #2 <>              \ tkn-lst1 sess0 bool
+    over list-get-length #2 <>              \ cmd-lst1 sess0 bool
     if
         cr ." dn command has an invald number of arguments" cr
         2drop
         exit
     then
 
-    over list-get-second-item               \ tkn-lst1 sess0 tkn1
-    token-get-string                        \ tkn-lst1 sess0 c-addr u
-    snumber?                                \ tkn-lst1 sess0, n t | f
-    if                                      \ tkn-lst1 sess0 n
-        cr ." You entered number " dup . cr
+    over list-get-second-item               \ cmd-lst1 sess0 tkn1
 
-        \ Check lower bound.
-        dup 0 <                             \ tkn-lst1 sess0 n flag
-        if
-            cr ." Number entered is out of range" cr
-            2drop drop
-            exit
-        then                                \ tkn-lst1 sess0 n
+    cr ." You entered number " dup . cr
 
-        \ Check higher bound.
-        over                                \ tkn-lst1 sess0 n sess0
-        session-get-needs                   \ tkn-lst1 sess0 n ned-lst
-        dup list-get-length                 \ tkn-lst1 sess0 n ned-lst ned-len
-        #2 pick                             \ tkn-lst1 sess0 n ned-lst ned-len n
-        swap                                \ tkn-lst1 sess0 n ned-lst n ned-len
-        >=
-        if                                  \ tkn-lst1 sess0 n ned-lst flag
-            cr ." Number entered is out of range" cr
-            2drop 2drop
-            exit
-        then                                \ tkn-lst1 sess0 n ned-lst
+    \ Check lower bound.
+    dup 0<                              \ cmd-lst1 sess0 n flag
+    if
+        cr ." Number entered is out of range" cr
+        2drop drop
+        exit
+    then                                \ cmd-lst1 sess0 n
 
-        \ Get selected need.
-        list-get-item                       \ tkn-lst1 sess0 ned
-        cr ." You chose need: " dup .need cr
-        swap                                \ tkn-lst1 ned sess0
-        session-do-need                     \ tkn-lst1 bool
-        2drop
-    else                                    \ tkn-lst1 sess0
-        cr ." dn command argument not a number" cr
-        2drop
-    then
+    \ Check higher bound.
+    over                                \ cmd-lst1 sess0 n sess0
+    session-get-needs                   \ cmd-lst1 sess0 n ned-lst
+    dup list-get-length                 \ cmd-lst1 sess0 n ned-lst ned-len
+    #2 pick                             \ cmd-lst1 sess0 n ned-lst ned-len n
+    swap                                \ cmd-lst1 sess0 n ned-lst n ned-len
+    >=
+    if                                  \ cmd-lst1 sess0 n ned-lst flag
+        cr ." Number entered is out of range" cr
+        2drop 2drop
+        exit
+    then                                \ cmd-lst1 sess0 n ned-lst
+
+    \ Get selected need.
+    list-get-item                       \ cmd-lst1 sess0 ned
+    cr ." You chose need: " dup .need cr
+    swap                                \ cmd-lst1 ned sess0
+    session-do-need                     \ cmd-lst1 bool
+    2drop
 ;
 
-: session-do-to-command ( tkn-lst1 sess0 -- )  \ Do the "to" command. Change state to a given regioncorr.
+: session-do-to-command ( regc-to1 sess0 -- )  \ Do the "to" command. Change state to a given regioncorr.
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-token-list
-
-    over list-get-length                        \ tkn-lst1 sess0 len
-    over                                        \ tkn-lst0 sess0 len sess
-    session-get-number-domains 1 +              \ tkn-lst0 sess0 len num-dom+
-    <> if
-        cr ." to command has an invalid number of arguments" cr
-        2drop
-        exit
-    then
-
-    \ Get goal regioncorr.
-    over list-copy-after-first-struct           \ tkn-lst0 sess0 tkn-lst2'
-    dup regioncorr-from-token-list              \ tkn-lst0 sess0 tkn-lst2' regc-to' t | f
-    false? if
-        cr ." to command arguments did not convert to a regioncorr" cr
-        token-list-deallocate                   \ tkn-lst0 sess0
-        2drop
-        exit
-    then
-    swap token-list-deallocate                   \ tkn-lst0 sess0 regc-to'
+    assert-nos-is-regioncorr
 
     \ Get current regioncorr.
-    over session-get-current-regions            \ tkn-lst0 sess0 regc-to regc-from'
+    dup session-get-current-regions             \ regc-to1 sess0 regc-from'
 
     \ Check if the current states are already at the goal.
-    2dup swap                                   \ tkn-lst0 sess0 regc-to' regc-from' regc-from' regc-to
-    regioncorr-superset?                        \ tkn-lst0 sess0 regc-to' regc-from' bool
+    #2 pick                                     \ regc-to1 sess0 regc-from' regc-to1
+    over                                        \ regc-to1 sess0 regc-from' regc-to1 regc-from'
+    regioncorr-superset?                        \ regc-to1 sess0 regc-from' bool
     if
         cr ." The current states are already at goal." cr
         regioncorr-deallocate
-        regioncorr-deallocate
         2drop
         exit
     then
 
-    cr ." from: " dup .regioncorr space ." to: " over .regioncorr cr
-    regioncorr-deallocate                       \ tkn-lst0 sess0 regc-to'
-    dup                                         \ tkn-lst0 sess0 regc-to' regc-to'
-    #2 pick                                     \ tkn-lst0 sess0 regc-to' regc-to' sess0
-    session-change-to-plans                     \ tkn-lst0 sess0 regc-to' plnc-lst' t | f
+    cr ." from: " dup .regioncorr space ." to: " #2 pick .regioncorr cr
+    regioncorr-deallocate                       \ regc-to1 sess0
+    2dup                                        \ regc-to1 sess0 regc-to1 sess0
+    session-change-to-plans                     \ regc-to1 sess0, plnc-lst' t | f
     if
-        swap regioncorr-deallocate              \ tkn-lst0 sess0 plnc-lst'
-
         cr ." Plan found: " dup .plancorr-list cr
-        dup plancorr-list-run-plans             \ tkn-lst0 sess0 planc-lst' bool
+        dup plancorr-list-run-plans             \ regc-to1 sess0 planc-lst' bool
         if
             cr ." Plan suceeded" cr
         else
             cr ." Plan failed" cr
         then
-        plancorr-list-deallocate                \ tkn-lst0 sess0
+        plancorr-list-deallocate                \ regc-to1 sess0
         2drop
     else
         cr ." No plan found" cr
-        regioncorr-deallocate                   \ tkn-lst0 sess0
         2drop
     then
 ;
 
-: session-do-pd-command ( tkn-lst1 sess0 -- ) \ Do the "pd" command. Print a Domain.
+: session-do-pd-command ( cmd-lst1 sess0 -- ) \ Do the "pd" command. Print a Domain.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length                        \ tkn-lst1 sess0 len
+    over list-get-length                    \ cmd-lst1 sess0 len
     #2 <> if
         cr ." pd command: invalid number of arguments" cr
         2drop
         exit
     then
 
-    over list-get-second-item                   \ tkn-lst0 sess0 tkn1
-    token-get-string                            \ tkn-lst0 sess0 c-addr c-cnt
+    \ Get domain id.
+    over list-get-second-item               \ tkn-lst0 sess0 tkn1
 
-    \ Get domain.
-    snumber?                                    \ tkn-lst0 sess0, n t | f
+    over                                    \ tkn-lst0 sess0  n sess0
+    session-find-domain                     \ tkn-lst0 sess0, dom t | f
     if
-        over                                    \ tkn-lst0 sess0  n sess0
-        session-find-domain                     \ tkn-lst0 sess0, dom t | f
-        if
-            \ Set current domain.
-            tuck swap                           \ tkn-lst1 dom dom sess0
-            session-set-current-domain          \ tkn-lst1 dom
-            .domain                             \ tnk-lst1
-            drop
-        else
-            cr ." pd command: domain id value invalid" cr
-            2drop
-        then
+        \ Set current domain.
+        tuck swap                           \ cmd-lst1 dom dom sess0
+        session-set-current-domain          \ cmd-lst1 dom
+        .domain                             \ tnk-lst1
+        drop
     else
-        cr ." pd command: domain id not a number" cr
+        cr ." pd command: domain id value invalid" cr
         2drop
     then
 ;
 
-: session-do-cds-command ( tkn-lst1 sess0 -- )    \ Do the "cds" command. Change Domain State command.
+: session-do-cds-command ( cmd-lst1 sess0 -- )    \ Do the "cds" command. Change Domain State command.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length                        \ tkn-lst1 sess0 len
+    over list-get-length                    \ cmd-lst1 sess0 len
     #3 <> if
         cr ." cds command: invalid number of arguments" cr
         2drop
@@ -2741,53 +2706,40 @@ session-points-disp                     cell+   constant session-previous-points
     then
 
     \ Get domain.
-    over list-get-second-item                   \ tkn-lst1 sess0 tkn1
-    token-get-string                            \ tkn-lst1 sess0 c-addr u
-    snumber?                                    \ tkn-lst1 sess0, n t | f
-    if                                          \ tkn-lst1 sess0 n
-        over session-find-domain                \ tkn-lst0 sess0, dom t | f
-        if                                      \ tkn-lst0 sess0 dom
-            \ Set current domain.
-            dup #2 pick                         \ tkn-lst0 sess0 dom dom sess0
-            session-set-current-domain          \ tkn-lst0 sess0 dom
-        else
-            cr ." cds command: domain id invalid value" cr
-            2drop
-            exit
-        then
+    over list-get-second-item               \ cmd-lst1 sess0 tkn1
+
+    over session-find-domain                \ tkn-lst0 sess0, dom t | f
+    if                                      \ tkn-lst0 sess0 dom
+        \ Set current domain.
+        dup #2 pick                         \ tkn-lst0 sess0 dom dom sess0
+        session-set-current-domain          \ tkn-lst0 sess0 dom
     else
-        cr ." cds command: domain id not a number" cr
+        cr ." cds command: domain id invalid value" cr
         2drop
         exit
     then
 
     \ Get state.
-    #2 pick list-get-third-item                 \ tkn-lst0 sess0 dom tkn2
-    token-get-string                            \ tkn-lst0 sess0 dom c-addr u
-    snumber?                                    \ tkn-lst0 sess0 dom, num t | f
-    if                                          \ tkn-lst0 sess0 dom num
-        dup is-value?                           \ tkn-lst0 sess0 dom num bool
-        if
-            cr ." state " dup . cr
-            swap                                \ tkn-lst0 sess0 sta dom
-            domain-set-current-state            \ tkn-lst0 sess0
-            2drop
-        else
-            cr ." cds command: state invalid value" cr
-            2drop 2drop
-        then
+    #2 pick list-get-third-item             \ tkn-lst0 sess0 dom tkn2
+
+    dup is-value?                           \ tkn-lst0 sess0 dom num bool
+    if
+        cr ." state " dup . cr
+        swap                                \ tkn-lst0 sess0 sta dom
+        domain-set-current-state            \ tkn-lst0 sess0
+        2drop
     else
-        cr ." cds command: state not a number" cr
-        drop 2drop
+        cr ." cds command: state invalid value" cr
+        2drop 2drop
     then
 ;
 
-: session-do-psd-command ( tkn-lst1 sess0 -- ) \ Do the "pds" command. Print square detail for a domain's action.
+: session-do-psd-command ( cmd-lst1 sess0 -- ) \ Do the "pds" command. Print square detail for a domain's action.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length                        \ tkn-lst1 sess0 len
+    over list-get-length                    \ cmd-lst1 sess0 len
     #3 <> if
         cr ." psd command: invalid number of arguments" cr
         2drop
@@ -2795,57 +2747,44 @@ session-points-disp                     cell+   constant session-previous-points
     then
 
     \ Get domain.
-    over list-get-second-item                   \ tkn-lst1 sess0 tkn1
-    token-get-string                            \ tkn-lst1 sess0 c-addr-u
-    snumber?                                    \ tkn-lst1 sess0, dom-id t | f
-    if
-        \ cr ." domain " dup . cr
-        over session-find-domain                \ tkn-lst1 sess0, dom t | f
-        if                                      \ tkn-lst1 sess0 dom
-            \ Set current domain.
-            dup #2 pick                         \ tkn-lst1 sess0 dom dom sess0
-            session-set-current-domain          \ tkn-lst1 sess0 dom
-        else
-            cr ." psd command: domain id value invalid" cr
-            2drop
-            exit
-        then
+    over list-get-second-item               \ cmd-lst1 sess0 tkn1
+
+    \ cr ." domain " dup . cr
+    over session-find-domain                \ cmd-lst1 sess0, dom t | f
+    if                                      \ cmd-lst1 sess0 dom
+        \ Set current domain.
+        dup #2 pick                         \ cmd-lst1 sess0 dom dom sess0
+        session-set-current-domain          \ cmd-lst1 sess0 dom
     else
-        cr ." psd command: domain id not a number" cr
+        cr ." psd command: domain id value invalid" cr
         2drop
         exit
     then
 
     \ Get action.
-    #2 pick list-get-third-item                 \ tkn-lst1 sess0 dom tkn2
-    token-get-string                            \ tkn-lst1 sess0 dom c-addr u
-    snumber?                                    \ tkn-lst1 sess0 dom, act-id t | f
-    if                                          \ tkn-lst1 sess0 dom act-id
-        over                                    \ tkn-lst1 sess0 dom act-id dom
-        domain-find-action                      \ tkn-lst1 sess0 dom, act t | f
-        if
-            tuck swap                           \ tkn-lst1 sess0 act act dom
-            domain-set-current-action           \ tkn-lst1 sess0 act
-            action-get-squares                  \ tkn-lst1 sess0 sqr-lst
-            cr .square-list cr                  \ tkn-lst1 sess0
-            2drop
-            exit
-        else
-            cr ." psd command: action id value invalid" cr
-            drop 2drop
-        then
-    else
-        cr ." psd command: action id not a number" cr
+    #2 pick list-get-third-item             \ cmd-lst1 sess0 dom tkn2
+
+    over                                    \ cmd-lst1 sess0 dom act-id dom
+    domain-find-action                      \ cmd-lst1 sess0 dom, act t | f
+    if
+        tuck swap                           \ cmd-lst1 sess0 act act dom
+        domain-set-current-action           \ cmd-lst1 sess0 act
+        action-get-squares                  \ cmd-lst1 sess0 sqr-lst
+        cr .square-list cr                  \ cmd-lst1 sess0
         2drop
+        exit
+    else
+        cr ." psd command: action id value invalid" cr
+        drop 2drop
     then
 ;
 
-: session-do-tos-command ( tkn-lst1 sess0 -- ) \ Do the "tos" command. Change a domain to a state.
+: session-do-tos-command ( cmd-lst1 sess0 -- ) \ Do the "tos" command. Change a domain to a state.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length                            \ tkn-lst1 sess0 len
+    over list-get-length                            \ cmd-lst1 sess0 len
     #3 <> if
         cr ." tos command: invalid number of arguments" cr
         2drop
@@ -2853,85 +2792,72 @@ session-points-disp                     cell+   constant session-previous-points
     then
 
     \ Get domain.
-    over list-get-second-item                       \ tkn-lst1 sess0 tkn1
-    token-get-string                                \ tkn-lst1 sess0 c-addr u
-    snumber?                                        \ tkn-lst1 sess0, num t | f
-    if
-        over session-find-domain                    \ tkn-lst1 sess0, dom t | f
-        if                                          \ tkn-lst1 sess0 dom
-            \ Set current domain.
-            2dup swap                               \ tkn-lst1 sess0 dom dom sess0
-            session-set-current-domain              \ tkn-lst1 sess0 dom
-        else
-            cr ." tos command: domain id value invalid" cr
-            2drop
-            exit
-        then
+    over list-get-second-item                       \ cmd-lst1 sess0 tkn1
+
+    over session-find-domain                    \ cmd-lst1 sess0, dom t | f
+    if                                          \ cmd-lst1 sess0 dom
+        \ Set current domain.
+        2dup swap                               \ cmd-lst1 sess0 dom dom sess0
+        session-set-current-domain              \ cmd-lst1 sess0 dom
     else
-        cr ." tos command: domain id not a number" cr
+        cr ." tos command: domain id value invalid" cr
         2drop
         exit
     then
 
     \ Get state.
-    #2 pick list-get-third-item                 \ tkn-lst1 sess0 dom tkn1
-    token-get-string                            \ tkn-lst1 sess0 dom c-addr u
-    snumber?                                    \ tkn-lst1 sess0 dom, to-sta t | f
+    #2 pick list-get-third-item                 \ cmd-lst1 sess0 dom tkn1
+
+    dup is-value?                           \ cmd-lst1 sess0 dom to-sta bool
     if
-        dup is-value?                           \ tkn-lst1 sess0 dom to-sta bool
-        if
-            swap                                \ tkn-lst1 sess0 to-sta dom
-            dup domain-get-current-state        \ tkn-lst1 sess0 to-sta dom cur-sta
-            rot swap                            \ tkn-lst1 sess0 dom to-sta cur-sta
-            2dup =
-            if                                  \ tkn-lst1 sess0 dom to-sta cur-sta
-                cr ." Already at that state."
-                2drop 2drop drop
-                exit
-            then
+        swap                                \ cmd-lst1 sess0 to-sta dom
+        dup domain-get-current-state        \ cmd-lst1 sess0 to-sta dom cur-sta
+        rot swap                            \ cmd-lst1 sess0 dom to-sta cur-sta
+        2dup =
+        if                                  \ cmd-lst1 sess0 dom to-sta cur-sta
+            cr ." Already at that state."
+            2drop 2drop drop
+            exit
+        then
 
-            \ Do domain-get-plan
-            dup region-new swap                 \ tkn-lst1 sess0 dom cur-reg' to-sta
-            dup region-new swap                 \ tkn-lst1 sess0 dom to-reg' cur-reg'
+        \ Do domain-get-plan
+        dup region-new swap                 \ cmd-lst1 sess0 dom cur-reg' to-sta
+        dup region-new swap                 \ cmd-lst1 sess0 dom to-reg' cur-reg'
 
-            rot                                 \ tkn-lst1 sess0 to-reg' cur-reg' dom
-            #2 pick swap                        \ tkn-lst1 sess0 to-reg' cur-reg' to-reg' dom
-            #2 pick swap                        \ tkn-lst1 sess0 to-reg' cur-reg' to-reg' cur-reg' dom
-            domain-get-plan                     \ tkn-lst1 sess0 to-reg' cur-reg', plan' t | f
-            if                                  \ tkn-lst1 sess0 to-reg' cur-reg' plan'
-                swap region-deallocate          \ tkn-lst1 sess0 to-reg' plan'
-                swap region-deallocate          \ tkn-lst1 sess0 plan'
-                dup                             \ tkn-lst1 sess0 plan' plan'
-                plan-run                        \ tkn-lst1 sess0 plan' flag
-                swap plan-deallocate            \ tkn-lst1 sess0 flag
-                if
-                    cr ." Plan succeeded" cr
-                else
-                    cr ." Plan failed" cr
-                then
-                2drop
-            else                                \ tkn-lst1 sess0 to-reg cur-reg
-                region-deallocate               \ tkn-lst1 sess0 to-reg
-                region-deallocate               \ tkn-lst1 sess0
-                2drop
-                cr ." No plan found" cr
+        rot                                 \ cmd-lst1 sess0 to-reg' cur-reg' dom
+        #2 pick swap                        \ cmd-lst1 sess0 to-reg' cur-reg' to-reg' dom
+        #2 pick swap                        \ cmd-lst1 sess0 to-reg' cur-reg' to-reg' cur-reg' dom
+        domain-get-plan                     \ cmd-lst1 sess0 to-reg' cur-reg', plan' t | f
+        if                                  \ cmd-lst1 sess0 to-reg' cur-reg' plan'
+            swap region-deallocate          \ cmd-lst1 sess0 to-reg' plan'
+            swap region-deallocate          \ cmd-lst1 sess0 plan'
+            dup                             \ cmd-lst1 sess0 plan' plan'
+            plan-run                        \ cmd-lst1 sess0 plan' flag
+            swap plan-deallocate            \ cmd-lst1 sess0 flag
+            if
+                cr ." Plan succeeded" cr
+            else
+                cr ." Plan failed" cr
             then
-        else
-            cr ." tos command: state value invalid" cr
-            2drop drop
+            2drop
+        else                                \ cmd-lst1 sess0 to-reg cur-reg
+            region-deallocate               \ cmd-lst1 sess0 to-reg
+            region-deallocate               \ cmd-lst1 sess0
+            2drop
+            cr ." No plan found" cr
         then
     else
-        cr ." tos command: state not a number" cr
-        2drop
+        cr ." tos command: state value invalid" cr
+        2drop drop
     then
 ;
 
-: session-do-scs-command ( tkn-lst1 sess0 -- ) \ Do the "scs" command.  Sample the current state of a domain.
+: session-do-scs-command ( cmd-lst1 sess0 -- ) \ Do the "scs" command.  Sample the current state of a domain.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length                        \ tkn-lst1 sess0 len
+    over list-get-length                    \ cmd-lst1 sess0 len
     #3 <> if
         cr ." scs command: invalid number of arguments" cr
         2drop
@@ -2939,61 +2865,47 @@ session-points-disp                     cell+   constant session-previous-points
     then
 
     \ Get domain.
-    over list-get-second-item                   \ tkn-lst1 sess0 tkn1
-    token-get-string                            \ tkn-lst1 sess0 c-addr u
-    snumber?                                    \ tkn-lst1 sess0, dom-id t | f
+    over list-get-second-item               \ cmd-lst1 sess0 tkn1
+
+    over session-find-domain                \ cmd-lst1 sess0, dom t | f
     if
-        \ cr ." domain " dup . cr
-        over session-find-domain                \ tkn-lst1 sess0, dom t | f
-        if
-            \ Set current domain.
-            2dup swap                           \ tkn-lst1 sess0 dom dom sess0
-             session-set-current-domain         \ tkn-lst1 sess0 dom
-        else
-            cr ." scs command: domain id value invalid" cr
-            2drop
-            exit
-        then
+        \ Set current domain.
+        2dup swap                           \ cmd-lst1 sess0 dom dom sess0
+            session-set-current-domain      \ cmd-lst1 sess0 dom
     else
-        cr ." scs command: domain id not a number" cr
+        cr ." scs command: domain id value invalid" cr
         2drop
         exit
     then
 
+
     \ Get action.
-    #2 pick list-get-third-item                 \ tkn-lst1 sess0 dom tkn2
-    token-get-string                            \ tkn-lst1 sess0 dom c-addr u
-    snumber?                                    \ tkn-lst1 sess0 dom, act-id t | f
-    if                                          \ tkn-lst1 sess0 dom act-id
-        \ cr ." action " dup . cr
-        over domain-find-action                 \ tkn-lst1 sess0 dom, act t | f
-        if
-            swap 2dup                           \ tkn-lst1 sess0 act dom act dom
-            domain-set-current-action           \ tkn-lst1 sess0 act dom
-            dup domain-get-current-state        \ tkn-lst1 sess0 act dom cur-sta
-            rot                                 \ tkn-lst1 sess0 dom cur-sta act
-            action-get-sample                   \ tkn-lst1 sess0 dom smpl'
-            dup sample-get-result               \ tkn-lst1 sess0 dom smpl' smpl-r
-            rot                                 \ tkn-lst1 sess0 smpl' smpl-r dom
-            domain-set-current-state            \ tkn-lst1 sess0 smpl'
-            sample-deallocate                   \ tkn-lst1 sess0
-            2drop
-        else
-            cr ." scs command: action id value invalid" cr
-            drop 2drop
-        then
+    #2 pick list-get-third-item             \ cmd-lst1 sess0 dom tkn2
+
+    over domain-find-action                 \ cmd-lst1 sess0 dom, act t | f
+    if
+        swap 2dup                           \ cmd-lst1 sess0 act dom act dom
+        domain-set-current-action           \ cmd-lst1 sess0 act dom
+        dup domain-get-current-state        \ cmd-lst1 sess0 act dom cur-sta
+        rot                                 \ cmd-lst1 sess0 dom cur-sta act
+        action-get-sample                   \ cmd-lst1 sess0 dom smpl'
+        dup sample-get-result               \ cmd-lst1 sess0 dom smpl' smpl-r
+        rot                                 \ cmd-lst1 sess0 smpl' smpl-r dom
+        domain-set-current-state            \ cmd-lst1 sess0 smpl'
+        sample-deallocate                   \ cmd-lst1 sess0
+        2drop
     else
-        cr ." scs command: action id not a number" cr
+        cr ." scs command: action id value invalid" cr
         drop 2drop
     then
 ;
 
-: session-do-pa-command ( tkn-lst1 sess0 -- ) \ Do "pa" command. Print a domain's action.
+: session-do-pa-command ( cmd-lst1 sess0 -- ) \ Do "pa" command. Print a domain's action.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length                            \ tkn-lst1 sess0 len
+    over list-get-length                            \ cmd-lst1 sess0 len
     #3 <> if
         cr ." pa command: invalid number of arguments" cr
         2drop
@@ -3001,54 +2913,42 @@ session-points-disp                     cell+   constant session-previous-points
     then
 
     \ Get domain.
-    over list-get-second-item                       \ tkn-lst1 sess0 tkn1
-    token-get-string                                \ tkn-lst1 sess0 c-addr u
-    snumber?                                        \ tkn-lst1 sess0, u t | f
-    if                                              \ tkn-lst1 sess0 u
-        over session-find-domain                    \ tkn-lst1 sess0, dom t | f
-        if
-            \ Set current domain.
-            2dup swap                               \ tkn-lst1 sess0 dom dom sess0
-            session-set-current-domain              \ tkn-lst1 sess0 dom
-        else
-            cr ." pa command: domain id value invalid" cr
-            2drop
-            exit
-        then
+    over list-get-second-item                   \ cmd-lst1 sess0 tkn1
+                                                \ cmd-lst1 sess0 u
+    over session-find-domain                    \ cmd-lst1 sess0, dom t | f
+    if
+        \ Set current domain.
+        2dup swap                               \ cmd-lst1 sess0 dom dom sess0
+        session-set-current-domain              \ cmd-lst1 sess0 dom
     else
-        cr ." pa command: domain id not a number" cr
+        cr ." pa command: domain id value invalid" cr
         2drop
         exit
     then
-                                                    \ tkn-lst1 sess0 dom
+
+                                                \ cmd-lst1 sess0 dom
 
     \ Get action.
-    #2 pick list-get-third-item                     \ tkn-lst1 sess0 dom tkn2
-    token-get-string                                \ tkn-lst1 sess0 dom c-addr u
-    snumber?                                        \ tkn-lst1 sess0 dom, act-id t | f
-    if                                              \ tkn-lst1 sess0 dom act-id
-        over domain-find-action                     \ tkn-lst1 sess0 dom, act t | f
-        if                                          \ tkn-lst1 sess0 dom act
-            tuck swap                               \ tkn-lst1 sess0 act act dom
-            domain-set-current-action               \ tkn-lst1 sess0 act
-            .action                                 \ tkn-lst1 sess0
-            2drop
-        else                                        \ dom
-            cr ." pa command: action id value invalid" cr
-            drop 2drop
-        then
-    else                                            \ dom
-        cr ." pa command: action id not a number" cr
+    #2 pick list-get-third-item                 \ cmd-lst1 sess0 dom tkn2
+
+    over domain-find-action                     \ cmd-lst1 sess0 dom, act t | f
+    if                                          \ cmd-lst1 sess0 dom act
+        tuck swap                               \ cmd-lst1 sess0 act act dom
+        domain-set-current-action               \ cmd-lst1 sess0 act
+        .action                                 \ cmd-lst1 sess0
+        2drop
+    else                                        \ dom
+        cr ." pa command: action id value invalid" cr
         drop 2drop
     then
 ;
 
-: session-do-sas-command ( tkn-lst1 sess0 -- ) \ Do the "sas" command. Take an arbitrary domain action for a given state.
+: session-do-sas-command ( cmd-lst1 sess0 -- ) \ Do the "sas" command. Take an arbitrary domain action for a given state.
     \ Check args.
     assert-tos-is-session
     assert-nos-is-token-list
 
-    over list-get-length                            \ tkn-lst1 sess0 len
+    over list-get-length                        \ cmd-lst1 sess0 len
     #4 <> if
         cr ." sas command: invalid number of arguments" cr
         2drop
@@ -3056,82 +2956,61 @@ session-points-disp                     cell+   constant session-previous-points
     then
 
     \ Get domain.
-    over list-get-second-item                       \ tkn-lst1 sess0 tkn1
-    token-get-string                                \ tkn-lst1 sess0 c-addr u
-    snumber?                                        \ tkn-lst1 sess0, dom-id t | f
+    over list-get-second-item                   \ cmd-lst1 sess0 tkn1
+
+    over session-find-domain                    \ cmd-lst1 sess0, dom t | f
     if
-        over session-find-domain                    \ tkn-lst1 sess0, dom t | f
-        if
-            \ Set current domain.
-            2dup swap                               \ tkn-lst1 sess0 dom dom sess0
-            session-set-current-domain              \ tkn-lst1 sess0 dom
-        else
-            cr ." sas command: domain id value invalid" cr
-            drop 2drop
-            exit
-        then
+        \ Set current domain.
+        2dup swap                               \ cmd-lst1 sess0 dom dom sess0
+        session-set-current-domain              \ cmd-lst1 sess0 dom
     else
-        cr ." sas command: domain id not a number" cr
-        2drop
+        cr ." sas command: domain id value invalid" cr
+        drop 2drop
         exit
     then
 
     \ Get action.
-    #2 pick list-get-third-item                     \ tkn-lst1 sess0 dom tkn2
-    token-get-string                                \ tkn-lst1 sess0 dom c-addr u
-    snumber?                                        \ tkn-lst1 sess0 dom, act-id t | f
+    #2 pick list-get-third-item                 \ cmd-lst1 sess0 dom tkn2
+
+    over domain-find-action                     \ cmd-lst1 sess0 dom, act t | f
     if
-        over domain-find-action                     \ tkn-lst1 sess0 dom, act t | f
-        if
-            swap 2dup                               \ tkn-lst1 sess0 act dom act dom
-            domain-set-current-action               \ tkn-lst1 sess0 act dom
-        else
-            cr ." sas command: action id value invalid" cr
-            drop 2drop
-            exit
-        then
+        swap 2dup                               \ cmd-lst1 sess0 act dom act dom
+        domain-set-current-action               \ cmd-lst1 sess0 act dom
     else
-        cr ." sas command: action id not a number" cr
+        cr ." sas command: action id value invalid" cr
         drop 2drop
         exit
-    then                                            \ tkn-lst1 sess0 sta-str act dom
+    then
 
     \ Get state.
-    #3 pick list-get-fourth-item                    \ tkn-lst1 sess0 act dom tkn2
-    token-get-string                                \ tkn-lst1 sess0 act dom c-addr u
-    snumber?                                        \ tkn-lst1 sess0 act dom, sta t | f
-    if                                              \ tkn-lst1 sess0 act dom sta
-        dup is-not-value?                           \ tkn-lst1 sess0 act dom sta flag
-        if
-            cr ." sas command: state value invalid"
-            2drop 2drop drop
-            exit
-        then
-
-        2dup swap                                   \ tkn-lst1 sess0 act dom sta sta dom
-        domain-set-current-state                    \ tkn-lst1 sess0 act dom sta
-        rot                                         \ tkn-lst1 sess0 dom sta act
-        action-get-sample                           \ tkn-lst1 sess0 dom smpl'
-        dup sample-get-result                       \ tkn-lst1 sess0 dom smpl' smpl-r
-        rot                                         \ tkn-lst1 sess0 smpl' smpl-r dom
-        domain-set-current-state                    \ tkn-lst1 sess0 smpl'
-        sample-deallocate                           \ tnk-lst0 sess0
-        2drop
-    else                                            \ tkn-lst1 sess0 act dom
-        cr ." sas command: state not a number"
-        2drop 2drop
+    #3 pick list-get-fourth-item                \ cmd-lst1 sess0 act dom tkn2
+    dup is-not-value?                           \ cmd-lst1 sess0 act dom sta flag
+    if
+        cr ." sas command: state value invalid"
+        2drop 2drop drop
+        exit
     then
+
+    2dup swap                                   \ cmd-lst1 sess0 act dom sta sta dom
+    domain-set-current-state                    \ cmd-lst1 sess0 act dom sta
+    rot                                         \ cmd-lst1 sess0 dom sta act
+    action-get-sample                           \ cmd-lst1 sess0 dom smpl'
+    dup sample-get-result                       \ cmd-lst1 sess0 dom smpl' smpl-r
+    rot                                         \ cmd-lst1 sess0 smpl' smpl-r dom
+    domain-set-current-state                    \ cmd-lst1 sess0 smpl'
+    sample-deallocate                           \ tnk-lst0 sess0
+    2drop
 ;
 
 \ Do commands from user input.
-\ Return true if the read-eval loop should continue.session-do-to-command
-: session-eval-user-input ( tkn-lst1 sess0 -- bool )
+\ Return true if the read-eval loop should continue.
+: session-eval-user-input ( cmd-lst1 sess0 -- bool )
     \ Check args.
     assert-tos-is-session
-    assert-nos-is-token-list
+    assert-nos-is-list
 
     \ Check for no tokens
-    over list-is-empty?                 \ tkn-lst1 sess0 bool
+    over list-is-empty?                 \ cmd-lst1 sess0 bool
     if
         nip                             \ sess0
         session-do-zero-token-command   \ bool
@@ -3139,12 +3018,12 @@ session-points-disp                     cell+   constant session-previous-points
     then
 
     \ Check command.
-    over list-get-first-item            \ tkn-lst1 sess0 tkn0
+    over list-get-first-item            \ cmd-lst1 sess0 tkn0
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" ps" str=                         \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" ps" str=                         \ cmd-lst1 sess0 tkn0 bool
     if
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         swap list-get-length            \ sess0 len
         1 =                             \ sess0 bool
         if                              \ sess0
@@ -3158,30 +3037,66 @@ session-points-disp                     cell+   constant session-previous-points
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" pa" str=                         \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" pa" str=                         \ cmd-lst1 sess0 tkn0 bool
     if
         \ Print a domain's action.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-pa-command           \
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" to" str=                         \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" to" str=                         \ cmd-lst1 sess0 tkn0 bool
     if
-        \ Go to a given regiorcorr.
-        drop                            \ tkn-lst sess0
-        session-do-to-command           \
+        \ Go to a given regioncorr.
+        drop                                \ cmd-lst1 sess0
+
+        over list-get-length #2 =           \ cmd-lst1 sess0 bool
+        if
+        else
+            cr ." Did not understand regioncorr string" cr
+            2drop
+            true
+            exit
+        then
+
+        swap list-get-second-item           \ sess0 reg-lst
+        dup is-allocated-list?              \ sess0 reg-lst bool
+        if
+        else
+            cr ." Did not understand regioncorr string" cr
+            2drop
+            true
+            exit
+        then
+
+        dup region-list-corresponding?  \ sess0 reg-lst bool
+        if
+        else
+            cr ." Did not understand regioncorr string" cr
+            2drop
+            true
+            exit
+        then
+
+        \ Make regioncorr from region list.
+        regioncorr-new              \ sess0 regc-to'
+
+        \ Run command.
+        tuck swap                   \ regc-to' regc-to' sess0
+        session-do-to-command       \ regc-to'
+        regioncorr-deallocate
+
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" q" str=                          \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" q" str=                          \ cmd-lst1 sess0 tkn0 bool
     if
-        2drop                           \ tkn-lst1
+        2drop                           \ cmd-lst1
         list-get-length                 \ len
         1 =
         if
@@ -3194,10 +3109,10 @@ session-points-disp                     cell+   constant session-previous-points
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" mu" str=                         \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" mu" str=                         \ cmd-lst1 sess0 tkn0 bool
     if
-        2drop                           \ tkn-lst1
+        2drop                           \ cmd-lst1
         list-get-length                 \ len
         1 =
         if
@@ -3210,71 +3125,71 @@ session-points-disp                     cell+   constant session-previous-points
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" dn" str=                         \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" dn" str=                         \ cmd-lst1 sess0 tkn0 bool
     if
         \ Do a specific need number from the displayed list.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-dn-command           \
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" pd" str=                         \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" pd" str=                         \ cmd-lst1 sess0 tkn0 bool
     if
         \ Print a domain, given a domain ID.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-pd-command           \
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" cds" str=                        \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" cds" str=                        \ cmd-lst1 sess0 tkn0 bool
     if
         \ Print a domain, given a domain ID.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-cds-command          \
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" psd" str=                        \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" psd" str=                        \ cmd-lst1 sess0 tkn0 bool
     if
         \ Print square detail for a given domain, action.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-psd-command          \
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" tos" str=                        \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" tos" str=                        \ cmd-lst1 sess0 tkn0 bool
     if
         \ Print a domain, given a domain ID.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-tos-command          \
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" scs" str=                        \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" scs" str=                        \ cmd-lst1 sess0 tkn0 bool
     if
         \ Print a domain, given a domain ID.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-scs-command          \
         true
         exit
     then
 
-    dup token-get-string                \ tkn-lst1 sess0 tkn0 c-addr u
-    s" sas" str=                        \ tkn-lst1 sess0 tkn0 bool
+    dup token-get-string                \ cmd-lst1 sess0 tkn0 c-addr u
+    s" sas" str=                        \ cmd-lst1 sess0 tkn0 bool
     if
         \ Print a domain, given a domain ID.
-        drop                            \ tkn-lst1 sess0
+        drop                            \ cmd-lst1 sess0
         session-do-sas-command          \
         true
         exit
@@ -3335,7 +3250,7 @@ session-points-disp                     cell+   constant session-previous-points
     cr ." dn <number> - Do Need number."
     cr ." mu - Display Memory Use."
     cr ." tos <domain ID> <state> - TO domain State, from the current state, to an arbitrary value, by finding and executing a plan."
-    cr ." to - Change all domain states, like: to (0X00 000X1). Leading zeros are required."
+    cr ." to - Change all domain states, like: to (r0X00 r000X1). Leading zeros are not required."
     cr
     cr ." <state> will usually be like: %0101, leading zeros can be ommitted."
     cr
@@ -3350,9 +3265,16 @@ session-points-disp                     cell+   constant session-previous-points
     #80                         \ sess0 p-addr p-addr #80
     accept                      \ sess0 pad-add n
     cr
-    token-list-from-string      \ sess0 tkn-lst'
-    2dup swap                   \ sess0 tkn-lst' tkn-lst' sess0
-    session-eval-user-input     \ sess0 tkn-lst' bool
-    swap token-list-deallocate  \ sess0 bool
-    nip                         \ bool
+    list-from-string-xt execute                             \ sess0, lst' t | f
+    if
+        2dup swap                                           \ sess0 lst' lst' sess0
+        session-eval-user-input                             \ sess0 lst' bool
+        swap                                                \ sess0 bool lst'
+        structinfo-list-deallocate-struct-list-xt execute   \ sess0 bool
+        nip                                                 \ bool
+    else
+        cr ." Did not understand input string as a list."
+        drop
+        true
+    then
 ;

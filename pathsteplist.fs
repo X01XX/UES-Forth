@@ -1084,7 +1084,7 @@
         dup link-get-data                   \ regc1 pthstp-link pthstpx
         pathstep-get-initial-regions        \ regc1 pthstp-link initial
         #2 pick                             \ regc1 pthstp-link initial regc1
-        regioncorr-eq?                      \ regc1 pthstp-link bool
+        regioncorrs-eq?                     \ regc1 pthstp-link bool
         if
             link-get-data                   \ regc1 pthstpx
             nip                             \ pthstpx

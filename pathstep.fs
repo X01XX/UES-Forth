@@ -26,18 +26,20 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 ;
 
 \ Check instance type.
-: is-allocated-pathstep ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-pathstep? ( addr -- bool )
+    dup pathstep-mma mma-is-item    \ addr bool
     if
-        pathstep-id =
+        struct-get-id
+        pathstep-id =               \ bool
     else
-        false
+        drop
+        false                       \ f
     then
 ;
 
 \ Check TOS for pathstep, unconventional, leaves stack unchanged.
 : assert-tos-is-pathstep ( tos -- tos )
-    dup is-allocated-pathstep
+    dup is-allocated-pathstep?
     false? if
         s" TOS is not an allocated pathstep"
         .abort-xt execute
@@ -46,7 +48,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
 \ Check NOS for pathstep, unconventional, leaves stack unchanged.
 : assert-nos-is-pathstep ( nos tos -- nos tos )
-    over is-allocated-pathstep
+    over is-allocated-pathstep?
     false? if
         s" NOS is not an allocated pathstep"
         .abort-xt execute
@@ -289,7 +291,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     \ Check initial regions.
     over pathstep-get-initial-regions       \ pthstp-sub pthstp-sup sub-initial
     over pathstep-get-initial-regions       \ pthstp-sub pthstp-sup sub-initial sup-initial
-    regioncorr-eq?                          \ pthstp-sub pthstp-sup bool
+    regioncorrs-eq?                         \ pthstp-sub pthstp-sup bool
     if
     else
         2drop
@@ -317,7 +319,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     \ Check initial regions.
     over pathstep-get-initial-regions       \ pthstp-sup pthstp-sub sub-initial
     over pathstep-get-initial-regions       \ pthstp-sup pthstp-sub sub-initial sup-initial
-    regioncorr-eq?                          \ pthstp-sup pthstp-sub bool
+    regioncorrs-eq?                         \ pthstp-sup pthstp-sub bool
     if
     else
         2drop

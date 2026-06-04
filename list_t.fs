@@ -36,6 +36,5 @@
 
 : list-tests
     list-test-one-of-each
-    cr ." at 1" cr
 ;
 

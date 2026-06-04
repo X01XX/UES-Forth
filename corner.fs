@@ -25,18 +25,20 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 ;
 
 \ Check instance type.
-: is-allocated-corner ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-corner? ( addr -- bool )
+    dup corner-mma mma-is-item  \ addr bool
     if
-        corner-id =
+        struct-get-id
+        corner-id =             \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for corner, unconventional, leaves stack unchanged.
 : assert-tos-is-corner ( tos -- tos )
-    dup is-allocated-corner
+    dup is-allocated-corner?
     false? if
         s" TOS is not an allocated corner"
         .abort-xt execute
@@ -45,7 +47,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 
 \ Check NOS for corner, unconventional, leaves stack unchanged.
 : assert-nos-is-corner ( nos tos -- nos tos )
-    over is-allocated-corner
+    over is-allocated-corner?
     false? if
         s" NOS is not an allocated corner"
         .abort-xt execute

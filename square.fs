@@ -25,18 +25,20 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 ;
 
 \ Check instance type.
-: is-allocated-square ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-square? ( addr -- bool )
+    dup square-mma mma-is-item  \ addr bool
     if
-        square-id =
+        struct-get-id
+        square-id =             \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for square, unconventional, leaves stack unchanged.
 : assert-tos-is-square ( tos -- tos )
-    dup is-allocated-square
+    dup is-allocated-square?
     false? if
         s" TOS is not an allocated square"
         .abort-xt execute
@@ -45,7 +47,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 \ Check NOS for square, unconventional, leaves stack unchanged.
 : assert-nos-is-square ( nos tos -- nos tos )
-    over is-allocated-square
+    over is-allocated-square?
     false? if
         s" NOS is not an allocated square"
         .abort-xt execute

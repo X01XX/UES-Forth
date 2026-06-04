@@ -20,7 +20,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 ;
 
 \ Check instance type.
-: is-allocated-plan ( addr -- flag )
+: is-allocated-plan? ( addr -- bool )
     get-first-word          \ w t | f
     if
         plan-id =
@@ -31,7 +31,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
 \ Check TOS for plan, unconventional, leaves stack unchanged.
 : assert-tos-is-plan ( tos -- tos )
-    dup is-allocated-plan
+    dup is-allocated-plan?
     false? if
         s" TOS is not an allocated plan"
        .abort-xt execute
@@ -40,7 +40,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
 \ Check NOS for plan, unconventional, leaves stack unchanged.
 : assert-nos-is-plan ( nos tos -- nos tos )
-    over is-allocated-plan
+    over is-allocated-plan?
     false? if
         s" NOS is not an allocated plan"
        .abort-xt execute
@@ -283,7 +283,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         planstep-get-result-region  \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i
         #3 pick                     \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i pln
         plan-get-initial-region     \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i pln-r
-        region-eq? false? abort" plansteps do not link directly, maybe use plan-link?"
+        regions-eq? false? abort" plansteps do not link directly, maybe use plan-link?"
     then
 
     planstep-list-push              \ plnplnstp1 pln0
@@ -612,7 +612,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 ;
 
 \ Return true if a plan is empty.
-: plan-is-empty ( pln -- bool )
+: plan-is-empty? ( pln -- bool )
     \ Check arg.
     assert-tos-is-plan
 

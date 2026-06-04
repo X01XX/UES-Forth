@@ -2,14 +2,14 @@
 
 : rule-test-restrict-initial-region
     \ Test 1.
-    s" 0011" region-from-string-a   \ reg1
+    s" r0011" region-from-string-a  \ reg1
     s" 00/01/11/10/" rule-from-string-a \ reg1 rul1
     2dup                            \ reg1 rul1 reg1 rul1
     rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
     if
         s" 00/01/11/10/" rule-from-string-a
 
-        2dup rule-eq
+        2dup rules-eq?
         0= abort" rule-test-restrict-initial-region 1: rules ne?"
 
         rule-deallocate
@@ -22,14 +22,14 @@
     region-deallocate
 
     \ Test 2.
-    s" 1010" region-from-string-a   \ reg1
+    s" r1010" region-from-string-a  \ reg1
     s" X1/X1/X0/X0/" rule-from-string-a \ reg1 rul1
     2dup                            \ reg1 rul1 reg1 rul1
     rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
     if
         s" 11/01/10/00/" rule-from-string-a
 
-        2dup rule-eq
+        2dup rules-eq?
         0= abort" rule-test-restrict-initial-region 2: rules ne?"
 
         rule-deallocate
@@ -42,14 +42,14 @@
     region-deallocate
 
     \ Test 3.
-    s" 1010" region-from-string-a   \ reg1
+    s" r1010" region-from-string-a  \ reg1
     s" XX/XX/Xx/Xx/" rule-from-string-a \ reg1 rul1
     2dup                            \ reg1 rul1 reg1 rul1
     rule-restrict-initial-region    \ reg1 rul1, rul2 t | f
     if
         s" 11/00/10/01/" rule-from-string-a
 
-        2dup rule-eq
+        2dup rules-eq?
         0= abort" rule-test-restrict-initial-region 3: rules ne?"
 
         rule-deallocate
@@ -66,15 +66,15 @@
 
 : rule-test-restrict-result-region
     \ Test 1.
-    s" 0101" region-from-string-a       \ reg1
+    s" r0101" region-from-string-a          \ reg1
 
-    s" 00/11/XX/XX/" rule-from-string-a \ reg1 rul1
+    s" 00/11/XX/XX/" rule-from-string-a     \ reg1 rul1
 
-    2dup                                \ reg1 rul1 reg1 rul1
-    rule-restrict-result-region         \ reg1 rul1, rul2 t | f
+    2dup                                    \ reg1 rul1 reg1 rul1
+    rule-restrict-result-region             \ reg1 rul1, rul2 t | f
     if
         s" 00/11/00/11/" rule-from-string-a \ reg1 rul1 rul2 rul3
-        2dup rule-eq                        \ reg1 rul1 rul2 rul3 flag
+        2dup rules-eq?                      \ reg1 rul1 rul2 rul3 flag
         0= abort" rule-test-restrict-result-region: rules ne?"
 
         rule-deallocate
@@ -87,15 +87,15 @@
     region-deallocate
 
     \ Test 2.
-    s" 1001" region-from-string-a       \ reg1
+    s" r1001" region-from-string-a          \ reg1
 
-    s" X1/X0/Xx/Xx/" rule-from-string-a \ reg1 rul1
+    s" X1/X0/Xx/Xx/" rule-from-string-a     \ reg1 rul1
 
-    2dup                                \ reg1 rul1 reg1 rul1
-    rule-restrict-result-region         \ reg1 rul1, rul2 t | f
+    2dup                                    \ reg1 rul1 reg1 rul1
+    rule-restrict-result-region             \ reg1 rul1, rul2 t | f
     if
         s" X1/X0/10/01/" rule-from-string-a \ reg1 rul1 rul2 rul3
-        2dup rule-eq                        \ reg1 rul1 rul2 rul3 flag
+        2dup rules-eq?                      \ reg1 rul1 rul2 rul3 flag
         0= abort" rule-test-restrict-result-region 2: rules ne?"
         rule-deallocate
         rule-deallocate
@@ -118,7 +118,7 @@
         cr ." rule restriction failed?" abort
     then
     s" 01/11/11/11/" rule-from-string-a \ reg rul rul' rul2
-    2dup rule-eq                        \ reg rul rul' rul2 flag
+    2dup rules-eq?                      \ reg rul rul' rul2 flag
     if
     else
         cr ." invalid rule?" cr abort
@@ -141,7 +141,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 1: " dup .rule cr
     s" 00/01/01/00/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 1 failed?"
     rule-deallocate
     rule-deallocate
@@ -156,7 +156,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 2: " dup .rule cr
     s" 11/10/10/11/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 2 failed?"
     rule-deallocate
     rule-deallocate
@@ -171,7 +171,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 3: " dup .rule cr
     s" 01/00/00/01/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 3 failed?"
     rule-deallocate
     rule-deallocate
@@ -186,7 +186,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 4: " dup .rule cr
     s" 00/01/00/01/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 4 failed?"
     rule-deallocate
     rule-deallocate
@@ -201,7 +201,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 5: " dup .rule cr
     s" 10/11/10/11/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 5 failed?"
     rule-deallocate
     rule-deallocate
@@ -216,7 +216,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 6: " dup .rule cr
     s" 11/10/10/11/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 6 failed?"
     rule-deallocate
     rule-deallocate
@@ -231,7 +231,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 7: " dup .rule cr
     s" XX/Xx/X0/X1/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 7 failed?"
     rule-deallocate
     rule-deallocate
@@ -246,7 +246,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 8: " dup .rule cr
     s" 10/11/01/00/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 8 failed?"
     rule-deallocate
     rule-deallocate
@@ -261,7 +261,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 9: " dup .rule cr
     s" Xx/XX/X0/X1/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 9 failed?"
     rule-deallocate
     rule-deallocate
@@ -276,7 +276,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 10: " dup .rule cr
     s" 00/01/11/10/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 10 failed?"
     rule-deallocate
     rule-deallocate
@@ -291,7 +291,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 11: " dup .rule cr
     s" X1/X0/X0/X1/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 11 failed?"
     rule-deallocate
     rule-deallocate
@@ -306,7 +306,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 12: " dup .rule cr
     s" X0/X1/X0/X1/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 12 failed?"
     rule-deallocate
     rule-deallocate
@@ -321,7 +321,7 @@
     rule-combine                        \ rul1 rul0 rul01
     \ cr ." rule test 13: " dup .rule cr
     s" X0/X1/X0/X1/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 13 failed?"
     rule-deallocate
     rule-deallocate
@@ -336,7 +336,7 @@
     rule-combine                        \ rul1 rul0 rul01
     cr ." rule test 14: " dup .rule cr
     s" X1/X0/X1/X0/" rule-from-string-a \ rul1 rul0 rul01 rult
-    2dup rule-eq                        \ rul1 rul0 rul01 rult bool
+    2dup rules-eq?                      \ rul1 rul0 rul01 rult bool
     false? abort" rule-test-combine: test 14 failed?"
     rule-deallocate
     rule-deallocate
@@ -349,56 +349,56 @@
 : rule-test-new-region-to-region
 
     \ Test 1.
-    s" 0011" region-from-string-a   \ reg-from
-    s" 0110" region-from-string-a   \ reg-from reg-to
+    s" r0011" region-from-string-a  \ reg-from
+    s" r0110" region-from-string-a  \ reg-from reg-to
     swap                            \ reg-to reg-from
     2dup rule-new-region-to-region  \ reg1 reg2 rul1
 
     \ cr ." rul1 " dup .rule cr
     s" 00/01/11/10/" rule-from-string-a \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test1 rule-eq failed?"
+    2dup rules-eq? false? abort" rule-test-new-region-to-region test1 rules-eq? failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
     region-deallocate
 
     \ Test 2.
-    s" XXX1" region-from-string-a   \ reg-from
-    s" 01XX" region-from-string-a   \ reg-from reg-to
+    s" rXXX1" region-from-string-a  \ reg-from
+    s" r01XX" region-from-string-a  \ reg-from reg-to
     swap                            \ reg-to reg-from
     2dup rule-new-region-to-region  \ reg1 reg2 rul1
 
     \ cr ." rul1 " dup .rule cr
     s" X0/X1/XX/11/" rule-from-string-a \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test2 rule-eq failed?"
+    2dup rules-eq? false? abort" rule-test-new-region-to-region test2 rules-eq? failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
     region-deallocate
 
     \ test 3.
-    s" 0101" region-from-string-a   \ reg-from
-    s" XXXX" region-from-string-a   \ reg-from reg-to
+    s" r0101" region-from-string-a  \ reg-from
+    s" rXXXX" region-from-string-a  \ reg-from reg-to
     swap                            \ reg-to reg-from
     2dup rule-new-region-to-region  \ reg1 reg2 rul1
 
     \ cr ." rul1 " dup .rule cr
     s" 00/11/00/11/" rule-from-string-a \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test3 rule-eq failed?"
+    2dup rules-eq? false? abort" rule-test-new-region-to-region test3 rules-eq? failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate
     region-deallocate
 
     \ Test 4.
-    s" 0XXX" region-from-string-a   \ reg-from
-    s" 0X10" region-from-string-a   \ reg-from reg-to
+    s" r0XXX" region-from-string-a  \ reg-from
+    s" r0X10" region-from-string-a  \ reg-from reg-to
     swap                            \ reg-to reg-from
     2dup rule-new-region-to-region  \ reg1 reg2 rul1
 
     \ cr ." rul1 " dup .rule cr
     s" 00/XX/X1/X0/" rule-from-string-a \ reg1 reg2 rul1 rul2
-    2dup rule-eq false? abort" rule-test-new-region-to-region test4 rule-eq failed?"
+    2dup rules-eq? false? abort" rule-test-new-region-to-region test4 rules-eq? failed?"
     rule-deallocate
     rule-deallocate
     region-deallocate

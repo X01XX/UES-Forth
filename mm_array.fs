@@ -213,7 +213,7 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
 
 \ Create something like: 0 value <struct name>-mma
 \ Run like: <num-cells-per-item> <num-items> mma-new to <struct name>-mma
-: mma-new ( num-cells-per-item  num-items -- mma-addr )
+: mma-new ( num-cells-per-item num-items -- mma-addr )
 
     tuck        \ n-i n-c-p-i n-i
 
@@ -282,7 +282,7 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
 
     \ Set allocation counter.
     \ At end, with no memory leaks, deallocations will match allocations.
-    \ With the exception of lists (1), links (number structures), stackinfo (number structures)
+    \ With the exception of lists (1), links (number structures), structinfo (number structures)
     \ due to the structinfo-list-store.
     0 over _mma-set-num-allocations
 ;
@@ -292,9 +292,9 @@ array-end-disp      cell+   constant array-items-disp   \ The start of the array
 : mma-free ( addr -- )
     dup   _mma-get-stack        \ mma-addr stack-addr
     free                        \ mma-addr
-    0<> if ." mma-array stack free failed" then
+    0<> abort" mma-array stack free failed"
     free
-    0<> if ." mma-array free failed" then
+    0<> abort" mma-array free failed"
 ;
 
 \ Return the number of struct instances in use.

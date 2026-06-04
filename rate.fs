@@ -20,18 +20,20 @@
 ;
 
 \ Check instance type.
-: is-allocated-rate ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-rate? ( addr -- flag )
+    dup rate-mma mma-is-item    \ addr bool
     if
-        rate-id =
+        struct-get-id
+        rate-id =               \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for rate, unconventional, leaves stack unchanged.
 : assert-tos-is-rate ( tos -- tos )
-    dup is-allocated-rate
+    dup is-allocated-rate?
     false? if
         s" TOS is not an allocated rate"
         .abort-xt execute
@@ -40,7 +42,7 @@
 
 \ Check NOS for rate, unconventional, leaves stack unchanged.
 : assert-nos-is-rate ( nos tos -- nos tos )
-    over is-allocated-rate
+    over is-allocated-rate?
     false? if
         s" NOS is not an allocated rate"
         .abort-xt execute
@@ -65,7 +67,7 @@
     3w@                     \ Fetch the field.
 
     \ Change value to negative.
-    dup 0 > if
+    dup 0> if
         -1 *
     then
 ;
@@ -167,7 +169,7 @@
     swap _rate-set-positive \
 ;
 
-: rate-is-negative ( rate -- bool ) \ Return true if a rate has a non-zero negative quality.
+: rate-is-negative? ( rate -- bool ) \ Return true if a rate has a non-zero negative quality.
     \ Check arg.
     assert-tos-is-rate
 

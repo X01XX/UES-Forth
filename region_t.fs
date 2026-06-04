@@ -3,8 +3,8 @@
 : region-test-region-subtract
     \ cr ." region-test-region-subtract - start"
 
-    s" X10X" region-from-string-a   \ reg1
-    s" 1XX0" region-from-string-a   \ reg1 reg2
+    s" rX10X" region-from-string-a  \ reg1
+    s" r1XX0" region-from-string-a  \ reg1 reg2
 
     2dup                            \ reg1 reg2 reg1 reg2
     region-subtract                 \ reg1 reg2 reg-lst
@@ -15,7 +15,7 @@
     dup list-get-length #2 <>
     abort" List length not 2?"
 
-    s" 10X0" region-from-string-a   \ reg-lst reg3
+    s" r10X0" region-from-string-a  \ reg-lst reg3
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
     region-list-member              \ reg-lst reg3 flag
@@ -24,7 +24,7 @@
                                     \ reg-lst reg3
     region-deallocate               \ reg-lst
 
-    s" 1X10" region-from-string-a   \ reg-lst reg3
+    s" r1X10" region-from-string-a  \ reg-lst reg3
 
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
@@ -51,7 +51,7 @@
     #15 over list-push
 
     \ Make region
-    s" XXX1" region-from-string-a           \ sta-lst reg
+    s" rXXX1" region-from-string-a          \ sta-lst reg
 
     \ Get states in region
     2dup region-states-in                   \ sta-lst reg sta-lst2
@@ -87,7 +87,7 @@
     \ cr ." from " over .region
     \ cr ." to   " #2 pick .region
     \ cr ." =    " dup .region cr
-    #2 pick over region-eq? false? abort" region-test-translate-to-region: 1: region unexpected"
+    #2 pick over regions-eq? false? abort" region-test-translate-to-region: 1: region unexpected"
     region-deallocate
     region-deallocate
     region-deallocate
@@ -101,7 +101,7 @@
     \ cr ." from " over .region
     \ cr ." to   " #2 pick .region
     \ cr ." =    " dup .region cr
-    2dup region-eq? false? abort" region-test-translate-to-region: 2: region unexpected"
+    2dup regions-eq? false? abort" region-test-translate-to-region: 2: region unexpected"
     region-deallocate
     region-deallocate
     region-deallocate
@@ -121,7 +121,7 @@
     region-test-states-in
     region-test-translate-to-region
 
-    s" XxX1" region-from-string-a           \ reg
+    s" rXxX1" region-from-string-a                  \ reg
     region-deallocate
 
     session-deallocate

@@ -19,7 +19,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 ;
 
 \ Check instance type.
-: is-allocated-plancorr ( addr -- flag )
+: is-allocated-plancorr? ( addr -- bool )
     get-first-word          \ w t | f
     if
         plancorr-id =
@@ -30,7 +30,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 
 \ Check TOS for plancorr, unconventional, leaves stack unchanged.
 : assert-tos-is-plancorr ( tos -- tos )
-    dup is-allocated-plancorr
+    dup is-allocated-plancorr?
     false? if
         s" TOS is not an allocated plancorr"
         .abort-xt execute
@@ -39,7 +39,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 
 \ Check NOS for plancorr, unconventional, leaves stack unchanged.
 : assert-nos-is-plancorr ( nos tos -- nos tos )
-    over is-allocated-plancorr
+    over is-allocated-plancorr?
     false? if
         s" NOS is not an allocated plancorr"
         .abort-xt execute

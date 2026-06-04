@@ -3,8 +3,8 @@
 : regioncorr-test-superset
 
     \ Init lists.
-    s" (0XX1 0XX0X)" regioncorr-from-string-a \ regc1
-    s" (0XXX 0XXXX)" regioncorr-from-string-a \ regc1 regc2
+    s" (r0XX1 r0XX0X)" regioncorr-from-string-a \ regc1
+    s" (r0XXX r0XXXX)" regioncorr-from-string-a \ regc1 regc2
 
     2dup regioncorr-superset?       \ regc1 regc2 flag
     0= abort" List is not superset?"
@@ -18,14 +18,14 @@
     regioncorr-deallocate           \ regc2
     regioncorr-deallocate           \
 
-    cr ." regioncorr-test-superset: Ok" cr
+    cr ." regioncorr-test-superset: Ok"
 ;
 
 : regioncorr-test-intersects
 
     \ Init lists.
-    s" (0XX1 0XX0X)" regioncorr-from-string-a \ regc1
-    s" (0XXX 0XXXX)" regioncorr-from-string-a \ regc1 regc2
+    s" (r0XX1 r0XX0X)" regioncorr-from-string-a \ regc1
+    s" (r0XXX r0XXXX)" regioncorr-from-string-a \ regc1 regc2
 
     \ Test intersection.
     2dup regioncorr-intersects?   \ regc1 regc2 bool
@@ -34,7 +34,7 @@
     regioncorr-deallocate              \ regc1
 
     \ Test non-intersection.
-    s" (1XXX 0XXXX)" regioncorr-from-string-a \ regc1 lst3
+    s" (r1XXX r0XXXX)" regioncorr-from-string-a \ regc1 lst3
 
     \ cr ." lst3: " dup .regioncorr cr
 
@@ -45,121 +45,74 @@
     regioncorr-deallocate              \ regc1
     regioncorr-deallocate              \
 
-    cr ." regioncorr-test-intersects: Ok" cr
+    cr ." regioncorr-test-intersects: Ok"
 ;
 
 : regioncorr-test-subtract
     \ Init lists.
-    s" (X1X1 0X10X)" regioncorr-from-string-a \ regc1
-    s" (0X0X 0XXX1)" regioncorr-from-string-a \ regc1 regc2
+    s" (rX1X1 r0X10X)" regioncorr-from-string-a \ regc1
+    s" (r0X0X r0XXX1)" regioncorr-from-string-a \ regc1 regc2
 
-    cr dup .regioncorr space ." - " over .regioncorr
+    \ cr dup .regioncorr space ." - " over .regioncorr
+
     \ Test subtraction.
     2dup regioncorr-subtract      \ regc1 regc2, regc-lst t | f
+    invert abort" Subtract failed?"
 
-    if                                  \ regc1 regc2 regc-lst
-        \ Check list length.
-        dup list-get-length #4 <> abort" list length is not 4?"
-        [ ' .regioncorr ] literal over list-apply
+    \ cr ." = " dup .regioncorr-list cr
 
-        \ Check results 1.
-        s" (0x0x 0X0X1)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
-        [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
-        over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        false? abort" regioncorr not found in list of lists?"
-        regioncorr-deallocate                           \ regc1 regc2 regc-lst
-
-        \ Check results 2.
-        s" (0x0x 0XX11)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
-        [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
-        over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        false? abort" regioncorr not found in list of lists?"
-        regioncorr-deallocate                           \ regc1 regc2 regc-lst
-
-        \ Check results 3.
-        s" (0X00 0xxx1)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
-        [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
-        over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        false? abort" regioncorr not found in list of lists?"
-        regioncorr-deallocate                           \ regc1 regc2 regc-lst
-
-        \ Check results 4.
-        s" (000X 0xxx1)" regioncorr-from-string-a       \ regc1 regc2 regc-lst lst-t
-        [ ' regioncorr-eq ] literal                     \ regc1 regc2 regc-lst lst-t xt
-        over #3 pick list-member                        \ regc1 regc2 regc-lst lst-t bool
-        false? abort" regioncorr not found in list of lists?"
-        regioncorr-deallocate                           \ regc1 regc2 regc-lst
-
-        \ Clean up list-of-lists.
-        regioncorr-list-deallocate                      \ regc1 regc2
+    \ Check result.
+    s" ((r0X0X r0X0X1)(r0X0X r0XX11)(r0X00 r0XXX1)(r000X r0XXX1))"
+    regioncorr-list-from-string-a       \ regc1 regc2 regc-lst tst-lst
+    2dup lists-eq?                      \ regc1 regc2 regc-lst tst-lst bool
+    if
     else
-        cr ." Subtract failed?"
+        cr ." Lists ne?" cr
         abort
     then
 
-    \ Clean up.                     \ regc1 regc2
-    regioncorr-deallocate          \ regc1
-    regioncorr-deallocate          \
+    \ Clean up.
+    regioncorr-list-deallocate                  \ regc1 regc2 regc-lst
+    regioncorr-list-deallocate                  \ regc1 regc2
+    regioncorr-deallocate                       \ regc1
+    regioncorr-deallocate
 
-    cr ." regioncorr-test-subtract: Ok" cr
+    cr ." regioncorr-test-subtract: Ok"
 ;
 
 : regioncorr-test-complement
     \ Init list 1.
-    s" (X1X1 XX10X)" regioncorr-from-string-a \ regc
+    s" (rX1X1 rXX10X)" regioncorr-from-string-a \ regc
 
-    cr ." regc: " dup .regioncorr
+    \ cr ." regc: " dup .regioncorr
 
     dup                                 \ regc regc
     regioncorr-complement               \ regc regc-lst
 
-    cr ." complement: "
-    [ ' .regioncorr ] literal over list-apply cr
+    \ Test the result.
+    s" ((rxxxx rxx0xx)(rxxxx rxxx1x)(rxxx0 rxxxxx)(rx0xx rxxxxx))"
+    regioncorr-list-from-string-a       \ regc regc-lst tst-lst
 
-    \ Check list length.
-    dup list-get-length #4 <> abort" list length is not 4?"
-    \ [ ' .regioncorr ] literal over list-apply
-
-    \ Check results 1.
-    s" (xxxx XX0XX)" regioncorr-from-string-a       \ regc regc-lst regc-t
-    [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
-    over #3 pick list-member                        \ regc regc-lst regc-t bool
-    false? abort" regioncorr not found in list of lists?"
-    regioncorr-deallocate                          \ regc regc-lst
-
-    \ Check results 2.
-    s" (xxxx XXX1X)" regioncorr-from-string-a       \ regc regc-lst regc-t
-    [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
-    over #3 pick list-member                        \ regc regc-lst regc-t bool
-    false? abort" regioncorr not found in list of lists?"
-    regioncorr-deallocate                          \ regc regc-lst
-
-    \ Check results 3.
-    s" (XXX0 xxxxx)" regioncorr-from-string-a       \ regc regc-lst regc-t
-    [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
-    over #3 pick list-member                        \ regc regc-lst regc-t bool
-    false? abort" regioncorr not found in list of lists?"
-    regioncorr-deallocate                          \ regc regc-lst
-
-    \ Check results 4.
-    s" (X0XX xxxxx)" regioncorr-from-string-a       \ regc regc-lst regc-t
-    [ ' regioncorr-eq ] literal                     \ regc regc-lst regc-t xt
-    over #3 pick list-member                        \ regc regc-lst regc-t bool
-    false? abort" regioncorr not found in list of lists?"
-    regioncorr-deallocate                           \ regc regc-lst
+    2dup lists-eq?                      \ regc regc-lst tst-lst bool
+    if
+    else
+        cr ." Lists ne?" cr
+        abort
+    then
 
     \ Clean up list-of-lists.
-    regioncorr-list-deallocate                      \ regc
+    regioncorr-list-deallocate          \ regc regc-lst
+    regioncorr-list-deallocate          \ regc
 
-    regioncorr-deallocate                          \
+    regioncorr-deallocate
 
-    cr ." regioncorr-test-complement: Ok" cr
+    cr ." regioncorr-test-complement: Ok"
 ;
 
 : regioncorr-test-distance
     \ Init lists.
-    s" (X1X1 0X10X)" regioncorr-from-string-a   \ regc1
-    s" (1001 0XX11)" regioncorr-from-string-a   \ regc1 regc2
+    s" (rX1X1 r0X10X)" regioncorr-from-string-a   \ regc1
+    s" (r1001 r0XX11)" regioncorr-from-string-a   \ regc1 regc2
 
     2dup regioncorr-distance                    \ regc1 regc2 dist
     #2 <> abort" Distance not 2?"
@@ -167,7 +120,7 @@
     regioncorr-deallocate                       \ regc1
     regioncorr-deallocate                       \
 
-    cr ." regioncorr-test-distance: Ok" cr
+    cr ." regioncorr-test-distance: Ok"
 ;
 
 \ Assume domain0 is 4-bit, Domain 1 is 5-bit.
@@ -189,6 +142,7 @@
     regioncorr-test-subtract
     regioncorr-test-complement
     regioncorr-test-distance
+    cr
 
     session-deallocate
 ;

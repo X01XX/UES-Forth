@@ -19,18 +19,20 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 ;
 
 \ Check instance type.
-: is-allocated-rulestore ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-rulestore? ( addr -- bool )
+    dup rulestore-mma mma-is-item   \ addr bool
     if
-        rulestore-id =
+        struct-get-id
+        rulestore-id =              \ bool
     else
-        false
+        drop
+        false                       \ f
     then
 ;
 
 \ Check TOS for rulestore, unconventional, leaves stack unchanged.
 : assert-tos-is-rulestore ( tos -- tos )
-    dup is-allocated-rulestore
+    dup is-allocated-rulestore?
     false? if
         s" TOS is not an allocated rulestore."
         .abort-xt execute
@@ -39,7 +41,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 \ Check NOS for rulestore, unconventional, leaves stack unchanged.
 : assert-nos-is-rulestore ( nos tos -- nos tos )
-    over is-allocated-rulestore
+    over is-allocated-rulestore?
     false? if
         s" NOS is not an allocated rulestore."
         .abort-xt execute
@@ -147,13 +149,13 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     assert-nos-is-rule
 
     \ Check that the rules are not equal.
-    2dup rule-eq
+    2dup rules-eq?
     abort" rulestore-new-2: rules cannot be equal."
 
     \ Check that the rule initial regions are equal.
     over rule-calc-initial-region   \ rul1 rul0 reg1
     over rule-calc-initial-region   \ rul1 rul0 reg1 reg0
-    2dup region-eq? false?          \ rul1 rul0 reg1 reg0 flag
+    2dup regions-eq? false?         \ rul1 rul0 reg1 reg0 flag
     abort" rulestore-new-2: Rules must have the same initial region."
 
     region-deallocate

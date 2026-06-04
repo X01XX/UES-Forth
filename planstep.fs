@@ -27,7 +27,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 ;
 
 \ Check instance type.
-: is-allocated-planstep ( addr -- flag )
+: is-allocated-planstep? ( addr -- bool )
     get-first-word          \ w t | f
     if
         planstep-id =
@@ -38,7 +38,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
 \ Check TOS for planstep, unconventional, leaves stack unchanged.
 : assert-tos-is-planstep ( tos -- tos )
-    dup is-allocated-planstep
+    dup is-allocated-planstep?
     false? if
         s" TOS is not an allocated planstep"
         .abort-xt execute
@@ -47,7 +47,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
 \ Check NOS for planstep, unconventional, leaves stack unchanged.
 : assert-nos-is-planstep ( nos tos -- nos tos )
-    over is-allocated-planstep
+    over is-allocated-planstep?
     false? if
         s" NOS is not an allocated planstep"
         .abort-xt execute

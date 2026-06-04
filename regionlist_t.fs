@@ -2,13 +2,13 @@
 
 : region-list-test-region-intersections-n
 
-    s" (X10X)" region-list-from-string-a        \ lst1
+    s" (rX10X)" region-list-from-string-a       \ lst1
 
-    s" (1XX1 0XX1)" region-list-from-string-a   \ lst1
+    s" (r1XX1 r0XX1)" region-list-from-string-a \ lst1
 
     2dup region-list-intersections-n            \ lst1 lst2 lst3
 
-    s" (X101)" region-list-from-string-a        \ lst1 lst2 lst3 lst4
+    s" (rX101)" region-list-from-string-a       \ lst1 lst2 lst3 lst4
     2dup region-list-eq                         \ lst1 lst2 lst3 lst4 bool
     0= abort" X101 not found"
 
@@ -23,16 +23,16 @@
 : region-list-test-subtract-n
 
     \ Make subtrahend list.
-    s" (1XX1 0XX1)" region-list-from-string-a   \ lst1
+    s" (r1XX1 r0XX1)" region-list-from-string-a   \ lst1
 
     \ Make minuend list.
-    s" (0000 X10X)" region-list-from-string-a   \ lst1 lst2
+    s" (r0000 rX10X)" region-list-from-string-a   \ lst1 lst2
 
     \ Subtract regions.
     2dup region-list-subtract-n                 \ lst1 lst2 lst3
 
     \ Check results.
-    s" (X100 0X00)" region-list-from-string-a   \ lst1 lst2 lst3 lst4
+    s" (rX100 r0X00)" region-list-from-string-a   \ lst1 lst2 lst3 lst4
 
     2dup region-list-eq                         \ lst1 lst2 lst3 lst4 bool
     false? abort" region-list-test-subtract-n: region-lists invaid?"
@@ -76,7 +76,7 @@
 : region-list-test-state-in-one-region
 
     \ Make a region-list.
-    s" (X1X1 X10X 01XX)" region-list-from-string-a  \ lst1
+    s" (rX1X1 rX10X r01XX)" region-list-from-string-a   \ lst1
 
     #2 over                                 \ lst1 2 lst1
     region-list-state-in-one-region         \ lst1 flag
@@ -113,13 +113,13 @@
 
 : region-list-test-intersection-fragments
     \ Make a region-list.
-    s" (XX1X 1XXX X1X1 X1X1)" region-list-from-string-a \ lst1
+    s" (rXX1X r1XXX rX1X1 rX1X1)" region-list-from-string-a \ lst1
 
     dup                                     \ lst1 lst1
     region-list-intersection-fragments      \ lst1 lst2
 
     \ Check.
-    s" (1111 101x 1x10 0111 1101 0101 100x 1x00 0x10 001x)" region-list-from-string-a   \ lst1 lst2 lst3
+    s" (r1111 r101x r1x10 r0111 r1101 r0101 r100x r1x00 r0x10 r001x)" region-list-from-string-a \ lst1 lst2 lst3
     2dup region-list-eq                     \ lst1 lst2 lst3 bool
     false? abort" region-list-test-intersection-fragments: 1 region lists ne?"
 
@@ -130,7 +130,7 @@
     \ Test with subset.
 
     \ Make a region-list.
-    s" (011X XX1X)" region-list-from-string-a   \ lst1
+    s" (r011X rXX1X)" region-list-from-string-a \ lst1
 
     \ cr ." lst1: " dup .region-list cr
 
@@ -144,7 +144,7 @@
     #3 <> abort" Result length not 3?"
 
     \ Check list.
-    s" (011X 1X1X X01X)" region-list-from-string-a  \ lst1 lst2 lst3
+    s" (r011X r1X1X rX01X)" region-list-from-string-a   \ lst1 lst2 lst3
 
     2dup region-list-eq                             \ lst1 lst2 lst3
     false? abort" region-list-test-intersection-fragments: 2 region lists ne?"
@@ -158,13 +158,13 @@
 ;
 
 : region-list-test-normalize
-    s" (X101 X100 0111 00X1)" region-list-from-string-a \ lst1
+    s" (rX101 rX100 r0111 r00X1)" region-list-from-string-a \ lst1
 
     dup region-list-normalize               \ lst1 lst2
     \ cr ." rslt: " dup .region-list cr
 
     \ Check results.
-    s" (X10X 0XX1)" region-list-from-string-a   \ lst1 lst2 lst3
+    s" (rX10X r0XX1)" region-list-from-string-a \ lst1 lst2 lst3
     2dup region-list-eq                         \ lst1 lst2 lst3 bool
     false? abort" region-list-test-normalize: 1 region lists ne?"
 
@@ -177,15 +177,15 @@
 ;
 
 : region-list-test-copy-except
-    s" (X100 0111 00X1)" region-list-from-string-a \ lst1
+    s" (rX100 r0111 r00X1)" region-list-from-string-a   \ lst1
 
-    s" X111" region-from-string-a           \ lst1 regx
+    s" rX111" region-from-string-a          \ lst1 regx
     1                                       \ lst1 regx 1
     #2 pick                                 \ lst1 regx lst1
     region-list-copy-except                 \ lst1 lst2
 
     \ Check results.
-    s" (X100 X111 00X1)" region-list-from-string-a  \ lst1 lst2 lst3
+    s" (rX100 rX111 r00X1)" region-list-from-string-a   \ lst1 lst2 lst3
     2dup region-list-eq                             \ lst1 lst2 lst3 bool
     false? abort" region-list-test-copy-except: region lists ne?"
 
@@ -199,8 +199,8 @@
 
 : region-list-test-push-nosubs
     \ Test 1, pushing a region that is a subset of regions in a list.
-    s" 10x1" region-from-string-a               \ reg'
-    s" (xx01 10xx)" region-list-from-string-a   \ reg' reg-lst'
+    s" r10x1" region-from-string-a               \ reg'
+    s" (rxx01 r10xx)" region-list-from-string-a \ reg' reg-lst'
     2dup
     region-list-push-nosubs                     \ reg1` reg-lst' bool
     if
@@ -220,8 +220,8 @@
     region-deallocate
 
     \ Test 2, pushing a region that is not a subset of regions in a list.
-    s" 0xx0" region-from-string-a               \ reg'
-    s" (xx01 10xx)" region-list-from-string-a   \ reg' reg-lst'
+    s" r0xx0" region-from-string-a              \ reg'
+    s" (rxx01 r10xx)" region-list-from-string-a \ reg' reg-lst'
     2dup
     region-list-push-nosubs                     \ reg1` reg-lst' bool
     if
@@ -242,8 +242,8 @@
     drop
 
     \ Test 3, pushing a region that is not a superset of a region in a list.
-    s" 1xxx" region-from-string-a               \ reg'
-    s" (xx01 10xx)" region-list-from-string-a   \ reg' reg-lst'
+    s" r1xxx" region-from-string-a              \ reg'
+    s" (rxx01 r10xx)" region-list-from-string-a \ reg' reg-lst'
     2dup
     region-list-push-nosubs                     \ reg1` reg-lst' bool
     if
@@ -268,8 +268,8 @@
 
 : region-list-test-push-nosups
     \ Test 1, pushing a region that is a superset of regions in a list.
-    s" 1xx1" region-from-string-a               \ reg'
-    s" (1x01 10x1)" region-list-from-string-a   \ reg' reg-lst'
+    s" r1xx1" region-from-string-a              \ reg'
+    s" (r1x01 r10x1)" region-list-from-string-a \ reg' reg-lst'
     2dup
     region-list-push-nosups                     \ reg1` reg-lst' bool
     if
@@ -286,8 +286,8 @@
     region-deallocate
 
     \ Test 2, pushing a region that is not a superset of regions in a list.
-    s" 1110" region-from-string-a               \ reg'
-    s" (1x01 10x1)" region-list-from-string-a   \ reg' reg-lst'
+    s" r1110" region-from-string-a              \ reg'
+    s" (r1x01 r10x1)" region-list-from-string-a \ reg' reg-lst'
     2dup
     region-list-push-nosups                     \ reg1` reg-lst' bool
     if
@@ -304,8 +304,8 @@
     drop
 
     \ Test 3, pushing a region that is a subset of regions in a list.
-    s" 1011" region-from-string-a               \ reg'
-    s" (1x01 10x1)" region-list-from-string-a   \ reg' reg-lst'
+    s" r1011" region-from-string-a              \ reg'
+    s" (r1x01 r10x1)" region-list-from-string-a \ reg' reg-lst'
     2dup
     region-list-push-nosups                     \ reg1` reg-lst' bool
     if
@@ -326,8 +326,8 @@
 
 : region-list-test-remove-superset
     \ Test 1, pushing a region that is a subset of regions in a list.
-    s" 1001" region-from-string-a               \ reg'
-    s" (1x01 00x1)" region-list-from-string-a   \ reg' reg-lst'
+    s" r1001" region-from-string-a              \ reg'
+    s" (r1x01 r00x1)" region-list-from-string-a \ reg' reg-lst'
     2dup
     region-list-remove-superset                 \ reg1` reg-lst' bool
     if

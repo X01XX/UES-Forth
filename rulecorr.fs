@@ -19,18 +19,20 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 ;
 
 \ Check instance type.
-: is-allocated-rulecorr ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-rulecorr? ( addr -- bool )
+    dup rulecorr-mma mma-is-item    \ addr bool
     if
-        rulecorr-id =
+        struct-get-id
+        rulecorr-id =               \ bool
     else
-        false
+        drop
+        false                       \ f
     then
 ;
 
 \ Check TOS for rulecorr, unconventional, leaves stack unchanged.
 : assert-tos-is-rulecorr ( tos -- tos )
-    dup is-allocated-rulecorr
+    dup is-allocated-rulecorr?
     false? if
         s" TOS is not an allocated rulecorr"
         .abort-xt execute
@@ -39,7 +41,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 \ Check NOS for rulecorr, unconventional, leaves stack unchanged.
 : assert-nos-is-rulecorr ( nos tos -- nos tos )
-    over is-allocated-rulecorr
+    over is-allocated-rulecorr?
     false? if
         s" NOS is not an allocated rulecorr"
         .abort-xt execute
@@ -430,75 +432,25 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     true
 ;
 
-\ Return a rulecorr from a token-list.
-: rulecorr-from-token-list ( tkn-lst0 -- rulc t | f )
-    \ Check arg.
-    assert-tos-is-token-list
-
-    \ Check number tokens.
-    dup list-get-length         \ tkn-lst0 cnt
-    number-domains-gbl          \ tkn-lst0 cnt domain-count
-    <> if                       \ tkn-lst0
-        drop
-        false
-        exit
-    then
-
-    \ Process each rule.
-                                            \ tkn-lst0
-    list-new                                \ tkn-lst0 rul-lst
-
-    \ Prep for loop.
-    swap list-get-links                     \ rul-lst tkn-lnk
-    get-domain-list-gbl list-get-links      \ rul-lst tkn-lnk d-lnk
-
-    \ Process each token.
-    begin
-        ?dup
-    while
-        \ Set current domain.
-        dup link-get-data           \ rul-lst tkn-lnk d-lnk domx
-        domain-set-current-gbl      \ rul-lst tkn-lnk d-lnk
-
-        \ Get one region.
-        over link-get-data          \ rul-lst tkn-lnk d-lnk tknx
-        token-get-string            \ rul-lst tkn-lnk d-lnk c-addr u
-        rule-from-string            \ rul-lst tkn-lnk d-lnk, rulx t | f
-        if
-            #3 pick                 \ rul-lst tkn-lnk d-lnk rulx rul-lst
-            rule-list-push-end      \ rul-lst tkn-lnk d-lnk
-        else
-            2drop
-            rule-list-deallocate
-            false
-            exit
-        then
-
-        swap link-get-next
-        swap link-get-next
-    repeat
-
-    \ Clean up.                     \ rul-lst tkn-lnk
-    drop                            \ rul-lst
-
-    \ Return.
-    rulecorr-new                    \ rulecorr
-    true
-;
-
 \ Return a rulecorr from a string.
 : rulecorr-from-string ( str-addr str-n -- rulc t | f )
-    \ Get tokens.
-    token-list-from-string          \ tkn-lst'
-
-    \ Get rulecorr.
-    dup                             \ tkn-lst' tkn-lst'
-    rulecorr-from-token-list        \ tkn-lst', rulc t | f
+    list-from-string-xt execute             \ lst t | f
     if
-        swap token-list-deallocate  \ rulc
-        true
+        [ ' is-allocated-rule? ] literal
+        over list-apply-all-true?           \ lst bool
+        if
+            dup rule-list-corresponding?  \ lst bool
+            if
+                rulecorr-new
+                true
+            else
+                rule-list-deallocate
+                false
+            then
+        else
+            structinfo-list-deallocate-struct-list-xt execute
+        then
     else
-        token-list-deallocate
         false
     then
 ;

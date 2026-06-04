@@ -4,7 +4,7 @@
     domain-state-complement     \ dom0 reg-lst'
     cr ." ~5 = " dup .region-list cr
 
-    s" (1XXX XX1X X0XX XXX0)"
+    s" (r1XXX rXX1X rX0XX rXXX0)"
     region-list-from-string-a   \ dom0 reg-lst' test-lst'
     2dup region-list-eq         \ dom0 reg-lst' test-lst' bool
     if
@@ -34,7 +34,7 @@
     2dup region-list-intersections-nosubs   \ dom0 list45' list36' ints'
     dup cr ." Possible regions = (~4 + ~5) & (~3 + ~6) = " .region-list
 
-    s" (1XXX X11X XXX0 XXX1 X0XX)"
+    s" (r1XXX rX11X rXXX0 rXXX1 rX0XX)"
     region-list-from-string-a               \ dom0 list45' list36' list-int' list-test'
     2dup region-list-eq                     \ dom0 list45' list36' list-int' list-test' bool
     false? abort" domain-test-state-pair-complement: lists ne?"
@@ -94,12 +94,12 @@
 
         dup plan-get-initial-region \ sess dom act reg-to 'reg-from' plan' reg-init
         #2 pick                     \ sess dom act reg-to 'reg-from' plan' reg-init reg-from
-        region-eq?                  \ sess dom act reg-to 'reg-from' plan' bool
+        regions-eq?                 \ sess dom act reg-to 'reg-from' plan' bool
         false? abort" Invalid initial region?"
 
         dup plan-get-result-region  \ sess dom act reg-to 'reg-from' plan' reg-rslt
         #3 pick                     \ sess dom act reg-to 'reg-from' plan' reg-rslt reg-to
-        region-eq?                  \ sess dom act reg-to 'reg-from' plan' bool
+        regions-eq?                 \ sess dom act reg-to 'reg-from' plan' bool
         false? abort" Invalid result region?"
 
         plan-deallocate

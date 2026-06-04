@@ -29,6 +29,19 @@
     then
 ;
 
+\ Deallocate a structinfo list recursively.
+: structinfo-list-deallocate-recursive ( structinfo-lst -- )
+    dup struct-get-use-count                        \ structinfo-lst uc
+    #2 < if
+        [ ' structinfo-deallocate ] literal over    \ structinfo-lst xt structinfo-lst
+        list-apply-recursive                        \ Deallocate structinfo instances in the list.
+
+        list-deallocate-recursive                   \ Deallocate list and links.
+    else
+        struct-dec-use-count
+    then
+;
+
 \ Find a structinfo instance in a list, by instance id, if any.
 : structinfo-list-find ( id1 si-lst0 -- si t | f )
     \ Check args.
@@ -435,6 +448,18 @@
     then
 ;
 
+: structinfo-list-print-struct ( stc -- )
+    dup get-structinfo              \ lst-link data, snf t | f
+    if                              \ lst-link data snf
+        \ Print a struct instance.
+        structinfo-get-print-xt     \ lst-link data xt
+        execute                     \ lst-link
+    else                            \ lst-link data
+        \ Print a number.
+        .
+    then
+;
+
 \ Print a list of structures.
 : structinfo-list-print-struct-list ( lst0 -- )
     \ Check args.
@@ -474,7 +499,7 @@
     assert-tos-is-list
 
     dup struct-get-use-count                \ lst0 uc
-    dup 0 < abort" Invalid use count"
+    dup 0< abort" structinfo-list-deallocate-struct-list: Invalid use count"
 
     #2 <                                    \ lst0 bool
     if
@@ -487,6 +512,7 @@
             dup get-structinfo              \ lst0 lst-link link-data, snf t | f
             if
                 \ Deallocate struct instance.
+                \ space 2dup structinfo-get-print-xt execute
                 structinfo-get-deallocate-xt    \ lst0 lst-link link-struct xt
                 execute                     \ lst0 lst-link
             else
@@ -504,3 +530,143 @@
 ;
 
 ' structinfo-list-deallocate-struct-list to structinfo-list-deallocate-struct-list-xt
+
+\ Return a struct instance from a string.
+: structinfolist-interpret-string ( c-addr u lst0 -- inst t | f )
+    \ Check args.
+    assert-tos-is-structinfo-list
+    \ cr ." structinfolist-interpret-string: " #2 pick #2 pick type cr
+
+    list-get-links                      \ c-addr u link
+
+    begin
+        ?dup
+    while
+        dup link-get-data               \ c-addr u link snfx
+        structinfo-get-from-string-xt   \ c-addr u link xt
+        [ ' noop ] literal              \ c-addr u link xt xt-nop
+        over =                          \ c-addr u link xt bool
+        if
+            drop                        \ c-addr u link
+        else                            \ c-addr u link xt
+            #3 pick swap                \ c-addr u link c-addr xt
+            #3 pick swap                \ c-addr u link c-addr u xt
+            execute                     \ c-addr u link, inst t | f
+            if                          \ c-addr u link inst
+                2nip                    \ link inst
+                nip                     \ inst
+                true
+                exit
+            then
+        then
+        link-get-next
+    repeat
+
+                                        \ c-addr u
+    2drop
+    false
+;
+
+\ Return true if two items are equal.
+: structinfo-list-items-eq? ( itm1 itm0 -- bool )
+
+    \ Handle the possibility of integers instead of structs.
+
+    \ Check numeric equality, works for integers and struct addresses.
+    2dup =
+    if
+        2drop true
+        \ cr ." exit 1" cr
+        exit
+    then
+
+    \ Get first word of itm1.
+    over get-first-word         \ itm1 itm0, id1 t | f ( could be an integer )
+    if
+    else
+        \ If its an integer, it already failed the numeric test, else I don't know what it is.
+        2drop false
+        \ cr ." exit 2" cr
+        exit
+    then
+
+    \ Get first word of itm0.
+    over get-first-word         \ itm1 itm0 id1, id0 t | f ( could be an integer )
+    if
+    else
+        \ If its an integer, it already failed the numeric test, else I don't know what it is.
+        2drop drop false
+        \ cr ." exit 3" cr
+        exit
+    then
+
+    \ We should be dealing with structs at this point.
+
+    \ Check kind of structs.    \ itm1 itm0 id1 id0
+    over =                      \ itm1 itm0 id1 bool
+    if
+    else
+        drop 2drop false
+        \ cr ." exit 4" cr
+        exit
+    then
+
+    \ Check <struct>s-eq?
+    structinfo-list-store       \ itm1 itm0 id1 snf-lst
+    structinfo-list-find        \ itm1 itm0, snfx t | f
+    if
+    else
+        \ Can't find info on an id.
+        2drop false
+        \ cr ." exit 5" cr
+        exit
+    then
+
+    \ Get <struct>s-eq? xt.
+    structinfo-get-eq-xt        \ itm1 itm0 eq-xt
+
+    \ Check for noop xt.
+    dup [ ' noop ] literal =    \ itm1 itm0 eq-xt bool
+    if
+        drop 2drop false
+        \ cr ." exit 6" cr
+        exit
+    then
+
+    \ Test the two structs.
+    execute                     \ bool
+    \ cr ." exit 7" cr
+;
+
+\ Return true if an item is in a list, order does not matter.
+\ Hopefully, this will work for lists within lists.
+: structinfo-list-member? ( item list -- flag )
+    \ Check arg.
+    assert-tos-is-list
+    \ cr ." structinfo-list-member?: "
+    \ over structinfo-list-print-struct
+    \ space
+    \ dup structinfo-list-print-struct-list
+    \ cr
+
+    list-get-links                  \ item link
+    begin
+        ?dup
+    while                           \ item link
+        \ Look for link item match.
+        over                        \ item link item
+        over link-get-data          \ item link item link-data
+        structinfo-list-items-eq?   \ item link bool
+        if
+            2drop
+            true
+            exit
+        then
+
+        link-get-next
+    repeat
+
+    \ Cleanup, return.              \ item
+    drop
+    false
+;

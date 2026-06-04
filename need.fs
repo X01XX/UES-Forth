@@ -22,7 +22,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 #6 value need-type-max
 
 \ Return true if tos is a valid need type.
-: is-need-type ( u -- bool )
+: is-need-type? ( u -- bool )
     dup  need-type-min >=    \ u bool
     swap need-type-max <=   \ bool bool
     and
@@ -38,18 +38,20 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 ;
 
 \ Check instance type.
-: is-allocated-need ( addr -- flag )
-    get-first-word          \ w t | f
+: is-allocated-need? ( addr -- bool )
+    dup need-mma mma-is-item    \ addr bool
     if
-        need-id =
+        struct-get-id
+        need-id =               \ bool
     else
-        false
+        drop
+        false                   \ f
     then
 ;
 
 \ Check TOS for need, unconventional, leaves stack unchanged.
 : assert-tos-is-need ( tos -- tos )
-    dup is-allocated-need
+    dup is-allocated-need?
     false? if
         s" TOS is not an allocated need"
        .abort-xt execute
@@ -58,7 +60,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check NOS for need, unconventional, leaves stack unchanged.
 : assert-nos-is-need ( nos tos -- nos tos )
-    over is-allocated-need
+    over is-allocated-need?
     false? if
         s" NOS is not an allocated need"
        .abort-xt execute
@@ -67,7 +69,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check tos for valid need number.
 : assert-tos-is-need-number ( tos -- tos )
-    dup is-need-type
+    dup is-need-type?
     if
     else
         s" tos invalid need number?"
@@ -77,7 +79,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check nos for valid need number.
 : assert-nos-is-need-number ( nos tos -- nos tos )
-    over is-need-type
+    over is-need-type?
     if
     else
         s" nos invalid need number?"
@@ -87,7 +89,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check 3os for valid need number.
 : assert-3os-is-need-number ( 3os nos tos -- 3os nos tos )
-    #2 pick is-need-type
+    #2 pick is-need-type?
     if
     else
         s" 3os invalid need number?"
@@ -97,7 +99,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check 4os for valid need number.
 : assert-4os-is-need-number ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick is-need-type
+    #3 pick is-need-type?
     if
     else
         s" 4os invalid need number?"
