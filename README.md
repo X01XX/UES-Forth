@@ -30,6 +30,10 @@ A is different from B in some way.
   
 ~A + ~B covers everything, with regions containing A, regions containing B, regions containing neither,
 NO regions containing A and B.
+Avoiding regions that contain dissimilar things, forms regions that contain similar things.
+A set of similar things may be divided into more than one region, depending on what is to be avoided.
+The set of all ships can be divided into those in the Pacific Ocean and those in the Atlantic Ocean, avoidng land.
+
 Similar calculations of other pairs, exhibiting the same difference, can be intersected for an improved understanding.
 Everything intersecting everything, is still everything. The arrangement of the underlying regions changes.
 
