@@ -31,15 +31,23 @@ A is different from B in some way.
 ~A + ~B covers everything, with regions containing A, regions containing B, regions containing neither,
 NO regions containing A and B.
 Avoiding regions that contain dissimilar things, forms regions that contain similar things.
-A set of similar things may be divided into more than one region, depending on what is to be avoided.
-The set of all ships can be divided into those in the Pacific Ocean and those in the Atlantic Ocean, avoidng land.
 
-Similar calculations of other pairs, exhibiting the same difference, can be intersected for an improved understanding.
-Everything intersecting everything, is still everything. The arrangement of the underlying regions changes.
+Your initial thought may be that this just creates sets of similar things.
+But a set of similar things may be divided into more than one region, depending on what is
+to be avoided.
 
-Commonly, there are a lot of overlaps between regions, where there is no data.
-Overlaps are a measure of uncertainty.
-You could seek data in overlapped areas, producing smaller, more numerous, overlaps.  Thats ineffective.
+Similar calculations of other pairs, exhibiting the same difference, can be intersected for
+an improved understanding.
+
+Your initial thought may be that multiple intersections produces smaller, and smaller, results.
+But everything intersecting everything, is still everything.
+The arrangement of the underlying regions changes.
+
+Commonly, there are a lot of overlaps between regions containing dissimilar things,
+where there is no data.
+Overlaps of dissimilar regions are a measure of uncertainty.
+You could seek data in the dissimilar overlapped areas, producing smaller, more numerous, overlaps.
+Thats ineffective.
 
 The results are better with adjacent pairs, points on a logical <i>Edge</i>.
 The results are even better with multiple adjacencies, like (~A + ~B) & (~A + ~C), a logical <i>Corner</i>.
@@ -48,9 +56,13 @@ The results are even better with a cluster of corners, like (~A + ~B) & (~A + ~C
 
 The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>Anchors</i>.
 Note that I added a corner by adding a single item, ~D. Corner clusters share data.
-The number of adjacent, dissimilar, terms used for a corner, equals the number of edges of the region the anchor is in.  
+The number of adjacent, dissimilar, terms used for a corner, equals the number of edges of
+the region the anchor is in.  
 
-In the results, regions not completely overlapped by other regions are <i>Defining</i> regions, others are <i>Placeholders</i>.
+In the results, regions not completely overlapped by other regions are <i>Defining</i> regions,
+others are <i>Placeholders</i>.
+Placeholder regions are caused by adjacent, similar, regions.
+
 When a corner is well developed, all adjacent dissimilar samples tested, the anchor
 will be in only one region, a defining region, else it will not be a valid corner.
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
@@ -58,13 +70,16 @@ Each defining region will have a corner.  Having more than one corner is possibl
 One of a region's corners may be better to keep than another, to be part of a corner cluster.
 Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor cannot be in more than one region.
 
-After corners are established and tested, accumulated data, not part of the final corners, can be deleted.
+After corners are established and tested, accumulated data, not part of the final corners,
+can be deleted.
 Corner clusters are the most data-efficient way to describe the regions, based on my experience.
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
-Corner clusters, sharing data, can go as low as one state per region, depending on how regularly the regions are found to be arranged.
+Corner clusters, sharing data, can go as low as one term per region, depending on how regularly the regions
+are found to be arranged.
 
-Understanding is tenuous at first, then improves with more data, selected judiciously to find/test corners, like IRL.
-Poor selection of data (like me, doing this), or inability to select, can still result in improved understanding,
+Understanding is tenuous at first, then improves with more data, selected to find/test corners, like IRL.
+Poor selection of data (like me, doing this), or inability to select, can still result in improved
+understanding,
 it requires more time, data input, and data storage, to haphazardly discover corners.
 
 The program starts in the inability-to-select mode, taking samples as available.
