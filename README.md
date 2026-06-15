@@ -28,8 +28,8 @@ Understanding = ~A + ~B
 
 A is different from B in some way.
   
-~A + ~B covers everything, with regions containing A, regions containing B, regions containing neither,
-NO regions containing A and B.
+~A + ~B covers everything, with regions containing A, regions containing B,
+regions containing neither, NO regions containing A and B.
 Avoiding regions that contain dissimilar things, forms regions that contain similar things.
 
 Your initial thought may be that this just creates sets of similar things.
@@ -68,19 +68,20 @@ will be in only one region, a defining region, else it will not be a valid corne
 Each defining region will have a corner.  Having more than one corner is possible, but not needed.
 
 One of a region's corners may be better to keep than another, to be part of a corner cluster.
-Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor cannot be in more than one region.
+Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor
+cannot be in more than one region.
 
 After corners are established and tested, accumulated data, not part of the final corners,
 can be deleted.
 Corner clusters are the most data-efficient way to describe the regions, based on my experience.
 There may be an opportunity for a mathematical proof here, but I don't have that talent.
-Corner clusters, sharing data, can go as low as one term per region, depending on how regularly the regions
-are found to be arranged.
+Corner clusters, sharing data, can go as low as one term per region, depending on how regularly the
+regions are found to be arranged.
 
-Understanding is tenuous at first, then improves with more data, selected to find/test corners, like IRL.
+Understanding is tenuous at first, then improves with more data, selected to find/test corners,
+like IRL.
 Poor selection of data (like me, doing this), or inability to select, can still result in improved
-understanding,
-it requires more time, data input, and data storage, to haphazardly discover corners.
+understanding, it requires more time, data input, and data storage, to haphazardly discover corners.
 
 The program starts in the inability-to-select mode, taking samples as available.
 After 75, or so, samples (you can lean on the Enter key), a few short, single-step,
