@@ -61,7 +61,8 @@ the region the anchor is in.
 
 In the results, regions not completely overlapped by other regions are <i>Defining</i> regions,
 others are <i>Placeholders</i>.
-Placeholder regions are caused by adjacent, similar, regions.
+Placeholder regions are caused by adjacent, similar, regions, not to be confused with the
+overlaps mentioned above.
 
 When a corner is well developed, all adjacent dissimilar samples tested, the anchor
 will be in only one region, a defining region, else it will not be a valid corner.
