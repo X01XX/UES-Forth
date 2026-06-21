@@ -52,7 +52,7 @@ Thats ineffective.
 The results are better with adjacent pairs, points on a logical <i>Edge</i>.
 The results are even better with multiple adjacencies, like (~A + ~B) & (~A + ~C), a logical <i>Corner</i>.
 The results are even better with a cluster of corners, like (~A + ~B) & (~A + ~C) & (~C + ~D).
-"Better" can be defined as fewer dissimilar overlaps, less uncertainty.
+"Better" can be defined as fewer, smaller, dissimilar overlaps, less uncertainty.
 
 The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>Anchors</i>.
 Note that I added a corner by adding a single item, ~D. Corner clusters share data.
