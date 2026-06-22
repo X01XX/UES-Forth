@@ -55,7 +55,7 @@ The results are even better with a cluster of corners, like (~A + ~B) & (~A + ~C
 "Better" can be defined as fewer, smaller, dissimilar overlaps, less uncertainty.
 
 The corners, above, are ~A + (~B & ~C), ~C + (~A & ~D).  I call A, and C, <i>Anchors</i>.
-Note that I added a corner by adding a single item, ~D. Corner clusters share data.
+Note that I added a corner by adding a single term, ~D. Corner clusters share data.
 The number of adjacent, dissimilar, terms used for a corner, equals the number of edges of
 the region the anchor is in.  
 
