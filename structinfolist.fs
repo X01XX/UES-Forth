@@ -114,7 +114,25 @@
     \ Print Summary line.
     cr
     spaces
-    #82 spaces ." Totals: "
+    #46 spaces ." Totals: "
+
+    \ Sum struct instances in use.
+    0 over list-get-links           \ si-lst0 cnt si-link
+
+    begin
+        ?dup
+    while
+        dup link-get-data           \ si-lst0 cnt si-link six
+        structinfo-get-mma          \ si-lst0 cnt si-link mmax
+        mma-in-use                  \ si-lst0 cnt si-link totx
+        rot                         \ si-lst0 si-link totx cnt
+        + swap                      \ si-lst0 cnt+ si-link
+
+        link-get-next
+    repeat
+
+    \ Print array instances in use.
+    #6 dec.r
 
     \ Sum array memory use.
     0 over list-get-links           \ si-lst0 cnt si-link
@@ -132,6 +150,7 @@
     repeat
 
     \ Print array memory use.
+    30 spaces
     #7 dec.r
 
     \ Sum overhead memory use.
@@ -191,7 +210,7 @@
     #7 spaces #12 dec.r
 
     drop
-    cr .stack-gbl cr                \ si-lst0
+    cr .stack-structs-xt execute cr	\ si-lst0
 ;
 
 ' structinfo-list-print-memory-use to structinfo-list-print-memory-use-xt
