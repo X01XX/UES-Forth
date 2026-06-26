@@ -23,6 +23,9 @@ Showing the power of roll-your-own Memory Management, I added an allocation coun
 It turns out UES-Forth does literally Millions of struct Allocation/Deallocation operations, with no apparent slowness.
 At end, everything is accounted for, no memory leaks, nothing left on the Forth stack.
 
+After rules are discovered, the "to" command can be used to change the current state.  The program will attempt
+to form a plan that avoids negative states, then execute it.
+
 <pre>
 Understanding = ~A + ~B
 
