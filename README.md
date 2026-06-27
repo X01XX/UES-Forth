@@ -90,7 +90,7 @@ hence time, to haphazardly discover corners.
 
 The program starts in the inability-to-select mode, taking samples as available.
 After 75, or so, samples (you can lean on the Enter key), regions of differing bit changes
-stort to form, providing rules. A few short, single-step, plans become possible to start
+start to form, providing rules. A few short, single-step, plans become possible to start
 to control selection.
 Early plans have a tendency to fail, but failure provides data, understanding improves.
 
