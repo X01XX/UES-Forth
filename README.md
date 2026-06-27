@@ -89,12 +89,13 @@ can still result in improved understanding. It requires more data input and data
 hence time, to haphazardly discover corners.
 
 The program starts in the inability-to-select mode, taking samples as available.
-After 75, or so, samples (you can lean on the Enter key), a few short, single-step,
-plans become possible to start to control selection.
+After 75, or so, samples (you can lean on the Enter key), regions of differing bit changes
+stort to form, providing rules. A few short, single-step, plans become possible to start
+to control selection.
 Early plans have a tendency to fail, but failure provides data, understanding improves.
 
-With more actively selected samples, corners are found.
-Plans become easier to find, more steps per plan, more likely to succeed.
+With more actively selected samples, corners are found, regions are better defined.
+Plans become easier to make, more steps per plan, more likely to succeed.
 Corner clusters are calculated.
 The corner cluster algorithm can be slowed by too much data, maybe there's a better way?
 Excess data is then deleted.
