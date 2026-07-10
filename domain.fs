@@ -1,6 +1,6 @@
 \ Implement a Domain struct and functions.
 
-#31379 constant domain-id
+#31379 constant domain-struct-id
     #8 constant domain-struct-number-cells
 
 \ Struct fields
@@ -27,44 +27,33 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 \ Check instance type.
 : is-allocated-domain? ( addr -- bool )
-    dup domain-mma mma-is-item  \ addr bool
+    dup domain-mma mma-is-item? \ addr bool
     if
         struct-get-id
-        domain-id =             \ bool
+        domain-struct-id =      \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for domain, unconventional, leaves stack unchanged.
-: assert-tos-is-domain ( tos -- tos )
+\ Check TOS for domain.
+: is-domain? ( tos -- t )
     dup is-allocated-domain?
-    false? if
-        s" TOS is not an allocated domain"
-       .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated domain"
+    .abort-xt execute
 ;
 
-' assert-tos-is-domain to assert-tos-is-domain-xt
-
-\ Check NOS for domain, unconventional, leaves stack unchanged.
-: assert-nos-is-domain ( nos tos -- nos tos )
-    over is-allocated-domain?
-    false? if
-        s" NOS is not an allocated domain"
-       .abort-xt execute
-    then
-;
-
-' assert-nos-is-domain to assert-nos-is-domain-xt
+' is-domain? to is-domain?-xt
 
 \ Start accessors.
 
 \ Return the parent session of the domain.
 : domain-get-parent-session ( dom0 -- ses )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-parent-session-disp + \ Add offset.
     @                           \ Fetch the field.
@@ -75,7 +64,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the parent session of an domain.
 : _domain-set-parent-session ( ses1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-parent-session-disp +    \ Add offset.
     !                               \ Set the field.
@@ -84,7 +73,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the action-list from an domain instance.
 : domain-get-actions ( dom0 -- lst )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-actions-disp +   \ Add offset.
     @                       \ Fetch the field.
@@ -93,8 +82,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the action-list from an domain instance.
 : _domain-set-actions ( lst dom0 -- )
     \ Check arg.
-    assert-tos-is-domain
-    assert-nos-is-action-list
+    assert( tos is-domain? )
+    assert( nos is-action-list? )
 
     domain-actions-disp +   \ Add offset.
     !struct                 \ Set the field.
@@ -103,7 +92,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the instance ID from an domain instance.
 : domain-get-inst-id ( dom0 -- u)
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     \ Get intst ID.
     4c@
@@ -114,7 +103,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the instance ID of an domain instance.
 : domain-set-inst-id ( u1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     over 0<
     abort" Invalid instance id"
@@ -129,7 +118,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the number bits used by a domain instance.
 : domain-get-num-bits ( dom0 -- u)
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     \ Get intst ID.
     5c@
@@ -140,7 +129,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the number bits used by a domain instance, use only in this file.
 : _domain-set-num-bits ( u1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     over 1 <
     abort" Invalid number of bits."
@@ -155,7 +144,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the current state from a domain instance.
 : domain-get-current-state ( dom0 -- u)
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-current-state-disp +
     @
@@ -166,8 +155,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the current state of a domain instance.
 : domain-set-current-state ( u1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-value
+    assert( tos is-domain? )
+    assert( nos is-value? )
 
     \ Set inst id.
     domain-current-state-disp +
@@ -177,7 +166,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the current actien from a domain instance.
 : domain-get-current-action ( dom0 -- u)
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-current-action-disp +
     @
@@ -188,9 +177,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the current action of a domain instance.
 : domain-set-current-action ( act1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
     over 0<> if
-        assert-nos-is-action
+        assert( nos is-action? )
     then
 
     \ Set inst id.
@@ -201,7 +190,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the max-region of the domain.
 : domain-get-max-region ( dom0 -- reg )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-max-region-disp +    \ Add offset.
     @                           \ Fetch the field.
@@ -212,7 +201,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the max region of the domain.
 : _domain-set-max-region ( reg1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-max-region-disp +    \ Add offset.
     !struct                     \ Set the field.
@@ -221,7 +210,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the all-bits-mask of the domain.
 : domain-get-all-bits-mask ( dom0 -- msk )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-all-bits-mask-disp +    \ Add offset.
     @                           \ Fetch the field.
@@ -232,7 +221,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the max region of the domain.
 : _domain-set-all-bits-mask ( msk1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-all-bits-mask-disp +    \ Add offset.
     !                               \ Set the field.
@@ -241,7 +230,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the ms-bit-mask of the domain.
 : domain-get-ms-bit-mask ( dom0 -- msk )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-ms-bit-mask-disp +   \ Add offset.
     @                           \ Fetch the field.
@@ -252,7 +241,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Set the max region of the domain.
 : _domain-set-ms-bit-mask ( msk1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-ms-bit-mask-disp +   \ Add offset.
     !                           \ Set the field.
@@ -269,7 +258,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ The current state defaults to zero, but can be set with domain-set-current-state.
 : domain-new ( nb1 ses0 -- dom )
     \ Check arg.
-    assert-tos-is-session-xt execute
+    assert( tos is-session?-xt execute )
 
     \ Check number bits.
     over 1 < abort" Number bits < 1?"
@@ -279,7 +268,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     > abort" Number bits too large?"
 
     \ Allocate space.
-    domain-id domain-mma            \ nb1 ses0 id mma
+    domain-struct-id domain-mma     \ nb1 ses0 id mma
     struct-allocate                 \ nb1 ses0 dom
 
     \ Set instance ID, based on its position in the session domain list.
@@ -337,7 +326,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Print a domain.
 : .domain ( dom0 -- )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     dup domain-get-inst-id
     cr cr ." Dom: " dec.
@@ -354,7 +343,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Deallocate a domain.
 : domain-deallocate ( dom0 -- )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     dup struct-get-use-count      \ act0 count
     dup 0< abort" invalid use count"
@@ -374,7 +363,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 : domain-add-action ( xt1 dom0 -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     tuck                        \ dom0 xt1 dom0
 
@@ -391,7 +380,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Update parent session points counter.
 : domain-update-session-points ( dom -- )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-get-parent-session       \ sess
     session-update-points-xt        \ xt
@@ -402,8 +391,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Call only from session-get-sample, since current-domain in set there.
 : domain-get-sample ( act1 dom0 -- smpl )
      \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-action
+    assert( tos is-domain? )
+    assert( nos is-action? )
 
     \ Set domain current action.
     2dup domain-set-current-action  \ act1 dom0
@@ -435,8 +424,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Get a sample from an action in a domain, for a step.
 : domain-get-sample-step ( act1 dom0 -- smpl )
      \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-action
+    assert( tos is-domain? )
+    assert( nos is-action? )
 
     \ Set domain current action.
     2dup domain-set-current-action  \ act1 dom0
@@ -468,7 +457,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return true if a domain id matches a number.
 : domain-id-eq ( id1 dom0 -- flag )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-get-inst-id
     =
@@ -476,7 +465,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 : domain-get-needs ( dom0 -- ned-lst )
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     \ dup domain-get-inst-id cr ." domain-get-needs: Dom: " .
 
@@ -518,9 +507,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return a list of all steps that can make at least one needed change.
 : domain-calc-possible-steps ( reg-to reg-from dom0 -- plnstp-lst t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     \ cr ." domain-calc-possible-steps: reg-to: " #2 pick .region space ." reg-from: " over .region cr
 
     #2 pick #2 pick swap                    \ | reg-to reg-from
@@ -584,11 +573,11 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \    which would make using it premature.
 : domain-rule-valid-next-step? ( cngs4 reg-to reg-from plnstp1 dom0 -- bool )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-planstep
-    assert-3os-is-region
-    assert-4os-is-region
-    assert-5os-is-changes
+    assert( tos is-domain? )
+    assert( nos is-planstep? )
+    assert( 3os is-region? )
+    assert( 4os is-region? )
+    assert( 5os is-changes? )
 
     \ Check if rule initial region includes reg-from.
     over planstep-get-rule          \ cngs4 reg-to reg-from plnstp1 dom0 rul
@@ -637,9 +626,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ to support a random depth-first strategy.
 : domain-calc-step-fc ( reg-to reg-from dom0 -- step t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
 
     #2 pick #2 pick                         \ reg-to reg-from dom0 | reg-to reg-from
     region-subset?                          \ reg-to reg-from dom0 | bool
@@ -734,7 +723,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 : domain-find-action ( u1 dom0 -- act t | f )
     \ cr ." domain-find-action: Dom: " dup domain-get-inst-id . space over . cr
     \ Check args.
-    assert-tos-is-domain
+    assert( tos is-domain? )
     over 0< if
         2drop
         false
@@ -759,9 +748,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ a from-region (tos) and a to-region (nos).
 : domain-get-plan2-fc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     #3 pick 0< abort" invalid depth?"
     #2 pick #2 pick                                 \ | reg-to reg-from
     swap region-subset?                             \ | bool
@@ -955,9 +944,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ of times to find a plan to accomplish a desired sample.
 : domain-get-plan-fc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     #3 pick 0< abort" Invalid depth?"
     \ cr ." domain-get-plan-fc:  start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
@@ -989,11 +978,11 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \    which would make using it premature.
 : domain-rule-valid-previous-step? ( cngs4 reg-to reg-from plnstp1 dom0 -- bool )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-planstep
-    assert-3os-is-region
-    assert-4os-is-region
-    assert-5os-is-changes
+    assert( tos is-domain? )
+    assert( nos is-planstep? )
+    assert( 3os is-region? )
+    assert( 4os is-region? )
+    assert( 5os is-changes? )
 
     \ Check if rule result region intersects reg-to.
     over planstep-get-rule          \ cngs4 reg-to reg-from plnstp1 dom0 rul
@@ -1042,9 +1031,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ to support a random depth-first strategy.
 : domain-calc-step-bc ( reg-to reg-from dom0 -- step t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     \ cr ." domain-calc-step-bc: start: reg-to: " #2 pick .region space ." reg-from: " over .region cr
 
     over #3 pick                           \ reg-to reg-from dom0 | reg-from reg-to
@@ -1135,9 +1124,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ a sample result state to a sample initial state.
 : domain-get-plan2-bc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     #3 pick 0< abort" invalid depth?"
     #2 pick #2 pick                                 \ | reg-to reg-from
     swap region-subset?                             \ | bool
@@ -1346,9 +1335,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ of times to find a plan to accomplish a desired sample.
 : domain-get-plan-bc ( depth reg-to reg-from dom0 -- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     #3 pick 0< abort" Invalid depth?"
     \ cr ." domain-get-plan-bc:  start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
@@ -1378,9 +1367,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ for going from an initial region to a non-intersecting result region.
 : domain-get-plan-fb ( reg-to reg-from dom0 -domain-get-plan-bc- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     \ cr ." domain-get-plan-fb:  start:           from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     #2 random
@@ -1439,9 +1428,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Try making a plan that goes from the current state, to the rule, then to the goal.
 : domain-asymmetric-chaining ( reg-to reg-from dom0 -- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     \ cr ." domain-asymmetric-chaining: start:    from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     \ Get possible steps containing a needed change.
@@ -1593,9 +1582,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Get a plan for going between an initial region and a non-intersecting result region.
 : domain-get-plan ( reg-to reg-from dom0 -- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-domain? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     \ cr ." domain-get-plan:     start:           from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec.
 
     \ Check for no plan needed.
@@ -1641,7 +1630,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     swap planstep-list-deallocate               \ | cngs' plnstp-cngs'
     \ cr ." cngs: " over .changes space ." planstep-list cngs: " dup .changes cr
     2dup                                        \ | cngs' plnstp-cngs' cngs' plnstp-cngs'
-    changes-superset-of                         \ | cngs' plnstp-cngs' bool
+    changes-superset-of?                        \ | cngs' plnstp-cngs' bool
     swap changes-deallocate                     \ | cngs' bool
     swap changes-deallocate                     \ | bool
     if
@@ -1683,8 +1672,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Get a plan for going from the current state to a need target.
 : domain-get-plan-for-need ( ned1 dom0 -- plan t | f )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-need
+    assert( tos is-domain? )
+    assert( nos is-need? )
 
     \ Calc to region.
     over need-get-target            \ ned1 dom0 n-sta
@@ -1715,7 +1704,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
 : domain-get-number-actions ( dom -- na )
     \ Check arg.
-    assert-tos-is-domain
+    assert( tos is-domain? )
 
     domain-get-actions      \ act-lst
     list-get-length         \ len
@@ -1726,8 +1715,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return the complement af a state.
 : domain-state-complement ( u1 dom0 -- list )
     \ Check arg.
-    assert-tos-is-domain
-    assert-nos-is-value
+    assert( tos is-domain? )
+    assert( nos is-value? )
 
     domain-get-max-region               \ u1 reg-max
 
@@ -1737,9 +1726,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 \ Return ~A + ~B for a state pair.
 : domain-state-pair-complement ( u2 u1 dom0 -- list )
     \ Check args.
-    assert-tos-is-domain
-    assert-nos-is-value
-    assert-3os-is-value
+    assert( tos is-domain? )
+    assert( nos is-value? )
+    assert( 3os is-value? )
 
     tuck                            \ u2 dom0 u1 dom0
     domain-state-complement         \ u2 dom0 comp1

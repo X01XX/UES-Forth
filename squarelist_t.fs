@@ -3,8 +3,8 @@
 \ Return square states in a region.
 : square-list-states-in-region ( reg1 sqr-lst0 -- ret-sta-lst )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-region
+    assert( tos is-list? )
+    assert( nos is-region? )
 
     \ Init return list.
     list-new -rot                   \ ret-lst reg1 sqr-lst0
@@ -48,10 +48,10 @@
     abort" list length not 2?"
 
     \ Check the correct squares were returned.
-    #7 over square-list-member
+    #7 over square-list-member?
     0= abort" 7 NOT found"
 
-    #13 over square-list-member
+    #13 over square-list-member?
     0= abort" 13 NOT found"
 
     \ Deallocate
@@ -79,10 +79,10 @@
     abort" list length not 2?"
 
     \ Check the correct squares were returned.
-    [ ' = ] literal #7 #2 pick list-member
+    [ ' = ] literal #7 #2 pick list-member?
     0= abort" 7 NOT found"
 
-    [ ' = ] literal #13 #2 pick list-member
+    [ ' = ] literal #13 #2 pick list-member?
     0= abort" 13 NOT found"
 
     \ Deallocate

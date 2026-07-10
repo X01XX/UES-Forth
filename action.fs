@@ -1,6 +1,6 @@
 \ Implement an Action struct and functions.
 
-#29717 constant action-id
+#29717 constant action-struct-id
     #9 constant action-struct-number-cells
 
 \ Struct fields
@@ -28,53 +28,33 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 \ Check instance type.
 : is-allocated-action? ( addr -- bool )
-    dup action-mma mma-is-item  \ addr bool
+    dup action-mma mma-is-item? \ addr bool
     if
         struct-get-id
-        action-id =             \ bool
+        action-struct-id =      \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for action, unconventional, leaves stack unchanged.
-: assert-tos-is-action ( tos -- tos )
-    dup is-allocated-action?
-    false? if
-        s" TOS is not an allocated action"
-       .abort-xt execute
-    then
+\ Check TOS for action.
+: is-action? ( tos -- t )
+    is-allocated-action?
+    if true exit then
+
+    s" Selected arg is not an allocated action"
+    .abort-xt execute
 ;
 
-' assert-tos-is-action to assert-tos-is-action-xt
-
-\ Check NOS for action, unconventional, leaves stack unchanged.
-: assert-nos-is-action ( nos tos -- nos tos )
-    over is-allocated-action?
-    false? if
-        s" NOS is not an allocated action"
-       .abort-xt execute
-    then
-;
-
-' assert-nos-is-action to assert-nos-is-action-xt
-
-\ Check 3OS for action, unconventional, leaves stack unchanged.
-: assert-3os-is-action ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-action?
-    false? if
-        s" 3OS is not an allocated action"
-       .abort-xt execute
-    then
-;
+' is-action? to is-action?-xt
 
 \ Start accessors.
 
 \ Return the instance ID from an action instance.
 : action-get-inst-id ( act0 -- u)
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Get inst ID.
     4c@
@@ -85,7 +65,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the instance ID of an action instance, use only in this file.
 : _action-set-inst-id ( u1 act0 -- )
     \ Check args.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     over 0<
     abort" Invalid instance id"
@@ -100,7 +80,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the cull squares trigger from an action instance.
 : action-get-cull-squares-trigger ( act0 -- bool)
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Get cull trigger.
     5c@
@@ -116,8 +96,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the cull trigger of an action instance, use only in this file.
 : _action-set-cull-squares-trigger ( bool act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-bool
+    assert( tos is-action? )
+    assert( nos is-bool? )
 
     swap                \ act0 bool
     if
@@ -133,7 +113,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the calc-corners trigger from an action instance.
 : action-get-calc-corners-trigger ( act0 -- bool)
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Get calc-corner triggr.
     6c@
@@ -149,8 +129,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the calc-corners trigger of an action instance, use only in this file.
 : _action-set-calc-corners-trigger ( bool act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-bool
+    assert( tos is-action? )
+    assert( nos is-bool? )
 
     swap                \ act0 bool
     if
@@ -167,7 +147,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the parent domain of the action.
 : action-get-parent-domain ( act0 -- dom )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-parent-domain-disp + \ Add offset.
     @                           \ Fetch the field.
@@ -178,8 +158,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the parent domain of an action.
 : _action-set-parent-domain ( dom act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-domain-xt execute
+    assert( tos is-action? )
+    assert( nos is-domain?-xt execute )
 
     action-parent-domain-disp + \ Add offset.
     !                           \ Set the field.
@@ -188,7 +168,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the square-list from an action instance.
 : action-get-squares ( act0 -- lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-squares-disp +   \ Add offset.
     @                       \ Fetch the field.
@@ -197,8 +177,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the square-list of an action instance, use only in this file.
 : _action-set-squares ( sqr-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-square-list
+    assert( tos is-action? )
+    assert( nos is-square-list? )
 
     action-squares-disp +   \ Add offset.
     !struct                 \ Set the field.
@@ -207,7 +187,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the incompatible-pairs region-list from an action instance.
 : action-get-incompatible-pairs ( act0 -- reg-lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-incompatible-pairs-disp +    \ Add offset.
     @                                   \ Fetch the field.
@@ -216,8 +196,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the incompatible-pairs region-list of an action instance, use only in this file.
 : _action-set-incompatible-pairs ( reg-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region-list
+    assert( tos is-action? )
+    assert( nos is-region-list? )
 
     action-incompatible-pairs-disp +    \ Add offset.
     !struct                             \ Store it.
@@ -226,8 +206,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Update incompatible-pairs.
 : _action-update-incompatible-pairs ( reg-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region-list
+    assert( tos is-action? )
+    assert( nos is-region-list? )
     cr ." New incompatible pairs: " over .region-list cr
 
     dup action-get-incompatible-pairs   \ reg-lst1 act0 ip-lst
@@ -239,7 +219,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the logical-structure region-list from an action instance.
 : action-get-logical-structure ( act0 -- reg-lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-logical-structure-disp + \ Add offset.
     @                               \ Fetch the field.
@@ -250,8 +230,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the logical-structure region-list of an action instance, use only in this file.
 : _action-set-logical-structure ( reg-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region-list
+    assert( tos is-action? )
+    assert( nos is-region-list? )
 
     \ Set new LS.
     action-logical-structure-disp + \ Add offset.
@@ -262,7 +242,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the group-list from an action instance.
 : action-get-groups ( act0 -- grp-lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-groups-disp +    \ Add offset.
     @                       \ Fetch the field.
@@ -271,8 +251,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the group-list of an action instance, use only in this file.
 : _action-set-groups ( grp-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-group-list
+    assert( tos is-action? )
+    assert( nos is-group-list? )
 
     action-groups-disp +    \ Add offset.
     !struct                 \ Set the field.
@@ -281,7 +261,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the function xt that implements the action.
 : action-get-function ( act0 -- xt )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-function-disp +  \ Add offset.
     @                       \ Fetch the field.
@@ -290,7 +270,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the function xt that implements an action.
 : _action-set-function ( xt act0 -- )
     \ Check args.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-function-disp +  \ Add offset.
     !                       \ Set the field.
@@ -299,7 +279,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the defining-regions region-list from an action instance.
 : action-get-defining-regions ( act0 -- reg-lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-defining-regions-disp +  \ Add offset.
     @                               \ Fetch the field.
@@ -308,8 +288,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set the defining-regions region-list of an action instance, use only in this file.
 : _action-set-defining-regions ( reg-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region-list
+    assert( tos is-action? )
+    assert( nos is-region-list? )
 
     action-defining-regions-disp +  \ Add offset.
     !struct                         \ Store it.
@@ -320,13 +300,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return true if a region, in the logical structure, is a defining region.
 : action-is-region-defining? ( reg1 act0 -- flag )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
+    assert( tos is-action? )
+    assert( nos is-region? )
 
     2dup                                \ reg1 act0 reg1 act0
     action-get-logical-structure        \ reg1 act0 reg1 LS
     tuck                                \ reg1 act0 LS reg1 LS
-    region-list-member                  \ reg1 act0 LS flag
+    region-list-member?                 \ reg1 act0 LS flag
     0= abort" Region not in logical structure"
 
                                         \ reg1 act0 LS
@@ -340,13 +320,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Remove a group with a given region.
 : _action-delete-group ( reg1 act0 -- flag )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
+    assert( tos is-action? )
+    assert( nos is-region? )
 
     \ Check if group exists.
     2dup                                \ reg1 act0 reg1 act0
     action-get-groups                   \ reg1 act0 reg1 grp-lst
-    group-list-member                   \ reg1 act0 flag
+    group-list-member?                  \ reg1 act0 flag
     if
         \ Delete group.
         action-get-groups               \ reg1 grp-lst
@@ -362,8 +342,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Update defining-regions.
 : _action-update-defining-regions ( reg-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region-list
+    assert( tos is-action? )
+    assert( nos is-region-list? )
     cr
     ." Dom: " current-domain-id-gbl #3 dec.r
     space ." Act: " current-action-id-gbl #3 dec.r
@@ -378,7 +358,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Calculate defining regions, from action-logical-structure.
 : action-calc-defining-regions ( act0 -- df-lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Init return list.
     list-new                                \ act0 df-lst
@@ -409,8 +389,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-update-logical-structure ( new-ls act0 -- )
     \ cr ." _action-update-logical-structure: start"  cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-list
+    assert( tos is-action? )
+    assert( nos is-list? )
 
     cr
     ." Dom: " current-domain-id-gbl #3 dec.r
@@ -490,7 +470,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
         #2 pick                             \ act0 link reg act0
         action-get-groups                   \ act0 link reg grps
-        group-list-member                   \ act0 link flag
+        group-list-member?                  \ act0 link flag
         if                                  \ act0 link
             \ space ." group already exists"
         else
@@ -548,7 +528,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return action-corners list.
 : action-get-corners ( act0 -- crn-lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-corners-disp +   \ Add offset.
     @                       \ Fetch the field.
@@ -559,8 +539,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Set action-corners list.
 : _action-set-corners ( crn-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-corner-list
+    assert( tos is-action? )
+    assert( nos is-corner-list? )
 
     action-corners-disp +   \ Add offset.
     !struct                 \ Set the field.
@@ -569,8 +549,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Update the action-corners list.
 : _action-update-corners ( crn-lst1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-corner-list
+    assert( tos is-action? )
+    assert( nos is-corner-list? )
 \    cr
 \    ." Dom: " current-domain-id #3 dec.r
 \    space ." Act: " current-action-id #3 dec.r
@@ -622,10 +602,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ which avoids duplicates and may be useful as an index into the list.
 : action-new ( xt1 dom0 -- addr)
     \ Check arg.
-    assert-tos-is-domain-xt execute
+    assert( tos is-domain?-xt execute )
 
     \ Allocate space.
-    action-id action-mma                \ xt1 dom0 id mma
+    action-struct-id action-mma         \ xt1 dom0 id mma
     struct-allocate                     \ xt1 dom0 act
 
     \ Set instance ID, based on it's position in the domain action list.
@@ -693,8 +673,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return a square given a state.
 : action-find-square ( sta1 act0 -- sqr t | f )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     action-get-squares          \ sta1 sqr-lst
     square-list-find
@@ -704,7 +684,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 : .action-corners ( act0 -- )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     dup action-get-corners              \ act0 crn-lst
     dup list-get-length                 \ act0 crn-lst len
@@ -736,7 +716,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Print a action.
 : .action ( act0 -- )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     dup action-get-inst-id
     cr #5 spaces ." Act: " dec.
@@ -771,7 +751,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 : .action-id ( act0 -- )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-get-inst-id
     .value
@@ -780,7 +760,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Deallocate a action.
 : action-deallocate ( act0 -- )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     dup struct-get-use-count      \ act0 count
     dup 0< abort" invalid use count"
@@ -805,13 +785,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return true if an incompatible pair should be kept.
 : action-incompatible-pair-needed ( reg1 act0 -- bool )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
+    assert( tos is-action? )
+    assert( nos is-region? )
 
     \ If region state 0 is not in any corner region, keep it.
     over region-get-state-0                     \ reg1 act0 sta0
     over action-get-corners                     \ reg1 act0 sta0 crn-lst
-    corner-list-state-in-any-corner-region      \ reg1 act0 bool
+    corner-list-state-in-any-corner-region?     \ reg1 act0 bool
     false? if
         \ Keep pair
         2drop
@@ -822,7 +802,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ If region state 1 is not in any corner region, keep it.
     over region-get-state-1                 \ reg1 act0 sta1
     over action-get-corners                 \ reg1 act0 sta1 crn-lst
-    corner-list-state-in-any-corner-region  \ reg1 act0 bool
+    corner-list-state-in-any-corner-region? \ reg1 act0 bool
     false? if
         \ Keep pair
         2drop
@@ -833,7 +813,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ If region state 0 is used by any corner, keep it.
     over region-get-state-0                     \ reg1 act0 sta0
     over action-get-corners                     \ reg1 act0 sta0 crn-lst
-    corner-list-uses-state                      \ reg1 act0 bool
+    corner-list-uses-state?                     \ reg1 act0 bool
     if
         \ Keep pair
         2drop
@@ -844,7 +824,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ If region state 1 is used by any corner, keep it.
     over region-get-state-1                     \ reg1 act0 sta1
     over action-get-corners                     \ reg1 act0 sta1 crn-lst
-    corner-list-uses-state                      \ reg1 act0 bool
+    corner-list-uses-state?                     \ reg1 act0 bool
     if
         \ Keep pair
         2drop
@@ -860,7 +840,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ This keeps down the permutations of list-one-of-each-struct in action-calc-corners.
 : action-cull-incompatible-pairs ( act0 -- )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
     \ cr
     \ ." Dom: " current-domain-id-gbl #3 dec.r
     \ space ." Act: " dup action-get-inst-id #3 dec.r
@@ -895,7 +875,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return the number of defining regions.
 : action-number-defining-regions ( act0 -- u )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-get-defining-regions \ df-lst
     list-get-length
@@ -909,7 +889,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ possible corners earlier in the list.
 : action-calc-corners ( act0 -- )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
     \ cr ." action-calc-corners: start" cr
 \    cr
 \    ." Dom: " current-domain-id-gbl execute #3 dec.r
@@ -1116,8 +1096,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return squares in a given region list.
 : action-squares-in-region-list ( reg-lst1 act0 -- sqr-lst )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region-list
+    assert( tos is-action? )
+    assert( nos is-region-list? )
 
     \ Init return list.
     list-new                            \ reg-lst1 act0 ret-lst
@@ -1132,7 +1112,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         dup link-get-data               \ reg-lst1 act0 ret-lst sqr-link sqrx
         square-get-state                \ reg-lst1 act0 ret-lst sqr-link stax
         #4 pick                         \ reg-lst1 act0 ret-lst sqr-link stax reg-lst1
-        region-list-any-superset-state  \ reg-lst1 act0 ret-lst sqr-link bool
+        region-list-any-superset-state? \ reg-lst1 act0 ret-lst sqr-link bool
         if
             dup link-get-data           \ reg-lst1 act0 ret-lst sqr-link sqrx
             #2 pick                     \ reg-lst1 act0 ret-lst sqr-link sqrx ret-lst
@@ -1150,8 +1130,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ In a set of pn > 1 squares, two squares of lesser pn should not be compared.
 : action-find-incompatible-pairs-for-square ( sqr1 act0 -- reg-list )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-square
+    assert( tos is-action? )
+    assert( nos is-square? )
 
     \ Int return list.
     list-new -rot                               \ ret-lst sqr1 act0
@@ -1230,8 +1210,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-check-square ( sqr1 act0 -- )
     \ cr ." _action-check-square: start" cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-square
+    assert( tos is-action? )
+    assert( nos is-square? )
 
     \ Form regions with incompatible squares, no supersets.
     tuck                                            \ act0 sqr1 act0
@@ -1306,8 +1286,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-pairs-no-longer-incompatible ( reg-lst1 act0 -- reg-lst )
     \ cr ." _action-not-incompatible-pairs: start" cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-list
+    assert( tos is-action? )
+    assert( nos is-list? )
 
     over list-is-empty?
     abort" list is empty?"
@@ -1362,7 +1342,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 :  _action-recalc-logical-structure ( act0 -- )
     \ cr ." _action-recalc-logical-structure: start" cr
     \ Check args.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Init new logical-structure region list.
     list-new                                \ act0 ls-new
@@ -1417,8 +1397,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-check-incompatible-pairs2 ( sqr1 act0 -- )
     \ cr ." _action-check-incompatible-pairs2: Act: " dup .action-id space ." sqr: " over .square-state cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-square
+    assert( tos is-action? )
+    assert( nos is-square? )
 
     over square-get-state                   \ sqr1 act0 | sta
     over action-get-incompatible-pairs      \ sqr1 act0 | sta ip-lst'
@@ -1517,8 +1497,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : _action-check-incompatible-pairs ( sqr1 act0 -- )
     \ cr ." _action-check-incompatible-pairs: Act: " dup .action-id space ." sqr: " over .square-state cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-square
+    assert( tos is-action? )
+    assert( nos is-square? )
 
     \ Get regions that use the state
     over square-get-state               \ sqr1 act0 sta
@@ -1599,8 +1579,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : action-add-sample ( smpl1 act0 -- )
     \ cr ." action-add-sample: start" cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-sample
+    assert( tos is-action? )
+    assert( nos is-sample? )
 \    cr ." action-add-sample: start" cr
 \    cr
 \    ." Dom: " current-domain-idsgbl #3 dec.r
@@ -1696,8 +1676,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return true if a state is confirmed with a pnc square.
 : action-state-confirmed ( sta1 act0 -- flag )
      \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     action-find-square      \ sqr t | f
     if
@@ -1715,8 +1695,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : action-get-sample ( sta1 act0 -- smpl )
     \ cr ." action-get-sample: start" cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     tuck                    \ act0 sta1 act0
     dup                     \ act0 sta1 act0 act0
@@ -1738,8 +1718,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Otherwise, do nothing.
 : action-update-existing-square ( smpl1 act0 -- )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-sample
+    assert( tos is-action? )
+    assert( nos is-sample? )
 
     over sample-get-initial         \ smpl1 act0 sta
     over                            \ smpl1 act0 sta act0
@@ -1762,8 +1742,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 : action-get-sample-step ( sta1 act0 -- smpl )
     \ cr ." action-get-sample-step: start" cr
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     dup                     \ sta1 act0 act0
     action-get-function     \ sta1 act0 xt
@@ -1773,7 +1753,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return true if a action id matches a number.
 : action-id-eq ( id1 act0 -- flag )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     action-get-inst-id
     =
@@ -1783,9 +1763,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Check target is not a pnc square.
 : action-make-need ( typ2 sta1 act0 -- need )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
-    assert-3os-is-need-number
+    assert( tos is-action? )
+    assert( nos is-value? )
+    assert( 3os is-need-number? )
 
     2dup                    \ typ2 sta1 act0 sta1 act0
     action-find-square      \ typ2 sta1 act0, sqr t | f
@@ -1813,7 +1793,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ from the first square, in the r-region.
 : action-calc-group-confirm-needs ( act0 -- ned-lst )
     \ Check-args.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Init return list.
     list-new                                        \ act0 | ret-lst
@@ -1851,8 +1831,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ corresponding square that needs more samples.
 : action-calc-state-not-in-group-needs ( sta1 act0 -- ned-lst )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     \ Init return list.
     list-new                                        \ sta1 act0 | ret-lst
@@ -1889,9 +1869,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return a need for a incompatible pair state in a region.
 : action-get-ip-state-region-need ( reg2 sta1 act0 -- ned t | f )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
-    assert-3os-is-region
+    assert( tos is-action? )
+    assert( nos is-value? )
+    assert( 3os is-region? )
 
     \ Get list of all adjacent, external, states.
     rot                         \ sta1 act0 reg2
@@ -2025,8 +2005,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ As if it is a possible anchor, no yet proven.
 : action-get-ip-state-multi-region-need ( sta1 act0 -- ned t | f )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     \ Get LS regions the state is in.
     over                                \ sta1 act0 sta1
@@ -2071,7 +2051,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return incompatible pair needs.
 : action-calc-incompatible-pair-needs ( act0 -- ned-lst )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Init return list.
     list-new                            \ act0 ret-lst
@@ -2171,7 +2151,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     while
         dup link-get-data                   \ act0 ret-lst ip-link ip-reg
         region-get-states                   \ act0 ret-lst ip-link sta1 sta0
-        value-adjacent                      \ act0 ret-lst ip-link bool
+        value-adjacent?                     \ act0 ret-lst ip-link bool
         if
             \ No need.
         else
@@ -2240,13 +2220,13 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return true if a square/sttae is still needed.
 : action-square-needed? ( sta1 act0 -- bool )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     \ Check incompatible pairs.
     2dup                            \ sta1 act0 sta1 act0
     action-get-incompatible-pairs   \ sta1 act0 sta1 ip-lst
-    region-list-uses-state          \ sta1 act0 bool
+    region-list-uses-state?         \ sta1 act0 bool
     if
         2drop
         true
@@ -2255,7 +2235,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Check corners.
     2dup action-get-corners         \ sta1 act0 sta1 crn-lst
-    corner-list-uses-state          \ sta1 act0 bool
+    corner-list-uses-state?         \ sta1 act0 bool
     if
         2drop
         true
@@ -2265,7 +2245,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check groups.
     over                            \ sta1 act0 sta1
     over action-get-groups          \ sta1 act0 sta1 grp-lst
-    group-list-uses-square          \ sta1 act0 bool
+    group-list-uses-square?         \ sta1 act0 bool
     if
         2drop
         true
@@ -2279,7 +2259,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Remove unneeded squares.
 : action-cull-unneeded-squares ( act0 -- )
     \ Check arg.
-    assert-tos-is-action
+    assert( tos is-action? )
 
     \ Init remove list.
     list-new swap               \ rmv-lst' act0
@@ -2343,8 +2323,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return a list of needs for an action, given the current state.
 : action-get-needs ( sta1 act0 -- ned-lst )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     \ cr
     \ ." Dom: " dup action-get-parent-domain domain-get-inst-id-xt execute #3 dec.r
@@ -2413,14 +2393,14 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return a step, given reg-to, reg-from, and a rule.
 : action-make-planstep ( reg-to4 reg-from3 alt-rul2 rul1 act0 -- stp )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-rule
+    assert( tos is-action? )
+    assert( nos is-rule? )
     #2 pick
     if
-        assert-3os-is-rule
+        assert( 3os is-rule? )
     then
-    assert-4os-is-region
-    assert-5os-is-region
+    assert( 4os is-region? )
+    assert( 5os is-region? )
 
                                             \ reg-to4 reg-from3 alt-rul2 rul1 act0 |
 
@@ -2452,11 +2432,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
 : action-rule-valid-step? ( cngs4 reg-to reg-from rul act0 -- bool )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-rule
-    assert-3os-is-region
-    assert-4os-is-region
-    assert-5os-is-changes
+    assert( tos is-action? )
+    assert( nos is-rule? )
+    assert( 3os is-region? )
+    assert( 4os is-region? )
+    assert( 5os is-changes? )
 
     \ Check changes.
     #4 pick                         \ cngs4 reg-to reg-from rul act0 cngs4
@@ -2475,11 +2455,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Rule list is from a single group, with one, or two rules.
 : action-planstep-list-from-rule-list ( cngs4 reg-to reg-from rul-lst1 act0 -- plnstp-lst )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-rule-list
-    assert-3os-is-region
-    assert-4os-is-region
-    assert-5os-is-changes
+    assert( tos is-action? )
+    assert( nos is-rule-list? )
+    assert( 3os is-region? )
+    assert( 4os is-region? )
+    assert( 5os is-changes? )
 
     over list-get-length            \ cngs4 reg-to reg-from rul-lst1 act0 len
     0= abort" list length zero?"
@@ -2582,10 +2562,10 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Steps may, or may not, intersect the to/from regions.
 : action-calc-possible-steps ( cngs3 reg-to reg-from act0 -- plnstp-lst )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-region
-    assert-3os-is-region
-    assert-4os-is-changes
+    assert( tos is-action? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
+    assert( 4os is-changes? )
     #2 pick #2 pick                                 \ | reg-to reg-from
     swap region-superset?                           \ | bool
     abort" action-calc-possible-steps: region subset?"    \ |
@@ -2651,8 +2631,8 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 \ Return a corner matching a given anchor state.
 : ?action-find-corner ( sta1 act0 -- crn t | f )
     \ Check args.
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     action-get-corners          \ sta1 crn-lst
     corner-list-find-corner

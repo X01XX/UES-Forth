@@ -2,7 +2,7 @@
 \
 \ A pathstep may be added to a pathstep list to make a path-plan.
 
-#53197 constant pathstep-id
+#53197 constant pathstep-struct-id
     #5 constant pathstep-struct-number-cells
 
 \ Struct fields.
@@ -27,32 +27,23 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
 \ Check instance type.
 : is-allocated-pathstep? ( addr -- bool )
-    dup pathstep-mma mma-is-item    \ addr bool
+    dup pathstep-mma mma-is-item?   \ addr bool
     if
         struct-get-id
-        pathstep-id =               \ bool
+        pathstep-struct-id =        \ bool
     else
         drop
         false                       \ f
     then
 ;
 
-\ Check TOS for pathstep, unconventional, leaves stack unchanged.
-: assert-tos-is-pathstep ( tos -- tos )
+\ Check TOS for pathstep.
+: is-pathstep? ( tos -- t )
     dup is-allocated-pathstep?
-    false? if
-        s" TOS is not an allocated pathstep"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for pathstep, unconventional, leaves stack unchanged.
-: assert-nos-is-pathstep ( nos tos -- nos tos )
-    over is-allocated-pathstep?
-    false? if
-        s" NOS is not an allocated pathstep"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated pathstep"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -60,7 +51,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return the pathstep rule.
 : pathstep-get-rules ( pstp0 -- rulc )
     \ Check arg.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     pathstep-rules-disp +   \ Add offset.
     @                       \ Fetch the field.
@@ -69,8 +60,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set the rule of a pathstep instance, use only in this file.
 : _pathstep-set-rules ( rulc1 pstp0 -- )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-rulecorr
+    assert( tos is-pathstep? )
+    assert( nos is-rulecorr? )
 
     pathstep-rules-disp +   \ Add offset.
     !struct                 \ Set field.
@@ -79,7 +70,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return the pathstep initial-region.
 : pathstep-get-initial-regions ( pstp0 -- regc )
     \ Check arg.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     pathstep-initial-regions-disp + \ Add offset.
     @                               \ Fetch the field.
@@ -88,8 +79,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set the initial-region of a pathstep instance, use only in this file.
 : _pathstep-set-initial-regions ( regc1 pstp0 -- )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep? )
+    assert( nos is-regioncorr? )
 
     pathstep-initial-regions-disp + \ Add offset.
     !struct                         \ Set the field.
@@ -98,7 +89,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return the pathstep rule.
 : pathstep-get-result-regions ( pstp0 -- regc )
     \ Check arg.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     pathstep-result-regions-disp +  \ Add offset.
     @                               \ Fetch the field.
@@ -107,8 +98,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set the result-region of a pathstep instance, use only in this file.
 : _pathstep-set-result-regions ( regc1 pstp0 -- )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep? )
+    assert( nos is-regioncorr? )
 
     pathstep-result-regions-disp +  \ Add offset.
     !struct                         \ Set the field.
@@ -117,7 +108,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return the pathstep changes.
 : pathstep-get-changes ( pstp0 -- cngsc )
     \ Check arg.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     pathstep-changes-disp + \ Add offset.
     @                       \ Fetch the field.
@@ -132,7 +123,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return pathstep number-unwanted-changes.
 : pathstep-get-number-unwanted-changes ( pstp0 -- u )
     \ Check arg.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     4c@
 ;
@@ -140,7 +131,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Set pathstep number-unwanted-changes.
 : pathstep-set-number-unwanted-changes ( u pstp0 -- )
     \ Check args.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     4c!
 ;
@@ -150,10 +141,10 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return a new pathstep, given a rule and an action.
 : pathstep-new    ( rulc1 -- pstp )
     \ Check args.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
    \ Allocate space.
-    pathstep-id pathstep-mma
+    pathstep-struct-id pathstep-mma
     struct-allocate                         \ rulc1 pstp
 
     \ Set initial-region.
@@ -179,7 +170,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
 : .pathstep ( pstp0 -- )
     \ Check arg.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     ." [ "
 
@@ -193,7 +184,7 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Deallocate a pathstep instance.
 : pathstep-deallocate ( pstp0 -- )
     \ Check arg.
-    assert-tos-is-pathstep
+    assert( tos is-pathstep? )
 
     dup struct-get-use-count      \ pstp0 count
     dup 0< abort" invalid use count"
@@ -223,8 +214,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return true if a pathstep's changes intersects a given changes.
 : pathstep-intersects-changes ( cngsc1 pstp0 -- flag )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-changes
+    assert( tos is-pathstep? )
+    assert( nos is-changes? )
 
     pathstep-get-changes            \ cngsc1 s-cngsc
     changescorr-intersect?          \ flag
@@ -233,8 +224,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return true if two pathsteps can be linked pstp1 result region to pstp0 initial region.
 : ?pathstep-can-be-linked ( pstp1 pstp0 -- bool )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-pathstep
+    assert( tos is-pathstep? )
+    assert( nos is-pathstep? )
 
     swap pathstep-get-result-regions    \ pstp0 regc-r
     swap pathstep-get-initial-regions   \ regc-r regc-i
@@ -244,8 +235,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Calc, and set' the number unwanted changes, given the needed changes.
 : ?pathstep-calc-number-unwanted-changes ( cngsc-needed1 pthstp0 -- )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-changescorr
+    assert( tos is-pathstep? )
+    assert( nos is-changescorr? )
 
     swap                                    \ pthstp0 cngsc-needed1
     changescorr-invert dup                  \ pthstp0 cngsc-invert cngsc-invert
@@ -259,32 +250,32 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 ;
 
 \ Return true if a TOS pathstep is a superset of the NOS pathstep.
-: ?pathstep-superset-of ( pthstp-sub pthstp-sup -- bool )
+: ?pathstep-superset-of? ( pthstp-sub pthstp-sup -- bool )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-pathstep
+    assert( tos is-pathstep? )
+    assert( nos is-pathstep? )
 
     swap pathstep-get-rules         \ pthstp-sup ruls-sub
     swap pathstep-get-rules         \ ruls-sub ruls-sup
 
-    rulecorr-superset-of            \ bool
+    rulecorr-superset-of?           \ bool
 ;
 
 \ Return true if a TOS pathstep is a subset of the NOS pathstep.
-: ?pathstep-subset-of ( pthstp-sup pthstp-sub -- bool )
+: ?pathstep-subset-of? ( pthstp-sup pthstp-sub -- bool )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-pathstep
+    assert( tos is-pathstep? )
+    assert( nos is-pathstep? )
 
-    swap ?pathstep-superset-of
+    swap ?pathstep-superset-of?
 ;
 
 \ Return true if TOS pathstep has an equal initial region, but superset result
 \ to the NOS pathstep.
 : pathstep-eq-initial-superset-result? ( pthstp-sub pthstp-sup -- bool )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-pathstep
+    assert( tos is-pathstep? )
+    assert( nos is-pathstep? )
     \ cr ." pathstep-eq-initial-superset-result?: sup: " dup .pathstep
     \ cr ."                                       sub: " over .pathstep
 
@@ -311,8 +302,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 
 : pathstep-eq-initial-subset-result? ( pthstp-sup pthstp-sub -- bool )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-pathstep
+    assert( tos is-pathstep? )
+    assert( nos is-pathstep? )
     \ cr ." pathstep-eq-initial-subset-result?: sub: " dup .pathstep
     \ cr ."                                     sup: " over .pathstep
 
@@ -346,8 +337,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Apply a pathstep to a regioncorr, forward chaining.
 : pathstep-apply-to-regioncorr-fc ( regc2 pthstp0 -- regc t | f )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep? )
+    assert( nos is-regioncorr? )
     \ cr ." pathstep-apply-to-regioncorr-fc: " over .regioncorr space dup .pathstep cr
 
     pathstep-get-rules                  \ regc2 rulc
@@ -358,8 +349,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Apply a pathstep to a regioncorr, backward chaining.
 : pathstep-apply-to-regioncorr-bc ( regc2 pthstp0 -- regc t | f )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep? )
+    assert( nos is-regioncorr? )
     \ cr ." pathstep-apply-to-regioncorr-bc: " over .regioncorr space dup .pathstep cr
 
     pathstep-get-rules                  \ regc2 rulc
@@ -369,8 +360,8 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
 \ Return true if a pathstep's changescorr intersect a given changescorr.
 : pathstep-intersect-changes? ( cngs1 pthstp0 -- bool )
     \ Check args.
-    assert-tos-is-pathstep
-    assert-nos-is-changescorr
+    assert( tos is-pathstep? )
+    assert( nos is-changescorr? )
 
     pathstep-get-changes        \ cngs1 stp-cngs
     changescorr-intersect?      \ bool

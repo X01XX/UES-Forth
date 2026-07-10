@@ -2,7 +2,7 @@
 \
 \ A planstep may be added to a planstep list in a plan.
 
-#37171 constant planstep-id
+#37171 constant planstep-struct-id
     #7 constant planstep-struct-number-cells
 
 \ Struct fields.
@@ -30,28 +30,19 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 : is-allocated-planstep? ( addr -- bool )
     get-first-word          \ w t | f
     if
-        planstep-id =
+        planstep-struct-id =
     else
         false
     then
 ;
 
-\ Check TOS for planstep, unconventional, leaves stack unchanged.
-: assert-tos-is-planstep ( tos -- tos )
+\ Check TOS for planstep.
+: is-planstep? ( tos -- t )
     dup is-allocated-planstep?
-    false? if
-        s" TOS is not an allocated planstep"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for planstep, unconventional, leaves stack unchanged.
-: assert-nos-is-planstep ( nos tos -- nos tos )
-    over is-allocated-planstep?
-    false? if
-        s" NOS is not an allocated planstep"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated planstep"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -59,7 +50,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return the planstep action.
 : planstep-get-action ( plnstp0 -- act )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     planstep-action-disp +  \ Add offset.
     @                       \ Fetch the field.
@@ -74,7 +65,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return the planstep rule.
 : planstep-get-rule ( plnstp0 -- rul )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     planstep-rule-disp +    \ Add offset.
     @                       \ Fetch the field.
@@ -89,7 +80,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return the planstep alt-rule.
 : planstep-get-alt-rule ( plnstp0 -- rul )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     planstep-alt-rule-disp +    \ Add offset.
     @                           \ Fetch the field.
@@ -109,7 +100,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return the planstep initial-region.
 : planstep-get-initial-region ( plnstp0 -- reg )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     planstep-initial-region-disp +  \ Add offset.
     @                               \ Fetch the field.
@@ -124,7 +115,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return the planstep rule.
 : planstep-get-result-region ( plnstp0 -- reg )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     planstep-result-region-disp +   \ Add offset.
     @                               \ Fetch the field.
@@ -139,7 +130,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return the planstep changes.
 : planstep-get-changes ( plnstp0 -- cngs )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     planstep-changes-disp + \ Add offset.
     @                   \ Fetch the field.
@@ -154,7 +145,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return planstep number-unwanted-changes.
 : planstep-get-number-unwanted-changes ( plnstp0 -- u )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     4c@
 ;
@@ -162,7 +153,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Set planstep number-unwanted-changes.
 : planstep-set-number-unwanted-changes ( u plnstp0 -- )
     \ Check args.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     4c!
 ;
@@ -174,17 +165,17 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return a new planstep, given a rule, group and action.
 : planstep-new    ( alt-rul2 rul1 act0 -- plnstp )
     \ Check args.
-    assert-tos-is-action-xt execute
-    assert-nos-is-rule
+    assert( tos is-action?-xt execute )
+    assert( nos is-rule? )
     #2 pick
     0=
     if
     else
-        assert-3os-is-rule
+        assert( 3os is-rule? )
     then
 
    \ Allocate space.
-    planstep-id planstep-mma
+    planstep-struct-id planstep-mma
     struct-allocate                         \ alt-rul2 rul1 act0 plnstpx
 
     \ Set action.
@@ -220,7 +211,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 
 : .planstep ( plnstp0 -- )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     dup planstep-get-action                 \ plnstp0 actx
     action-get-inst-id-xt execute           \ plnstp0 act-id
@@ -238,7 +229,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Deallocate a planstep instance.
 : planstep-deallocate ( plnstp0 -- )
     \ Check arg.
-    assert-tos-is-planstep
+    assert( tos is-planstep? )
 
     dup struct-get-use-count      \ plnstp0 count
     dup 0< abort" invalid use count"
@@ -276,8 +267,8 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return true if a planstep's changes intersects a given changes.
 : planstep-intersects-changes ( cngs1 plnstp0 -- flag )
     \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-changes
+    assert( tos is-planstep? )
+    assert( nos is-changes? )
 
     planstep-get-changes            \ cngs1 s-cngs
     changes-intersect?              \ bool
@@ -286,8 +277,8 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return a planstep with a rule initial-region restricted by a given region.
 : planstep-restrict-initial-region ( reg1 plnstp0 -- plnstp )
     \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-region
+    assert( tos is-planstep? )
+    assert( nos is-region? )
 
     \ cr ." planstep-restrict-initial-region: reg: " over .region space dup planstep-get-rule .rule cr
 
@@ -320,8 +311,8 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return a planstep with a rule result-region restricted by a given region.
 : planstep-restrict-result-region ( reg1 plnstp0 -- plnstp )
     \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-region
+    assert( tos is-planstep? )
+    assert( nos is-region? )
     \ cr ." planstep " dup .planstep space ." restrict result to: " over .region
 
     over                                    \ reg1 plnstp0 reg1
@@ -353,10 +344,10 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 ;
 
 \ Return true if two plansteps can be linked plnstp1 result region to plnstp0 initial region.
-: planstep-can-be-linked ( plnstp1 plnstp0 -- bool )
+: planstep-can-be-linked? ( plnstp1 plnstp0 -- bool )
     \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-planstep
+    assert( tos is-planstep? )
+    assert( nos is-planstep? )
 
     swap planstep-get-result-region     \ plnstp0 reg1
     swap planstep-get-initial-region    \ reg1 reg0
@@ -366,9 +357,9 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return true if a planstep links two regions.
 : ?planstep-links-two-regions ( reg-to reg-from plnstp0 -- bool )
     \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-planstep? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
 
                                     \ reg-to reg-from plnstp0
     planstep-get-rule               \ reg-to reg-from s-rul
@@ -395,8 +386,8 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Return the status of a sample, 0 = Expected/wanted, 1 = Unwanted, 2 = Unexpected.
 : planstep-result-status ( smpl1 plnstp0 -- status )
     \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-sample
+    assert( tos is-planstep? )
+    assert( nos is-sample? )
 
     \ Check for Expected/wanted.
     over sample-get-result      \ smpl1 plnstp0 s-rslt
@@ -438,9 +429,9 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ any of two regions.
 : planstep-any-intersection? ( reg2 reg1 plnstp -- bool )
     \ Check args.
-    assert-tos-is-planstep
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-planstep? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
 
     \ Check for planstep initial region intersection with reg1.
     dup planstep-get-initial-region     \ reg2 reg1 plnstp initial

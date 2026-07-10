@@ -1,31 +1,24 @@
 \ Functions for planstep lists.
 
-\ Check if tos is an empty list, or has a planstep instance as its first item.
-: assert-tos-is-planstep-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for planstep-list.
+: is-planstep-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-planstep
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a planstep instance as its first item.
-: assert-nos-is-planstep-list ( nos tos -- nos tos )
-    assert-tos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-planstep
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-planstep? )
+        true
     then
 ;
 
 \ Deallocate a planstep list.
 : planstep-list-deallocate ( plnstp-lst0 -- )
     \ Check arg.
-    assert-tos-is-planstep-list
+    assert( tos is-planstep-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ plnstp-lst0 uc
@@ -42,7 +35,7 @@
 \ Print a planstep-list
 : .planstep-list ( list0 -- )
     \ Check arg.
-    assert-tos-is-planstep-list
+    assert( tos is-planstep-list? )
 
     [ ' .planstep ] literal swap .list
 ;
@@ -50,8 +43,8 @@
 \ Push a planstep to the end of a planstep-list.
 : planstep-list-push-end ( plnstp1 list0 -- )
     \ Check args.
-    assert-tos-is-planstep-list
-    assert-nos-is-planstep
+    assert( tos is-planstep-list? )
+    assert( nos is-planstep? )
 
     list-push-end-struct
 ;
@@ -59,8 +52,8 @@
 \ Push a planstep to a planstep-list.
 : planstep-list-push ( plnstp1 list0 -- )
     \ Check args.
-    assert-tos-is-planstep-list
-    assert-nos-is-planstep
+    assert( tos is-planstep-list? )
+    assert( nos is-planstep? )
 
     list-push-struct
 ;
@@ -70,8 +63,8 @@
 \ Append nos planstep-list to the tos planstep-list.
 : planstep-list-append ( plnstp-lst1 plnstp-lst0 -- )
     \ Check args.
-    assert-tos-is-planstep-list
-    assert-nos-is-planstep-list
+    assert( tos is-planstep-list? )
+    assert( nos is-planstep-list? )
 
     swap                    \ plnstp-lst0 plnstp-lst1
     list-get-links          \ plnstp-lst0 link
@@ -91,7 +84,7 @@
 \ Remove a planstep from a planstep-list.
 : planstep-list-remove-item ( inx1 plnstp-lst0 -- plnstpx )
     \ Check arg.
-    assert-tos-is-planstep-list
+    assert( tos is-planstep-list? )
 
     list-remove-item        \ plnstpx
     dup struct-dec-use-count
@@ -100,8 +93,8 @@
 \ Return a list of plansteps that have a sample with the desired changes.
 : planstep-list-intersects-changes ( cngs1 plnstp-lst0 -- plnstp-lst )
     \ Check args.
-    assert-tos-is-planstep-list
-    assert-nos-is-changes
+    assert( tos is-planstep-list? )
+    assert( nos is-changes? )
 
     \ Prep for loop.
     list-new -rot                   \ ret cngs1 plnstp-lst0
@@ -127,7 +120,7 @@
 \ Return a reversed planstep list.
 : planstep-list-reverse ( plnstp-lst0 -- plnstp-lst )
     \ Check arg.
-    assert-tos-is-planstep-list
+    assert( tos is-planstep-list? )
 
     \ Init return list.
     list-new swap           \ lst plnstp-lst0
@@ -149,7 +142,7 @@
 \ Pop the first planstep from a planstep-list.
 : planstep-list-pop ( plnstp-lst0 -- plnstp t | f )
     \ Check arg.
-    assert-tos-is-planstep-list
+    assert( tos is-planstep-list? )
 
     list-pop        \ plnstp t | f
     if
@@ -163,9 +156,9 @@
 \ Return tru eif any planstep intersects reg-to or reg-from.
 : planstep-list-any-from-to-intersections ( reg-to reg-from plnstp-lst0 -- bool )
     \ Check args.
-    assert-tos-is-planstep-list
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-planstep-list? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
 
     list-get-links                      \ reg-to reg-from link
 
@@ -201,7 +194,7 @@
 \ Return the union of all changes in a pathstep-list.
 : planstep-list-union-changes ( plnstp0 -- cngs )
     \ Check arg.
-    assert-tos-is-planstep-list
+    assert( tos is-planstep-list? )
 
     \ Init return changes.
     0 0 changes-new swap        \ ret-cngs plnstp0
@@ -227,8 +220,8 @@
 
 : planstep-list-change-intersection ( cngs1 plnstp-lst0 -- plnstp-lst t | f )
     \ Check args.
-    assert-tos-is-planstep-list
-    assert-nos-is-changes
+    assert( tos is-planstep-list? )
+    assert( nos is-changes? )
 
     \ Init return list.
     list-new                 \ cngs1 plnstp-lst0 | ret-lst
@@ -266,7 +259,7 @@
 \ Return a planstep-list, containing plansteps with the minimum number unwanted changen.
 : planstep-list-filter-min-number-unwanted-changes ( plnstp-lst0 -- plnstp )
     \ Check arg.
-    assert-tos-is-planstep-list
+    assert( tos is-planstep-list? )
 
     \ Init return list.
     list-new swap               \ ret-lst plnstp-lst0

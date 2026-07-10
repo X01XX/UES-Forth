@@ -15,37 +15,10 @@
     <>                          \ flag
 ;
 
-\ Check TOS for value, unconventional, leaves stack unchanged.
-: assert-tos-is-value ( tos -- tos )
-    dup is-not-value?
-    if
-        s" TOS is not a valid value."
-        .abort-xt execute
-    then
-;
-
-\ Check NOS for value, unconventional, leaves stack unchanged.
-: assert-nos-is-value ( nos tos -- nos tos )
-    over is-not-value?
-    if
-        s" NOS is not a valid value."
-        .abort-xt execute
-    then
-;
-
-\ Check 3OS for value, unconventional, leaves stack unchanged.
-: assert-3os-is-value ( 3os nos tos -- 3os nos tos )
-    #2 pick is-not-value?
-    if
-        s" 3OS is not a valid value."
-        .abort-xt execute
-    then
-;
-
 \ Print a value.
 : .value ( val0 -- )
     \ Check arg.
-    assert-tos-is-value
+    assert( tos is-value? )
 
     \ Setup for bit-position loop.
     current-ms-bit-mask-gbl \ val0 ms-bit
@@ -148,7 +121,7 @@
 \ Return a list of single-one-bit value from a given value.
 : value-split ( val0 -- val-lst )
     \ Check arg.
-    assert-tos-is-value
+    assert( tos is-value? )
 
     \ Init return list.
     list-new swap           \ val-lst val0
@@ -163,10 +136,10 @@
 ;
 
 \ Return true if two values are adjacent.
-: value-adjacent ( val1 val0 -- bool )
+: value-adjacent? ( val1 val0 -- bool )
     \ Check args.
-    assert-tos-is-value
-    assert-nos-is-value
+    assert( tos is-value? )
+    assert( nos is-value? )
 
     xor             \ dif-msk
     value-1-bit-set \ bool
@@ -175,7 +148,7 @@
 \ Return, roughly, one half of a values least significant bits.
 : value-half-lsbs ( val0 - val )
     \ Check args.
-    assert-tos-is-value
+    assert( tos is-value? )
     dup 0= abort" no bits?"
 
     \ Init return value.

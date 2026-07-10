@@ -1,6 +1,6 @@
 \ Implement a struct and functions for a list of changes, corresponding to domains.
 
-#53173 constant changescorr-id
+#53173 constant changescorr-struct-id
     #2 constant changescorr-struct-number-cells
 
 \ Struct fields
@@ -21,49 +21,32 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
 \ Check instance type.
 : is-allocated-changescorr? ( addr -- bool )
-    dup changescorr-mma mma-is-item \ addr bool
+    dup changescorr-mma mma-is-item?    \ addr bool
     if
         struct-get-id
-        changescorr-id =            \ bool
+        changescorr-struct-id =         \ bool
     else
         drop
-        false                       \ f
+        false                           \ f
     then
 ;
 
-\ Check TOS for changescorr, unconventional, leaves stack unchanged.
-: assert-tos-is-changescorr ( tos -- tos )
+\ Check TOS for changescorr.
+: is-changescorr? ( tos -- t )
     dup is-allocated-changescorr?
-    false? if
-        s" TOS is not an allocated changescorr"
-        .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated changescorr"
+    .abort-xt execute
 ;
 
-\ Check NOS for changescorr, unconventional, leaves stack unchanged.
-: assert-nos-is-changescorr ( nos tos -- nos tos )
-    over is-allocated-changescorr?
-    false? if
-        s" NOS is not an allocated changescorr"
-        .abort-xt execute
-    then
-;
-
-\ Check 3OS for changescorr, unconventional, leaves stack unchanged.
-: assert-3os-is-changescorr ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-changescorr?
-    false? if
-        s" 3OS is not an allocated changescorr"
-        .abort-xt execute
-    then
-;
 
 \ Start accessors.
 
 \ Return the changescorr list field from a changescorr instance.
 : changescorr-get-list ( cngsc0 -- lst )
     \ Check arg.
-    assert-tos-is-changescorr
+    assert( tos is-changescorr? )
 
     changescorr-list-disp +     \ Add offset.
     @                           \ Fetch the field.
@@ -72,8 +55,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Set the changescorr list field of a changescorr instance, use only in this file.
 : _changescorr-set-list ( lst1 cngsc0 -- )
     \ Check args.
-    assert-tos-is-changescorr
-    assert-nos-is-list
+    assert( tos is-changescorr? )
+    assert( nos is-list? )
 
     \ Store list
     changescorr-list-disp +    \ Add offset.
@@ -85,23 +68,23 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Create a changescorr from a list of changes on the stack.
 : changescorr-new ( lst0 -- addr)
     \ check arg.
-    assert-tos-is-changes-list
+    assert( tos is-changes-list? )
     dup list-get-length
     number-domains-gbl
     <> abort" changescorr-new: invalid list length?"
 
     \ Allocate space.
-    changescorr-id changescorr-mma  \ lst0 id mma
-    struct-allocate                 \ lst0 cngsc
+    changescorr-struct-id changescorr-mma   \ lst0 id mma
+    struct-allocate                         \ lst0 cngsc
 
-    tuck                            \ cngsc lst0 cngsc
-    _changescorr-set-list           \ cngsc
+    tuck                                    \ cngsc lst0 cngsc
+    _changescorr-set-list                   \ cngsc
 ;
 
 \ Print a changescorr list, corresponding to the session domain list.
 : .changescorr ( chgsc0 -- )
     \ Check arg.
-    assert-tos-is-changescorr
+    assert( tos is-changescorr? )
 
     changescorr-get-list            \ lst
     list-get-links                  \ link0
@@ -132,7 +115,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Deallocate the given changescorr, if its use count is 1 or 0.
 : changescorr-deallocate ( chgsc0 -- )
     \ Check arg.
-    assert-tos-is-changescorr
+    assert( tos is-changescorr? )
 
     dup struct-get-use-count            \ cngsc0 count
     dup 0< abort" invalid use count"
@@ -153,8 +136,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Return true if at least one bit set-to-1 is the same between two changescorr.
 : changescorr-intersect? ( cngsc1 cngsc0 -- bool )
     \ Check args.
-    assert-tos-is-changescorr
-    assert-nos-is-changescorr
+    assert( tos is-changescorr? )
+    assert( nos is-changescorr? )
 
     changescorr-get-list list-get-links swap
     changescorr-get-list list-get-links         \ link0 link1 ( order of links does not matter )
@@ -182,8 +165,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Return changes needed to traverse from one regioncorr to another.
 : changescorr-new-regc-to-regc ( regc-to regc-from -- cngsc )
     \ Check args.
-    assert-tos-is-regioncorr-xt execute
-    assert-nos-is-regioncorr-xt execute
+    assert( tos is-regioncorr?-xt execute )
+    assert( nos is-regioncorr?-xt execute )
     \ cr ." changescorr-new-regc-to-regc: from " dup .regioncorr-xt execute space ." to " over .regioncorr-xt execute cr
 
     \ Init changesscorr list.
@@ -223,7 +206,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Return the number of changes in a changescorr.
 : changescorr-number-changes ( cngsc0 -- u )
     \ Check arg.
-    assert-tos-is-changescorr
+    assert( tos is-changescorr? )
 
     \ Init counter.
     0 swap                      \ cnt cngsc
@@ -251,7 +234,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Return the inversion of a changescorr.
 : changescorr-invert ( cngsc0 -- cngsc )
     \ Check arg.
-    assert-tos-is-changescorr
+    assert( tos is-changescorr? )
 
     \ Init changes list.
     list-new swap           \ cngs-lst cngsc0
@@ -289,8 +272,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Return the intersection of two changescorr.
 : changescorr-intersection ( cngsc1 cngsc0 -- cngsc )
     \ Check args.
-    assert-tos-is-changescorr
-    assert-nos-is-changescorr
+    assert( tos is-changescorr? )
+    assert( nos is-changescorr? )
 
     \ Init changes list.
     list-new -rot                               \ cngs-lst cngsc1 cngsc0
@@ -322,8 +305,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Return true if two changescorr are equal.
 : changescorr-eq? ( cngsc1 cngsc0 -- bool )
     \ Check args.
-    assert-tos-is-changescorr
-    assert-nos-is-changescorr
+    assert( tos is-changescorr? )
+    assert( nos is-changescorr? )
 
     changescorr-get-list list-get-links     \ cngsc1 cngs0-link
     swap                                    \ cngs0-link cngsc1
@@ -353,8 +336,8 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 \ Return true if TOS changescorr is a superset, or equal, the NOS changescorr.
 : changescorr-is-superset? ( cngsc1 cngsc0 -- bool )
     \ Check args.
-    assert-tos-is-changescorr
-    assert-nos-is-changescorr
+    assert( tos is-changescorr? )
+    assert( nos is-changescorr? )
 
     \ Check intersection equal nos changescorr.
     over                        \ cngsc1 cngsc0 cngsc1
@@ -368,7 +351,7 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
 
 : changescorr-null? ( cngsc0 -- bool )
     \ Check arg.
-    assert-tos-is-changescorr
+    assert( tos is-changescorr? )
 
     changescorr-get-list        \ cngsc-lst
     list-get-links              \ cngsc-link

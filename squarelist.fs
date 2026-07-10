@@ -1,42 +1,24 @@
 \ Functions for square lists.
 
-\ Check if tos is an empty list, or has a square instance as its first item.
-: assert-tos-is-square-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for square-list.
+: is-square-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-square
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a square instance as its first item.
-: assert-nos-is-square-list ( nos tos -- nos tos )
-    assert-nos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-square
-        drop
-    then
-;
-
-\ Check if 3os is an empty list, or has a square instance as its first item.
-: assert-3os-is-square-list ( nos tos -- nos tos )
-    assert-3os-is-list
-    #2 pick list-is-not-empty?
-    if
-        #2 pick list-get-links link-get-data
-        assert-tos-is-square
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-square? )
+        true
     then
 ;
 
 \ Deallocate a square list.
 : square-list-deallocate ( lst0 -- )
     \ Check arg.
-    assert-tos-is-square-list
+    assert( tos is-square-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -55,8 +37,8 @@
 \ Return the intersection of two square lists.
 : ?square-list-set-intersection ( list1 list0 -- list-result )
     \ Check args.
-    assert-tos-is-square-list
-    assert-nos-is-square-list
+    assert( tos is-square-list? )
+    assert( nos is-square-list? )
 
     [ ' square-eq ] literal -rot        \ xt list1 list0
     list-intersection-struct            \ list-result
@@ -65,8 +47,8 @@
 \ Return the union of two square lists.
 : ?square-list-set-union ( list1 list0 -- list-result )
     \ Check args.
-    assert-tos-is-square-list
-    assert-nos-is-square-list
+    assert( tos is-square-list? )
+    assert( nos is-square-list? )
 
     [ ' square-eq ] literal -rot        \ xt list1 list0
     list-union-struct                   \ list-result
@@ -75,8 +57,8 @@
 \ Return the difference of two square lists.
 : ?square-list-set-difference ( list1 list0 -- list-result )
     \ Check args.
-    assert-tos-is-square-list
-    assert-nos-is-square-list
+    assert( tos is-square-list? )
+    assert( nos is-square-list? )
 
     [ ' square-eq ] literal -rot        \ xt list1 list0
     list-difference-struct              \ list-result
@@ -85,7 +67,7 @@
 \ Print a square-list
 : .square-list ( list0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert( tos is-list? )
 
     [ ' .square ] literal swap .list
 ;
@@ -93,7 +75,7 @@
 \ Print a list of square states.
 : .square-list-states ( sqrlst0 -- )
     \ Check args.
-    assert-tos-is-list
+    assert( tos is-list? )
 
     ." ("
     [ ' .square-state ] literal swap list-apply
@@ -103,12 +85,12 @@
 \ Push a square to a square-list, unless it is already in the list.
 : square-list-push-nodups ( sqr1 list0 -- )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-square
+    assert( tos is-list? )
+    assert( nos is-square? )
 
     2dup
     [ ' square-eq ] literal -rot
-    list-member
+    list-member?
     if
         2drop
     else
@@ -119,8 +101,8 @@
 \ Push a square to a square-list.
 : square-list-push ( sqr1 list0 -- )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-square
+    assert( tos is-list? )
+    assert( nos is-square? )
 
     list-push-struct
 ;
@@ -128,8 +110,8 @@
 \ Push a square to the end of a square-list.
 : square-list-push-end ( sqr1 list0 -- )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-square
+    assert( tos is-list? )
+    assert( nos is-square? )
 
     list-push-end-struct
 ;
@@ -139,8 +121,8 @@
 \ Return true if an square was removed.
 : square-list-remove ( sta1 list0 -- bool )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-value
+    assert( tos is-list? )
+    assert( nos is-value? )
 
     [ ' square-state-eq ] literal   \ sta1 lst0 xt
     -rot                            \ xt sta1 lst0
@@ -158,8 +140,8 @@
 \ Return squares in a given region.
 : square-list-in-region ( reg1 list0 -- sqr-lst )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-region
+    assert( tos is-list? )
+    assert( nos is-region? )
 
     [ ' square-state-in-region ] literal -rot       \ xt reg1 list0
     list-find-all-struct                            \ ret-list
@@ -168,25 +150,25 @@
 \ Find a square in a list, by state, if any.
 : square-list-find ( val1 list0 -- sqr t | f )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-value
+    assert( tos is-list? )
+    assert( nos is-value? )
 
     [ ' square-state-eq ] literal -rot list-find
 ;
 
 \ Return true if a square with a given state is a member.
-: square-list-member ( val1 list0 -- flag )
+: square-list-member? ( val1 list0 -- flag )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-value
+    assert( tos is-list? )
+    assert( nos is-value? )
 
-    [ ' square-state-eq ] literal -rot list-member
+    [ ' square-state-eq ] literal -rot list-member?
 ;
 
 \ Return the highest pn value in a non-empty list of squares.
 : square-list-highest-pn ( list0 -- pn )
     \ Check arg.
-    assert-tos-is-list
+    assert( tos is-list? )
     dup list-is-empty?
     abort" List is empty?"
 
@@ -217,7 +199,7 @@
 \ Return a region built from squares of the highest pn value, in a list.
 : square-list-region ( sqr-lst0 -- reg t | f )
     \ Check arg.
-    assert-tos-is-list
+    assert( tos is-list? )
     dup list-is-empty?
     if
         drop
@@ -280,7 +262,7 @@
 \ Return rules for a square-list.
 : square-list-get-rules ( list0 -- rulestore t | f )
     \ Check arg.
-    assert-tos-is-list
+    assert( tos is-list? )
 
     \ Check for empty list.
     dup list-is-empty?
@@ -355,8 +337,8 @@
 \ Return members of a square-list equal having a given pn value.
 : square-list-eq-pn ( pn1 sqr-lst0 -- sqr-lst )
     \ Check args.
-    assert-tos-is-list
-    assert-nos-is-pn
+    assert( tos is-list? )
+    assert( nos is-pn? )
 
     list-new                    \ pn1 sqp-lst | ret-lst
     over list-get-links         \ pn1 sqp-lst | ret-lst link
@@ -378,9 +360,9 @@
 ;
 
 \ Return true if all squares are squares.
-: square-list-all-pnc ( sqr-lst0 -- bool )
+: square-list-all-pnc? ( sqr-lst0 -- bool )
     \ Check arg.
-    assert-tos-is-list
+    assert( tos is-list? )
 
     \ Prep for loop.
     list-get-links              \ sqr-link

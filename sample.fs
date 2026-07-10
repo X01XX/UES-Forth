@@ -5,7 +5,7 @@
 \ A initial/result problem, that may be solved with one, or many, actions, all within
 \ a single domain.
 
-#23719 constant sample-id
+#23719 constant sample-struct-id
     #3 constant sample-struct-number-cells
 
 \ Struct fields
@@ -26,32 +26,23 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 
 \ Check instance type.
 : is-allocated-sample? ( addr -- bool )
-    dup sample-mma mma-is-item  \ addr bool
+    dup sample-mma mma-is-item? \ addr bool
     if
         struct-get-id
-        sample-id =             \ bool
+        sample-struct-id =      \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for sample, unconventional, leaves stack unchanged.
-: assert-tos-is-sample ( tos -- tos )
+\ Check TOS for sample.
+: is-sample? ( tos -- t )
     dup is-allocated-sample?
-    false? if
-        s" TOS is not an allocated sample"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for sample, unconventional, leaves stack unchanged.
-: assert-nos-is-sample ( nos tos -- nos tos )
-    over is-allocated-sample?
-    false? if
-        s" NOS is not an allocated sample"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated sample"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -59,7 +50,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Return the initial field from a sample instance.
 : sample-get-initial ( smp0 -- u)
     \ Check arg.
-    assert-tos-is-sample
+    assert( tos is-sample? )
 
     sample-initial-disp +   \ Add offset.
     @                       \ Fetch the field.
@@ -68,7 +59,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Return the result field from a sample instance.
 : sample-get-result ( smp0 -- u)
     \ Check arg.
-    assert-tos-is-sample
+    assert( tos is-sample? )
 
     sample-result-disp +    \ Add offset.
     @                       \ Fetch the field.
@@ -77,8 +68,8 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Set the initial field from a sample instance, use only in this file.
 : _sample-set-initial ( u1 smp0 -- )
     \ Check args.
-    assert-tos-is-sample
-    assert-nos-is-value
+    assert( tos is-sample? )
+    assert( nos is-value? )
 
     sample-initial-disp +   \ Add offset.
     !                       \ Set initial field.
@@ -87,8 +78,8 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Set the result field of a sample instance, use only in this file.
 : _sample-set-result ( u1 smp0 -- )
     \ Check args.
-    assert-tos-is-sample
-    assert-nos-is-value
+    assert( tos is-sample? )
+    assert( nos is-value? )
 
     sample-result-disp +    \ Add offset.
     !                       \ Set result field.
@@ -100,11 +91,11 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ The numbers may be the same.
 : sample-new ( r1 i0 -- smp)
     \ Check args.
-    assert-tos-is-value
-    assert-nos-is-value
+    assert( tos is-value? )
+    assert( nos is-value? )
 
     \ Allocate space.
-    sample-id sample-mma
+    sample-struct-id sample-mma
     struct-allocate             \ u1 u2 smp
 
     \ Store states
@@ -115,7 +106,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Print a sample.
 : .sample ( smp0 -- )
     \ Check arg.
-    assert-tos-is-sample
+    assert( tos is-sample? )
 
     ." ("
     dup sample-get-initial .value
@@ -127,7 +118,7 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
 \ Deallocate a sample.
 : sample-deallocate ( smp0 -- )
     \ Check arg.
-    assert-tos-is-sample
+    assert( tos is-sample? )
 
     dup struct-get-use-count      \ smp0 count
     dup 0< abort" invalid use count"

@@ -2,6 +2,32 @@
 \ A store for the current session.
 0 value current-session-store
 
+: display-debug-status
+    assert-level @ if
+        cr ." debug on"
+    else
+        cr ." debug off"
+    then
+;
+
+1 assert-level !    \ 0 to turn most asserts off, 1 to turn them on.
+display-debug-status
+
+' dup alias tos
+' over alias nos
+
+: 3os ( 3os nos tos -- 3os nos tos 3os )
+    #2 pick
+;
+
+: 4os ( 4os 3os nos tos -- 4os 3os nos tos 4os )
+    #3 pick
+;
+
+: 5os ( 5os 4os 3os nos tos -- 5os 4os 3os nos tos 5os )
+    #4 pick
+;
+
 : current-session-gbl ( -- ses )
     current-session-store   \ ses
     ?dup
@@ -72,10 +98,11 @@
     .stack-structs-xt execute
 ;
 
+
 \ Set the current domain.
 : domain-set-current-gbl ( dom0 -- )
     \ Check arg.
-    assert-tos-is-domain-xt execute
+    assert( tos is-domain?-xt execute )
 
     dup domain-get-parent-session-xt execute
     session-set-current-domain-xt execute
@@ -98,3 +125,5 @@
     current-session-gbl
     session-calc-max-regions-xt execute
 ;
+
+

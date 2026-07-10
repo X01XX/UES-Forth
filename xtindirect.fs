@@ -25,7 +25,7 @@
 
 ' xtabort value session-get-domains-xt
 
-' xtabort value assert-tos-is-session-xt
+' xtabort value is-session?-xt
 
 ' xtabort value session-update-points-xt
 
@@ -50,9 +50,7 @@
 
 ' xtabort value domain-get-number-actions-xt
 
-' xtabort value assert-tos-is-domain-xt
-
-' xtabort value assert-nos-is-domain-xt
+' xtabort value is-domain?-xt
 
 ' xtabort value domain-get-num-bits-xt
 
@@ -65,9 +63,7 @@
 
 ' xtabort value action-get-inst-id-xt
 
-' xtabort value assert-tos-is-action-xt
-
-' xtabort value assert-nos-is-action-xt
+' xtabort value is-action?-xt
 
 ' xtabort value action-make-need-xt
 
@@ -100,7 +96,7 @@
 
 ' xtabort value region-list-push-xt
 
-' xtabort value assert-nos-is-group-xt
+' xtabort value is-group?-xt
 
 
 ' xtabort value .regioncorrrate-xt
@@ -113,9 +109,7 @@
 
 ' xtabort value regioncorr-list-deallocate-xt
 
-' xtabort value assert-tos-is-regioncorr-xt
-
-' xtabort value assert-nos-is-regioncorr-xt
+' xtabort value is-regioncorr?-xt
 
 ' xtabort value regioncorr-get-list-xt
 
@@ -137,8 +131,6 @@
 ' xtabort value structinfo-list-print-struct-list-xt
 
 ' xtabort value structinfo-list-deallocate-struct-list-xt
-
-' xtabort value assert-nos-is-plan-xt
 
 ' xtabort value list-from-string-xt
 

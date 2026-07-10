@@ -1,6 +1,6 @@
 \ Implement a need struct and functions.
 
-#19717 constant need-id
+#19717 constant need-struct-id
     #4 constant need-struct-number-cells
 
 \ Struct fields
@@ -39,72 +39,32 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 \ Check instance type.
 : is-allocated-need? ( addr -- bool )
-    dup need-mma mma-is-item    \ addr bool
+    dup need-mma mma-is-item?   \ addr bool
     if
         struct-get-id
-        need-id =               \ bool
+        need-struct-id =        \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for need, unconventional, leaves stack unchanged.
-: assert-tos-is-need ( tos -- tos )
+\ Check TOS for need.
+: is-need? ( tos -- t )
     dup is-allocated-need?
-    false? if
-        s" TOS is not an allocated need"
-       .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated need"
+    .abort-xt execute
 ;
 
-\ Check NOS for need, unconventional, leaves stack unchanged.
-: assert-nos-is-need ( nos tos -- nos tos )
-    over is-allocated-need?
-    false? if
-        s" NOS is not an allocated need"
-       .abort-xt execute
-    then
-;
-
-\ Check tos for valid need number.
-: assert-tos-is-need-number ( tos -- tos )
+\ Check TOS for need-number.
+: is-need-number? ( tos -- t )
     dup is-need-type?
-    if
-    else
-        s" tos invalid need number?"
-       .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check nos for valid need number.
-: assert-nos-is-need-number ( nos tos -- nos tos )
-    over is-need-type?
-    if
-    else
-        s" nos invalid need number?"
-       .abort-xt execute
-    then
-;
-
-\ Check 3os for valid need number.
-: assert-3os-is-need-number ( 3os nos tos -- 3os nos tos )
-    #2 pick is-need-type?
-    if
-    else
-        s" 3os invalid need number?"
-       .abort-xt execute
-    then
-;
-
-\ Check 4os for valid need number.
-: assert-4os-is-need-number ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick is-need-type?
-    if
-    else
-        s" 4os invalid need number?"
-       .abort-xt execute
-    then
+    s" Selected arg is not a valid need-number"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -112,7 +72,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Return the domain field from a need instance.
 : need-get-domain ( ned0 -- dom )
     \ Check arg.
-    assert-tos-is-need
+    assert( tos is-need? )
 
     need-domain-disp +  \ Add offset.
     @                   \ Fetch the field.
@@ -121,8 +81,8 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Set the domain field from a need instance, use only in this file.
 : _need-set-domain ( dom1 ned0 -- )
     \ Check args.
-    assert-tos-is-need
-    assert-nos-is-domain-xt execute
+    assert( tos is-need? )
+    assert( nos is-domain?-xt execute )
 
     need-domain-disp +  \ Add offset.
     !                   \ Set the field.
@@ -131,7 +91,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Return the action field from a need instance.
 : need-get-action ( ned0 -- act )
     \ Check arg.
-    assert-tos-is-need
+    assert( tos is-need? )
 
     need-action-disp +  \ Add offset.
     @                   \ Fetch the field.
@@ -140,8 +100,8 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Set the action field from a need instance, use only in this file.
 : _need-set-action ( act1 ned0 -- )
     \ Check args.
-    assert-tos-is-need
-    assert-nos-is-action-xt execute
+    assert( tos is-need? )
+    assert( nos is-action?-xt execute )
 
     need-action-disp +  \ Add offset.
     !                   \ Set the field.
@@ -150,7 +110,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Return the target field from a need instance.
 : need-get-target ( ned0 -- sta )
     \ Check arg.
-    assert-tos-is-need
+    assert( tos is-need? )
 
     need-target-disp +  \ Add offset.
     @                   \ Fetch the field.
@@ -159,7 +119,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Set the target field from a need instance, use only in this file.
 : _need-set-target ( ned0 -- )
     \ Check arg.
-    assert-tos-is-need
+    assert( tos is-need? )
 
     need-target-disp +  \ Add offset.
     !                   \ Set the field.
@@ -167,14 +127,14 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 : need-get-type ( ned0 -- type )
     \ Check arg.
-    assert-tos-is-need
+    assert( tos is-need? )
 
     4c@
 ;
 
 : _need-set-type ( typ1 ned0 -- )
-    assert-tos-is-need
-    assert-nos-is-need-number
+    assert( tos is-need? )
+    assert( nos is-need-number? )
 
     4c!
 ;
@@ -184,13 +144,13 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Create a need given a need number, target, act and domain.
 : need-new ( typ3 u2 act1 dom0 -- addr) \ For non-test code, call action-make-need instead of this.
     \ Check args.
-    assert-tos-is-domain-xt execute
-    assert-nos-is-action-xt execute
-    assert-3os-is-value
-    assert-4os-is-need-number
+    assert( tos is-domain?-xt execute )
+    assert( nos is-action?-xt execute )
+    assert( 3os is-value? )
+    assert( 4os is-need-number? )
 
     \ Allocate space.
-    need-id need-mma
+    need-struct-id need-mma
     struct-allocate             \ typ3 u2 act1 dom0 ned
 
     \ Store domain
@@ -209,7 +169,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Print a need.
 : .need ( ned0 -- )
     \ Check arg.
-    assert-tos-is-need
+    assert( tos is-need? )
 
     ." Dom: " dup need-get-domain domain-get-inst-id-xt execute #3 dec.r space
     ." Act: " dup need-get-action action-get-inst-id-xt execute #3 dec.r space
@@ -236,7 +196,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Deallocate a need.
 : need-deallocate ( ned0 -- )
     \ Check arg.
-    assert-tos-is-need
+    assert( tos is-need? )
 
     dup struct-get-use-count      \ ned0 count
     dup 0< abort" invalid use count"
@@ -253,8 +213,8 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 \ Return true if two needs are equal.
 : need-eq ( ned1 ned0 -- flag )
     \ Check args.
-    assert-tos-is-need
-    assert-nos-is-need
+    assert( tos is-need? )
+    assert( nos is-need? )
 
     over need-get-domain
     over need-get-domain <>
@@ -273,10 +233,10 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 ;
 
 \ Return true if a state satisfies the need.
-: need-current-state-satisfies ( sta1 ned0 -- bool )
+: need-current-state-satisfies? ( sta1 ned0 -- bool )
     \ Check arg.
-    assert-tos-is-need
-    assert-nos-is-value
+    assert( tos is-need? )
+    assert( nos is-value? )
 
     need-get-target             \ sta1 n-sta
     =

@@ -1,6 +1,6 @@
 \ Implement a struct and functions for a plancorr, a list of plans corresponding to the list of domains.
 
-#53717 constant plancorr-id
+#53717 constant plancorr-struct-id
     #2 constant plancorr-struct-number-cells
 
 \ Struct fields
@@ -22,28 +22,19 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 : is-allocated-plancorr? ( addr -- bool )
     get-first-word          \ w t | f
     if
-        plancorr-id =
+        plancorr-struct-id =
     else
         false
     then
 ;
 
-\ Check TOS for plancorr, unconventional, leaves stack unchanged.
-: assert-tos-is-plancorr ( tos -- tos )
+\ Check TOS for plancorr.
+: is-plancorr? ( tos -- t )
     dup is-allocated-plancorr?
-    false? if
-        s" TOS is not an allocated plancorr"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for plancorr, unconventional, leaves stack unchanged.
-: assert-nos-is-plancorr ( nos tos -- nos tos )
-    over is-allocated-plancorr?
-    false? if
-        s" NOS is not an allocated plancorr"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated plancorr"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -51,7 +42,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Return the plancorr list field from a plan instance.
 : plancorr-get-list ( plnc0 -- pln-lst )
     \ Check arg.
-    assert-tos-is-plancorr
+    assert( tos is-plancorr? )
 
     plancorr-list-disp +    \ Add offset.
     @                       \ Fetch the field.
@@ -60,7 +51,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Set the plancorr list field of a plan instance, use only in this file.
 : _plancorr-set-list ( pln-lst1 plnc0 -- )
     \ Check args.
-    assert-tos-is-plancorr
+    assert( tos is-plancorr? )
 
     \ Store list
     plancorr-list-disp +    \ Add offset.
@@ -72,13 +63,13 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Create a plancorr-list-corr from a plancorr-list-corr-list on the stack.
 : plancorr-new ( pln-lst0 -- plnc )
     \ check arg.
-    assert-tos-is-plan-list
+    assert( tos is-plan-list? )
     dup list-get-length
     number-domains-gbl
     <> abort" plancorr-new: invalid list length?"
 
     \ Allocate space.
-    plancorr-id plancorr-mma
+    plancorr-struct-id plancorr-mma
     struct-allocate             \ pln-lst0 plnc
 
     \ Store plan list.
@@ -89,7 +80,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Print a plan-list corresponding to the session domain list.
 : .plancorr ( plnc0 -- )
     \ Check arg.
-    assert-tos-is-plancorr
+    assert( tos is-plancorr? )
 
     plancorr-get-list               \ pln-lst
     list-get-links                  \ plnc-link
@@ -120,7 +111,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Deallocate the given plancorr, if its use count is 1 or 0.
 : plancorr-deallocate ( plnc0 -- )
     \ Check arg.
-    assert-tos-is-plancorr
+    assert( tos is-plancorr? )
 
     dup struct-get-use-count        \ plnc0 count
     dup 0< abort" invalid use count"
@@ -141,7 +132,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Return result regions of a plancorr.
 : plancorr-calc-result-regions ( plnc -- regc )
     \ Check arg.
-    assert-tos-is-plancorr
+    assert( tos is-plancorr? )
 
     \ Init reg list.
     list-new swap                   \ reg-lst plsc
@@ -178,7 +169,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Return initial regions of a plancorr.
 : plancorr-calc-initial-regions ( plnc -- regc )
     \ Check arg.
-    assert-tos-is-plancorr
+    assert( tos is-plancorr? )
 
     \ Init reg list.
     list-new swap                   \ reg-lst plsc
@@ -215,7 +206,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Run a plancorr.
 : plancorr-run ( plnc0 -- bool )
     \ Check arg.
-    assert-tos-is-plancorr
+    assert( tos is-plancorr? )
 
     \ Prep for loop.
     plancorr-get-list               \ pln-lst
@@ -252,8 +243,8 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 \ Return true if a plancorr stays within a given regioncorr.
 : plancorr-within-regc? ( regc1 plnc0 -- bool )
     \ Check args.
-    assert-tos-is-plancorr
-    assert-nos-is-regioncorr
+    assert( tos is-plancorr? )
+    assert( nos is-regioncorr? )
 
     \ Prep for loop.
     swap regioncorr-get-list        \ plnc0 regc1-lst

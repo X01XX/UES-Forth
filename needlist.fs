@@ -1,31 +1,24 @@
 \ Functions for need lists.
 
-\ Check if tos is an empty list, or has a need instance as its first item.
-: assert-tos-is-need-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for need-list.
+: is-need-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-need
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a need instance as its first item.
-: assert-nos-is-need-list ( nos tos -- nos tos )
-    assert-nos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-need
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-need? )
+        true
     then
 ;
 
 \ Deallocate a need list.
 : need-list-deallocate ( lst0 -- )
     \ Check arg.
-    assert-tos-is-need-list
+    assert( tos is-need-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -44,7 +37,7 @@
 \ Print a need-list
 : .need-list ( list0 -- )
     \ Check args.
-    assert-tos-is-need-list
+    assert( tos is-need-list? )
 
     \ Init counter
     0 swap                  \ cnt link
@@ -75,8 +68,8 @@
 \ Push a need to a need-list, unless it is already in the list.
 : need-list-push ( ned1 list0 -- )
     \ Check args.
-    assert-tos-is-need-list
-    assert-nos-is-need
+    assert( tos is-need-list? )
+    assert( nos is-need? )
 
     list-push-struct
 ;
@@ -84,8 +77,8 @@
 \ Append nos need-list to the tos need-list.
 : need-list-append ( lst1 lst0 -- )
     \ Check args.
-    assert-tos-is-need-list
-    assert-nos-is-need-list
+    assert( tos is-need-list? )
+    assert( nos is-need-list? )
 
     swap                    \ lst0 lst1
     list-get-links          \ lst0 link
@@ -105,8 +98,8 @@
 \ Return true need-list-contains-targetif a need in a list has a given target state.
 : ?need-list-contains-target ( sta1 lst0 -- bool )
     \ Check args.
-    assert-tos-is-need-list
-    assert-nos-is-value
+    assert( tos is-need-list? )
+    assert( nos is-value? )
 
     list-get-links          \ sta1 link
     begin
@@ -132,8 +125,8 @@
 \ Find all needs matching a given type.
 : need-list-find-all-match-type ( typ1 ned-lst0 -- ned-lst t | f )
     \ Check args.
-    assert-tos-is-need-list
-    assert-nos-is-need-number
+    assert( tos is-need-list? )
+    assert( nos is-need-number? )
 
     \ Init return list.
     list-new -rot               \ ret-lst typ1 ned-lst0

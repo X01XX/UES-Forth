@@ -1,31 +1,24 @@
 \ Functions for a list of Region-list-core + rate, regioncorrrate, structures.
 
-\ Check if tos is an empty list, or has a regioncorrrate instance as its first item.
-: assert-tos-is-regioncorrrate-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for regioncorrrate-list.
+: is-regioncorrrate-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-regioncorrrate
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a regioncorrrate instance as its first item.
-: assert-nos-is-regioncorrrate-list ( nos tos -- nos tos )
-    assert-nos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-regioncorrrate
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-regioncorrrate? )
+        true
     then
 ;
 
 \ Deallocate a regioncorrrate list.
 : regioncorrrate-list-deallocate ( regcr-lst0 -- )
     \ Check arg.
-    assert-tos-is-regioncorrrate-list
+    assert( tos is-regioncorrrate-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -42,31 +35,31 @@
 ;
 
 \ Return true if a regioncorrrate is a member of a list.
-: regioncorrrate-list-member ( regcr1 regcr-lst0 -- )
+: regioncorrrate-list-member? ( regcr1 regcr-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorrrate-list
-    assert-nos-is-regioncorrrate
+    assert( tos is-regioncorrrate-list? )
+    assert( nos is-regioncorrrate? )
 
     \ Check for dup regc.
     [ ' regioncorrrate-eq ] literal \ regc1 regcr-lst0 xt
     #2 pick                         \ regc1 regcr-lst0 xt regc1
     #2 pick                         \ regc1 regcr-lst0 xt regc1 regcr-lst0
 
-    list-member                     \ regc1 regcr-lst0 bool
+    list-member?                    \ regc1 regcr-lst0 bool
     nip nip                         \ bool
 ;
 
 \ Push a regioncorrrate to a regioncorrrate-list.
 : regioncorrrate-list-push ( regcr1 regcr-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorrrate-list
-    assert-nos-is-regioncorrrate
+    assert( tos is-regioncorrrate-list? )
+    assert( nos is-regioncorrrate? )
 
     \ Check for 0/0 rate.
-    over regioncorrrate-rate-all-zero      \ regc2 regcr-lst0 bool
+    over regioncorrrate-rate-all-zero?     \ regc2 regcr-lst0 bool
     abort" rate is 0/0 ?"
 
-    2dup regioncorrrate-list-member        \ regc2 regcr-lst0 bool
+    2dup regioncorrrate-list-member?       \ regc2 regcr-lst0 bool
     abort" Duplicate regioncorr in list?"
 
     list-push-struct
@@ -75,7 +68,7 @@
 \ Print a regioncorrrate-list
 : .regioncorrrate-list ( regcr-lst0 -- )
     \ Check arg.
-    assert-tos-is-regioncorrrate-list
+    assert( tos is-regioncorrrate-list? )
 
     .regioncorrrate-xt swap .list
 ;
@@ -83,7 +76,7 @@
 \ Return a regioncorr list, without the rates.
 : regioncorrrate-list-to-regioncorr-list ( regcr-lst0 -- regc-lst )
     \ Check arg.
-    assert-tos-is-regioncorrrate-list
+    assert( tos is-regioncorrrate-list? )
 
     \ Init return list.
     list-new swap                       \ ret-lst regcr-lst0
@@ -107,7 +100,7 @@
 \ Return regioncorr-list of regioncorrrates the have a given negative rate.
 : regioncorrrate-list-match-rate-negative ( n lst0 -- regc-lst )
     \ Check arg.
-    assert-tos-is-regioncorrrate-list
+    assert( tos is-regioncorrrate-list? )
 
     \ Init return list.
     list-new -rot                           \ ret-lst n lst0
@@ -140,8 +133,8 @@
 \ Return a rate for a given regioncorr.
 : regioncorrrate-list-rate-regioncorr ( regc1 regcr-lst0 -- rate )
     \ Check args.
-    assert-tos-is-regioncorrrate-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorrrate-list? )
+    assert( nos is-regioncorr? )
 
     0 0 rate-new swap                       \ regc1 ret-rate regcr-lst0
     list-get-links                          \ regc1 ret-rate link
@@ -174,8 +167,8 @@
 
 : regioncorrrate-list-more-positive-regioncorrs ( rate1 regcr-lst0 -- regcr-lst ) \ Return a list of more-positive regioncorrrates.
     \ Check args.
-    assert-tos-is-regioncorrrate-list
-    assert-nos-is-rate
+    assert( tos is-regioncorrrate-list? )
+    assert( nos is-rate? )
 
     \ Init return list.
     list-new -rot                           \ ret-lst rate1 regcr-lst0
@@ -207,11 +200,11 @@
 ;
 
 \ Return true if TOS is a superset of its corresponding region in NOS.
-: regioncorrrate-superset ( regcr1 regcr0 -- bool )
+: regioncorrrate-superset? ( regcr1 regcr0 -- bool )
     \ cr ." regioncorrrate-superset: " dup .regioncorrrate space ." sup " over .regioncorrrate
     \ Check args.
-    assert-tos-is-regioncorrrate
-    assert-nos-is-regioncorrrate
+    assert( tos is-regioncorrrate? )
+    assert( nos is-regioncorrrate? )
 
     \ Save lists for end.
     2dup                                        \ regcr1 regcr0 regcr1 regcr0
@@ -233,16 +226,16 @@
 ;
 
 \ Return true if TOS is a subset of its corresponding region in NOS.
-: regioncorrrate-subset ( regcr1 regcr0 -- bool )
-    swap regioncorrrate-superset
+: regioncorrrate-subset? ( regcr1 regcr0 -- bool )
+    swap regioncorrrate-superset?
 ;
 
 \ Return true if a regioncorrrate-list (list of lists) contains
 \ a superset of a given regc.
-: regioncorrrate-list-any-superset ( regcr1 regcr-lst0 -- bool )
+: regioncorrrate-list-any-superset? ( regcr1 regcr-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorrrate-list
-    assert-nos-is-regioncorrrate
+    assert( tos is-regioncorrrate-list? )
+    assert( nos is-regioncorrrate? )
 
     list-get-links                  \ regcr1 regcr-link
 
@@ -251,7 +244,7 @@
     while
         over                        \ regcr1 regcr-link regcr1
         over link-get-data          \ regcr1 regcr-link regcr1 regcx
-        regioncorrrate-superset     \ regcr1 regcr-link bool
+        regioncorrrate-superset?    \ regcr1 regcr-link bool
         if
             2drop
             true
@@ -268,15 +261,15 @@
 \ For a regioncorrrate-list, remove subsets of a given regc.
 : regioncorrrate-list-remove-subsets ( regcr1 regcr-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorrrate-list
-    assert-nos-is-regioncorrrate
+    assert( tos is-regioncorrrate-list? )
+    assert( nos is-regioncorrrate? )
 
     begin
-        [ ' regioncorrrate-subset ] literal \ regcr1 regcr-lst0 xt
-        #2 pick #2 pick                 \ regcr1 regcr-lst0 xt regcr1 regcr-lst0
-        list-remove                     \ regcr1 regcr-lst0, regcx t | f
+        [ ' regioncorrrate-subset? ] literal    \ regcr1 regcr-lst0 xt
+        #2 pick #2 pick                         \ regcr1 regcr-lst0 xt regcr1 regcr-lst0
+        list-remove                             \ regcr1 regcr-lst0, regcx t | f
         if
-            regioncorrrate-deallocate   \ regcr1 regcr-lst0
+            regioncorrrate-deallocate           \ regcr1 regcr-lst0
         else
             2drop
             exit
@@ -291,11 +284,11 @@
 \ You may want to deallocate the regc if the push fails.
 : regioncorrrate-list-push-nosubs ( regcr1 regcr-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorrrate-list
-    assert-nos-is-regioncorrrate
+    assert( tos is-regioncorrrate-list? )
+    assert( nos is-regioncorrrate? )
 
     \ Skip if any supersets/eq are in the list.
-    2dup regioncorrrate-list-any-superset      \ regcr1 regcr-lst0 bool
+    2dup regioncorrrate-list-any-superset?     \ regcr1 regcr-lst0 bool
     if
         2drop
         false

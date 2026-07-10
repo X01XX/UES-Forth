@@ -1,6 +1,6 @@
 \ Implement a square struct and functions.
 
-#23197 constant square-id
+#23197 constant square-struct-id
     #7 constant square-struct-number-cells
 
 \ Struct fields
@@ -26,42 +26,37 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 \ Check instance type.
 : is-allocated-square? ( addr -- bool )
-    dup square-mma mma-is-item  \ addr bool
+    dup square-mma mma-is-item? \ addr bool
     if
         struct-get-id
-        square-id =             \ bool
+        square-struct-id =      \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for square, unconventional, leaves stack unchanged.
-: assert-tos-is-square ( tos -- tos )
+\ Check TOS for square.
+: is-square? ( tos -- t )
     dup is-allocated-square?
-    false? if
-        s" TOS is not an allocated square"
-        .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated square"
+    .abort-xt execute
 ;
 
-\ Check NOS for square, unconventional, leaves stack unchanged.
-: assert-nos-is-square ( nos tos -- nos tos )
-    over is-allocated-square?
-    false? if
-        s" NOS is not an allocated square"
-        .abort-xt execute
-    then
-;
-
-\ Check nos is a valid pn value.
-: assert-nos-is-pn ( nos tos -- nos tos )
-    over dup 1 < swap
-    #3 > or
+\ Check tos is a valid pn value.
+: is-pn? ( tos -- t )
+    dup 0<      \ tos bool
+    over        \ tos bool tos
+    #3 >        \ tos bool bool
+    or          \ tos bool
     if
         s" nos is not a valid pn value"
         .abort-xt execute
     then
+    drop
+    true
 ;
 
 \ Start accessors.
@@ -69,7 +64,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return result count from the square header.
 : square-get-result-count ( square-addr -- u-length )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     2w@
 ;
@@ -89,7 +84,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return the square state.
 : square-get-state ( addr -- u )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     square-state-disp + \ Add offset.
     @                   \ Fetch the field.
@@ -98,8 +93,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Set the state of a square instance, use only in this file.
 : _square-set-state ( u1 addr -- )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-value
+    assert( tos is-square? )
+    assert( nos is-value? )
 
     square-state-disp + \ Add offset.
     !                   \ Set field.
@@ -108,7 +103,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return square 8-bit pnc value, as a bool.
 : square-get-pnc ( sqr0 -- bool )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     6c@
     0<>     \ Change 255 to -1
@@ -116,23 +111,23 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 : _square-set-pnc ( pnc sqr -- )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-bool
+    assert( tos is-square? )
+    assert( nos is-bool? )
 
     6c!
 ;
 
 : square-get-rules ( sqr0 -- rulstr )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     square-rules-disp + @
 ;
 
 : _square-set-rules ( rulstr1 sqr0 -- )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-rulestore
+    assert( tos is-square? )
+    assert( nos is-rulestore? )
 
     square-rules-disp +
     !struct
@@ -140,7 +135,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 : square-get-pn ( sqr0 -- pn )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     square-get-rules
     rulestore-get-pn
@@ -151,8 +146,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ is never invalid.
 : _square-update-rules ( new-ruls1 sqr0 -- )
     \ Check arg.
-    assert-tos-is-square
-    assert-nos-is-rulestore
+    assert( tos is-square? )
+    assert( nos is-rulestore? )
 
     \ Get\save old rules.
     dup square-get-rules        \ new-ruls1 sqr0 old-ruls
@@ -168,7 +163,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Get results item, given index.
 : square-get-result ( index1 sqr0 -- result )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     over dup                    \ i1 s0 i i
     0< swap #3 > or             \ i1 s0 flag
@@ -209,12 +204,13 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 \ Return a new square, given a state and result.
 : square-new    ( result state -- square )
+    cr ." square-new: start: " .stack-gbl cr
     \ Check args.
-    assert-tos-is-value
-    assert-nos-is-value
+    assert( tos is-value? )
+    assert( nos is-value? )
 
    \ Allocate space.
-    square-id square-mma
+    square-struct-id square-mma
     struct-allocate             \ r s addr
 
     \ Set result count.
@@ -224,7 +220,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     #2 pick #2 pick                     \ r s addr r s
     rule-new                            \ r s addr rul
     rulestore-new-1                     \ r s addr rulstr
-    over _square-set-rules              \ r s addr
+    over
+    _square-set-rules              \ r s addr
 
     \ Set state
     tuck _square-set-state      \ r addr
@@ -240,7 +237,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 : square-from-sample ( smpl -- sqr )
     \ Check arg.
-    assert-tos-is-sample
+    assert( tos is-sample? )
 
     dup sample-get-result
     swap sample-get-initial
@@ -249,7 +246,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 : square-deallocate ( sqr0 -- )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     dup struct-get-use-count      \ sqr0 count
     dup 0< abort" invalid use count"
@@ -288,7 +285,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Print a square.
 : .square ( sqr0 -- )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     dup square-get-state .value
 
@@ -309,7 +306,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 : .square-state ( sqr -- )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     square-get-state .value space
 ;
@@ -414,8 +411,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 \ Return a rulestore for a square, given a pn value.
 : _square-calc-rules ( pn1 sqr0 -- rulestore )
-    assert-tos-is-square
-    assert-nos-is-pn
+    assert( tos is-square? )
+    assert( nos is-pn? )
 
     swap                            \ sqr0 pn1
     case
@@ -454,8 +451,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return true if pn, or pnc changed.
 : square-add-result ( val1 sqr0 -- flag )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-value
+    assert( tos is-square? )
+    assert( nos is-value? )
 
     \ Init return flag to false.
     false -rot                      \ rf val1 sqr0
@@ -525,8 +522,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return true if pn, or pnc changed.
 : square-add-sample ( smpl1 sqr0 -- flag )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-sample
+    assert( tos is-square? )
+    assert( nos is-sample? )
 
     over sample-get-initial     \ smpl1 sqr0 initial
     over square-get-state       \ smpl1 sqr0 initial state
@@ -541,8 +538,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return true if two squares ar equal.
 : square-eq ( sqr1 sqr0 -- flag )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-square
+    assert( tos is-square? )
+    assert( nos is-square? )
 
     square-get-state
     swap
@@ -643,8 +640,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 : square-compare ( sqr1 sqr0 -- char )  \ Return char C = Compatible, I = Incompatible, M = More samples needed.
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-square
+    assert( tos is-square? )
+    assert( nos is-square? )
     2dup square-eq
     abort" squares eq?"
 
@@ -706,8 +703,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return true if two squares are incompatible.
 : square-incompatible ( sqr1 sqr0 -- flag )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-square
+    assert( tos is-square? )
+    assert( nos is-square? )
 
     2dup square-eq
     if
@@ -722,8 +719,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return true if two squares are compatible.
 : square-compatible ( sqr1 sqr0 -- flag )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-square
+    assert( tos is-square? )
+    assert( nos is-square? )
 
     2dup square-eq
     if
@@ -738,8 +735,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return true if a square state matches a value.
 : square-state-eq ( val1 sqr0 -- flag )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-value
+    assert( tos is-square? )
+    assert( nos is-value? )
 
     square-get-state
     =
@@ -748,8 +745,8 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return true if a square-state is a subset of a region.
 : square-state-in-region ( reg1 sqr0 -- flag )
     \ Check args.
-    assert-tos-is-square
-    assert-nos-is-region
+    assert( tos is-square? )
+    assert( nos is-region? )
 
     square-get-state
     swap
@@ -759,7 +756,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 \ Return the last, that is most-recent, result.
 : square-get-last-result ( sqr -- rslt )
     \ Check arg.
-    assert-tos-is-square
+    assert( tos is-square? )
 
     dup square-get-result-count     \ sqr cnt
     1- #4 mod                       \ sqr index

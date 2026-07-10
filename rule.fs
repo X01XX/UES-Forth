@@ -2,7 +2,7 @@
 \
 \ Represent how a rule changes bits.
 
-#23131 constant rule-id
+#23131 constant rule-struct-id
     #5 constant rule-struct-number-cells
 
 \ Struct fields.
@@ -25,45 +25,30 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Check instance type.
 
 : is-allocated-rule? ( addr -- bool )    \ Check if an address is within the rule array.
-    dup rule-mma mma-is-item    \ addr bool
+    dup rule-mma mma-is-item?   \ addr bool
     if
         struct-get-id
-        rule-id =               \ bool
+        rule-struct-id =        \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-: assert-tos-is-rule ( tos -- tos ) \ Check TOS for rule, unconventional, leaves stack unchanged.
+\ Check TOS for rule.
+: is-rule? ( tos -- t )
     dup is-allocated-rule?
-    false? if
-        s" TOS is not an allocated rule."
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-: assert-nos-is-rule ( nos tos -- nos tos ) \ Check NOS for rule, unconventional, leaves stack unchanged.
-    over is-allocated-rule?
-    false? if
-        s" NOS is not an allocated rule."
-        .abort-xt execute
-    then
-;
-
-: assert-3os-is-rule ( 3os nos tos -- 3os nos tos ) \ Check 3OS for rule, unconventional, leaves stack unchanged.
-    #2 pick is-allocated-rule?
-    false? if
-        s" 3OS is not an allocated rule."
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated rule"
+    .abort-xt execute
 ;
 
 \ Start accessors.
 
 : rule-get-m00 ( rul0 -- u) \ Return the m00 field of a rule instance.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     rule-m00-disp + \ Add offset.
     @               \ Fetch the field.
@@ -76,7 +61,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-get-m01 ( rul0 -- u) \ Return the m01 field of a rule instance.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     rule-m01-disp + \ Add offset.
     @               \ Fetch the field.
@@ -89,7 +74,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-get-m11 ( rul0 -- u) \ Return the m11 field of a rule instance.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     rule-m11-disp + \ Add offset.
     @               \ Fetch the field.
@@ -102,7 +87,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-get-m10 ( rul0 -- u) \ Return the m10 field of a rule instance.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     rule-m10-disp + \ Add offset.
     @               \ Fetch the field.
@@ -116,7 +101,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Get the number of bits.
 : rule-get-num-bits ( rul0 -- nb )
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     4c@
 ;
@@ -142,7 +127,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     then
 
     \ Allocate instance.
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate         \ u-r u-i nb rul
 
     \ Set number bits.
@@ -175,8 +160,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-new ( u-result u-initial -- rul )    \ Create a rule from two numbers on the stack.
     \ Check args.
-    assert-tos-is-value
-    assert-nos-is-value
+    assert( tos is-value? )
+    assert( nos is-value? )
 
     \ Get current number bits, from current domain.
     current-num-bits-gbl    \ u-result u-initial nb
@@ -186,7 +171,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-get-masks ( rul0 -- m00 m01 m11 m10 )    \ Push all four masks onto stack.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-m00 swap   \ m00 rule
     dup rule-get-m01 swap   \ m00 m01 rule
@@ -197,7 +182,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Return a rule's X->0 mask.
 : rule-get-x0-mask ( rul0 -- mask )
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-m00        \ rul0 m00
     swap rule-get-m10       \ m00 m10
@@ -207,7 +192,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Return a rule's X->1 mask.
 : rule-get-x1-mask ( rul0 -- mask )
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-m11        \ rul0 m11
     swap rule-get-m01       \ m11 m01
@@ -217,8 +202,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Return true if two rules have a different number of bits.
 : rules-dif-num-bits? ( rul1 rul0 -- flag )
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
 
     rule-get-num-bits   \ rul1 nb0
     swap                \ nb0 rul1
@@ -228,8 +213,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rules-eq? ( rul1 rul0 -- flag ) \ Return true if two rules are equal.
     \ Check arg.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
     2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
     \ Check m00
@@ -271,14 +256,14 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : .rule ( rul0 -- ) \ Print a rule.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     \ Set up masks and most-significant-bit,
     \ the basis of each cycle.
     dup rule-get-num-bits ms-bit        \ rul ms
 
-    >r                                  \ rul rs: nb
-    rule-get-masks                      \ m00 m01 m11 m10 rs: nb
+    >r                                  \ rul rs: ms
+    rule-get-masks                      \ m00 m01 m11 m10 rs: ms
     r>                                  \ m00 m01 m11 m10 ms
 
     begin
@@ -350,7 +335,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-deallocate ( rul0 -- )   \ Deallocate a rule.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup struct-get-use-count      \ rule-addr count
     dup 0< abort" invalid use count"
@@ -366,7 +351,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-calc-initial-region ( rul0 -- reg0 ) \ Return rule initial region.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     \ Save number bits.
     dup rule-get-num-bits swap  \ nb rul0
@@ -379,7 +364,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-calc-result-region ( rul0 -- reg0 )  \ Return rule result region.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     \ Save number bits.
     dup rule-get-num-bits swap  \ nb rul0
@@ -393,8 +378,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-intersects-changes? ( csgs1 rul0 -- flag )    \ Return true if a rule's change intersects a changes' changes.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-changes
+    assert( tos is-rule? )
+    assert( nos is-changes? )
 
     over changes-get-m01 over rule-get-m01 and
     0<> if
@@ -407,20 +392,20 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0<>
 ;
 
-: rule-initial-region-intersects ( reg1 rul0 -- bool )  \ Return trdiff regioncorrlist_t.fs /media/earl/Archive/fs2/regioncorrlist_t.fsue if a rule's initial region intersects a region.
+: rule-initial-region-intersects? ( reg1 rul0 -- bool )  \ Return trdiff regioncorrlist_t.fs /media/earl/Archive/fs2/regioncorrlist_t.fsue if a rule's initial region intersects a region.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
 
     rule-calc-initial-region    \ reg1 initial'
     tuck region-intersects?     \ initial' bool
     swap region-deallocate      \ bool
 ;
 
-: rule-result-region-intersects ( reg1 rul0 -- bool )   \ Return true if a rule's result region intersects a region.
+: rule-result-region-intersects? ( reg1 rul0 -- bool )   \ Return true if a rule's result region intersects a region.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
 
     rule-calc-result-region     \ reg1 initial'
     tuck region-intersects?     \ initial' bool
@@ -429,7 +414,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-all-bits-set ( rul0 -- flag )    \ Return true if all bit positions in a rule are represented.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-num-bits   \ rul0 nb
     all-bits swap           \ all rul0
@@ -447,8 +432,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ As X1 & Xx = 01, X1 & XX = 11, X0 & Xx = 10, X0 & XX = 00.
 : rule-intersection ( rul1 rul0 -- rul t | f )    \ Return the valid result of a rule intersection, or false.
     \ Check arg.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
     2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
     \ Save number bits.
@@ -478,7 +463,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     and                     \ nb m00 m01 m11 m10
 
     \ Start new rule.
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate         \ nb m00 m01 m11 m10 rul
 
     \ Set each field.
@@ -503,7 +488,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-change-mask ( rul0 -- mask ) \ Return a rule's change mask.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-m01        \ rul0 m01
     swap rule-get-m10       \ m01 m10
@@ -512,8 +497,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-union ( rul1 rul0 -- rul t | f )   \ Return the result of a rule union, if valid.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
     2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
     \ Save number bits.
@@ -543,7 +528,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     or                      \ nb m00 m01 m11 m10
 
     \ Start new rule.
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate         \ nb m00 m01 m11 m10 rul
 
     \ Set each field.
@@ -579,8 +564,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-union-by-changes ( rul1 rul0 -- rul t | f )    \ If two rule changes (m01, m10) are equal, form a union.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
 
     \ Check if a union can be made.
     over rule-change-mask       \ rul1 rul0 rcm1
@@ -599,8 +584,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ There is no possibility of an X->x position in the result rule.
 : rule-new-region-to-region ( reg-to reg-from -- rul )  \ Return a rule for translating one region (tos) to another.
     \ Check arg.
-    assert-tos-is-region
-    assert-nos-is-region
+    assert( tos is-region? )
+    assert( nos is-region? )
     2dup regions-dif-num-bits? abort" regions do not have the same number bits?"
 
     \ 2dup cr .region space .region cr
@@ -643,7 +628,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
      rot drop                           \ nb r10 r01 r00 r11
 
     \ Init rule
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate                     \ nb r10 r01 r00 r11 rul
 
     \ Build rule.
@@ -658,14 +643,14 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-restrict-initial-region ( reg1 rul0 -- rul t | f )   \ Return a rule restricted to an intersecting initial region.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
     over region-get-num-bits    \ reg1 rul0 rnb
     over rule-get-num-bits      \ reg1 rul0 rnb unb
     <> abort" num bits mismatch?"
     \ cr ." rule-restrict-initial-region: " over .region space dup .rule cr
 
-    2dup rule-initial-region-intersects  \ reg1 rul0 bool
+    2dup rule-initial-region-intersects? \ reg1 rul0 bool
     false? if
         2drop
         false
@@ -693,7 +678,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap                        \ nb n00 n01 n11 ones rul0
     rule-get-m10 and            \ nb n00 n01 n11 n10
 
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate             \ nb n00 n01 n11 n10 rul
 
     tuck                        \ nb n00 n01 n11 rul r10 rul
@@ -716,13 +701,13 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-restrict-result-region ( reg1 rul0 -- rul t | f )    \ Return a rule restricted to a result region.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
     over region-get-num-bits    \ reg1 rul0 rnb
     over rule-get-num-bits      \ reg1 rul0 rnb unb
     <> abort" num bits mismatch?"
 
-    2dup rule-result-region-intersects  \ reg1 rul0 bool
+    2dup rule-result-region-intersects? \ reg1 rul0 bool
     false? if
         2drop
         false
@@ -750,7 +735,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap                        \ nb n00 n10 n11 ones rul0
     rule-get-m01 and            \ nb n00 n10 n11 n01
 
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate             \ nb n00 n10 n11 n01 rul
 
     tuck                        \ nb n00 n10 n11 rul r01 rul
@@ -811,7 +796,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ bit positions.  For the rule-from-string function.
 : _rule-adjust-masks ( ci cr rul0 -- bool )  \ Adjust rule, by rule-from-string.
     \ Check arg
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-lshift
     -rot                \ rul0 ci cr
@@ -920,7 +905,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     0 -rot                          \ cnt c-addr u
 
     \ Init rule.
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate                 \ cnt c-addr u rul
     0 over _rule-set-m00
     0 over _rule-set-m01
@@ -989,7 +974,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-get-changes ( rul0 -- cngs ) \ Return a changes struct, from a rule.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-m10 swap   \ m10 rul0
     rule-get-m01            \ m10 m01
@@ -998,7 +983,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-makes-change ( rul0 -- flag )    \ Return true if a rule changes at least one bit.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-m01        \ rul0 m01
     0<> if
@@ -1013,8 +998,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-restrict-to-region ( reg1 rul0 -- rul t | f )    \ Return a rule restricted, initial and result regions, to a given region.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
     over region-get-num-bits    \ reg1 rul0 rnb
     over rule-get-num-bits      \ reg1 rul0 rnb unb
     <> abort" num bits mismatch?"
@@ -1044,8 +1029,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-combine ( rul1-to rul0-from -- rul )    \ Return a rule by combining tos rule to nos rule.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
     2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
     \ Save number bits.
@@ -1103,7 +1088,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     2drop                           \ nb m00 m01 m11 m10
 
     \ Make new rule.
-    rule-id rule-mma
+    rule-struct-id rule-mma
     struct-allocate                 \ nb m00 m01 m11 m10 rul
 
     tuck _rule-set-m10              \ nb m00 m01 m11 rul
@@ -1119,9 +1104,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ Used to compare plansteps.
 : rule-number-unwanted-changes ( reg-to reg-from rul0 -- u )
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     #2 pick region-get-num-bits
     #2 pick region-get-num-bits
     #2 pick rule-get-num-bits       \ reg-to reg-from rul0 nb nb nb
@@ -1170,11 +1155,11 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
      \ space ." = " dup . cr
 ;
 
-: rule-can-be-used-first  ( reg-to reg-from rul0 -- bool )    \ Return true if reg-from to rule initial region involves no needed changes.
+: rule-can-be-used-first? ( reg-to reg-from rul0 -- bool )    \ Return true if reg-from to rule initial region involves no needed changes.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     #2 pick region-get-num-bits
     #2 pick region-get-num-bits
     #2 pick rule-get-num-bits       \ reg-to reg-from rul0 nb nb nb
@@ -1200,17 +1185,17 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     false?
 ;
 
-: rule-can-be-used-last  ( reg-to reg-from rul0 -- bool )    \ Return true if reg-from to rule result region involves all needed changes.
+: rule-can-be-used-last? ( reg-to reg-from rul0 -- bool )    \ Return true if reg-from to rule result region involves all needed changes.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
-    assert-3os-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
+    assert( 3os is-region? )
     #2 pick region-get-num-bits
     #2 pick region-get-num-bits
     #2 pick rule-get-num-bits       \ reg-to reg-from rul0 nb nb nb
     over <> abort" num bits ne?"    \ reg-to reg-from rul0 nb nb
     <> abort" num bits ne?"         \ reg-to reg-from rul0
-    \ cr ." rule-can-be-used-last: rul0: " dup .rule cr
+    \ cr ." rule-can-be-used-last?: rul0: " dup .rule cr
 
     \ Calc the needed changes, reg-from to reg-to.
     rot                                             \ reg-from rul0 reg-to
@@ -1225,7 +1210,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     swap region-deallocate                          \ cngs-ned' cngs-rul'
 
     \ Check if the rule changes are a superset of the needed changes.
-    2dup changes-superset-of                        \ cngs-ned' cngs-rul' bool
+    2dup changes-superset-of?                       \ cngs-ned' cngs-rul' bool
     swap changes-deallocate                         \ cngs-ned' bool
     swap changes-deallocate                         \ bool
 ;
@@ -1235,8 +1220,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ calculate a rule between them.
 : ?rule-combine ( rul1 rul0 -- rul )
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
 
     over rule-calc-initial-region   \ rul1 rul0 rul1-reg-i
     over rule-calc-result-region    \ rul1 rul0 rul1-reg-i rul0-reg-r
@@ -1269,7 +1254,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-is-valid? ( rul0 - bool ) \ Return true if a rule is valid.
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     dup rule-get-m00            \ rul0 m00
     over rule-get-m01           \ rul0 m00 m01
@@ -1304,8 +1289,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-apply-to-region-fc ( reg1 rul0 -- reg t | f )    \ Return the result region from applying a region to a rule's initial region.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
     over region-get-num-bits
     over rule-get-num-bits
     <> abort" num bits ne?"
@@ -1327,8 +1312,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 
 : rule-apply-to-region-bc ( reg1 rul0 -- reg t | f )    \ Return the initial region from applying a region to a rule's result region.
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-region
+    assert( tos is-rule? )
+    assert( nos is-region? )
     over region-get-num-bits
     over rule-get-num-bits
     <> abort" num bits ne?"
@@ -1352,8 +1337,8 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 \ initial region.
 : rule-apply-to-state ( sta1 rul0 - sta-result )
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-value
+    assert( tos is-rule? )
+    assert( nos is-value? )
 
     2dup                            \ sta1 rul0 sta1 rul0
     rule-calc-initial-region        \ sta1 rul0 sta1 i-reg'
@@ -1371,10 +1356,10 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
 ;
 
 \ Return true if the TOS rule is a superset of the NOS rule.
-: rule-superset-of ( rul-sub rul-sup -- bool )
+: rule-superset-of? ( rul-sub rul-sup -- bool )
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
     2dup rules-dif-num-bits? abort" rules do not have the same number bits?"
 
     over rule-intersection      \ rul-sub, rul-int' t | f

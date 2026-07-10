@@ -18,7 +18,7 @@
     s" r10X0" region-from-string-a  \ reg-lst reg3
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
-    region-list-member              \ reg-lst reg3 flag
+    region-list-member?             \ reg-lst reg3 flag
     0= abort" Region 10X0 not found?"
 
                                     \ reg-lst reg3
@@ -28,7 +28,7 @@
 
     over                            \ reg-lst reg3 reg-lst
     over swap                       \ reg-lst reg3 reg3 reg-lst
-    region-list-member              \ reg-lst reg3 flag
+    region-list-member?             \ reg-lst reg3 flag
     0= abort" Region 1X10 not found?"
 
                                     \ reg-lst reg3
@@ -62,13 +62,13 @@
     #3 <>
     abort" List length not 3?"
 
-    [ ' = ] literal #7 #2 pick list-member
+    [ ' = ] literal #7 #2 pick list-member?
     0= abort" 7 not in list?"
 
-    [ ' = ] literal #13 #2 pick list-member
+    [ ' = ] literal #13 #2 pick list-member?
     0= abort" 13 not in list?"
 
-    [ ' = ] literal #15 #2 pick list-member
+    [ ' = ] literal #15 #2 pick list-member?
     0= abort" 15 not in list?"
 
     list-deallocate

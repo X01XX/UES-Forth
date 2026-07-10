@@ -12,7 +12,7 @@
 \
 \ So the prediction of what is achievable may be over-optimistic.
 
-#31973 constant changes-id
+#31973 constant changes-struct-id
     #3 constant changes-struct-number-cells
 
 \ Struct fields.
@@ -34,59 +34,23 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Check instance type.
 
 : is-allocated-changes? ( addr -- bool )
-    dup changes-mma mma-is-item \ addr bool
+    dup changes-mma mma-is-item?    \ addr bool
     if
         struct-get-id
-        changes-id =            \ bool
+        changes-struct-id =         \ bool
     else
         drop
-        false                   \ f
+        false                       \ f
     then
 ;
 
-\ Check TOS for changes, unconventional, leaves stack unchanged.
-: assert-tos-is-changes ( tos -- tos )
+\ Check TOS for change.
+: is-changes? ( tos -- t )
     dup is-allocated-changes?
-    false? if
-        s" TOS is not an allocated changes."
-       .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for changes, unconventional, leaves stack unchanged.
-: assert-nos-is-changes ( nos tos -- nos tos )
-    over is-allocated-changes?
-    false? if
-        s" NOS is not an allocated changes."
-       .abort-xt execute
-    then
-;
-
-\ Check 3OS for changes, unconventional, leaves stack unchanged.
-: assert-3os-is-changes ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-changes?
-    false? if
-        s" 3OS is not an allocated changes."
-       .abort-xt execute
-    then
-;
-
-\ Check 4OS for changes, unconventional, leaves stack unchanged.
-: assert-4os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick is-allocated-changes?
-    false? if
-        s" 4OS is not an allocated changes."
-       .abort-xt execute
-    then
-;
-
-\ Check 5OS for changes, unconventional, leaves stack unchanged.
-: assert-5os-is-changes ( 4os 3os nos tos -- 4os 3os nos tos )
-    #4 pick is-allocated-changes?
-    false? if
-        s" 5OS is not an allocated changes."
-       .abort-xt execute
-    then
+    s" Selected arg is not an allocated changes"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -94,7 +58,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return the m01 field of a changes instance.
 : changes-get-m01 ( cngs0 -- u)
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     changes-m01-disp +  \ Add offset.
     @                   \ Fetch the field.
@@ -109,7 +73,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return the m10 field of a changes instance.
 : changes-get-m10 ( cngs0 -- u)
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     changes-m10-disp +  \ Add offset.
     @                   \ Fetch the field.
@@ -126,15 +90,15 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Allocate a changes, setting id and use count only, use only in this file.
 : _changes-allocate ( -- cngs )
     \ Allocate space.
-    changes-id changes-mma      \ id mma
-    struct-allocate             \ cngs
+    changes-struct-id changes-mma   \ id mma
+    struct-allocate                 \ cngs
 ;
 
 \ Create a changes from two numbers on the stack.
 : changes-new ( msk-m10 msk-m01 -- addr)
     \ Check args.
-    assert-tos-is-value
-    assert-nos-is-value
+    assert( tos is-value? )
+    assert( nos is-value? )
 
     _changes-allocate       \ m10 m01 addr
 
@@ -149,7 +113,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Deallocate a changes.
 : changes-deallocate ( cngs0 -- )
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     dup struct-get-use-count      \ cngs0 count
     dup 0< abort" invalid use count"
@@ -166,8 +130,8 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return the union of two changes.
 : changes-calc-union ( cngs1 cngs0 -- cngs )
     \ Check args.
-    assert-tos-is-changes
-    assert-nos-is-changes
+    assert( tos is-changes? )
+    assert( nos is-changes? )
 
     over changes-get-m10    \ cngs1 cngs0 1m10
     over changes-get-m10    \ cngs1 cngs0 1m10 0m10
@@ -183,8 +147,8 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return a state with all possible changes applied.
 : changes-apply-to-state ( sta1 cngs0 -- sta )
     \ Check args.
-    assert-tos-is-changes
-    assert-nos-is-value
+    assert( tos is-changes? )
+    assert( nos is-value? )
 
     2dup changes-get-m10        \ sta1 cngs0 sta1 m10
     and                         \ sta1 cngs0 msk10
@@ -197,7 +161,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 : .changes ( cngs -- )
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     ." (m10: " dup changes-get-m10 .value
     ." , m01: " changes-get-m01 .value ." )"
@@ -206,7 +170,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Put both changes masks on the stack.
 : changes-get-masks ( cngs0 -- m10 m01 )
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     dup changes-get-m10
     swap changes-get-m01
@@ -217,8 +181,8 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ 1->0 = X->0 union 1->0.
 : change-masks-region-to-region ( reg-to reg-from -- m10 m01 )
     \ Check arg.
-    assert-tos-is-region
-    assert-nos-is-region
+    assert( tos is-region? )
+    assert( nos is-region? )
 
     \ Get reg-from masks.
     dup region-x-mask -rot      \ fx reg-to reg-from
@@ -240,16 +204,16 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     or                          \ fx f0 f1 t0 t1 | c10 c01
 
     \ Clean up.
-    >r >r                       \ fx f0 f1 t0 t1
-    2drop 2drop drop            \
-    r> r>                       \ c10 c01
+    2swap 2drop                 \ fx f0 f1 c10 c01
+    2swap 2drop                 \ fx c10 c01
+    rot drop                    \ c10 c01
 ;
 
 \ Return changes needed to translate a region (tos) to intersect with another (nos).
 : changes-new-region-to-region ( reg-to reg-from -- cngs )
     \ Check args.
-    assert-tos-is-region
-    assert-nos-is-region
+    assert( tos is-region? )
+    assert( nos is-region? )
 
     \ cr ." changes-new-region-to-region: from: " dup .region space ." to " over .region
     change-masks-region-to-region           \ m10 m01
@@ -261,8 +225,8 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return true if two changes intersect, in at least one bit.
 : changes-intersect? ( cngs1 cngs0 -- bool )
     \ Check args.
-    assert-tos-is-changes
-    assert-nos-is-changes
+    assert( tos is-changes? )
+    assert( nos is-changes? )
 
     over changes-get-m01        \ cngs1 cngs0 1m01
     over changes-get-m01        \ cngs1 cngs0 1m01 0m01
@@ -281,7 +245,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return true if the m01 and m10 masks have a one in the same position.
 : ?changes-duplex ( cngs0 -- bool )
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     dup changes-get-m01     \ cngs0 m01
     swap                    \ m01 cngs0
@@ -293,8 +257,8 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return the intersection of two changes.
 : changes-intersection ( cngs1 cngs0 -- cngs )
     \ Check args.
-    assert-tos-is-changes
-    assert-nos-is-changes
+    assert( tos is-changes? )
+    assert( nos is-changes? )
 
     \ Intersect m01.
     over changes-get-m01        \ cngs1 cngs0 1m01
@@ -317,7 +281,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 : changes-null? ( cngs0 -- bool )    \ Return true if changes masks are all zero.
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     dup changes-get-m01     \ cngs0 m01
     0<> if
@@ -337,7 +301,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 : changes-invert ( cngs0 -- cngs )  \ Return the inversion of a changes masks.
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     dup changes-get-m10 !not    \ cngs0 m10'
 
@@ -348,7 +312,7 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 
 : changes-number-changes ( cngs0 -- u ) \ Return number of 1-bits in the changes masks.
     \ Check arg.
-    assert-tos-is-changes
+    assert( tos is-changes? )
 
     dup changes-get-m10 value-num-bits  \ cngs0 u10
     swap                                \ u10 cngs0
@@ -359,8 +323,8 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 \ Return true if two changes are equal.
 : changes-eq? ( cngs1 cngs0 -- bool )
     \ Check args.
-    assert-tos-is-changes
-    assert-nos-is-changes
+    assert( tos is-changes? )
+    assert( nos is-changes? )
 
     2dup =          \ cngs1 cngs0 bool
     if
@@ -379,10 +343,10 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
 ;
 
 \ Return true if the tos changes is a superset of the nos changes.
-: changes-superset-of ( cngs-sub cngs-sup -- bool )
+: changes-superset-of? ( cngs-sub cngs-sup -- bool )
     \ Check args.
-    assert-tos-is-changes
-    assert-nos-is-changes
+    assert( tos is-changes? )
+    assert( nos is-changes? )
 
     over                    \ cngs-sub cngs-sup cngs-sub
     changes-intersection    \ cngs-sub cngs-int'

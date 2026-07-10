@@ -1,6 +1,6 @@
 \ Implement a Session struct and functions.
 
-#31319 constant session-id
+#31319 constant session-struct-id
    #10 constant session-struct-number-cells
 
 \ Struct fields
@@ -36,32 +36,32 @@ session-points-disp                     cell+   constant session-previous-points
 
 \ Check instance type.
 : is-allocated-session? ( addr -- bool )
-    dup session-mma mma-is-item	\ addr bool
+    dup session-mma mma-is-item?    \ addr bool
     if
         struct-get-id
-        session-id =            \ bool
+        session-struct-id =         \ bool
     else
         drop
-        false                   \ f
+        false                       \ f
     then
 ;
 
-\ Check TOS for session, unconventional, leaves stack unchanged.
-: assert-tos-is-session ( tos -- tos )
+\ Check TOS for session.
+: is-session? ( tos -- t )
     dup is-allocated-session?
-    false? if
-        s" TOS is not an allocated session"
-        .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated session"
+    .abort-xt execute
 ;
 
-' assert-tos-is-session to assert-tos-is-session-xt
+' is-session? to is-session?-xt
 
 \ Start accessors.
 
 : session-get-domains ( sess0 -- lst )  \ Return the domain-list from an session instance.
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-domains-disp +  \ Add offset.
     @                       \ Fetch the field.
@@ -71,8 +71,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : _session-set-domains ( lst sess0 -- ) \ Set the domain-list for an session instance.
     \ Check arg.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     session-domains-disp +  \ Add offset.
     !struct                 \ Set the field.
@@ -81,7 +81,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the current domain from an session instance.
 : session-get-current-domain ( sess0 -- dom )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-current-domain-disp +   \ Add offset.
     @                               \ Fetch the field.
@@ -92,9 +92,9 @@ session-points-disp                     cell+   constant session-previous-points
 \ Set the current domain for an session instance.
 : session-set-current-domain ( dom sess0 -- )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
     over 0<> if
-        assert-nos-is-domain
+        assert( nos is-domain? )
     then
 
     session-current-domain-disp +   \ Add offset.
@@ -106,7 +106,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the session need-list
 : session-get-needs ( sess0 -- ned-lst )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-needs-disp +        \ Add offset.
     @                           \ Fetch the field.
@@ -115,8 +115,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Set the need-list for an session instance.
 : _session-set-needs ( ned-lst sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-need-list
+    assert( tos is-session? )
+    assert( nos is-need-list? )
 
     session-needs-disp +        \ Add offset.
     !struct                     \ Set the field.
@@ -125,8 +125,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Update the session needs, deallocating the previous list, if any.
 : _session-update-needs  ( ned-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-need-list
+    assert( tos is-session? )
+    assert( nos is-need-list? )
 
     dup session-get-needs       \ ned-lst sess0 prev-lst
     -rot                        \ prev-lst ned-lst sess0
@@ -137,7 +137,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the session regioncorrrate list.
 : session-get-regioncorrrate-list ( sess0 -- regcr-lst )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-regioncorrrate-list-disp +  \ Add offset.
     @                                   \ Fetch the field.
@@ -146,8 +146,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Set the regioncorrrate list for an session instance.
 : _session-set-regioncorrrate-list ( regcr-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorrrate-list
+    assert( tos is-session? )
+    assert( nos is-regioncorrrate-list? )
 
     session-regioncorrrate-list-disp +  \ Add offset.
     !struct                             \ Set the field.
@@ -156,7 +156,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the session need-list
 : session-get-regioncorrrate-fragments ( sess0 -- regcr-lst )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-regioncorrrate-fragments-disp + \ Add offset.
     @                                       \ Fetch the field.
@@ -165,8 +165,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Set the need-list for an session instance.
 : _session-set-regioncorrrate-fragments ( regcr-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorrrate-list
+    assert( tos is-session? )
+    assert( nos is-regioncorrrate-list? )
 
     session-regioncorrrate-fragments-disp +    \ Add offset.
     !struct                                    \ Set the field.
@@ -175,8 +175,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Update the session regioncorrrate-fragments, deallocating the previous list.
 : _session-update-regioncorrrate-fragments  ( regcr-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorrrate-list
+    assert( tos is-session? )
+    assert( nos is-regioncorrrate-list? )
 
     dup session-get-regioncorrrate-fragments    \ regcr-lst sess0 prev-lst
     -rot                                        \ prev-lst regcr-lst sess0
@@ -187,7 +187,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the session regioncorrrate-nq list.
 : session-get-regioncorrrate-nq ( sess0 -- regcr-lst )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-regioncorrrate-nq-disp +    \ Add offset.
     @                                   \ Fetch the field.
@@ -196,8 +196,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Set the session regioncorrrate-nq for an session instance.
 : _session-set-regioncorrrate-nq ( regcr-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     session-regioncorrrate-nq-disp +    \ Add offset.
     !struct                             \ Set the field.
@@ -205,8 +205,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : _session-update-regioncorrrate-nq ( regcr-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     dup session-get-regioncorrrate-nq -rot  \ prev-list regcr-lst1 sess0
 
@@ -221,7 +221,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the session regioncorr-lol-by-rate list.
 : session-get-regioncorr-lol-by-rate ( sess0 -- regcr-lol )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-regioncorr-lol-by-rate-disp +   \ Add offset.
     @                                       \ Fetch the field.
@@ -230,8 +230,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Set the session-regioncorr-lol-by-rate list.
 : _session-set-regioncorr-lol-by-rate ( regcr-lol1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     session-regioncorr-lol-by-rate-disp +   \ Add offset.
     !struct                                 \ Set the field.
@@ -240,8 +240,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Update the session-regioncorr-lol-by-rate list.
 : _session-update-regioncorr-lol-by-rate ( regcr-lol1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     dup session-get-regioncorr-lol-by-rate -rot    \ prev-list regcr-lst1 sess0
 
@@ -255,7 +255,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return session-pathstep-lol-by-rate list.
 : session-get-pathstep-lol-by-rate ( sess0 -- pthstp-lst )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-pathstep-lol-by-rate-disp + \ Add offset.
     @                                   \ Fetch the field.
@@ -264,8 +264,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Set session-pathstep-lol-by-rate list.
 : _session-set-pathstep-lol-by-rate ( pthstp-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     session-pathstep-lol-by-rate-disp +     \ Add offset.
     !struct                                 \ Set the field.
@@ -274,8 +274,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Update the session-pathstep-lol-by-rate list.
 : _session-update-pathstep-lol-by-rate ( pthstp-lst1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     dup session-get-pathstep-lol-by-rate -rot  \ prev-lst pthstp-lst1 sess0
 
@@ -289,7 +289,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : _session-set-points ( u1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-points-disp +
     !
@@ -297,7 +297,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-get-points ( sess0 -- u )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-points-disp +
     @
@@ -306,7 +306,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Copy the current points value to the previous points value.
 : session-set-previous-points ( sess0 -- )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     dup session-get-points          \ sess0 pnts
     swap                            \ pnts sess0
@@ -316,7 +316,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-get-previous-points ( sess0 -- u )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-previous-points-disp +
     @
@@ -366,7 +366,7 @@ session-points-disp                     cell+   constant session-previous-points
 
     \ cr ." session-new: start " .s cr
     \ Allocate space.
-    session-id session-mma
+    session-struct-id session-mma
     struct-allocate                 \ ses
 
     \ Set domains list.
@@ -407,7 +407,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Print a session.
 : .session ( sess0 -- )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     cr ." Sess: "
     dup session-get-domains
@@ -475,7 +475,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-deallocate ( sess0 -- ) \ Deallocate a session.
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Clear fields.
     dup session-get-domains domain-list-deallocate
@@ -506,9 +506,9 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-get-sample ( act2 dom1 sess0 -- sample )  \ Get a sample from an action in a domain.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-domain
-    assert-3os-is-action
+    assert( tos is-session? )
+    assert( nos is-domain? )
+    assert( 3os is-action? )
 
     2dup session-set-current-domain
     -rot                        \ sess0 act2 dom1
@@ -521,7 +521,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a sample from a domain/action, given numeric id values.
 : session-get-sample-by-inst-id ( act-id2 dom-id1 sess0 -- sample t | f )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     swap                            \ act-id2 sess0 dom-id1
     over session-get-domains        \ act-id2 sess0 dom-id dom-lst
@@ -548,7 +548,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a list of states, one for each domain, in domain list order.
 : session-get-current-states ( sess0 -- sta-corr-lst )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Save current domain.
     dup session-get-current-domain  \ sess0 cur-dom
@@ -581,7 +581,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-get-current-regions ( sess0 -- regcorr )  \ Return a list of regions, one for each domain state, in domain list order.
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Save current domain.
     dup session-get-current-domain  \ sess0 cur-dom
@@ -617,7 +617,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : .session-current-states ( sess0 -- )  \ Print a list of current states.
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Save current domain.
     dup session-get-current-domain  \ sess0 cur-dom
@@ -652,7 +652,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Aggregate all domain needs, store in session instance field.
 : session-set-all-needs ( sess0 -- )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Init list to start appending domain need lists to.
     list-new                            \ s0 ned-lst
@@ -698,7 +698,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a domain, given a domain ID.
 : session-find-domain ( u1 sess0 -- dom t | f )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
     over 0< if
         2drop
         false
@@ -722,8 +722,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the highest rate for a regc, the highest rate regclst that has a superset regc.
 : session-highest-rate-regclst ( regc1 sess0 -- n )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     dup session-get-regioncorrrate-nq           \ regc1 sess0 rate-lst
     list-get-links                              \ regc1 sess0 rate-link
@@ -752,7 +752,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : .session-pathstep-lol-by-rate ( sess0 -- )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     dup session-get-regioncorrrate-nq       \ sess0 rate-lst
     list-get-links                          \ sess0 rate-link
@@ -780,7 +780,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Calculate pathstep lists for session-pathstep-lol-by-rate.
 : session-calc-pathstep-lol ( sess0 -- rullstcorr-lst )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Init return list.
     list-new swap                                   \ ret-lst sess0
@@ -877,7 +877,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Process the given regioncorrrates.
 : session-process-regioncorrrates ( sess0 -- )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ cr ." session-process-regioncorrrates" cr
 
@@ -946,7 +946,7 @@ session-points-disp                     cell+   constant session-previous-points
 
         \ Check if its already in the list.
         [ ' = ] literal #2 pick #2 pick         \ sess0 val-lst link n val-lst xt n val-lst
-        list-member                             \ sess0 val-lst link n val-lst bool
+        list-member?                            \ sess0 val-lst link n val-lst bool
         if
             2drop
         else
@@ -1043,8 +1043,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-add-domain ( dom1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-domain
+    assert( tos is-session? )
+    assert( nos is-domain? )
     \ cr ." session-add-domain: start " .stack-gbl execute cr
 
     \ Add domain
@@ -1061,8 +1061,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Add a regioncorrrate, to give a value to some arbitrary configuration of domain regions.
 : session-add-regioncorrrate ( regcr1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorrrate
+    assert( tos is-session? )
+    assert( nos is-regioncorrrate? )
 
     tuck session-get-regioncorrrate-list   \ sess0 regcr1 regcr-lst
     regioncorrrate-list-push               \ sess0
@@ -1073,8 +1073,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the rate and regc list for a path to satisfy a desired regioncorr.
 : session-regc-rate ( regc1 sess0 -- regc rate )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     dup session-get-regioncorrrate-nq       \ regc1 sess0 rt-lst
     list-get-links                          \ regc1 sess0 rt-lnk
@@ -1106,9 +1106,9 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return plan-list-corr (plc), a multi-domain plan, for moving domain states from one regc to another.
 : session-get-plc ( regc-to regc-from sess0 -- plc t | f )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
+    assert( nos is-list? )
 
     list-new                        \ regc-to regc-from sess0 ret-plc
     #3 pick list-get-links          \ regc-to regc-from sess0 ret-plc to-link
@@ -1181,8 +1181,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Run a plan-list-corr (plc), a multi-domain plan, to move domain states from one regc to another.
 : session-run-plc ( plc1 sess0 -- bool )
 \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     over list-get-links             \ plc1 sess0 plc1-link
     over session-get-domains        \ plc1 sess0 plc1-link dom-lst
@@ -1215,8 +1215,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ in a rated regioncorr list stored in the session struct, which
 \ intersects a given regioncorr, regc1.
 : session-find-highest-le-zero-rate-intersecting ( regc1 sess0 -- rate )
-    assert-tos-is-session
-    assert-nos-is-regioncorr
+    assert( tos is-session? )
+    assert( nos is-regioncorr? )
     \ cr ." session-find-highest-le-zero-rate: regc1: " over .regioncorr
 
     \ Find highest rate.
@@ -1250,8 +1250,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ in a rated regioncorr list stored in the session struct, which
 \ is a superset of a given regioncorr, regc1.
 : session-find-highest-le-zero-rate-superset ( regc1 sess0 -- rate )
-    assert-tos-is-session
-    assert-nos-is-regioncorr
+    assert( tos is-session? )
+    assert( nos is-regioncorr? )
     \ cr ." session-find-highest-le-zero-rate: regc1: " over .regioncorr
 
     \ Find highest rate.
@@ -1283,7 +1283,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a regc-list for a given rate (number, le 0).
 : session-find-regioncorr-list-by-rate ( rate1 regclst0 -- regioncorr-list )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Find highest rate.
     dup session-get-regioncorr-lol-by-rate  \ | regclst-lst
@@ -1316,7 +1316,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a pathstep list for a given rate (number, le 0).
 : session-find-pathstep-list-by-rate ( rate1 sess0 -- pthstp-list )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
     \ cr ." session-find-pathstep-list-by-rate: start: "
 
     \ Find equal rate.
@@ -1347,8 +1347,14 @@ session-points-disp                     cell+   constant session-previous-points
     abort
 ;
 
-: assert-5os-is-valid-depth ( 5os 4os 3os nos tos -- 5os 4os 3os nos tos )
-    #4 pick 0< abort" 5OS is not a valid depth"
+: is-valid-depth? ( tos -- true )
+    dup 0<
+    if
+        s" Selected arg is not a valid depth"
+        .abort-xt execute
+    then
+    drop
+    true
 ;
 
 \ Do semi-random depth-first search for a path from a regioncorr to another regioncorr.
@@ -1398,11 +1404,11 @@ session-points-disp                     cell+   constant session-previous-points
     \ cr .stack-gbl cr
 
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-pathstep-list
-    assert-3os-is-regioncorr
-    assert-4os-is-regioncorr
-    assert-5os-is-valid-depth
+    assert( tos is-session? )
+    assert( nos is-pathstep-list? )
+    assert( 3os is-regioncorr? )
+    assert( 4os is-regioncorr? )
+    assert( 5os is-valid-depth? )
     over list-is-empty? abort" pathstep list should not be empty"
 
     #3 pick #3 pick regioncorr-subset?
@@ -1548,11 +1554,11 @@ session-points-disp                     cell+   constant session-previous-points
     \ cr .stack-gbl cr
 
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-pathstep-list
-    assert-3os-is-regioncorr
-    assert-4os-is-regioncorr
-    assert-5os-is-valid-depth
+    assert( tos is-session? )
+    assert( nos is-pathstep-list? )
+    assert( 3os is-regioncorr? )
+    assert( 4os is-regioncorr? )
+    assert( 5os is-valid-depth? )
 
     #3 pick #3 pick regioncorr-subset?
     abort" session-calc-path-bc: regc-from subset regc-to?"
@@ -1578,9 +1584,9 @@ session-points-disp                     cell+   constant session-previous-points
 \ until the last regioncorr intersects the goal.
 : session-calc-path ( regc-to regc-from sess0 -- regc-seq t | f )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-session? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
     \ cr ." session-calc-path: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
     \ cr .stack-gbl cr
 
@@ -1741,9 +1747,9 @@ session-points-disp                     cell+   constant session-previous-points
 \ Does not insur ea plan stays within a desired region, a future improvement.
 : session-calc-plancorr ( regc-to regc-from sess0 -- plancorr t | f )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-session? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
     \ cr ." session-calc-plancorr: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     #2 pick #2 pick regioncorr-subset?
@@ -1810,10 +1816,10 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a plancorr list, given a regioncorr list.
 : session-calc-plnclst-from-regc-lst ( regc-lst regc-to regc-from sess0 - -plnc-lst t | f )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
-    assert-4os-is-regioncorr-list
+    assert( tos is-session? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
+    assert( 4os is-regioncorr-list? )
     \ cr ." session-calc-plnclst-from-pthstplst: start: regc-from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
     \ cr ." regc list: " #3 pick .regioncorr-list cr
 
@@ -1941,8 +1947,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ except the need domain which will be the need target.
 : session-regioncorr-for-need ( need1 sess0 -- regcorr )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-need
+    assert( tos is-session? )
+    assert( nos is-need? )
 
     \ Init region list, corresponding to domains.
     list-new                        \ need1 sess0 | reg-lst
@@ -1984,8 +1990,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Avoid negative regioncorrs, if possible.
 : session-change-to-plans ( regc-to sess0 -- plnc-lst t | f )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorr
+    assert( tos is-session? )
+    assert( nos is-regioncorr? )
     \ cr ." session-change-to-plans: start: " over .regioncorr cr
 
     tuck                                            \ sess0 regc-to sses0
@@ -2027,7 +2033,7 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-get-current-rate ( sess0 -- rate ) \ Return the rate of current domain states, based on being subset of regioncorrrates.
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Save current domain.
     dup session-get-current-domain                  \ sess0 cur-dom
@@ -2047,7 +2053,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Get current domain states rate, add to points value.
 : session-update-points ( sess0 -- )
     \ Check args.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     dup session-get-current-rate    \ sess rt
     dup rate-get-positive           \ sess rt pos
@@ -2068,7 +2074,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return the numebr of domains.
 : session-get-number-domains ( sess0 -- u )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     session-get-domains
     list-get-length
@@ -2079,8 +2085,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Do a need.  Return true if the need has been satisfied.
 : session-do-need ( ned1 sess0 -- bool )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-need
+    assert( tos is-session? )
+    assert( nos is-need? )
 
     over need-get-action            \ ned1 sess0 act
     #2 pick need-get-domain         \ ned1 sess0 act dom
@@ -2260,8 +2266,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a plan for a need.
 : session-get-plan-for-need ( ned1 sess0 -- pln t | f )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-need
+    assert( tos is-session? )
+    assert( nos is-need? )
 
     \ Make need domain the current domain.
     over need-get-domain        \ ned1 sess0 dom
@@ -2274,8 +2280,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return a sample for a need.
 : session-get-sample-for-need ( ned1 sess0 -- )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-need
+    assert( tos is-session? )
+    assert( nos is-need? )
 
     \ Make need domain the current domain.
     over need-get-domain        \ ned1 sess0 dom
@@ -2309,8 +2315,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ no plan was was found for any need.
 : session-process-need-list ( ned-lst1 sess0 -- bool )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-need-list
+    assert( tos is-session? )
+    assert( nos is-need-list? )
 
     \ Init index list for need list.
     over list-get-length                        \ ned-lst1 sess0 len
@@ -2333,7 +2339,7 @@ session-points-disp                     cell+   constant session-previous-points
         dup need-get-domain                     \ ned-lst1 sess0 inx-lst' rnd-inx nedx dom
         domain-get-current-state                \ ned-lst1 sess0 inx-lst' rnd-inx nedx d-sta
         swap tuck                               \ ned-lst1 sess0 inx-lst' rnd-inx nedx d-sta nedx
-        need-current-state-satisfies            \ ned-lst1 sess0 inx-lst' rnd-inx nedx bool
+        need-current-state-satisfies?           \ ned-lst1 sess0 inx-lst' rnd-inx nedx bool
         if
             \ No plan needed.
             cr
@@ -2472,7 +2478,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Automatic behaviours when the user presses the Enter key with no input.
 : session-do-zero-token-command ( sess0 -- true ) \ Zero-token logic, get/show/act-on needs.
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     dup session-get-needs           \ sess0 ned-lst
 
@@ -2582,8 +2588,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-dn-command ( cmd-lst1 sess0 -- )   \ Do the "dn" command. Do a need, given it's number in the displayed list.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length #2 <>              \ cmd-lst1 sess0 bool
     if
@@ -2627,8 +2633,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-to-command ( regc-to1 sess0 -- )  \ Do the "to" command. Change state to a given regioncorr.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-regioncorr
+    assert( tos is-session? )
+    assert( nos is-regioncorr? )
 
     \ Get current regioncorr.
     dup session-get-current-regions             \ regc-to1 sess0 regc-from'
@@ -2666,8 +2672,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-pd-command ( cmd-lst1 sess0 -- ) \ Do the "pd" command. Print a Domain.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length                    \ cmd-lst1 sess0 len
     #2 <> if
@@ -2695,8 +2701,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-cds-command ( cmd-lst1 sess0 -- )    \ Do the "cds" command. Change Domain State command.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length                    \ cmd-lst1 sess0 len
     #3 <> if
@@ -2736,8 +2742,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-psd-command ( cmd-lst1 sess0 -- ) \ Do the "pds" command. Print square detail for a domain's action.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length                    \ cmd-lst1 sess0 len
     #3 <> if
@@ -2781,8 +2787,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-tos-command ( cmd-lst1 sess0 -- ) \ Do the "tos" command. Change a domain to a state.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length                            \ cmd-lst1 sess0 len
     #3 <> if
@@ -2854,8 +2860,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-scs-command ( cmd-lst1 sess0 -- ) \ Do the "scs" command.  Sample the current state of a domain.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length                    \ cmd-lst1 sess0 len
     #3 <> if
@@ -2902,8 +2908,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-pa-command ( cmd-lst1 sess0 -- ) \ Do "pa" command. Print a domain's action.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length                            \ cmd-lst1 sess0 len
     #3 <> if
@@ -2945,8 +2951,8 @@ session-points-disp                     cell+   constant session-previous-points
 
 : session-do-sas-command ( cmd-lst1 sess0 -- ) \ Do the "sas" command. Take an arbitrary domain action for a given state.
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-token-list
+    assert( tos is-session? )
+    assert( nos is-token-list? )
 
     over list-get-length                        \ cmd-lst1 sess0 len
     #4 <> if
@@ -3006,8 +3012,8 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return true if the read-eval loop should continue.
 : session-eval-user-input ( cmd-lst1 sess0 -- bool )
     \ Check args.
-    assert-tos-is-session
-    assert-nos-is-list
+    assert( tos is-session? )
+    assert( nos is-list? )
 
     \ Check for no tokens
     over list-is-empty?                 \ cmd-lst1 sess0 bool
@@ -3222,7 +3228,7 @@ session-points-disp                     cell+   constant session-previous-points
 \ Return false if the user enterd the q (quit) command, else true.
 : session-get-user-input ( sess0 -- bool )
     \ Check arg.
-    assert-tos-is-session
+    assert( tos is-session? )
 
     \ Display needs.
     dup session-set-all-needs   \ sess0

@@ -1,31 +1,24 @@
 \ Functions for group lists.
 
-\ Check if tos is an empty list, or has a group instance as its first item.
-: assert-tos-is-group-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for group-list.
+: is-group-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-group
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a group instance as its first item.
-: assert-nos-is-group-list ( nos tos -- nos tos )
-    assert-nos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-group
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-group? )
+        true
     then
 ;
 
 \ Deallocate a group list.
 : group-list-deallocate ( lst0 -- )
     \ Check arg.
-    assert-tos-is-group-list
+    assert( tos is-group-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -44,25 +37,25 @@
 \ Find a group in a list, by state, if any.
 : group-list-find ( reg1 list0 -- grp t | f )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-region
+    assert( tos is-group-list? )
+    assert( nos is-region? )
 
     [ ' group-region-eq ] literal -rot list-find
 ;
 
 \ Return true if a group with a given state is a member.
-: group-list-member ( reg1 list0 -- flag )
+: group-list-member? ( reg1 list0 -- flag )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-region
+    assert( tos is-group-list? )
+    assert( nos is-region? )
 
-    [ ' group-region-eq ] literal -rot list-member
+    [ ' group-region-eq ] literal -rot list-member?
 ;
 
 \ Print a group-list
 : .group-list ( grp-list0 -- )
     \ Check args.
-    assert-tos-is-group-list
+    assert( tos is-group-list? )
 
     [ ' .group ] literal swap .list
 ;
@@ -70,7 +63,7 @@
 \ Print a list of group regions.
 : .group-list-regions ( grp-lst0 -- )
     \ Check args.
-    assert-tos-is-group-list
+    assert( tos is-group-list? )
 
     ." ("
     [ ' .group-region ] literal swap list-apply
@@ -80,8 +73,8 @@
 \ Push a group to a group-list, unless it is already in the list.
 : group-list-push ( grp1 list0 -- )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-group
+    assert( tos is-group-list? )
+    assert( nos is-group?-xt execute )
 
     cr ." Dom: " current-domain-id-gbl #3 dec.r
     space ." Act: " current-action-id-gbl #3 dec.r
@@ -96,8 +89,8 @@
 \ Return true if a group was removed.
 : group-list-delete ( reg1 grp-list0 -- bool )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-region
+    assert( tos is-group-list? )
+    assert( nos is-region? )
 
     cr ." Dom: " current-domain-id-gbl #3 dec.r
     space ." Act: " current-action-id-gbl #3 dec.r
@@ -119,8 +112,8 @@
 \ Add a new square to appropriate groups.
 : group-list-add-square ( sqr1 grp-lst0 -- )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-square
+    assert( tos is-group-list? )
+    assert( nos is-square? )
     \ cr ." group-list-add-square: start" cr
 
     list-get-links              \ sqr1 link
@@ -150,8 +143,8 @@
 : group-list-check-square ( sqr1 grp-lst0 -- )
     \ cr ." group-list-check-square: start" cr
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-square
+    assert( tos is-group-list? )
+    assert( nos is-square? )
     \ cr ." group-list-check-square: start" cr
 
     list-get-links              \ sqr1 link
@@ -180,8 +173,8 @@
 \ Return true, if a state is in at least one group region.
 : group-list-state-in-group ( val1 grp-lst0 -- flag )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-value
+    assert( tos is-group-list? )
+    assert( nos is-value? )
 
     list-get-links              \ val0 link
     begin
@@ -204,8 +197,8 @@
 \ Return true, if a state is in at least one group r-region.
 : group-list-state-in-group-r ( val1 grp-lst0 -- flag )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-value
+    assert( tos is-group-list? )
+    assert( nos is-value? )
 
     list-get-links              \ val0 link
     begin
@@ -226,10 +219,10 @@
 ;
 
 \ Return true if any group uses a given state.
-: group-list-uses-square ( sta1 grp-lst0 -- bool )
+: group-list-uses-square? ( sta1 grp-lst0 -- bool )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-value
+    assert( tos is-group-list? )
+    assert( nos is-value? )
 
     list-get-links              \ sta1 grp-link
 
@@ -238,7 +231,7 @@
     while
         over                    \ sta1 grp-link sta1
         over link-get-data      \ sta1 grp-link sta1 grpx
-        group-uses-square       \ sta1 grp-link bool
+        group-uses-square?      \ sta1 grp-link bool
         if
             2drop
             true
@@ -255,8 +248,8 @@
 \ Remove a square from a group list.
 : group-list-remove-square ( sta1 grp-lst0 -- )
     \ Check args.
-    assert-tos-is-group-list
-    assert-nos-is-value
+    assert( tos is-group-list? )
+    assert( nos is-value? )
 
     list-get-links          \ sta1 grp-link
 

@@ -1,4 +1,4 @@
-#17137 constant link-id
+#17137 constant link-struct-id
     #3 constant link-struct-number-cells
 
 \ Link struct fields.
@@ -19,21 +19,23 @@ link-next-disp      cell+   constant link-data-disp
 
 \ Return true if TOS is an allocated link.
 : is-allocated-link? ( link -- bool )
-    dup link-mma mma-is-item    \ addr bool
+    dup link-mma mma-is-item?   \ addr bool
     if
         struct-get-id
-        link-id =               \ bool
+        link-struct-id =        \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for link, unconventional, leaves stack unchanged.
-: assert-tos-is-link ( tos -- tos )
+\ Check TOS for link.
+: is-link? ( tos -- t )
     dup is-allocated-link?
-    0= if
-        s" TOS is not an allocated link."
+    if
+        drop true
+    else
+        s" Selected arg is not an allocated link."
        .abort-xt execute
     then
 ;
@@ -43,7 +45,7 @@ link-next-disp      cell+   constant link-data-disp
 \ Get link data cell.
 : link-get-data ( link-addr -- link-data-value )
     \ Check arg.
-    assert-tos-is-link
+    assert( tos is-link? )
 
     link-data-disp + @
 ;
@@ -56,7 +58,7 @@ link-next-disp      cell+   constant link-data-disp
 \ Get link next cell.
 : link-get-next ( link-addr -- link-next-value )
     \ Check arg.
-    assert-tos-is-link
+    assert( tos is-link? )
 
     link-next-disp + @
 ;
@@ -69,7 +71,7 @@ link-next-disp      cell+   constant link-data-disp
 
 \ Return a new link struct instance address, with given data value, zero next-value.
 : link-new ( data-val -- link-addr )
-    link-id link-mma            \ data-val
+    link-struct-id link-mma     \ data-val
     struct-allocate             \ data-val link
 
     tuck                        \ link data-val link
@@ -80,7 +82,7 @@ link-next-disp      cell+   constant link-data-disp
 \ Print a link in hex.
 : .link ( link-addr -- )
     \ Check arg.
-    assert-tos-is-link
+    assert( tos is-link? )
 
     ." Link: "
     dup hex.
@@ -99,7 +101,7 @@ link-next-disp      cell+   constant link-data-disp
 \ Deallocate a link.
 : link-deallocate ( link-addr -- )
     \ Check arg.
-    assert-tos-is-link
+    assert( tos is-link? )
 
     dup struct-get-use-count    \ link-addr count
 

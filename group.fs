@@ -1,6 +1,6 @@
 \ Implement a group struct and functions.
 
-#43717 constant group-id
+#43717 constant group-struct-id
     #5 constant group-struct-number-cells
 
 \ Struct fields
@@ -26,42 +26,33 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 \ Check instance type.
 : is-allocated-group? ( addr -- bool )
-    dup group-mma mma-is-item   \ addr bool
+    dup group-mma mma-is-item?  \ addr bool
     if
         struct-get-id
-        group-id =              \ bool
+        group-struct-id =       \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for group, unconventional, leaves stack unchanged.
-: assert-tos-is-group ( tos -- tos )
+\ Check TOS for group.
+: is-group? ( tos -- t )
     dup is-allocated-group?
-    false? if
-        s" TOS is not an allocated group"
-       .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated group"
+    .abort-xt execute
 ;
 
-\ Check NOS for group, unconventional, leaves stack unchanged.
-: assert-nos-is-group ( nos tos -- nos tos )
-    over is-allocated-group?
-    false? if
-        s" NOS is not an allocated group"
-       .abort-xt execute
-    then
-;
-
-' assert-nos-is-group to assert-nos-is-group-xt
+' is-group? to is-group?-xt
 
 \ Start accessors.
 
 \ Return the group region.
 : group-get-region ( addr -- reg )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     group-region-disp + \ Add offset.
     @                   \ Fetch the field.
@@ -76,7 +67,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return the group squares region.
 : group-get-r-region ( addr -- reg )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     group-r-region-disp +   \ Add offset.
     @                       \ Fetch the field.
@@ -91,7 +82,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return group 8-bit pnc value, as a bool.
 : group-get-pnc ( sqr0 -- bool )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     4c@
     0<>     \ Change 255 to -1
@@ -103,7 +94,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 : group-get-rules ( sqr0 -- rulstr )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     group-rules-disp + @
 ;
@@ -116,7 +107,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return the group squares.
 : group-get-squares ( addr -- reg )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     group-squares-disp +    \ Add offset.
     @                       \ Fetch the field.
@@ -130,7 +121,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 : group-get-pn ( grp0 -- pn )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     group-get-rules
     rulestore-get-pn
@@ -138,8 +129,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 : _group-update-r-region ( reg1 grp0 -- )
     \ Check arg.
-    assert-tos-is-group
-    assert-nos-is-region
+    assert( tos is-group? )
+    assert( nos is-region? )
 
     dup group-get-r-region -rot \ reg-old reg1 grp0
     _group-set-r-region         \ reg-old
@@ -148,8 +139,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 : _group-update-rules ( ruls1 grp0 -- )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-rulestore
+    assert( tos is-group? )
+    assert( nos is-rulestore? )
 
     dup group-get-rules -rot    \ ruls-old ruls1 grp0
     _group-set-rules            \ ruls-old
@@ -161,8 +152,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return a new group, given a region and square-list.
 : group-new    ( sqrs1 reg0 -- grp )
     \ Check args.
-    assert-tos-is-region
-    assert-nos-is-list
+    assert( tos is-region? )
+    assert( nos is-list? )
 
     over list-is-empty?
     if
@@ -171,7 +162,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     then
 
    \ Allocate space.
-    group-id group-mma          \ sqrs1 reg0 id mma
+    group-struct-id group-mma   \ sqrs1 reg0 id mma
     struct-allocate             \ sqrs1 reg0 grp
 
     \ Set region.
@@ -206,7 +197,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 : group-deallocate ( grp0 -- )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     dup struct-get-use-count    \ grp0 count
     dup 0< abort" invalid use count"
@@ -227,8 +218,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return true if a group region is equal to a given region.
 : group-region-eq ( reg1 grp0 -- flag )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-region
+    assert( tos is-group? )
+    assert( nos is-region? )
 
     group-get-region
     regions-eq?
@@ -236,7 +227,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 : .group ( grp -- )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     ." Grp: "
     dup group-get-region .region
@@ -251,7 +242,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Print a group region.
 : .group-region ( grp -- )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     group-get-region .region
 ;
@@ -259,7 +250,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Recalc a group r-region and rules.
 : group-recalc ( grp0 -- )
     \ Check arg.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     \ Generate pn-eq square-list to work on.
     dup group-get-squares           \ grp0 sqr-lst
@@ -285,8 +276,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Used for a new, or changed, square.
 : group-check-square ( sqr1 grp0 -- )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-square
+    assert( tos is-group? )
+    assert( nos is-square? )
 
     \ Check square belongs in group.
     over square-get-state       \ sqr1 grp0 sta
@@ -330,8 +321,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Add a square to a group.
 : group-add-square ( sqr1 grp0 -- )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-square
+    assert( tos is-group? )
+    assert( nos is-square? )
 
     cr
     ." Dom: " current-domain-id-gbl #3 dec.r
@@ -350,7 +341,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     \ and logical structure.
     over square-get-state       \ sqr1 grp0 sta
     over group-get-squares      \ sqr1 grp0 sta sqr-lst
-    square-list-member          \ sqr1 grp0 flag
+    square-list-member?         \ sqr1 grp0 flag
     if
         2drop
         exit
@@ -367,8 +358,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return true if two groups are equal.
 : group-eq ( grp1 grp0 -- flag )
      \ Check args.
-    assert-tos-is-group
-    assert-nos-is-group
+    assert( tos is-group? )
+    assert( nos is-group? )
 
     group-get-region
     swap
@@ -379,8 +370,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return true, if a state is in a group region.
 : group-state-in ( sta1 grp0 -- flag )
      \ Check args.
-    assert-tos-is-group
-    assert-nos-is-value
+    assert( tos is-group? )
+    assert( nos is-value? )
 
     group-get-region            \ sta1 reg
     region-superset-of-state?   \ flag
@@ -389,8 +380,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return true, if a state is in a group r-region.
 : group-state-in-r ( sta1 grp0 -- flag )
      \ Check args.
-    assert-tos-is-group
-    assert-nos-is-value
+    assert( tos is-group? )
+    assert( nos is-value? )
 
     group-get-r-region          \ sta1 reg
     region-superset-of-state?   \ flag
@@ -398,7 +389,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
 : group-calc-changes ( grp0 -- cngs )
     \ Check args.
-    assert-tos-is-group
+    assert( tos is-group? )
 
     group-get-rules         \ rulestore
     rulestore-calc-changes  \ changes
@@ -407,8 +398,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ return a list of rules, where at least one contains at least one change.
 : group-rules-for-changes ( cngs1 grp0 -- rul-lst )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-changes
+    assert( tos is-group? )
+    assert( nos is-changes? )
 
     over                            \ cngs1 grp0 cngs1
     over group-get-rules            \ cngs1 grp0 cngs1 ruls
@@ -430,7 +421,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return a need to confirm a group.
 : group-get-confirm-need-state ( grp0 -- sta t | f )
     \ Check args.
-    assert-tos-is-group
+    assert( tos is-group? )
     \ cr ." group " dup group-get-region .region cr
 
     dup group-get-squares       \ grp0 | sqr-lst
@@ -475,8 +466,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Return true if a group has at least one needed change.
 : group-has-any-change ( cngs1 grp0 -- flag )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-changes
+    assert( tos is-group? )
+    assert( nos is-changes? )
 
     dup group-get-pn            \ cngs1 grp0 pn
     #3 = if
@@ -490,15 +481,15 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 ;
 
 \ Return true if a group uses a square.
-: group-uses-square ( sta1 grp0 -- bool )
+: group-uses-square? ( sta1 grp0 -- bool )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-value
+    assert( tos is-group? )
+    assert( nos is-value? )
 
     \ Check if a square is in the group.
     over                        \ sta1 grp0 sta1
     over group-get-squares      \ sta1 grp0 sta1 sqr-lst
-    square-list-member          \ sta1 grp0 bool
+    square-list-member?         \ sta1 grp0 bool
     if
     else
         2drop
@@ -540,7 +531,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     over group-get-region       \ sta1 grp0 sta reg
     region-far-from-state       \ sta1 grp0 sta-far
     over group-get-squares      \ sta1 grp0 sta-far sqr-lst
-    square-list-member          \ sta1 grp0 bool
+    square-list-member?         \ sta1 grp0 bool
     nip nip                     \ bool
     invert
 ;
@@ -548,12 +539,12 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ Remove a square from a group.
 : group-remove-square ( sta1 grp0 -- )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-value
+    assert( tos is-group? )
+    assert( nos is-value? )
 
     group-get-squares           \ sta1 sqr-lst
 
-    2dup square-list-member     \ sta1 sqr-lst bool
+    2dup square-list-member?    \ sta1 sqr-lst bool
     if
         square-list-remove      \ bool
         drop
@@ -565,8 +556,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 \ If needed, change the first square in the square list.
 : group-set-first-square ( sta1 grp0 -- )
     \ Check args.
-    assert-tos-is-group
-    assert-nos-is-value
+    assert( tos is-group? )
+    assert( nos is-value? )
 
     cr
     ." Dom: " current-domain-id-gbl #3 dec.r

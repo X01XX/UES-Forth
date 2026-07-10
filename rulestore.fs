@@ -2,7 +2,7 @@
 \ This holds zero, one, or two rules.
 \ If two rules, order does not matter.
 
-#23173 constant rulestore-id
+#23173 constant rulestore-struct-id
     #3 constant rulestore-struct-number-cells
 
 \ Struct fields
@@ -20,40 +20,32 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 \ Check instance type.
 : is-allocated-rulestore? ( addr -- bool )
-    dup rulestore-mma mma-is-item   \ addr bool
+    dup rulestore-mma mma-is-item?  \ addr bool
     if
         struct-get-id
-        rulestore-id =              \ bool
+        rulestore-struct-id =       \ bool
     else
         drop
         false                       \ f
     then
 ;
 
-\ Check TOS for rulestore, unconventional, leaves stack unchanged.
-: assert-tos-is-rulestore ( tos -- tos )
+\ Check TOS for rulestore.
+: is-rulestore? ( tos -- t )
     dup is-allocated-rulestore?
-    false? if
-        s" TOS is not an allocated rulestore."
-        .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated rulestore"
+    .abort-xt execute
 ;
 
-\ Check NOS for rulestore, unconventional, leaves stack unchanged.
-: assert-nos-is-rulestore ( nos tos -- nos tos )
-    over is-allocated-rulestore?
-    false? if
-        s" NOS is not an allocated rulestore."
-        .abort-xt execute
-    then
-;
 
 \ Start accessors.
 
 \ Return the rule-0 field from a rulestore instance.
 : rulestore-get-rule-0 ( rulstr0 -- rul )
     \ Check arg
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     rulestore-rule-0-disp + \ Add offset.
     @                       \ Fetch the field.
@@ -62,7 +54,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return the rule-1 field from a rulestore instance.
 : rulestore-get-rule-1 ( rulstr0 -- rul )
     \ Check arg
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     \ Get second rule.
     rulestore-rule-1-disp + \ Add offset.
@@ -73,14 +65,14 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ The second arg can be zero, or a rule.
 : _rulestore-set-rule-0 ( rul1 rulstr0 -- )
     \ Check args
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     rulestore-rule-0-disp + \ Add offset.
 
     \ Check if the passed value is zero or a rule.
     over
     if
-        assert-nos-is-rule
+        assert( nos is-rule? )
 
         !struct                 \ Set the field.
     else
@@ -92,14 +84,14 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ The second arg can be zero, or a rule.
 : _rulestore-set-rule-1 ( rul1 rultr0 -- )
     \ Check args
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     rulestore-rule-1-disp +     \ Add offset.
 
     \ Check if the passed value is zero or a rule.
     over
     if
-        assert-nos-is-rule
+        assert( nos is-rule? )
 
         !struct                 \ Set the field.
     else
@@ -112,7 +104,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return a new rulestore instance, with no rules.
 : rulestore-new-0  ( -- rulstr )
     \ Allocate space.
-    rulestore-id rulestore-mma
+    rulestore-struct-id rulestore-mma
     struct-allocate             \ rulstr
 
     \ Init rule 0
@@ -127,10 +119,10 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return a new rulestore instance, with one rule.
 : rulestore-new-1  ( rul0 -- rulstr )
     \ Check arg.
-    assert-tos-is-rule
+    assert( tos is-rule? )
 
     \ Allocate space.
-    rulestore-id rulestore-mma
+    rulestore-struct-id rulestore-mma
     struct-allocate             \ rul0 addr
 
     \ Store rule 0
@@ -145,8 +137,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return a new rulestore instance, with two rules.
 : rulestore-new-2  ( rul1 rul0 -- rulstr )
     \ Check args.
-    assert-tos-is-rule
-    assert-nos-is-rule
+    assert( tos is-rule? )
+    assert( nos is-rule? )
 
     \ Check that the rules are not equal.
     2dup rules-eq?
@@ -162,7 +154,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     region-deallocate
 
     \ Allocate space.
-    rulestore-id rulestore-mma
+    rulestore-struct-id rulestore-mma
     struct-allocate             \ rul1 rul0 addr
 
     \ Store rule 0.
@@ -194,7 +186,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Deallocate a rulestore.
 : rulestore-deallocate ( rulstr0 -- )
     \ Check args.
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     dup struct-get-use-count      \ reg0 count
     dup 0< abort" invalid use count"
@@ -229,7 +221,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 : .rulestore ( rulstr0 -- )
     \ Check arg.
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     ." ["
     dup rulestore-get-rule-0    \ rulstr0 rul0
@@ -255,7 +247,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return a copy of a rulestore.
 : rulestore-copy ( rulstr0 -- rulstr )
     \ Check arg.
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     dup rulestore-number-rules  \ rs0 nr
     case
@@ -388,8 +380,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 : rulestore-union-by-changes ( rulstr1 rulstr0 -- rulstr t | f )
    \ Check args.
-    assert-tos-is-rulestore
-    assert-nos-is-rulestore
+    assert( tos is-rulestore? )
+    assert( nos is-rulestore? )
 
     2dup rulestore-union-00-by-changes  \ rulstr1 rulstr2, rulstr3 t | f
     if                                  \ rulstr1 rulstr2 rulstr3
@@ -404,8 +396,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ but not none or both.
 : rulestore-union-2 ( rulstr1 rulstr0 -- rulstr t | f )
    \ Check args.
-    assert-tos-is-rulestore
-    assert-nos-is-rulestore
+    assert( tos is-rulestore? )
+    assert( nos is-rulestore? )
 
     \ Try union by change-mask only.
     2dup rulestore-union-by-changes \ rulstr1 rulstr0, rulstr3 t | f
@@ -431,8 +423,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 : rulestore-union ( rulstr1 rulstr0 -- rulstr t | f )
     \ Check args.
-    assert-tos-is-rulestore
-    assert-nos-is-rulestore
+    assert( tos is-rulestore? )
+    assert( nos is-rulestore? )
 
     over rulestore-number-rules     \ rulstr1 rulstr0 nr1
     over rulestore-number-rules     \ rulstr1 rulstr0 nr1 nr0
@@ -464,7 +456,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 
 : rulestore-calc-changes ( rulstr0 -- cncgs )
     \ Check arg.
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     \ Init null changes.
     0 0 changes-new swap        \ cngs rulstr0
@@ -505,8 +497,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return 0, 1, or two rules for a given set of changes.
 : rulestore-rules-with-changes ( cngs1 ruls0 -- rul-lst )
     \ Check args.
-    assert-tos-is-rulestore
-    assert-nos-is-changes
+    assert( tos is-rulestore? )
+    assert( nos is-changes? )
 
      \ Init return list.
     list-new                                \ cngs1 ruls0 rul-lst
@@ -582,7 +574,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return a pn value, based on the number of rules stored in a rulestore.
 : rulestore-get-pn ( rul-str -- pn )
     \ Check arg.
-    assert-tos-is-rulestore
+    assert( tos is-rulestore? )
 
     dup rulestore-get-rule-0            \ rul-str rul0
     0= if
@@ -602,8 +594,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
 \ Return true if rulestore has at least one needed change.
 : rulestore-makes-change ( cngs1 rul-str0 -- flag )
     \ Check args.
-    assert-tos-is-rulestore
-    assert-nos-is-changes
+    assert( tos is-rulestore? )
+    assert( nos is-changes? )
 
     \ Check rule 0.
     2dup                        \ cngs1 rul-str0 cngs1 rul-str0

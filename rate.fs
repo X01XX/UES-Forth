@@ -2,7 +2,7 @@
 \
 \ The rate represents a rating for a given RLC.
 
-#41719 constant rate-id
+#41719 constant rate-struct-id
     #1 constant rate-struct-number-cells
 
 \ Struct fields
@@ -21,32 +21,23 @@
 
 \ Check instance type.
 : is-allocated-rate? ( addr -- flag )
-    dup rate-mma mma-is-item    \ addr bool
+    dup rate-mma mma-is-item?   \ addr bool
     if
         struct-get-id
-        rate-id =               \ bool
+        rate-struct-id =        \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for rate, unconventional, leaves stack unchanged.
-: assert-tos-is-rate ( tos -- tos )
+\ Check TOS for rate.
+: is-rate? ( tos -- t )
     dup is-allocated-rate?
-    false? if
-        s" TOS is not an allocated rate"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for rate, unconventional, leaves stack unchanged.
-: assert-nos-is-rate ( nos tos -- nos tos )
-    over is-allocated-rate?
-    false? if
-        s" NOS is not an allocated rate"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated rate"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -54,7 +45,7 @@
 \ Return the positive field from a rate instance.
 : rate-get-positive ( rt0 -- u)
     \ Check arg.
-    assert-tos-is-rate
+    assert( tos is-rate? )
 
     2w@                     \ Fetch the field.
 ;
@@ -62,7 +53,7 @@
 \ Return the negative field from a rate instance.
 : rate-get-negative ( rt0 -- n )
     \ Check arg.
-    assert-tos-is-rate
+    assert( tos is-rate? )
 
     3w@                     \ Fetch the field.
 
@@ -75,7 +66,7 @@
 \ Set the first field from a rate instance, use only in this file.
 : _rate-set-positive ( u1 rt0 -- )
     \ Check args.
-    assert-tos-is-rate
+    assert( tos is-rate? )
     swap abs swap
 
     2w!                     \ Set third header field.
@@ -84,7 +75,7 @@
 \ Set the second field from a rate instance, use only in this file.
 : _rate-set-negative ( u1 addr -- )
     \ Check args.
-    assert-tos-is-rate
+    assert( tos is-rate? )
 
     \ Change value to abs.
     swap
@@ -100,7 +91,7 @@
 : rate-new ( neg-u1 pos-u0 -- addr)
 
     \ Allocate space.
-    rate-id rate-mma
+    rate-struct-id rate-mma
     struct-allocate         \ nu1 pu0 addr
 
     \ Store values.
@@ -111,7 +102,7 @@
 \ Print a rate.
 : .rate ( rt0 -- )
     \ Check arg.
-    assert-tos-is-rate
+    assert( tos is-rate? )
 
     ." ("
     dup rate-get-positive   \ rt0 u
@@ -128,7 +119,7 @@
 \ Deallocate a rate.
 : rate-deallocate ( reg0 -- )
     \ Check arg.
-    assert-tos-is-rate
+    assert( tos is-rate? )
 
     dup struct-get-use-count      \ reg0 count
     dup 0< abort" invalid use count"
@@ -143,9 +134,9 @@
 ;
 
 \ Return true if a rate positive and negative is zero.
-: rate-all-zero ( rt0 -- bool )
+: rate-all-zero? ( rt0 -- bool )
     \ Check arg.
-    assert-tos-is-rate
+    assert( tos is-rate? )
 
     dup rate-get-positive 0=
     swap rate-get-negative 0=
@@ -155,8 +146,8 @@
 \ Add an nos rate to a tos rate.
 : rate-add ( rt1 rt0 -- rt )
     \ Check args.
-    assert-tos-is-rate
-    assert-nos-is-rate
+    assert( tos is-rate? )
+    assert( nos is-rate? )
 
     over rate-get-negative  \ rt1 rt0 neg1
     over rate-get-negative  \ rt1 rt0 neg1 neg0
@@ -171,15 +162,15 @@
 
 : rate-is-negative? ( rate -- bool ) \ Return true if a rate has a non-zero negative quality.
     \ Check arg.
-    assert-tos-is-rate
+    assert( tos is-rate? )
 
     rate-get-negative 0<>
 ;
 
 : rate-more-positive ( rate1 rate0 ) \ Return true if tos rate is more positive than the nos rate.
     \ Check args.
-    assert-tos-is-rate
-    assert-nos-is-rate
+    assert( tos is-rate? )
+    assert( nos is-rate? )
 
     rate-get-positive       \ rate1 u0
     swap rate-get-positive  \ u0 u1
@@ -189,8 +180,8 @@
 \ Return true if two rates are equal.
 : rate-eq? ( rate1 rate0 -- bool )
     \ Check args.
-    assert-tos-is-rate
-    assert-nos-is-rate
+    assert( tos is-rate? )
+    assert( nos is-rate? )
 
     over rate-get-positive      \ rate1 rate0 pos1
     over rate-get-positive      \ rate1 rate0 pos1 pos0

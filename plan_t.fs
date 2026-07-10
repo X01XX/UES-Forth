@@ -42,12 +42,12 @@
     \ Test results.
     dup plan-get-initial-region         \ act0 reg pln' initial
     %0001 %0001 region-new tuck         \ act0 reg pln' reg2 initial reg2
-    region-neq abort" initial regions not eq?"
+    region-neq? abort" initial regions not eq?"
     region-deallocate                   \ act0 reg pln'
 
     dup plan-get-result-region          \ act0 reg pln' result
     %1011 %1011 region-new tuck         \ act0 reg pln' reg2 result reg2
-    region-neq abort" result regions net eq?"
+    region-neq? abort" result regions net eq?"
     region-deallocate                   \ act0 reg pln'
 
     \ Clean up.
@@ -93,12 +93,12 @@
     \ Test results.
     dup plan-get-initial-region         \ act0 pln reg pln' initial
     %0000 %0100 region-new tuck         \ act0 pln reg pln' reg2 initial reg2
-    region-neq abort" initial regions not eq?"
+    region-neq? abort" initial regions not eq?"
     region-deallocate                   \ act0 pln reg pln'
 
     dup plan-get-result-region          \ act0 pln reg pln' result
     %1111 %1011 region-new tuck         \ act0 reg pln' reg2 result reg2
-    region-neq abort" result regions net eq?"
+    region-neq? abort" result regions net eq?"
     region-deallocate                   \ act0 pln reg pln'
 
     \ Test use count of last step.
@@ -156,12 +156,12 @@
     \ Test results.
     dup plan-get-initial-region         \ act0 reg pln' initial
     %0000 %0001 region-new tuck         \ act0 reg pln' reg2 initial reg2
-    region-neq abort" initial regions not eq?"
+    region-neq? abort" initial regions not eq?"
     region-deallocate                   \ act0 reg pln'
 
     dup plan-get-result-region          \ act0 reg pln' result
     %1011 %1011 region-new tuck         \ act0 reg pln' reg2 result reg2
-    region-neq abort" result regions net eq?"
+    region-neq? abort" result regions net eq?"
     region-deallocate                   \ act0 reg pln'
 
     \ Clean up.
@@ -203,12 +203,12 @@
     \ Test results.
     dup plan-get-initial-region         \ act0 pln' initial
     %1100 %1100 region-new tuck         \ act0 pln' regt' initial regt'
-    region-neq abort" initial regions not eq?"
+    region-neq? abort" initial regions not eq?"
     region-deallocate                   \ act0 pln'
 
     dup plan-get-result-region          \ act0 pln' result
     %0110 %0110 region-new tuck         \ act0 pln' regt' result regt'
-    region-neq abort" result regions net eq?"
+    region-neq? abort" result regions net eq?"
     region-deallocate                   \ act0 pln'
 
     plan-deallocate                     \ act0
@@ -247,12 +247,12 @@
     \ Test results.
     dup plan-get-initial-region         \ act0 pln' initial
     %0100 %0100 region-new tuck         \ act0 pln' regt' initial regt'
-    region-neq abort" initial regions not eq?"
+    region-neq? abort" initial regions not eq?"
     region-deallocate                   \ act0 pln'
 
     dup plan-get-result-region          \ act0 pln' result
     %1110 %1110 region-new tuck         \ act0 pln' regt' result regt'
-    region-neq abort" result regions net eq?"
+    region-neq? abort" result regions net eq?"
     region-deallocate                   \ act0 pln'
 
     plan-deallocate                         \ act0

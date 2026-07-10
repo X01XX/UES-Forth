@@ -1,6 +1,6 @@
 \ Implement a struct and functions for a region list corresponding to domains.
 
-#47317 constant regioncorr-id
+#47317 constant regioncorr-struct-id
     #2 constant regioncorr-struct-number-cells
 
 \ Struct fields
@@ -21,62 +21,33 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 \ Check instance type.
 : is-allocated-regioncorr? ( addr -- bool )
-    dup regioncorr-mma mma-is-item  \ addr bool
+    dup regioncorr-mma mma-is-item? \ addr bool
     if
         struct-get-id
-        regioncorr-id =             \ bool
+        regioncorr-struct-id =      \ bool
     else
         drop
         false                       \ f
     then
 ;
 
-\ Check TOS for regioncorr, unconventional, leaves stack unchanged.
-: assert-tos-is-regioncorr ( tos -- tos )
+\ Check TOS for regioncorr.
+: is-regioncorr? ( tos -- t )
     dup is-allocated-regioncorr?
-    false? if
-        s" TOS is not an allocated regioncorr"
-        .abort-xt execute
-    then
+    if drop true exit then
+
+    s" Selected arg is not an allocated regioncorr"
+    .abort-xt execute
 ;
 
-' assert-tos-is-regioncorr to assert-tos-is-regioncorr-xt
-
-\ Check NOS for regioncorr, unconventional, leaves stack unchanged.
-: assert-nos-is-regioncorr ( nos tos -- nos tos )
-    over is-allocated-regioncorr?
-    false? if
-        s" NOS is not an allocated regioncorr"
-        .abort-xt execute
-    then
-;
-
-' assert-nos-is-regioncorr to assert-nos-is-regioncorr-xt
-
-\ Check 3OS for regioncorr, unconventional, leaves stack unchanged.
-: assert-3os-is-regioncorr ( 3os nos tos -- 3os nos tos )
-    #2 pick is-allocated-regioncorr?
-    false? if
-        s" 3OS is not an allocated regioncorr"
-        .abort-xt execute
-    then
-;
-
-\ Check 4OS for regioncorr, unconventional, leaves stack unchanged.
-: assert-4os-is-regioncorr ( 4os 3os nos tos -- 4os 3os nos tos )
-    #3 pick is-allocated-regioncorr?
-    false? if
-        s" 4OS is not an allocated regioncorr"
-        .abort-xt execute
-    then
-;
+' is-regioncorr? to is-regioncorr?-xt
 
 \ Start accessors.
 
 \ Return the list field from a region instance.
 : regioncorr-get-list ( regc0 -- lst )
     \ Check arg.
-    assert-tos-is-regioncorr
+    assert( tos is-regioncorr? )
 
     regioncorr-list-disp +    \ Add offset.
     @                         \ Fetch the field.
@@ -87,7 +58,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Set the list field from a region instance, use only in this file.
 : _regioncorr-set-list ( lst1 regc0 -- )
     \ Check args.
-    assert-tos-is-regioncorr
+    assert( tos is-regioncorr? )
 
     \ Store list
     regioncorr-list-disp +    \ Add offset.
@@ -99,14 +70,14 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Create a regioncorr from a region-list corresponding, in order, to domains.
 : regioncorr-new ( reg-lst0 -- addr)
     \ check arg.
-    assert-tos-is-region-list
+    assert( tos is-region-list? )
 
     dup list-get-length
     number-domains-gbl
     <> abort" regioncorr-new: invalid list length?"
 
     \ Allocate space.
-    regioncorr-id regioncorr-mma
+    regioncorr-struct-id regioncorr-mma
     struct-allocate             \ reg-lst0 regc
 
     \ Store list.
@@ -117,7 +88,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Return a copy of a regioncorr.
 : regioncorr-copy ( regc0 -- regc )
     \ Check arg.
-    assert-tos-is-regioncorr
+    assert( tos is-regioncorr? )
 
     regioncorr-get-list     \ reg-lst
     regioncorr-new
@@ -126,7 +97,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Print a region-list corresponding to the session domain list.
 : .regioncorr ( regc0 -- )
     \ Check arg.
-    assert-tos-is-regioncorr
+    assert( tos is-regioncorr? )
 
     regioncorr-get-list             \ lst
     list-get-links                  \ link0
@@ -159,7 +130,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Deallocate the given regc, if its use count is 1 or 0.
 : regioncorr-deallocate ( regc0 -- )
     \ Check arg.
-    assert-tos-is-regioncorr
+    assert( tos is-regioncorr? )
 
     dup struct-get-use-count            \ regc0 count
     dup 0< abort" invalid use count"
@@ -181,8 +152,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 : regioncorr-superset? ( regc1 regc0 -- bool )
     \ cr ." regioncorr-superset?: " dup .regioncorr space ." sup " over .regioncorr
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
     \ Init links for loop.
     regioncorr-get-list list-get-links swap \ link0 regc1
@@ -230,8 +201,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 : regioncorr-intersects? ( regc1 regc0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ link0 regc1
@@ -271,8 +242,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Return a new regioncorr, with one item replaced.
 : regioncorr-copy-except ( reg2 cnt1 rc0 -- rc )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-3os-is-region
+    assert( tos is-regioncorr? )
+    assert( 3os is-region? )
 
     regioncorr-get-list         \ reg2 cnt1 reg-lst
     list-copy-except-struct     \ reg-lst2
@@ -282,8 +253,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \   Return regc0 minus regc1, a list of regioncorr.
 : regioncorr-subtract ( regc1 regc0 -- regc-lst t | f )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
 \    cr ." regioncorr-subtract: "
 \    cr ." regioncorr: " dup .regioncorr
@@ -414,7 +385,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Return the complement of a regioncorr, a list of regioncorr.
 : regioncorr-complement ( regc0 -- cmp-regc-lst )
     \ Check arg.
-    assert-tos-is-regioncorr
+    assert( tos is-regioncorr? )
 
     regioncorr-max-regions-gbl          \ regc0 regc-max
     tuck                                \ regc-max regc0 regc-max
@@ -428,8 +399,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Return the numbr of bits different between two regioncorr.
 : regioncorr-distance ( regc1 regc0 -- nb )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
     \ Init counter.
     0 -rot                  \ cnt regc1 regc0
@@ -458,10 +429,10 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 ;
 
 \ Return true if two regioncorr are adjacent.
-: regioncorr-adjacent ( regc1 regc0 -- bool )
+: regioncorr-adjacent? ( regc1 regc0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
     regioncorr-distance   \ nb
     1 =
@@ -469,8 +440,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 : regioncorr-intersection ( regc1 regc0 -- regc t | f )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
     \ Init return list.
     list-new -rot                           \ reg-lst regc1 regc0
@@ -518,8 +489,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 \ Return true if two regioncorrs are equal.
 : regioncorrs-eq? ( regc1 regc0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
     \ Init links for loop.
     regioncorr-get-list list-get-links swap   \ link0 regc1
@@ -559,8 +530,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
 : ?regioncorr-union ( regc1 regc0 -- regc )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
     \ cr ." regioncorr-union: " over .regioncorr space ." and: " dup .regioncorr
 
     \ Init return list.

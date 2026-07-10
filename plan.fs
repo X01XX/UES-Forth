@@ -1,6 +1,6 @@
 \ Implement a plan struct and functions.
 
-#37379 constant plan-id
+#37379 constant plan-struct-id
     #3 constant plan-struct-number-cells
 
 \ Struct fields
@@ -23,38 +23,27 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 : is-allocated-plan? ( addr -- bool )
     get-first-word          \ w t | f
     if
-        plan-id =
+        plan-struct-id =
     else
         false
     then
 ;
 
-\ Check TOS for plan, unconventional, leaves stack unchanged.
-: assert-tos-is-plan ( tos -- tos )
+\ Check TOS for plan.
+: is-plan? ( tos -- t )
     dup is-allocated-plan?
-    false? if
-        s" TOS is not an allocated plan"
-       .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for plan, unconventional, leaves stack unchanged.
-: assert-nos-is-plan ( nos tos -- nos tos )
-    over is-allocated-plan?
-    false? if
-        s" NOS is not an allocated plan"
-       .abort-xt execute
-    then
+    s" Selected arg is not an allocated plan"
+    .abort-xt execute
 ;
-
-' assert-nos-is-plan to assert-nos-is-plan-xt
 
 \ Start accessors.
 
 \ Return the plan domain.
 : plan-get-domain ( addr -- act )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     plan-domain-disp +  \ Add offset.
     @                   \ Fetch the field.
@@ -69,7 +58,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return the plan step-list.
 : plan-get-step-list ( addr -- act )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     plan-step-list-disp +   \ Add offset.
     @                       \ Fetch the field.
@@ -86,10 +75,10 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return a new, empty, plan, given a domain.
 : plan-new    ( dom0 -- plan )
     \ Check args.
-    assert-tos-is-domain-xt execute
+    assert( tos is-domain?-xt execute )
 
    \ Allocate space.
-    plan-id plan-mma
+    plan-struct-id plan-mma
     struct-allocate                 \  d0 addr
 
     \ Set domain.
@@ -103,7 +92,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
 : .plan ( pln0 -- )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     dup plan-get-domain domain-get-inst-id-xt execute
     ." Dom: " dec. space
@@ -112,7 +101,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
 : plan-deallocate ( pln0 -- )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     dup struct-get-use-count      \ pln0 count
     dup 0< abort" invalid use count"
@@ -131,7 +120,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return the result region of a non-empty plan.
 : plan-get-result-region ( pln0 - reg )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     \ Check for empty list.
     plan-get-step-list      \ plnplnplnstp-lst
@@ -155,8 +144,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Check plan for any initial region intersecting a step's result region.
 : plan-check-step-result ( plnplnstp1 pln0 -- flag )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-planstep
+    assert( tos is-plan? )
+    assert( nos is-planstep? )
 
     swap planstep-get-result-region
     swap                            \ reg-r pln0
@@ -187,8 +176,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Check plan for any result region intersecting a step's initial region.
 : plan-check-step-initial ( plnplnstp1 pln0 -- flag )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-planstep
+    assert( tos is-plan? )
+    assert( nos is-planstep? )
 
     swap planstep-get-initial-region
     swap                            \ reg-i pln0
@@ -219,8 +208,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Push a step to the end of a plan, forward chaining.
 : plan-push-end ( plnplnstp1 pln0 -- )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-planstep
+    assert( tos is-plan? )
+    assert( nos is-planstep? )
     \ cr ." plan-push-end: step: " over .planstep space ." plan: " dup .plan cr
 
     2dup plan-check-step-result     \ plnplnstp1 pln0 flag
@@ -239,7 +228,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
         planstep-get-initial-region \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i
         #3 pick                     \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i pln
         plan-get-result-region      \ plnplnstp1 pln0 | plnplnstp1 plnplnstp-lst plnplnstp-i pln-r
-        region-neq abort" steps do not link directly, use plan-link"
+        region-neq? abort" steps do not link directly, use plan-link"
     then
 
     planstep-list-push-end          \ plnplnstp1 pln0
@@ -249,7 +238,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return the initial region of a non-empty plan.
 : plan-get-initial-region ( pln - reg )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     plan-get-step-list          \ plnplnstp-lst
     dup list-is-empty?
@@ -263,8 +252,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Push a step to the beginning of a plan, backward chaining.
 : plan-push ( plnplnstp1 pln0 -- )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-planstep
+    assert( tos is-plan? )
+    assert( nos is-planstep? )
     \ cr ." plan-push: step: " over .planstep space ." plan: " dup .plan cr
 
     2dup plan-check-step-initial    \ plnplnstp1 pln0 flag
@@ -293,7 +282,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Run a plan.  Return true if it works.
 : plan-run ( pln0 -- flag )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     \ Set current domain and action.
     dup plan-get-domain             \ pln0 dom
@@ -369,8 +358,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Append a nos plan to a tos plan.
 : plan-append ( pln1 pln0 -- )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-plan
+    assert( tos is-plan? )
+    assert( nos is-plan? )
     \ cr ." append: " over .plan space ." to: " dup .plan cr
 
     swap                    \ pln0 pln1
@@ -392,8 +381,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return a plan after restricting its initial region.
 : plan-restrict-initial-region ( reg1 pln0 -- pln t | f )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-region
+    assert( tos is-plan? )
+    assert( nos is-region? )
 
     \ cr ." plan-restrict-initial-region: reg: " over .region space ." plan: " dup .plan cr
 
@@ -451,8 +440,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return a plan after restricting its result region.
 : plan-restrict-result-region ( reg1 pln0 -- pln t | f )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-region
+    assert( tos is-plan? )
+    assert( nos is-region? )
 
     2dup plan-get-result-region     \ reg1 pln0 reg1 pln-r-reg
     region-intersects?              \ reg1 pln0 bool
@@ -518,8 +507,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Link two plans, where tos plan result intersects nos plan initial.
 : plan-link ( pln-to pln-from -- pln t | f )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-plan
+    assert( tos is-plan? )
+    assert( nos is-plan? )
     \ cr ." plan-link: start from " dup .plan space ." to " over .plan cr
 
     \ Check intersection.
@@ -596,7 +585,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 
 : plan-get-length ( pln0 -- u )
     \ Check args.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     plan-get-step-list
     list-get-length
@@ -605,7 +594,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Pop the first step from a plan.
 : plan-pop ( pln0 -- plnstp t | f )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     plan-get-step-list  \ plnstp-lst
     planstep-list-pop   \ plnstp t | f
@@ -614,7 +603,7 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return true if a plan is empty.
 : plan-is-empty? ( pln -- bool )
     \ Check arg.
-    assert-tos-is-plan
+    assert( tos is-plan? )
 
     plan-get-step-list
     list-is-empty?
@@ -623,8 +612,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Add a copy of a step to a copy of a plan, returning a plan.
 : plan-link-step-to-result-region ( plnstp-to pln-from -- pln t | f )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-planstep
+    assert( tos is-plan? )
+    assert( nos is-planstep? )
     \ cr ." plan-link-step-to-result-region: from " dup .plan space ." to " over .planstep cr
 
     \ Get intersection.
@@ -676,8 +665,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Add a copy of a step to the beginning of a plan.
 : plan-link-step-to-initial-region ( plnstp-from pln-to -- bool )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-planstep
+    assert( tos is-plan? )
+    assert( nos is-planstep? )
     \ cr ." plan-link-step-to-initial-region: start from " over .planstep space ." to " dup .plan cr
 
     \ Get intersection.
@@ -729,8 +718,8 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
 \ Return true if a plan stays within a given region.
 : plan-within-region? ( reg1 pln0 -- bool )
     \ Check args.
-    assert-tos-is-plan
-    assert-nos-is-region
+    assert( tos is-plan? )
+    assert( nos is-region? )
 
     \ Prep for loop.
     plan-get-step-list              \ reg1 stp-lst

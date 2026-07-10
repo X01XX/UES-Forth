@@ -58,13 +58,13 @@
     #3 <>
     abort" List length not 3?"
 
-    [ ' = ] literal #4 #2 pick list-member
+    [ ' = ] literal #4 #2 pick list-member?
     0= abort" 4 not in list?"
 
-    [ ' = ] literal #7 #2 pick list-member
+    [ ' = ] literal #7 #2 pick list-member?
     0= abort" 7 not in list?"
 
-    [ ' = ] literal #13 #2 pick list-member
+    [ ' = ] literal #13 #2 pick list-member?
     0= abort" 13 not in list?"
 
     list-deallocate

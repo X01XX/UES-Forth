@@ -6,8 +6,8 @@
 \ previous result, or 0 if none.
 : act-0-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
     dup
@@ -20,8 +20,8 @@
 \ previous result, or 0 if none.
 : domain-0-act-1-get-sample ( cur-sta1 act0 -- sample )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
 
@@ -50,8 +50,8 @@
 \ previous result, or 0 if none.
 : domain-0-act-2-get-sample ( cur-sta1 act0 -- sample )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
 
@@ -76,8 +76,8 @@
 
 : domain-0-act-3-get-sample ( cur-sta1 act0 -- sample )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
 
@@ -106,8 +106,8 @@
 \ previous result, or 0 if none.
 : domain-0-act-4-get-sample ( cur-sta1 act0-- sample )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
 
@@ -133,8 +133,8 @@
 \ An action that changes all bits.
 : domain-0-act-5-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
     dup !not swap
@@ -145,8 +145,8 @@
 \ Exhibit X->0 and X->1 bit positions.
 : domain-0-act-6-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
     dup
@@ -163,8 +163,8 @@
 \ previous result, or 0 if none.
 : domain-1-act-1-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
 
@@ -189,8 +189,8 @@
 
 : domain-1-act-2-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
 
@@ -215,8 +215,8 @@
 
 : domain-1-act-3-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
 
@@ -227,8 +227,8 @@
 \ Do an act with two possible changes, 1 xor, 2 xor.
 : domain-1-act-4-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     over swap                   \ cur-sta1 cur-sta1 act0
     action-find-square          \ cur-sta1, sqr t | f
@@ -254,8 +254,8 @@
 \ An action that changes all bits.
 : domain-1-act-5-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     drop
     dup !not swap
@@ -266,8 +266,8 @@
 \ Do an act with three possible changes, to appear unpredictable.
 : domain-1-act-6-get-sample ( cur-sta1 act0 -- smpl )
     \ Check args
-    assert-tos-is-action
-    assert-nos-is-value
+    assert( tos is-action? )
+    assert( nos is-value? )
 
     over swap                   \ cur-sta1 cur-sta1 act0
     action-find-square          \ cur-sta1, sqr t | f

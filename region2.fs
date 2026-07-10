@@ -1,8 +1,8 @@
 \ Return a region-list from a TOS region minus the NOS region.
 : region-subtract ( reg1 reg0 -- region-list )
     \ Check args.
-    assert-tos-is-region
-    assert-nos-is-region
+    assert( tos is-region? )
+    assert( nos is-region? )
 
     \ Check if any subtraction is needed.
     2dup region-intersects? 0=      \ reg1 reg0 flag
@@ -64,8 +64,8 @@
 \ Return a region-list from a TOS region minus the NOS state.
 : region-subtract-state ( sta1 reg0 -- region-list )
     \ Check args.
-    assert-tos-is-region
-    assert-nos-is-value
+    assert( tos is-region? )
+    assert( nos is-value? )
 
     \ Check if any subtraction is needed.
     2dup region-superset-of-state? false?   \ sta1 reg0 flag

@@ -1,6 +1,6 @@
 \ Implement a struct and functions for a list of rules, corresponding to domains.
 
-#53171 constant rulecorr-id
+#53171 constant rulecorr-struct-id
     #2 constant rulecorr-struct-number-cells
 
 \ Struct fields
@@ -20,32 +20,23 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 \ Check instance type.
 : is-allocated-rulecorr? ( addr -- bool )
-    dup rulecorr-mma mma-is-item    \ addr bool
+    dup rulecorr-mma mma-is-item?   \ addr bool
     if
         struct-get-id
-        rulecorr-id =               \ bool
+        rulecorr-struct-id =        \ bool
     else
         drop
         false                       \ f
     then
 ;
 
-\ Check TOS for rulecorr, unconventional, leaves stack unchanged.
-: assert-tos-is-rulecorr ( tos -- tos )
+\ Check TOS for rulecorr.
+: is-rulecorr? ( tos -- t )
     dup is-allocated-rulecorr?
-    false? if
-        s" TOS is not an allocated rulecorr"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for rulecorr, unconventional, leaves stack unchanged.
-: assert-nos-is-rulecorr ( nos tos -- nos tos )
-    over is-allocated-rulecorr?
-    false? if
-        s" NOS is not an allocated rulecorr"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated rulecorr"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -53,7 +44,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Return the rulecorr list field from a rule instance.
 : rulecorr-get-list ( rulc0 -- rul-lst )
     \ Check arg.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
     rulecorr-list-disp +    \ Add offset.
     @                       \ Fetch the field.
@@ -62,7 +53,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Set the rulecorr list field of a rule instance, use only in this file.
 : _rulecorr-set-list ( lst1 rulc0 -- )
     \ Check args.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
     \ Store list
     rulecorr-list-disp +    \ Add offset.
@@ -74,13 +65,13 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Create a rulecorr-list-corr from a rulecorr-list-corr-list on the stack.
 : rulecorr-new ( rul-lst0 -- rulc )
     \ check arg.
-    assert-tos-is-rule-list
+    assert( tos is-rule-list? )
     dup list-get-length
     number-domains-gbl
     <> abort" rulecorr-new: invalid list length?"
 
     \ Allocate space.
-    rulecorr-id rulecorr-mma
+    rulecorr-struct-id rulecorr-mma
     struct-allocate             \ rul-lst0 rulc
 
     \ Store list.
@@ -91,7 +82,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Print a rule-list corresponding to the session domain list.
 : .rulecorr ( rulc0 -- )
     \ Check arg.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
     rulecorr-get-list               \ rul-lst
     list-get-links                  \ rc-link
@@ -122,7 +113,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Deallocate the given rulecorr, if its use count is 1 or 0.
 : rulecorr-deallocate ( rulc0 -- )
     \ Check arg.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
     dup struct-get-use-count        \ rulc0 count
     dup 0< abort" invalid use count"
@@ -143,8 +134,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Return a rulecorr for translating from one rule-list-corr (rulecorr-from) to another (rulecorr-to).
 : rulecorr-new-regc-to-regc ( regc-to regc-from -- rulecorr )
     \ Check args.
-    assert-tos-is-regioncorr
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr? )
+    assert( nos is-regioncorr? )
 
     \ Init return list.
     list-new -rot                               \ rul-lst regc-to regc-from
@@ -179,7 +170,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 : rulecorr-calc-initial-regions ( rulc -- regc )
     \ Check arg.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
     \ Init region list.
     list-new swap                   \ reg-lst rulc
@@ -215,7 +206,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 : rulecorr-calc-result-regions ( rulc -- regc )
     \ Check arg.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
     \ Init region list.
     list-new swap                   \ reg-lst rulc
@@ -252,7 +243,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Return changescorr from a rulecorr.
 : rulecorr-get-changes ( rulc -- cngsc )
     \ Check arg.
-    assert-tos-is-rulecorr
+    assert( tos is-rulecorr? )
 
     \ Init region list.
     list-new swap                   \ cngs-lst rulc
@@ -281,8 +272,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Return the result regions from applying a regioncorr to a rulecorr's initial regions.
 : rulecorr-apply-to-regioncorr-fc ( regc1 rulc0 -- regc t | f )
     \ Check args.
-    assert-tos-is-rulecorr
-    assert-nos-is-regioncorr
+    assert( tos is-rulecorr? )
+    assert( nos is-regioncorr? )
 
     \ Init region list.
     list-new -rot                   \ reg-lst regc1 rulc0
@@ -334,8 +325,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 \ Return the initial regions from applying a regioncorr to a rulecorr's result regions.
 : rulecorr-apply-to-regioncorr-bc ( regc1 rulc0 -- regc t | f )
     \ Check args.
-    assert-tos-is-rulecorr
-    assert-nos-is-regioncorr
+    assert( tos is-rulecorr? )
+    assert( nos is-regioncorr? )
 
     \ Init region list.
     list-new -rot                   \ reg-lst regc1 rulc0
@@ -385,11 +376,11 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 ;
 
 \ Return true if the TOS rulecorr is a superset of the NOS rulecorr.
-: rulecorr-superset-of ( rulc-sub rulc-sup -- bool )
+: rulecorr-superset-of? ( rulc-sub rulc-sup -- bool )
     \ Check args.
-    assert-tos-is-rulecorr
-    assert-nos-is-rulecorr
-    \ cr ." rulecorr-superset-of: sup: " dup .rulecorr cr
+    assert( tos is-rulecorr? )
+    assert( nos is-rulecorr? )
+    \ cr ." rulecorr-superset-of?: sup: " dup .rulecorr cr
     \    ."                       sub: " over .rulecorr
 
     \ Prep for loop.
@@ -413,7 +404,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         #2 pick link-get-data       \ sub-link sup-link d-link sub-rul
         #2 pick link-get-data       \ sub-link sup-link d-link sub-rul sup-rul
 
-        rule-superset-of            \ sub-link sup-link d-link bool
+        rule-superset-of?           \ sub-link sup-link d-link bool
         if
         else
             3drop
@@ -463,8 +454,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 : rulecorr-combine ( rulc-to rulc-from -- rulc )
     \ Check args.
-    assert-tos-is-rulecorr
-    assert-nos-is-rulecorr
+    assert( tos is-rulecorr? )
+    assert( nos is-rulecorr? )
     \ cr ." rulecorr-combine: from: " dup .rulecorr
     \ cr ."                     to: " over .rulecorr
 
@@ -512,8 +503,8 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 
 : pathstep-restrict-initial-regions ( regc1 rulc0 -- rulc t | f )
     \ Check args.
-    assert-tos-is-rulecorr
-    assert-nos-is-regioncorr
+    assert( tos is-rulecorr? )
+    assert( nos is-regioncorr? )
 
     \ Init rule list.
     list-new -rot                   \ rul-lst-rst regc1 rulc0

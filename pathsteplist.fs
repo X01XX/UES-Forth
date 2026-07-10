@@ -1,41 +1,23 @@
 \ Functions for a PathStep list.
 
-\ Check if tos is an empty list, or has a pathstep instance as its first item.
-: assert-tos-is-pathstep-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for pathstep-list.
+: is-pathstep-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-pathstep
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a pathstep instance as its first item.
-: assert-nos-is-pathstep-list ( nos tos -- nos tos )
-    assert-nos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-pathstep
-        drop
-    then
-;
-
-\ Check if 4os is a list, if non-empty, with the first item being a pathstep.
-: assert-4os-is-pathstep-list ( 4os 3os nos tos -- 4os 3os nos tos )
-    assert-4os-is-list
-    #3 pick list-is-not-empty?
-    if
-        #3 pick list-get-links link-get-data
-        assert-tos-is-pathstep
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-pathstep? )
+        true
     then
 ;
 
 : pathstep-list-deallocate ( plnstp-lst0 -- )
     \ Check arg.
-    assert-tos-is-pathstep-list
+    assert( tos is-pathstep-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ plnstp-lst0 uc
@@ -54,7 +36,7 @@
 \ Deallocate a list of lists of pathstep.
 : pathstep-lol-deallocate ( plnstp-lol0 -- )
     \ Check arg.
-    assert-tos-is-list
+    assert( tos is-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ plnstp-lol0 uc
@@ -72,7 +54,7 @@
 
 : .pathstep-list ( pthstp-lst -- )
     \ Check arg.
-    assert-tos-is-pathstep-list
+    assert( tos is-pathstep-list? )
 
     s" (" type
     [ ' .pathstep ] literal swap    \ xt pathstep-list
@@ -83,8 +65,8 @@
 \ Push a pathstep.
 : pathstep-list-push ( pthstp1 pthstp-lst0 -- )
    \ Check arg.
-    assert-tos-is-pathstep-list
-    assert-nos-is-pathstep
+    assert( tos is-pathstep-list? )
+    assert( nos is-pathstep? )
     \ cr ." pushing: " over .pathstep cr
 
     list-push-struct
@@ -93,8 +75,8 @@
 \ Push a pathstep to end of list.
 : pathstep-list-push-end ( pthstp1 pthstp-lst0 -- )
    \ Check arg.
-    assert-tos-is-pathstep-list
-    assert-nos-is-pathstep
+    assert( tos is-pathstep-list? )
+    assert( nos is-pathstep? )
 
     list-push-end-struct
 ;
@@ -102,8 +84,8 @@
 \ Return a list of pathsteps that have initial regions intersecting a given regioncorr.
 : pathstep-list-initial-region-intersection ( regc1 pthstp-lst0 -- pthstp-lst )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
 
     \ Init return list.
     list-new -rot                           \ ret-lst regc1 pthstp-lst0
@@ -137,9 +119,9 @@
 : pathstep-list-get-steps-fc2 ( regc-to regc-from pthstp-lst1 -- pthstp-lst )
     cr ." pathstep-list-get-steps-fc: start:       " dup .pathstep-list cr
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     \ Get changes-needed.
     #2 pick                         \ regc-to regc-from pthstp-lst1 regc-to
@@ -197,9 +179,9 @@
 \ and either a needed change, or regc-to also intersects the pathsetp initial region.
 : pathstep-list-get-steps-fc ( regc-to regc-from pthstp-lst1 -- pthstp-lst )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     2dup                                        \ regc-to regc-from pthstp-lst1 regc-from pthstp-lst1
     pathstep-list-initial-region-intersection   \ regc-to regc-from pthstp-lst1 pthstp-lst2'
@@ -222,7 +204,7 @@
 
 : pathstep-list-filter-min-number-unwanted-changes ( pthstp-lst0 -- pthstp-lst )
     \ Check args.
-    assert-tos-is-pathstep-list
+    assert( tos is-pathstep-list? )
 
     \ Init return list.
     list-new swap               \ ret-lst pthstp-lst0
@@ -271,7 +253,7 @@
 \ Remove a pathstep from a pathstep-list.
 : pathstep-list-remove-item ( inx1 pthstp-lst0 -- pthstpx )
     \ Check arg.
-    assert-tos-is-pathstep-list
+    assert( tos is-pathstep-list? )
 
     list-remove-item        \ pthstpx
     dup struct-dec-use-count
@@ -279,13 +261,13 @@
 
 : pathstep-list-any-eq-initial-subset-result? ( pthstp1 pthstp-lst0 -- bool )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-pathstep
+    assert( tos is-pathstep-list? )
+    assert( nos is-pathstep? )
 
     [ ' pathstep-eq-initial-subset-result? ] literal    \ pthstp1 pthstp-lst0  xt
     -rot                                                \ xt pthstp1 pthstp-lst0
 
-    list-member                                         \ pthstp2 t | f
+    list-member?                                        \ pthstp2 t | f
 ;
 
 \ Remove the first eq initial, superset result, pathstep from a pathstep-list, and deallocate.
@@ -293,8 +275,8 @@
 \ Return true if a pathstep was removed.
 : pathstep-list-remove-eq-initial-superset-result ( pthstp1 pthstp-lst0 -- bool )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-pathstep
+    assert( tos is-pathstep-list? )
+    assert( nos is-pathstep? )
 
     [ ' pathstep-eq-initial-superset-result? ] literal  \ pthstp1 pthstp-lst0  xt
     -rot                                                \ xt pthstp1 pthstp-lst0
@@ -314,15 +296,15 @@
 \ Return true if the pathstep is added to the list.
 : pathstep-list-push-nosups ( pthstp1 pthstp-lst0 -- flag )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-pathstep
+    assert( tos is-pathstep-list? )
+    assert( nos is-pathstep? )
     \ cr ." Add " over .pathstep space ." to: " dup .pathstep-list cr
 
     \ Return if any pathstep in the list is a superset of pthstp1.
     2dup                                    \ pthstp1 pthstp-lst0 pthstp1 pthstp-lst0
     [ ' pathstep-eq-initial-subset-result? ] literal    \ pthstp1 pthstp-lst0 pthstp1 pthstp-lst0 xt
     -rot                                    \ pthstp1 pthstp-lst0 xt pthstp1 pthstp-lst0
-    list-member                             \ pthstp1 pthstp-lst0 flag
+    list-member?                            \ pthstp1 pthstp-lst0 flag
     if
         2drop
         false
@@ -345,8 +327,8 @@
 \ Return a list of pathsteps with changes that intersect a given changescorr.
 : pathstep-list-intersect-changes ( cngsc1 pthstp-lst0 -- pthstp-lst )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-changescorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-changescorr? )
 
     \ Init return list.
     list-new                            \ cngsc1 pthstp-lst0 | ret-lst
@@ -379,9 +361,9 @@
 \ from regc-from to the pathstep's initial regioncorr.
 : pathstep-list-set-number-unwanted-changes-fc ( regc-to regc-from pthstp-lst0 -- )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     \ Get needed changes.
     #2 pick #2 pick                         \ regc-to regc-from pthstp-lst0 | regc-to regc-from
@@ -437,9 +419,9 @@
 \ Translating from a pathstep's result regions to regc-to can revert an unwanted change in the pathstep rulecorr.
 : pathstep-list-set-number-unwanted-changes-bc ( regc-to regc-from pthstp-lst0 -- )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     \ Get needed changes.
     #2 pick #2 pick                         \ regc-to regc-from pthstp-lst0 | regc-to regc-from
@@ -500,9 +482,9 @@
 \    which would make use of the step premature.
 : pathstep-list-possible-next-steps ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst t | f )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
     \ cr ." pathstep-list-possible-next-steps: start: from: "  over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     \ Get needed changes.
@@ -619,9 +601,9 @@
 \    which would make use of the step premature, or ... postmature?
 : ?pathstep-list-possible-previous-steps ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst t | f )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
     cr ." pathstep-list-possible-previous-steps: from: " over .regioncorr space ." to: " #2 pick .regioncorr cr
 
     \ Get needed changes.
@@ -707,9 +689,9 @@
 \ Return true if two regioncorrs both intersect at least one pathstep initial regions.
 : pathstep-list-intersects-both? ( regc2 regc1 pthstp-lst0 -- bool )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     \ Prep for loop.
     list-get-links                          \ regc2 regc1 pthstp-link
@@ -747,8 +729,8 @@
 \ For pathstep forward-chaining.
 : pathstep-list-intersecting-fc ( regc1 pthstp-lst0 -- pthstp-lst t | f )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
 
     \ Init return list.
     list-new swap                           \ regc1 ret-lst pthstp-link
@@ -799,8 +781,8 @@
 \ a given changescorr.
 : pathstep-list-has-needed-change ( cngs1 pthstp-lst0 -- pthstp-lst t | f )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-changescorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-changescorr? )
 
     \ Init return list.
     list-new                                \ cngs1 pthstp-lst0 | ret-lst
@@ -844,9 +826,9 @@
 \ in moving from one regioncorr to another.
 : pathstep-list-has-needed-change-from-to ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst t | f)
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     \ Get needed changes.
     -rot                                    \ pthstp-lst0 regc-to2 regc-from1
@@ -867,9 +849,9 @@
 \ do not reguire needed changes to get from regc-from to the pathstep's initial regions.
 : pathstep-list-reachable-fc ( regc-to2 regc-from1 pthstp-lst0 -- pthstp-lst t | f )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
     \ cr ." pathstep-list-reachable-fc: start: " .stack-gbl cr
 
     \ Get needed changes.
@@ -937,8 +919,8 @@
 \ Return a list of pathsteps with result-regions closest to a given regioncorr.
 : pathstep-list-closest-result-regions ( regc1 pthstp-lst0 -- pthstp-lst )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
 
     \ Init return list.
     list-new                            \ regc1 pthstp-lst0 ret-lst
@@ -1005,8 +987,8 @@
 \ Return the an intersection of a regioncorr and a pathstep-list.
 : pathstep-list-intersection ( regc1 pthstp-lst0 -- regc t | f )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
 
     list-get-links                      \ regc1 pthstp-link
 
@@ -1034,9 +1016,9 @@
 \ Return true if two regioncorrs are both subset of at least one pathstep initial regions.
 : pathstep-list-superset-both? ( regc2 regc1 pthstp-lst0 -- bool )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     \ Prep for loop.
     list-get-links                          \ regc2 regc1 pthstp-link
@@ -1072,8 +1054,8 @@
 \ Return a pathstep that has initial regions that match a given regc.
 : pathstep-list-find ( regc1 pthstp-lst -- pthstp t | f )
     \ Check args.
-    assert-tos-is-pathstep-list
-    assert-nos-is-regioncorr
+    assert( tos is-pathstep-list? )
+    assert( nos is-regioncorr? )
 
      \ Prep for loop.
     list-get-links                          \ regc1 pthstp-link

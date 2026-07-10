@@ -3,7 +3,7 @@
 \ A state, and closest dissimilar states.
 \ Once developed, the anchor square-state should be in only one region.
 
-#53719 constant corner-id
+#53719 constant corner-struct-id
     #5 constant corner-struct-number-cells
 
 \ Struct fields
@@ -26,32 +26,23 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 
 \ Check instance type.
 : is-allocated-corner? ( addr -- bool )
-    dup corner-mma mma-is-item  \ addr bool
+    dup corner-mma mma-is-item? \ addr bool
     if
         struct-get-id
-        corner-id =             \ bool
+        corner-struct-id =      \ bool
     else
         drop
         false                   \ f
     then
 ;
 
-\ Check TOS for corner, unconventional, leaves stack unchanged.
-: assert-tos-is-corner ( tos -- tos )
+\ Check TOS for corner.
+: is-corner? ( tos -- t )
     dup is-allocated-corner?
-    false? if
-        s" TOS is not an allocated corner"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for corner, unconventional, leaves stack unchanged.
-: assert-nos-is-corner ( nos tos -- nos tos )
-    over is-allocated-corner?
-    false? if
-        s" NOS is not an allocated corner"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated corner"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -59,7 +50,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Return the parent-action field from a corner instance.
 : corner-get-parent-action ( crn0 -- act)
     \ Check arg.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     corner-parent-action-disp + \ Add offset.
     @                           \ Fetch the field.
@@ -68,8 +59,8 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Set the parent-action field from a corner instance, use only in this file.
 : _corner-set-parent-action ( act1 crn0 -- )
     \ Check args.
-    assert-tos-is-corner
-    assert-nos-is-action-xt execute
+    assert( tos is-corner? )
+    assert( nos is-action?-xt execute )
 
     corner-parent-action-disp + \ Add offset.
     !                           \ Set the field.
@@ -79,7 +70,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Return the anchor-state field from a corner instance.
 : corner-get-anchor-state ( crn0 -- sta )
     \ Check arg.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     corner-anchor-state-disp +  \ Add offset.
     @                           \ Fetch the field.
@@ -88,7 +79,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Return the external-states list field from a corner instance.
 : corner-get-external-states ( crn0 -- sta-lst )
     \ Check arg.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     corner-external-states-disp +   \ Add offset.
     @                               \ Fetch the field.
@@ -97,8 +88,8 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Set the anchor-state field from a corner instance, use only in this file.
 : _corner-set-anchor-state ( sta1 crn0 -- )
     \ Check args.
-    assert-tos-is-corner
-    assert-nos-is-value
+    assert( tos is-corner? )
+    assert( nos is-value? )
 
     corner-anchor-state-disp +  \ Add offset.
     !                           \ Set the field.
@@ -107,8 +98,8 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Set the external-states list field from a corner instance, use only in this file.
 : _corner-set-external-states ( sta-lst1 crn0 -- )
     \ Check args.
-    assert-tos-is-corner
-    assert-nos-is-value-list
+    assert( tos is-corner? )
+    assert( nos is-value-list? )
 
     corner-external-states-disp +      \ Add offset.
     !struct                             \ Set the field.
@@ -117,7 +108,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Return the region field from a corner instance.
 : corner-get-region ( crn0 -- reg )
     \ Check arg.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     corner-region-disp +    \ Add offset.
     @                       \ Fetch the field.
@@ -126,8 +117,8 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Set the region field from a corner instance, use only in this file.
 : _corner-set-region ( reg1 crn0 -- )
     \ Check args.
-    assert-tos-is-corner
-    assert-nos-is-region
+    assert( tos is-corner? )
+    assert( nos is-region? )
 
     corner-region-disp +    \ Add offset.
     !struct                 \ Set the field.
@@ -139,9 +130,9 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 : corner-new ( reg2 sta1 act0 -- crn )
     \ Check args.
 
-    assert-tos-is-action-xt execute
-    assert-nos-is-value
-    assert-3os-is-region
+    assert( tos is-action?-xt execute )
+    assert( nos is-value? )
+    assert( 3os is-region? )
 
     \ cr ." Dom: " current-domain-id #3 dec.r space
     \    ." Act: " current-action-id #3 dec.r space
@@ -154,7 +145,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
     false? abort" Anchor square not in region?"
 
     \ Allocate space.
-    corner-id corner-mma                \ reg2 sta1 act0 id mma
+    corner-struct-id corner-mma         \ reg2 sta1 act0 id mma
     struct-allocate                     \ reg2 sta1 act0 crn
 
     \ Set parent action.
@@ -199,7 +190,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Print a corner.
 : .corner ( crn0 -- )
     \ Check arg.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     ." ("
     dup corner-get-anchor-state     \ crn0 sta
@@ -221,7 +212,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Deallocate a corner.
 : corner-deallocate ( crn0 -- )
     \ Check arg.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     dup struct-get-use-count      \ smp0 count
     dup 0< abort" invalid use count"
@@ -243,7 +234,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ unless one turns out to be compatible.
 : corner-get-adjacent-state-needs ( crn0 -- ned-lst )
     \ Check arg.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     \ Init return need list.
     list-new                                \ crn0 ret-lst
@@ -283,7 +274,7 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 \ Return a list of find/confirm needs for one corner.
 : corner-calc-needs ( crn0 -- ned-lst )
     \ Check args.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     \ Check anchor square needs.
     dup corner-get-anchor-state             \ crn sta
@@ -310,9 +301,9 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 ;
 
 \ Return true if a corner is confirmed.
-: corner-confirmed (  crn0 -- bool )
+: corner-confirmed? (  crn0 -- bool )
     \ Check args.
-    assert-tos-is-corner
+    assert( tos is-corner? )
 
     corner-calc-needs       \ ned-lst'
     dup list-is-empty?      \ ned-lst' bool
@@ -321,20 +312,20 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
 ;
 
 \ Return true if a given state is in a corner's region.
-: corner-state-in-region ( sta1 crn0 -- bool )
+: corner-state-in-region? ( sta1 crn0 -- bool )
     \ Check args.
-    assert-tos-is-corner
-    assert-nos-is-value
+    assert( tos is-corner? )
+    assert( nos is-value? )
 
     corner-get-region           \ sta1 crn0
     region-superset-of-state?   \ bool
 ;
 
 \ Return true if a corner uses a given state.
-: corner-uses-state ( sta1 crn0 -- bool )
+: corner-uses-state? ( sta1 crn0 -- bool )
     \ Check args.
-    assert-tos-is-corner
-    assert-nos-is-value
+    assert( tos is-corner? )
+    assert( nos is-value? )
 
     2dup                            \ sta1 crn0 sta1 crn0
     corner-get-anchor-state         \ sta1 crn0 sta1 a-sta
@@ -348,5 +339,5 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
     corner-get-external-states      \ sta1 ext-sta-lst
     [ ' = ] literal                 \ sta1 ext-sta-lst xt
     -rot                            \ xt sta1 ext-sta-lst
-    list-member                     \ bool
+    list-member?                    \ bool
 ;

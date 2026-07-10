@@ -1,20 +1,24 @@
 \ Functions for plan lists.
 
-\ Check if tos is an empty list, or has a plan instance as its first item.
-: assert-tos-is-plan-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for plan-list.
+: is-plan-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-plan
         drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-plan? )
+        true
     then
 ;
 
 \ Deallocate a plan list.
 : plan-list-deallocate ( lst0 -- )
     \ Check arg.
-    assert-tos-is-plan-list
+    assert( tos is-plan-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -31,7 +35,7 @@
 \ Print a plan-list
 : .plan-list ( list0 -- )
     \ Check args.
-    assert-tos-is-plan-list
+    assert( tos is-plan-list? )
 
     ." ("
     list-get-links                      \ link
@@ -57,8 +61,8 @@
 \ Push a plan to the end of a plan-list.
 : plan-list-push-end ( stp1 list0 -- )
     \ Check args.
-    assert-tos-is-plan-list
-    assert-nos-is-plan
+    assert( tos is-plan-list? )
+    assert( nos is-plan? )
 
     list-push-end-struct
 ;

@@ -5,7 +5,7 @@
 \ (x1x1 1x1x1) means x1x1 and 1x1x1.
 \ (x1x1 xxxxx), (xxxx 1x1x1) means x1x1 or 1x1x1.
 
-#41737 constant regioncorrrate-id
+#41737 constant regioncorrrate-struct-id
     #3 constant regioncorrrate-struct-number-cells
 
 \ Struct fields
@@ -26,32 +26,23 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 
 \ Check instance type.
 : is-allocated-regioncorrrate? ( addr -- bool )
-    dup regioncorrrate-mma mma-is-item  \ addr bool
+    dup regioncorrrate-mma mma-is-item? \ addr bool
     if
         struct-get-id
-        regioncorrrate-id =             \ bool
+        regioncorrrate-struct-id =      \ bool
     else
         drop
         false                           \ f
     then
 ;
 
-\ Check TOS for regioncorrrate, unconventional, leaves stack unchanged.
-: assert-tos-is-regioncorrrate ( tos -- tos )
+\ Check TOS for regioncorrrate.
+: is-regioncorrrate? ( tos -- t )
     dup is-allocated-regioncorrrate?
-    false? if
-        s" TOS is not an allocated regioncorrrate"
-        .abort-xt execute
-    then
-;
+    if drop true exit then
 
-\ Check NOS for regioncorrrate, unconventional, leaves stack unchanged.
-: assert-nos-is-regioncorrrate ( nos tos -- nos tos )
-    over is-allocated-regioncorrrate?
-    false? if
-        s" NOS is not an allocated regioncorrrate"
-        .abort-xt execute
-    then
+    s" Selected arg is not an allocated regioncorrrate"
+    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -59,7 +50,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Return the rate field from a regioncorrrate instance.
 : regioncorrrate-get-rate ( addr -- u)
     \ Check arg.
-    assert-tos-is-regioncorrrate
+    assert( tos is-regioncorrrate? )
 
     regioncorrrate-rate-disp +  \ Add offset.
     @                           \ Fetch the field.
@@ -68,7 +59,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Return the regioncorr field from a regioncorrrate instance.
 : regioncorrrate-get-regioncorr ( regcr0 -- regc )
     \ Check arg.
-    assert-tos-is-regioncorrrate
+    assert( tos is-regioncorrrate? )
 
     regioncorrrate-regioncorr-disp +    \ Add offset.
     @                                   \ Fetch the field.
@@ -77,8 +68,8 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Set the rate field from a regioncorrrate instance, use only in this file.
 : _regioncorrrate-set-rate ( rate1 regcr0 -- )
     \ Check args.
-    assert-tos-is-regioncorrrate
-    assert-nos-is-rate
+    assert( tos is-regioncorrrate? )
+    assert( nos is-rate? )
 
     regioncorrrate-rate-disp +  \ Add offset.
     !struct                     \ Set the field.
@@ -87,8 +78,8 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Set the regioncorr field from a regioncorrrate instance, use only in this file.
 : _regioncorrrate-set-regioncorr ( regc1 regcr0 -- )
     \ Check args.
-    assert-tos-is-regioncorrrate
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorrrate? )
+    assert( nos is-regioncorr? )
 
     regioncorrrate-regioncorr-disp +    \ Add offset.
     !struct                             \ Set the field.
@@ -99,11 +90,11 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Create a regioncorrrate from a n regioncorr and rate on the stack.
 : regioncorrrate-new ( regc1 rate -- addr )
     \ Check args.
-    assert-tos-is-rate
-    assert-nos-is-regioncorr
+    assert( tos is-rate? )
+    assert( nos is-regioncorr? )
 
     \ Allocate space.
-    regioncorrrate-id regioncorrrate-mma
+    regioncorrrate-struct-id regioncorrrate-mma
     struct-allocate                     \ regc1 rate regcr
 
     \ Store rate.
@@ -120,7 +111,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Print a regioncorrrate.
 : .regioncorrrate ( regcr0 -- )
     \ Check arg.
-    assert-tos-is-regioncorrrate
+    assert( tos is-regioncorrrate? )
 
     ." ["
     dup regioncorrrate-get-rate .rate
@@ -135,7 +126,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
 \ Deallocate a regioncorrrate.
 : regioncorrrate-deallocate ( regcr0 -- )
     \ Check arg.
-    assert-tos-is-regioncorrrate
+    assert( tos is-regioncorrrate? )
 
     dup struct-get-use-count                \ regcr0 count
     dup 0< abort" invalid use count"
@@ -157,18 +148,18 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     then
 ;
 
-: regioncorrrate-rate-all-zero ( regcr0 -- bool )
+: regioncorrrate-rate-all-zero? ( regcr0 -- bool )
     \ Check arg.
-    assert-tos-is-regioncorrrate
+    assert( tos is-regioncorrrate? )
 
     regioncorrrate-get-rate \ rate
-    rate-all-zero           \ bool
+    rate-all-zero?          \ bool
 ;
 
 : regioncorrrate-eq ( regcr1 regcr0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorrrate
-    assert-nos-is-regioncorrrate
+    assert( tos is-regioncorrrate? )
+    assert( nos is-regioncorrrate? )
 
     \ Get regioncorr part of regioncorrrate.
     regioncorrrate-get-regioncorr   \ regctr1 regc0

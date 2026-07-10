@@ -1,31 +1,24 @@
 \ Functions used on plancorr lits.
 
-\ Check if tos is an empty list, or has a plancorr instance as its first item.
-: assert-tos-is-plancorr-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for plancorr-list.
+: is-plancorr-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-plancorr
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a plancorr instance as its first item.
-: assert-nos-is-plancorr-list ( nos tos -- nos tos )
-    assert-nos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-plancorr
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-plancorr? )
+        true
     then
 ;
 
 \ Deallocate a plancorr list.
 : plancorr-list-deallocate ( lst0 -- )
     \ Check arg.
-    assert-tos-is-plancorr-list
+    assert( tos is-plancorr-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -41,7 +34,7 @@
 
 : .plancorr-list ( plnc-lst -- )
     \ Check arg.
-    assert-tos-is-plancorr-list
+    assert( tos is-plancorr-list? )
 
     s" (" type
     [ ' .plancorr ] literal swap    \ xt plancorr-list
@@ -52,8 +45,8 @@
 \ Push a plancorr to the end of a plancorr-list.
 : plancorr-list-push-end ( reg1 list0 -- )
     \ Check args.
-    assert-tos-is-plancorr-list
-    assert-nos-is-plancorr
+    assert( tos is-plancorr-list? )
+    assert( nos is-plancorr? )
 
     list-push-end-struct
 ;
@@ -61,7 +54,7 @@
 \ Run a plancorr list plancorrs, left to right.
 : plancorr-list-run-plans ( plnc-lst -- bool )
     \ Check arg.
-    assert-tos-is-plancorr-list
+    assert( tos is-plancorr-list? )
 
     \ Prep for loop.
     list-get-links              \ link

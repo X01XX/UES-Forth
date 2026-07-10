@@ -1,46 +1,17 @@
 \ Functions for a list of RegionCorrs.
 
-\ Check if tos is an empty list, or has a regioncorr instance as its first item.
-: assert-tos-is-regioncorr-list ( tos -- tos )
-    assert-tos-is-list
-    dup list-is-not-empty?
+\ Check TOS for regioncorr-list.
+: is-regioncorr-list? ( tos -- t )
+    assert( tos is-list? )
+    
+    dup list-is-empty?
     if
-        dup list-get-links link-get-data
-        assert-tos-is-regioncorr
         drop
-    then
-;
-
-\ Check if nos is an empty list, or has a regioncorr instance as its first item.
-: assert-nos-is-regioncorr-list ( nos tos -- nos tos )
-    assert-nos-is-list
-    over list-is-not-empty?
-    if
-        over list-get-links link-get-data
-        assert-tos-is-regioncorr
-        drop
-    then
-;
-
-\ Check if 3os is an empty list, or has a regioncorr instance as its first item.
-: assert-3os-is-regioncorr-list ( 3os nos tos -- 3os nos tos )
-    assert-3os-is-list
-    #2 pick list-is-not-empty?
-    if
-        #2 pick list-get-links link-get-data
-        assert-tos-is-regioncorr
-        drop
-    then
-;
-
-\ Check if 4os is an empty list, or has a regioncorr instance as its first item.
-: assert-4os-is-regioncorr-list ( 4os 3os nos tos -- 4os 3os nos tos )
-    assert-4os-is-list
-    #3 pick list-is-not-empty?
-    if
-        #3 pick list-get-links link-get-data
-        assert-tos-is-regioncorr
-        drop
+        true
+    else
+        list-get-links link-get-data
+        assert( is-regioncorr? )
+        true
     then
 ;
 
@@ -48,7 +19,7 @@
 : regioncorr-list-deallocate ( regc-lst0 -- )
     \ cr ." regioncorr-list-deallocate: " .stack-gbl execute cr
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ regc-lst0 uc
@@ -69,7 +40,7 @@
 : regioncorr-lol-deallocate ( lst0 -- )
     \ cr ." regioncorr-lol-deallocate: " .stack-gbl cr
     \ Check arg.
-    assert-tos-is-list
+    assert( tos is-list? )
 
     \ Check if the list will be deallocated for the last time.
     dup struct-get-use-count                        \ lst0 uc
@@ -87,7 +58,7 @@
 
 : .regioncorr-list ( regc-lst -- )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     s" (" type
     [ ' .regioncorr ] literal swap    \ xt regioncorr-list
@@ -99,7 +70,7 @@
 
 : .regioncorr-list-as-path-fc ( regc-lst -- )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     s" (" type
     list-get-links          \ regc-link
@@ -118,7 +89,7 @@
 
 : .regioncorr-list-as-path-bc ( regc-lst -- )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     s" (" type
     list-get-links          \ regc-link
@@ -139,8 +110,8 @@
 \ a superset of a given regc.
 : regioncorr-list-any-superset? ( regc1 regc-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     list-get-links                  \ regc1 regc-link
 
@@ -166,8 +137,8 @@
 \ For a regioncorr-list, remove subsets of a given regc.
 : regioncorr-list-remove-subsets ( regc1 regc-lst0 -- )
     \ Check args.regioncorr-superset
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     begin
         [ ' regioncorr-subset? ] literal    \ regc1 regc-lst0 xt
@@ -185,8 +156,8 @@
 \ For a regioncorr-list, remove supersets of a given regc.
 : regioncorr-list-remove-supersets ( regc1 regc-lst0 -- )
     \ Check args.regioncorr-superset
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     begin
         [ ' regioncorr-superset? ] literal  \ regc1 regc-lst0 xt
@@ -204,8 +175,8 @@
 \ Push a regc onto the beginning of a regioncorr-list.
 : regioncorr-list-push  ( regc1 regc-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     list-push-struct                     \
 ;
@@ -213,8 +184,8 @@
 \ Push a regc onto the end of a regioncorr-list.
 : regioncorr-list-push-end  ( regc1 regc-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     list-push-end-struct                     \
 ;
@@ -225,8 +196,8 @@
 \ You may want to deallocate the regc if the push fails.
 : regioncorr-list-push-nosubs ( regc1 regc-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     \ Skip if any supersets/eq are in the list.
     2dup regioncorr-list-any-superset?     \ regc1 regc-lst0 bool
@@ -248,8 +219,8 @@
 \ You may want to deallocate the regc if the push fails.
 : regioncorr-list-push-end-nosubs ( regc1 regc-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     \ Skip if any supersets/eq are in the list.
     2dup regioncorr-list-any-superset?     \ regc1 regc-lst0 bool
@@ -271,8 +242,8 @@
 \ You may want to deallocate the regc if the push fails.
 : regioncorr-list-push-end-nosups ( regc1 regc-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     \ Skip if any supersets/eq are in the list.
     2dup regioncorr-list-any-superset?     \ regc1 regc-lst0 bool
@@ -291,7 +262,7 @@
 \ Return an regioncorr-list with no duplicates or subsets.
 : regioncorr-list-copy-nosubs ( regc-lst0 -- regc-list )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     list-new swap                       \ ret-lst regc-lst0
 
@@ -313,7 +284,7 @@
 \ Return an regioncorr-list with no duplicates.
 : regioncorr-list-copy-nodups ( regc-lst0 -- regc-list )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     list-new swap                       \ ret-lst regc-lst0
 
@@ -325,7 +296,7 @@
         [ ' regioncorrs-eq? ] literal   \ ret-lst link xt
         over link-get-data              \ ret-lst link xt regcx
         #3 pick                         \ ret-lst link xt regcx ret-lst
-        list-member                     \ ret-lst link bool
+        list-member?                    \ ret-lst link bool
         if
         else
             dup link-get-data           \ ret-lst link regcx
@@ -341,7 +312,7 @@
 \ Return an regioncorr-list with no duplicates or supersets.
 : regioncorr-list-copy-nosups ( regc-lst0 -- regc-list )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     list-new swap                       \ ret-lst regc-lst0
 
@@ -364,8 +335,8 @@
 \ that intersects with a given regc.
 : regioncorr-list-any-intersection? ( regc1 regc-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     list-get-links                  \ regc1 regc-link
     begin
@@ -389,8 +360,8 @@
 
 : regioncorr-list-subtract-regioncorr ( regc1 regc-lst0 -- regc-lst )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     \ cr ." subtract " over .regioncorr space ." from " dup .regioncorr-list
     \ Init return list.
@@ -454,8 +425,8 @@
 \ Return TOS regc-lst minus NOS regc-lst.
 : regioncorr-list-subtract ( regc-lst1 regc-lst0 -- regc-lst )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr-list? )
     \ cr ." regioncorr-list " dup .regioncorr-list space ." - " over .regioncorr-list
 
     \ Prep for loop.
@@ -492,7 +463,7 @@
 \ Return the complement of a regc.
 : regioncorr-list-complement ( regc-lst0 -- regc-lst )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     \ Make list of maximum regions.
     list-new                            \ regc-lst0 max-regc-lst'
@@ -513,8 +484,8 @@
 \ Return true if two regioncorr-lists are equal.
 : regioncorr-lists-eq? ( regc-lst1 regc-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr-list? )
 
     \ Check length first.
     over list-get-length                    \ regc-lst1 regc-lst0 len1
@@ -534,7 +505,7 @@
         [ ' regioncorrs-eq? ] literal       \ regc-lst1 regc-link xt
         over link-get-data                  \ regc-lst1 regc-link xt regc0
         #3 pick                             \ regc-lst1 regc-link xt regc0 regc-lst1
-        list-member                         \ regc-lst1 regc-link bool
+        list-member?                        \ regc-lst1 regc-link bool
         false? if
             2drop
             false
@@ -551,7 +522,7 @@
 \ Return a normalized regioncorr-list.
 : regioncorr-list-normalize ( regc-lst0 -- regc-lst )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     regioncorr-list-complement      \ regc-lst0'
     dup                             \ regc-lst0' regc-lst0'
@@ -566,14 +537,14 @@
 \ Return true if the regc is added to the list.
 : regioncorr-list-push-nodups ( regc1 regc-lst0 -- flag )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     \ Return if any regc in the list is a duplicate of regc1.
     2dup                                    \ regc1 regc-lst0 regc1 regc-lst0
     [ ' regioncorrs-eq? ] literal           \ regc1 regc-lst0 regc1 regc-lst0 xt
     -rot                                    \ regc1 regc-lst0 xt regc1 regc-lst0
-    list-member                             \ regc1 regc-lst0 flag
+    list-member?                            \ regc1 regc-lst0 flag
     if
         2drop
         false
@@ -590,7 +561,7 @@
 \ Duplicates will be suppresed, but propr subsets are Ok.
 : regioncorr-list-intersections-nodups ( regc-lst -- regc-lst )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
     \ cr ." regioncorr-list-intersections-nodups: start: " dup .regioncorr-list cr
 
     \ Init return list.
@@ -636,8 +607,8 @@
 \ Append NOS regc-lst to TOS-regioncorr-list.
 : regioncorr-list-append ( regc-lst1 regc-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr-list? )
 
     swap                    \ regc-lst0 regc-lst1
     list-get-links          \ regc-lst0 link
@@ -657,8 +628,8 @@
 \ Append NOS regc-lst to TOS-regioncorr-list, no duplicates.
 : regioncorr-list-append-nodups ( regc-lst1 regc-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr-list? )
 
     swap                            \ regc-lst0 regc-lst1
     list-get-links                  \ regc-lst0 link
@@ -679,8 +650,8 @@
 \ Append NOS regc-lst to TOS-regioncorr-list, no subsets.
 : regioncorr-list-append-nosubs ( regc-lst1 regc-lst0 -- )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr-list? )
 
     swap                            \ regc-lst0 regc-lst1
     list-get-links                  \ regc-lst0 link
@@ -704,7 +675,7 @@
 \ Intermediate regions may be proper subsets, but duplicates will be avoided.
 : regioncorr-list-intersection-fragments ( lst0 -- frag-lst )
     \ Check arg.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
 
     \ Insure-no-duplicates.
     regioncorr-list-copy-nodups                     \ lst0-copy
@@ -748,9 +719,9 @@
 \ Return the least different value to two given regcs, not counting equal regcs.
 : regioncorr-list-least-difference ( regc2 regc1 regc-lst0 -- u )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     \ Init return count.
     #2 pick #2 pick             \ regc2 regc1 regc-lst0 regc2 regc1
@@ -812,10 +783,10 @@
 ;
 
 \ Return true if a regc intersects at least one regc in an regioncorr-list.
-: regioncorr-list-intersects ( regc1 lst0 -- bool )
+: regioncorr-list-intersects? ( regc1 lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     list-get-links              \ regc1 link
 
@@ -839,11 +810,11 @@
 ;
 
 \ Return true if both regc-to and regc-from intersect one regioncorr in the list.
-: regioncorr-list-intersects-both ( regc-to regc-from regc-lst0 -- bool )
+: regioncorr-list-intersects-both? ( regc-to regc-from regc-lst0 -- bool )
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
-    assert-3os-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
+    assert( 3os is-regioncorr? )
 
     list-get-links                      \ regc-to regc-from link
 
@@ -877,10 +848,10 @@
 \ Used by regioncorr subtraction.
 : regioncorr-list-copy-except ( regc2 inx1 lst0 -- lst )
     \ Check args.
-    assert-tos-is-regioncorr-list
+    assert( tos is-regioncorr-list? )
     over 0< abort" index out of range"
     over over list-get-length < false? abort" index out of range"
-    assert-3os-is-regioncorr
+    assert( 3os is-regioncorr? )
 
     \ Init return list.
     list-new swap                   \ regc2 inx1 ret-lst lst0
@@ -920,7 +891,7 @@
 
 : .regioncorr-lol ( regc-lol -- ) \ Print a regioncorr list-of-lists.
     \ Check arg.
-    assert-tos-is-list
+    assert( tos is-list? )
 
     list-get-links                     \ lol-link
 
@@ -938,8 +909,8 @@
 
 : regioncorr-list-closest-regioncorrs ( regc1 regc-lsn0 -- regc-lst ) \ Return a list of regc in list closest to a given regc.
     \ Check args.
-    assert-tos-is-regioncorr-list
-    assert-nos-is-regioncorr
+    assert( tos is-regioncorr-list? )
+    assert( nos is-regioncorr? )
 
     \ Get min difference of all items.
     #9999999                            \ | min
