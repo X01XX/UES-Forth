@@ -47,7 +47,7 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
 
 \ Check tos is a valid pn value.
 : is-pn? ( tos -- t )
-    dup 0<      \ tos bool
+    dup 1 <     \ tos bool
     over        \ tos bool tos
     #3 >        \ tos bool bool
     or          \ tos bool

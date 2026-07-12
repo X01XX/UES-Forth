@@ -3,7 +3,7 @@
 \ Check TOS for token-list.
 : is-token-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop
@@ -96,7 +96,8 @@
     \ cr ." token-list-from-string: " 2dup type cr
 
     \ Check for null input.
-    dup 0= if                       \ c-addr 0
+    dup
+    ifnot                           \ c-addr 0
         2drop
         list-new
         true
@@ -301,11 +302,11 @@
     repeat
 
     \ Check paren counter eq zero.  \ ret-lst cnt
-    0= if
-        true
-    else
+    if
         token-list-deallocate
         false
+    else
+        true
     then
 ;
 

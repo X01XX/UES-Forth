@@ -7,7 +7,7 @@
 \ Check TOS for strectinfo-list.
 : is-structinfo-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop
@@ -153,7 +153,7 @@
     repeat
 
     \ Print array memory use.
-    30 spaces
+    #30 spaces
     #7 dec.r
 
     \ Sum overhead memory use.
@@ -294,7 +294,7 @@
             dup structinfo-list-store-using-addr?
             if
             else                    \ size stack end item
-                cr dup ." In use: " #4 pick dump 
+                cr dup ." In use: " #4 pick dump
             then
         then
 

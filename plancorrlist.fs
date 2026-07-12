@@ -3,7 +3,7 @@
 \ Check TOS for plancorr-list.
 : is-plancorr-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop
@@ -64,7 +64,7 @@
     while
         dup link-get-data       \ link plnc
         plancorr-run            \ link, t | f
-        false? if
+        ifnot
             drop
             false
             exit

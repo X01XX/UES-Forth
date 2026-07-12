@@ -85,11 +85,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Get cull trigger.
     5c@
 
-    0=
     if
-        false
-    else
+        \ Return true for 255.
         true
+    else
+        false
     then
 ;
 
@@ -118,11 +118,11 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Get calc-corner triggr.
     6c@
 
-    0=
     if
-        false
-    else
+        \ Return true for 255.
         true
+    else
+        false
     then
 ;
 
@@ -688,7 +688,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     dup action-get-corners              \ act0 crn-lst
     dup list-get-length                 \ act0 crn-lst len
-    0= if
+    ifnot
         2drop
         exit
     then
@@ -792,7 +792,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over region-get-state-0                     \ reg1 act0 sta0
     over action-get-corners                     \ reg1 act0 sta0 crn-lst
     corner-list-state-in-any-corner-region?     \ reg1 act0 bool
-    false? if
+    ifnot
         \ Keep pair
         2drop
         true
@@ -803,7 +803,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     over region-get-state-1                 \ reg1 act0 sta1
     over action-get-corners                 \ reg1 act0 sta1 crn-lst
     corner-list-state-in-any-corner-region? \ reg1 act0 bool
-    false? if
+    ifnot
         \ Keep pair
         2drop
         true
@@ -1625,7 +1625,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         square-get-state        \ sqr act0 grp-lst sta
         over                    \ sqr act0 grp-lst sta grp-lst
         group-list-state-in-group   \ sqr act0 grp-lst flag
-        0= if
+        ifnot
             \ Check if this is the first square
                                 \ sqr act0 grp-lst
             over action-get-squares list-get-length \ sqr act0 grp-lst len
@@ -2337,7 +2337,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
 
     \ Chck for action zero.
     over action-get-inst-id                         \ sta1 act0 ret-lst id
-    0= if
+    ifnot
         nip nip                                     \ ret-lst
         exit
     then

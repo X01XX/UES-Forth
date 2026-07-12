@@ -3,7 +3,7 @@
 \ Check TOS for regioncorrrate-list.
 : is-regioncorrrate-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop
@@ -182,15 +182,15 @@
         over link-get-data                  \ ret-lst rate1 link rate1 reginocorrrate
         regioncorrrate-get-rate             \ ret-lst rate1 link rate1 ratex
         dup rate-get-negative               \ ret-lst rate1 link rate1 ratex u-neg
-        0= if
+        if
+            2drop                               \ ret-lst rate1 link
+        else                                    \ ret-lst rate1 link rate1 ratex
             rate-more-positive                  \ ret-lst rate1 link bool
             if
                 dup link-get-data               \ ret-lst rate1 link regcrx
                 #3 pick                         \ ret-lst rate1 link regcx ret-lst
                 list-push-struct                \ ret-lst rate1 link
             then
-        else                                    \ ret-lst rate1 link rate1 ratex
-            2drop                               \ ret-lst rate1 link
         then
 
         link-get-next
@@ -213,7 +213,7 @@
     swap regioncorrrate-get-regioncorr          \ regcr1 regcr0 regc1 regc0
 
     regioncorr-superset?                        \ regcr1 regcr0 bool
-    false? if
+    ifnot
         2drop
         false
         exit

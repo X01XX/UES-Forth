@@ -5,7 +5,7 @@
 \ Check TOS for value-list.
 : is-value-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

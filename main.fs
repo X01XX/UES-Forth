@@ -343,25 +343,25 @@ cr
         dup .rate                                       \ sess rate
         space ." Status: "
         dup rate-get-positive
-        0= if
+        ifnot
             \ No positive value.
             dup rate-get-negative
-            0= if
-                \ No negative value.
-                ." Neutral"
-            else
+            if
                  \ Some negative value.
                 ." Negative"
+            else
+                \ No negative value.
+                ." Neutral"
             then
         else
             \ Some positive value.
             dup rate-get-negative
-            0= if
-                \ No negative value.
-                ." Positive"
-            else
+            if
                 \ Some negative value.
                 ." Conflicted"
+            else
+                \ No negative value.
+                ." Positive"
             then
         then
 

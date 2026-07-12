@@ -3,7 +3,7 @@
 \ Check TOS for changen-list.
 : is-changes-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

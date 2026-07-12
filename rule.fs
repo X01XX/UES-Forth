@@ -382,7 +382,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert( nos is-changes? )
 
     over changes-get-m01 over rule-get-m01 and
-    0<> if
+    if
         2drop
         true
         exit
@@ -651,7 +651,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ cr ." rule-restrict-initial-region: " over .region space dup .rule cr
 
     2dup rule-initial-region-intersects? \ reg1 rul0 bool
-    false? if
+    ifnot
         2drop
         false
         exit
@@ -708,7 +708,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     <> abort" num bits mismatch?"
 
     2dup rule-result-region-intersects? \ reg1 rul0 bool
-    false? if
+    ifnot
         2drop
         false
         exit
@@ -926,8 +926,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
                 -rot                \ cnt rul c-addr ci cr
                 #3 pick             \ cnt rul c-addr ci cr rul
                 _rule-adjust-masks  \ cnt rul c-addr bool
-                if
-                else
+                ifnot
                     drop
                     rule-deallocate
                     drop
@@ -942,8 +941,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
                 -rot                \ cnt rul c-addr ci cr
                 #3 pick             \ cnt rul c-addr ci cr rul
                 _rule-adjust-masks  \ cnt rul c-addr bool
-                if
-                else
+                ifnot
                     drop
                     rule-deallocate
                     drop
@@ -986,7 +984,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     assert( tos is-rule? )
 
     dup rule-get-m01        \ rul0 m01
-    0<> if
+    if
         drop
         true
         exit
@@ -1007,7 +1005,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     \ Restrict the rule's initial region.
     2dup                            \ reg1 rul0 reg1 rul0
     rule-restrict-initial-region    \ reg1 rul0, rul1' t | f
-    false? if
+    ifnot
         2drop
         false
         exit
@@ -1259,7 +1257,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     dup rule-get-m00            \ rul0 m00
     over rule-get-m01           \ rul0 m00 m01
     and                         \ rul0 m0x
-    0<> if
+    if
         \ cr ." rule " over .rule space ." m0x: " dup .value cr
         2drop
         false
@@ -1269,7 +1267,7 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     dup rule-get-m11            \ rul0 m11
     over rule-get-m10           \ rul0 m11 m10
     and                         \ rul0 m1x
-    0<> if
+    if
         \ cr ." rule " over .rule space ." m1x: " dup .value cr
         2drop
         false

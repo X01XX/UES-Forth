@@ -20,7 +20,7 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     dup 1 <
     abort" regioncorrrate-mma-init: Invalid number of items."
 
-    cr ." Initializing regioncorrrate store."
+    cr ." Initializing Regioncorrrate store."
     regioncorrrate-struct-number-cells swap mma-new to regioncorrrate-mma
 ;
 

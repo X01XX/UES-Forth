@@ -642,8 +642,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #2 pick #2 pick #2 pick                 \ reg-to reg-from dom0 | reg-to reg-from dom0
     domain-calc-possible-steps              \ reg-to reg-from dom0 | stp-lst' t | f
     \ Check for no steps.
-    false?
-    if
+    ifnot
         2drop drop
         false
         \ cr ." domain-calc-step-fc: returning false" cr
@@ -758,8 +757,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ cr ." domain-get-plan2-fc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     \ Check depth.
-    #3 pick 0=
-    if
+    #3 pick
+    ifnot
         \ cr ." Depth exceeded." cr
         2drop 2drop
         false
@@ -780,7 +779,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         #4 pick                     \ depth reg-to reg-from dom0 | pln reg-from | reg-to reg-from dom0
         domain-calc-step-fc         \ depth reg-to reg-from dom0 | pln reg-from | stpx t | f
         \ Return if no step.
-        false? if                   \ depth reg-to reg-from dom0 | pln reg-from |
+        ifnot                       \ depth reg-to reg-from dom0 | pln reg-from |
             \ No step found, done.
             drop
             plan-deallocate
@@ -1049,8 +1048,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     domain-calc-possible-steps              \ reg-to reg-from dom0 | stp-lst t | f
 
     \ Check for no steps.
-    false?
-    if
+    ifnot
         2drop drop
         false
         exit
@@ -1134,8 +1132,8 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     \ cr ." domain-get-plan2-bc: start: depth: " #3 pick dec. space ." from: " over .region space ." to: " #2 pick .region space ." dom: " dup domain-get-inst-id dec. cr
 
     \ Check depth.
-    #3 pick 0=
-    if
+    #3 pick
+    ifnot
         \ cr ." Depth exceeded." cr
         2drop 2drop
         false
@@ -1157,7 +1155,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         domain-calc-step-bc                         \ depth reg-to reg-from dom0 | pln reg-to | stpx t | f
         \ cr ." after calc-step-bc: " .stack-gbl cr
 
-        false? if                                   \ depth reg-to reg-from dom0 | pln reg-to |
+        ifnot                                       \ depth reg-to reg-from dom0 | pln reg-to |
             \ No step found, done.
             drop
             plan-deallocate
@@ -1519,7 +1517,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #4 pick                                 \ reg-to reg-from dom0 | asym-lst' stpx plnstp-i reg-from
     #4 pick                                 \ reg-to reg-from dom0 | asym-lst' stpx plnstp-i reg-from dom0
     domain-get-plan-fb                      \ reg-to reg-from dom0 | asym-lst' stpx, plan1' t | f
-    false? if                               \ reg-to reg-from dom0 | asym-lst' stpx
+    ifnot                                   \ reg-to reg-from dom0 | asym-lst' stpx
         drop
         planstep-list-deallocate
         3drop
@@ -1554,7 +1552,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
 
     #3 pick                             \ reg-to reg-from dom0 | plan2' reg-to pln-r dom0
     domain-get-plan-fb                  \ reg-to reg-from dom0 | plan2', plan3' t | f
-    false? if                           \ reg-to reg-from dom0 | plan2'
+    ifnot                               \ reg-to reg-from dom0 | plan2'
         plan-deallocate
         3drop
         false
@@ -1617,8 +1615,7 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     #3 pick #3 pick                             \ | cngs' reg-to reg-from
     #3 pick                                     \ | cngs' reg-to reg-from dom0
     domain-calc-possible-steps                  \ | cngs', plnstp-lst' t | f
-    false?
-    if
+    ifnot
         changes-deallocate
         3drop
         false

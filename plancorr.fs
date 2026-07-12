@@ -226,7 +226,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
 
         \ Run plan.
         plan-run                    \ plnc-link d-link, t | f
-        false? if
+        ifnot
             2drop
             false
             exit
@@ -267,8 +267,7 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
         #2 pick link-get-data       \ regc1-link plnc-link d-link regx
         #2 pick link-get-data       \ regc1-link plnc-link d-link regx plnx
         plan-within-region?         \ regc1-link plnc-link d-link bool
-        if
-        else
+        ifnot
             2drop drop
             false
             exit

@@ -301,7 +301,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx rulx
         rule-apply-to-region-fc     \ reg-lst reg-link rul-link d-link, reg-r' t | f
-        false? if
+        ifnot
             3drop
             region-list-deallocate
             false
@@ -354,7 +354,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx
         #2 pick link-get-data       \ reg-lst reg-link rul-link d-link regx rulx
         rule-apply-to-region-bc     \ reg-lst reg-link rul-link d-link, reg-r' t | f
-        false? if
+        ifnot
             3drop
             region-list-deallocate
             false
@@ -405,8 +405,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         #2 pick link-get-data       \ sub-link sup-link d-link sub-rul sup-rul
 
         rule-superset-of?           \ sub-link sup-link d-link bool
-        if
-        else
+        ifnot
             3drop
             \ space ." false" cr
             false

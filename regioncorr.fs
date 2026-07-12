@@ -173,8 +173,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         #2 pick link-get-data       \ link1 link0 d-link reg2
         #2 pick link-get-data       \ link1 link0 d-link reg2 reg1
         region-superset?            \ link1 link0 d-link bool
-        if
-        else
+        ifnot
             \ Non-superset found.
             3drop
             false
@@ -222,7 +221,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         #2 pick link-get-data       \ link1 link0 d-link reg1
         #2 pick link-get-data       \ link1 link0 d-link reg1 reg0
         region-intersects?          \ link1 link0 d-link bool
-        false? if
+        ifnot
             3drop
             false
             exit
@@ -267,7 +266,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
 
     \ Check that the two lists intersect.
     2dup regioncorr-intersects?   \ regc1 regc0 bool
-    0= if
+    ifnot
         2drop
         false
         exit
@@ -510,8 +509,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         #2 pick link-get-data       \ link1 link0 d-link reg1
         #2 pick link-get-data       \ link1 link0 d-link reg1 reg0
         regions-eq?                 \ link1 link0 d-link bool
-        if
-        else
+        ifnot
             3drop
             false
             exit

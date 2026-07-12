@@ -3,7 +3,7 @@
 \ Check TOS for region-list.
 : is-region-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop
@@ -544,7 +544,7 @@
         #3 pick                 \ ret-lst link reg sta0 ret-lst
         [ ' = ] literal -rot    \ ret-lst link reg xt sta0 ret-lst
         list-member?            \ ret-lst link reg flag
-        0= if
+        ifnot
             dup                 \ ret-lst link reg reg
             region-get-state-0  \ ret-lst link reg sta0
             #3 pick             \ ret-lst link reg sta0 ret-lst
@@ -556,7 +556,7 @@
         #3 pick                 \ ret-lst link reg sta1 ret-lst
         [ ' = ] literal -rot    \ ret-lst link reg xt sta0 ret-lst
         list-member?            \ ret-lst link reg flag
-        0= if
+        ifnot
             region-get-state-1  \ ret-lst link sta1
             #2 pick             \ ret-lst link sta1 ret-lst
             list-push           \ ret-lst link
@@ -643,7 +643,7 @@
         #3 pick                         \ lst1 link xt data lst1
         list-member?                    \ lst1 link flag
 
-        0= if
+        ifnot
             2drop
             false
             exit

@@ -3,7 +3,7 @@
 \ Check TOS for corner-list.
 : is-corner-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

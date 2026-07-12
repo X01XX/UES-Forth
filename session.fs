@@ -999,7 +999,7 @@ session-points-disp                     cell+   constant session-previous-points
         \ Get fragments matching the val-list current-value.
         dup link-get-data                       \ sess0 val-lst rslt-lst sub-lst link valx
 
-        dup 0<> if
+        dup if
             #5 pick                                 \ sess0 val-lst rslt-lst sub-lst link val sess0
             session-get-regioncorrrate-fragments    \ sess0 val-lst rslt-lst sub-lst link val frag-lst
             regioncorrrate-list-match-rate-negative \ sess0 val-lst rslt-lst sub-lst link regc-lst
@@ -1194,7 +1194,7 @@ session-points-disp                     cell+   constant session-previous-points
         \ Run domain plan.
         over link-get-data          \ plc1 sess0 plc1-link dom-link pln
         plan-run                    \ plc1 sess0 plc1-link dom-link bool
-        false? if
+        ifnot
             2drop
             2drop
             false
@@ -1415,8 +1415,8 @@ session-points-disp                     cell+   constant session-previous-points
     abort" session-calc-path-fc: regc-from subset regc-to?"
 
     \ Check depth.
-    #4 pick 0=
-    if
+    #4 pick
+    ifnot
         \ cr ." depth exceeded" cr
         2drop 2drop drop
         false
@@ -1442,7 +1442,7 @@ session-points-disp                     cell+   constant session-previous-points
         over                                \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' cur-to cur-from
         #5 pick                             \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from' cur-to cur-from pthstp-lst
         pathstep-list-possible-next-steps   \ depth regc-to regc-from pthstp-lst sess0 | ret-lst cur-from', pthstp-nxt-lst' t | f
-        false? if
+        ifnot
             regioncorr-deallocate           \ depth regc-to regc-from pthstp-lst sess0 | ret-lst
             regioncorr-list-deallocate      \ depth regc-to regc-from pthstp-lst sess0
             2drop 2drop drop
@@ -1609,7 +1609,7 @@ session-points-disp                     cell+   constant session-previous-points
 
     \ Get reg-to, restricted if needed.
     #3 pick over pathstep-list-intersection     \ regc-to regc-from sess0 | pthstp-lst, regc-to' t | f
-    false? if
+    ifnot
         \ cr ." session-calc-path: problem: intersection failed?" cr
         \ cr ." regc-to: " #3 pick .regioncorr space ." pthstp-lst: " dup .pathstep-list cr
         2drop
@@ -2483,8 +2483,7 @@ session-points-disp                     cell+   constant session-previous-points
     dup session-get-needs           \ sess0 ned-lst
 
     dup list-get-length             \ sess0 ned-lst len
-    0=
-    if
+    ifnot
         drop                        \ sess0
         session-behavior            \
         true
@@ -3234,8 +3233,8 @@ session-points-disp                     cell+   constant session-previous-points
     dup session-set-all-needs   \ sess0
     dup session-get-needs       \ sess0 ned-lst
     dup list-get-length         \ sess0 ned-lst len
-    dup 0=
-    if
+    dup
+    ifnot
         cr ." Needs: No needs found" cr
         2drop
     else

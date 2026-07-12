@@ -3,7 +3,7 @@
 \ Check TOS for regioncorr-list.
 : is-regioncorr-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop
@@ -297,8 +297,7 @@
         over link-get-data              \ ret-lst link xt regcx
         #3 pick                         \ ret-lst link xt regcx ret-lst
         list-member?                    \ ret-lst link bool
-        if
-        else
+        ifnot
             dup link-get-data           \ ret-lst link regcx
             #2 pick                     \ ret-lst link regcx ret-lst
             regioncorr-list-push-end    \ ret-lst link
@@ -506,7 +505,7 @@
         over link-get-data                  \ regc-lst1 regc-link xt regc0
         #3 pick                             \ regc-lst1 regc-link xt regc0 regc-lst1
         list-member?                        \ regc-lst1 regc-link bool
-        false? if
+        ifnot
             2drop
             false
             exit
@@ -958,8 +957,7 @@
 \ Return a regioncorr-list from a string.
 : regioncorr-list-from-string ( c-addr u -- regc-lst t | f )
     list-from-string-xt execute \ lst t | f
-    if
-    else
+    ifnot
         false
         exit
     then

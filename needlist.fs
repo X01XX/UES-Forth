@@ -3,7 +3,7 @@
 \ Check TOS for need-list.
 : is-need-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

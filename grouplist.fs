@@ -3,7 +3,7 @@
 \ Check TOS for group-list.
 : is-group-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

@@ -89,11 +89,11 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
 \ Set the alt-rule of a planstep instance, use only in this file.
 : _planstep-set-alt-rule ( rul1 plnstp0 -- )
     planstep-alt-rule-disp +    \ Add offset.
-    over 0=
+    over
     if
-        !                       \ Set the field to zero.
-    else
         !struct                 \ Set the field.
+    else
+        !                       \ Set the field to zero.
     then
 ;
 
@@ -168,9 +168,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     assert( tos is-action?-xt execute )
     assert( nos is-rule? )
     #2 pick
-    0=
     if
-    else
         assert( 3os is-rule? )
     then
 
@@ -364,7 +362,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
                                     \ reg-to reg-from plnstp0
     planstep-get-rule               \ reg-to reg-from s-rul
     rule-restrict-initial-region    \ reg-to, s-rul' t | f
-    false? if
+    ifnot
         drop
         false
         exit
@@ -403,7 +401,7 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     \ Check if there is an alternate rule.
     \ If no, return Unexpected.
     dup planstep-get-alt-rule   \ smpl1 plnstp0 alt-rul
-    0= if
+    ifnot
         2drop
         #2
         exit

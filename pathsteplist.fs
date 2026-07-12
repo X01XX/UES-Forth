@@ -3,7 +3,7 @@
 \ Check TOS for pathstep-list.
 : is-pathstep-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

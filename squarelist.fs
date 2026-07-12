@@ -3,7 +3,7 @@
 \ Check TOS for square-list.
 : is-square-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop
@@ -227,14 +227,8 @@
         = if
             square-get-state            \ pn reg link sta
             rot                         \ pn link sta reg
-            dup 0=
+            dup
             if
-                                        \ pn link sta 0
-                drop                        \ pn link sta
-                dup                         \ pn link sta sta
-                region-new                  \ pn link reg
-                swap                        \ pn reg link
-            else
                                             \ pn link sta reg
                 2dup                        \ pn link sta reg sta reg
                 region-superset-of-state?   \ pn link sta reg flag
@@ -247,6 +241,12 @@
                     swap region-deallocate  \ pn link reg2
                     swap                    \ pn reg2 link
                 then
+            else
+                                            \ pn link sta 0
+                drop                        \ pn link sta
+                dup                         \ pn link sta sta
+                region-new                  \ pn link reg
+                swap                        \ pn reg link
             then
         else
             drop

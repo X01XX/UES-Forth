@@ -3,7 +3,7 @@
 \ Check TOS for rule-list.
 : is-rule-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

@@ -3,7 +3,7 @@
 \ Check TOS for domain-list.
 : is-domain-list? ( tos -- t )
     assert( tos is-list? )
-    
+
     dup list-is-empty?
     if
         drop

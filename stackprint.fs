@@ -69,9 +69,7 @@
         dup list-mma mma-within-array
         if
             dup struct-get-id
-            0= if
-                ." List-u "
-            else
+            if
                 ." List-"
                 dup list-get-length dup abs 0 <# #S rot sign #> type
                 dup list-get-length
@@ -82,6 +80,8 @@
                     else
                         space
                     then
+            else
+                ." List-u "
             then
             drop
         else

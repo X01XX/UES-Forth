@@ -295,3 +295,7 @@
     cell #8 *
     > abort" NOS is not a valid number of bits."
 ;
+
+\ A replacement for if else <code> then
+: ifnot POSTPONE 0= POSTPONE if ; immediate
+

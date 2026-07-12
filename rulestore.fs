@@ -273,7 +273,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     over rulestore-get-rule-0
 
     rule-union                  \ rulstr1 rulstr0, rul00 t | f
-    0= if
+    ifnot
         2drop
         false
         exit
@@ -301,7 +301,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     over rulestore-get-rule-0   \ rulstr1 rulstr0 rulstr1-1 rulstr0-0
 
     rule-union                  \ rulstr1 rulstr0, rul01 t | f
-    0= if
+    ifnot
         2drop
         false
         exit
@@ -329,7 +329,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     over rulestore-get-rule-0
 
     rule-union-by-changes       \ rulstr1 rulstr0, rul00 t | f
-    0= if
+    ifnot
         2drop
         false
         exit
@@ -357,7 +357,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     over rulestore-get-rule-0   \ rulstr1 rulstr0 rulstr1-1 rulstr0-0
 
     rule-union-by-changes       \ rulstr1 rulstr0, rul01 t | f
-    0= if
+    ifnot
         2drop
         false
         exit
@@ -513,8 +513,8 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     over rulestore-number-rules             \ cngs1 ruls0 rul-lst nr
 
     \ Check for no rules.
-    dup 0=
-    if
+    dup
+    ifnot
         drop
         nip nip
         exit
@@ -577,7 +577,7 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     assert( tos is-rulestore? )
 
     dup rulestore-get-rule-0            \ rul-str rul0
-    0= if
+    ifnot
         drop
         #3
         exit

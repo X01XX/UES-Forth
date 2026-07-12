@@ -176,8 +176,8 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
 
     \ Set rules
     over square-list-get-rules  \ sqrs1 grp , ruls t | f
-    0=
-    if  dup group-get-region cr ." Group: " .region
+    ifnot
+        dup group-get-region cr ." Group: " .region
         space ." Group squares cannot form rules."
         space over .square-list cr
         abort
@@ -262,7 +262,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     #2 pick _group-update-r-region  \ grp0 sqr-lst'
 
     dup square-list-get-rules       \ grp0 sqr-lst', ruls t | f
-    false? if
+    ifnot
         rulestore-new-0
     then
 
@@ -427,8 +427,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     dup group-get-squares       \ grp0 | sqr-lst
     list-get-first-item         \ grp0 | sqr-0
     dup square-get-pnc          \ grp0 | sqr-0 pnc
-    if                          \ grp0 | sqr-0
-    else
+    ifnot                          \ grp0 | sqr-0
         \ Return square state.
         square-get-state        \ act0 | sta-0
         nip                     \ sta-0
@@ -490,8 +489,7 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     over                        \ sta1 grp0 sta1
     over group-get-squares      \ sta1 grp0 sta1 sqr-lst
     square-list-member?         \ sta1 grp0 bool
-    if
-    else
+    ifnot
         2drop
         false
         exit
