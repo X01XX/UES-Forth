@@ -18,23 +18,16 @@ plancorr-header-disp   cell+   constant plancorr-list-disp      \ plan list corr
     plancorr-struct-number-cells swap mma-new to plancorr-mma
 ;
 
-\ Check instance type.
-: is-allocated-plancorr? ( addr -- bool )
-    get-first-word          \ w t | f
+\ Check if tos is an allocated plancorr.
+: is-plancorr? ( tos -- bool )
+    dup plancorr-mma mma-is-item?   \ tos bool
     if
-        plancorr-struct-id =
+        struct-get-id
+        plancorr-struct-id =        \ bool
     else
-        false
+        drop
+        false                       \ f
     then
-;
-
-\ Check TOS for plancorr.
-: is-plancorr? ( tos -- t )
-    dup is-allocated-plancorr?
-    if drop true exit then
-
-    s" Selected arg is not an allocated plancorr"
-    .abort-xt execute
 ;
 
 \ Start accessors.

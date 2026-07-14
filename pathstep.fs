@@ -25,9 +25,9 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
     pathstep-struct-number-cells swap mma-new to pathstep-mma
 ;
 
-\ Check instance type.
-: is-allocated-pathstep? ( addr -- bool )
-    dup pathstep-mma mma-is-item?   \ addr bool
+\ Check if tos is an allocated pathstep.
+: is-pathstep? ( tos -- bool )
+    dup pathstep-mma mma-is-item?   \ tos bool
     if
         struct-get-id
         pathstep-struct-id =        \ bool
@@ -35,15 +35,6 @@ pathstep-result-regions-disp    cell+   constant pathstep-changes-disp          
         drop
         false                       \ f
     then
-;
-
-\ Check TOS for pathstep.
-: is-pathstep? ( tos -- t )
-    dup is-allocated-pathstep?
-    if drop true exit then
-
-    s" Selected arg is not an allocated pathstep"
-    .abort-xt execute
 ;
 
 \ Start accessors.

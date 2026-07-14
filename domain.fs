@@ -25,9 +25,9 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
     domain-struct-number-cells swap mma-new to domain-mma
 ;
 
-\ Check instance type.
-: is-allocated-domain? ( addr -- bool )
-    dup domain-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated domain.
+: is-domain? ( tos -- bool )
+    dup domain-mma mma-is-item? \ tos bool
     if
         struct-get-id
         domain-struct-id =      \ bool
@@ -35,15 +35,6 @@ domain-all-bits-mask-disp   cell+   constant domain-ms-bit-mask-disp    \ A mask
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for domain.
-: is-domain? ( tos -- t )
-    dup is-allocated-domain?
-    if drop true exit then
-
-    s" Selected arg is not an allocated domain"
-    .abort-xt execute
 ;
 
 ' is-domain? to is-domain?-xt

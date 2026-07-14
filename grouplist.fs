@@ -2,17 +2,23 @@
 
 \ Check TOS for group-list.
 : is-group-list? ( tos -- t )
-    assert( tos is-list? )
+   dup is-list?            \ tos bool
+    ifnot
+        drop
+        false
+        exit
+    then
 
-    dup list-is-empty?
+    dup list-is-empty?      \ tos bool
     if
         drop
         true
-    else
-        list-get-links link-get-data
-        assert( is-group? )
-        true
+        exit
     then
+
+    list-get-links          \ link
+    link-get-data           \ data
+    is-group?               \ bool
 ;
 
 \ Deallocate a group list.

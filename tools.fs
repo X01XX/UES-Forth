@@ -296,6 +296,6 @@
     > abort" NOS is not a valid number of bits."
 ;
 
-\ A replacement for if else <code> then
+\ A replacement for "if else" or "0= if".
 : ifnot POSTPONE 0= POSTPONE if ; immediate
 

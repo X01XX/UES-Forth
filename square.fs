@@ -24,9 +24,9 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     square-struct-number-cells swap mma-new to square-mma
 ;
 
-\ Check instance type.
-: is-allocated-square? ( addr -- bool )
-    dup square-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated square.
+: is-square? ( tos -- bool )
+    dup square-mma mma-is-item? \ tos bool
     if
         struct-get-id
         square-struct-id =      \ bool
@@ -36,27 +36,12 @@ square-rules-disp   cell+   constant square-results-disp    \ Circular buffer of
     then
 ;
 
-\ Check TOS for square.
-: is-square? ( tos -- t )
-    dup is-allocated-square?
-    if drop true exit then
-
-    s" Selected arg is not an allocated square"
-    .abort-xt execute
-;
-
 \ Check tos is a valid pn value.
-: is-pn? ( tos -- t )
-    dup 1 <     \ tos bool
-    over        \ tos bool tos
-    #3 >        \ tos bool bool
-    or          \ tos bool
-    if
-        s" nos is not a valid pn value"
-        .abort-xt execute
-    then
-    drop
-    true
+: is-pn? ( tos -- bool )
+    dup 0>      \ tos bool
+    swap        \ bool tos
+    #4 <        \ tos bool bool
+    and         \ bool
 ;
 
 \ Start accessors.

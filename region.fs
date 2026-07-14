@@ -35,9 +35,9 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
     region-struct-number-cells swap mma-new to region-mma
 ;
 
-\ Check instance type.
-: is-allocated-region? ( addr -- bool )
-    dup region-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated region.
+: is-region? ( tos -- bool )
+    dup region-mma mma-is-item? \ tos bool
     if
         struct-get-id           \ id
         region-struct-id =      \ bool
@@ -45,15 +45,6 @@ region-state-0-disp cell+   constant region-state-1-disp  \ Second state.
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for region.
-: is-region? ( tos -- t )
-    dup is-allocated-region?
-    if drop true exit then
-
-    s" Selected arg is not an allocated region"
-    .abort-xt execute
 ;
 
 \ Start accessors.

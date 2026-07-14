@@ -28,9 +28,9 @@ structinfo-eq-xt-disp           cell+   constant structinfo-name-disp           
     structinfo-struct-number-cells swap mma-new to structinfo-mma
 ;
 
-\ Check instance type.
-: is-allocated-structinfo? ( tos -- flag )
-    dup structinfo-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated structinfo.
+: is-structinfo? ( tos -- flag )
+    dup structinfo-mma mma-is-item? \ tos bool
     if
         struct-get-id
         structinfo-struct-id =      \ bool
@@ -38,15 +38,6 @@ structinfo-eq-xt-disp           cell+   constant structinfo-name-disp           
         drop
         false                       \ f
     then
-;
-
-\ Check TOS for strectinfo.
-: is-structinfo? ( tos -- t )
-    dup is-allocated-structinfo?
-    if drop true exit then
-
-    s" Selected arg is not an allocated structinfo"
-    .abort-xt execute
 ;
 
 \ Start accessors.

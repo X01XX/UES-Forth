@@ -19,9 +19,9 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
     changescorr-struct-number-cells swap mma-new to changescorr-mma
 ;
 
-\ Check instance type.
-: is-allocated-changescorr? ( addr -- bool )
-    dup changescorr-mma mma-is-item?    \ addr bool
+\ Check if tos is an allocated changescorr.
+: is-changescorr? ( tos -- bool )
+    dup changescorr-mma mma-is-item?    \ tos bool
     if
         struct-get-id
         changescorr-struct-id =         \ bool
@@ -30,16 +30,6 @@ changescorr-header-disp   cell+   constant changescorr-list-disp    \ Changes li
         false                           \ f
     then
 ;
-
-\ Check TOS for changescorr.
-: is-changescorr? ( tos -- t )
-    dup is-allocated-changescorr?
-    if drop true exit then
-
-    s" Selected arg is not an allocated changescorr"
-    .abort-xt execute
-;
-
 
 \ Start accessors.
 

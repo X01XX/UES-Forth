@@ -24,9 +24,9 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
     corner-struct-number-cells swap mma-new to corner-mma
 ;
 
-\ Check instance type.
-: is-allocated-corner? ( addr -- bool )
-    dup corner-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated corner.
+: is-corner? ( tos -- bool )
+    dup corner-mma mma-is-item? \ tos bool
     if
         struct-get-id
         corner-struct-id =      \ bool
@@ -34,15 +34,6 @@ corner-external-states-disp cell+   constant corner-region-disp             \ A 
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for corner.
-: is-corner? ( tos -- t )
-    dup is-allocated-corner?
-    if drop true exit then
-
-    s" Selected arg is not an allocated corner"
-    .abort-xt execute
 ;
 
 \ Start accessors.

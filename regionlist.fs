@@ -2,17 +2,23 @@
 
 \ Check TOS for region-list.
 : is-region-list? ( tos -- t )
-    assert( tos is-list? )
+   dup is-list?            \ tos bool
+    ifnot
+        drop
+        false
+        exit
+    then
 
-    dup list-is-empty?
+    dup list-is-empty?      \ tos bool
     if
         drop
         true
-    else
-        list-get-links link-get-data
-        assert( is-region? )
-        true
+        exit
     then
+
+    list-get-links          \ link
+    link-get-data           \ data
+    is-region?              \ bool
 ;
 
 \ Deallocate a region list.
@@ -1006,7 +1012,7 @@
     list-from-string-xt execute                 \ lst t | f
     if
         \ Check all are regions.
-        [ ' is-allocated-region? ] literal over \ lst xt lst
+        [ ' is-region? ] literal over           \ lst xt lst
         list-apply-all-true?                    \ lst bool
         if
             true
@@ -1350,7 +1356,7 @@
     then
 
     \ Check all items in the list are regions.
-    [ ' is-allocated-region? ] literal over \ reg-lst0 xt reg-lst0
+    [ ' is-region? ] literal over           \ reg-lst0 xt reg-lst0
     list-apply-all-true?                    \ reg-lst0 bool
     if
     else

@@ -26,23 +26,16 @@ planstep-result-region-disp     cell+   constant planstep-changes-disp          
     planstep-struct-number-cells swap mma-new to planstep-mma
 ;
 
-\ Check instance type.
-: is-allocated-planstep? ( addr -- bool )
-    get-first-word          \ w t | f
+\ Check if tos is an allocated planstep.
+: is-planstep? ( tos -- bool )
+    dup planstep-mma mma-is-item?   \ tos bool
     if
-        planstep-struct-id =
+        struct-get-id
+        planstep-struct-id =        \ bool
     else
-        false
+        drop
+        false                       \ f
     then
-;
-
-\ Check TOS for planstep.
-: is-planstep? ( tos -- t )
-    dup is-allocated-planstep?
-    if drop true exit then
-
-    s" Selected arg is not an allocated planstep"
-    .abort-xt execute
 ;
 
 \ Start accessors.

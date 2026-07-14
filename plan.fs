@@ -19,23 +19,16 @@ plan-domain-disp    cell+   constant plan-step-list-disp    \ A step-list.
     plan-struct-number-cells swap mma-new to plan-mma
 ;
 
-\ Check instance type.
-: is-allocated-plan? ( addr -- bool )
-    get-first-word          \ w t | f
+\ Check if tos is an allocated plan.
+: is-plan? ( tos -- bool )
+    dup plan-mma mma-is-item?   \ tos bool
     if
-        plan-struct-id =
+        struct-get-id
+        plan-struct-id =        \ bool
     else
-        false
+        drop
+        false                   \ f
     then
-;
-
-\ Check TOS for plan.
-: is-plan? ( tos -- t )
-    dup is-allocated-plan?
-    if drop true exit then
-
-    s" Selected arg is not an allocated plan"
-    .abort-xt execute
 ;
 
 \ Start accessors.

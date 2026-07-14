@@ -6,17 +6,23 @@
 
 \ Check TOS for strectinfo-list.
 : is-structinfo-list? ( tos -- t )
-    assert( tos is-list? )
+   dup is-list?            \ tos bool
+    ifnot
+        drop
+        false
+        exit
+    then
 
-    dup list-is-empty?
+    dup list-is-empty?      \ tos bool
     if
         drop
         true
-    else
-        list-get-links link-get-data
-        assert( is-structinfo? )
-        true
+        exit
     then
+
+    list-get-links          \ link
+    link-get-data           \ data
+    is-structinfo?          \ bool
 ;
 
 \ Deallocate a structinfo list.
@@ -377,7 +383,11 @@
         link-get-next
     repeat
                                     \ snf-lst flg
-    abort" Memory leaks found!"
+   if
+        cr ." Memory leaks found!" abort
+    else
+        cr ." No memory leaks."
+    then
 
     drop
     assert-forth-stack-empty

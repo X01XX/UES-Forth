@@ -26,7 +26,7 @@ session-points-disp                     cell+   constant session-previous-points
 0 value session-mma     \ Storage for session mma instance.
 
 \ Init session mma, return the addr of allocated memory.
-: session-mma-init ( num-items -- ) \ sets region-mma.
+: session-mma-init ( num-items -- )
     dup 1 <
     abort" session-mma-init: Invalid number of items."
 
@@ -34,9 +34,9 @@ session-points-disp                     cell+   constant session-previous-points
     session-struct-number-cells swap mma-new to session-mma
 ;
 
-\ Check instance type.
-: is-allocated-session? ( addr -- bool )
-    dup session-mma mma-is-item?    \ addr bool
+\ Check if tos is an allocated session.
+: is-session? ( tos -- bool )
+    dup session-mma mma-is-item?    \ tos bool
     if
         struct-get-id
         session-struct-id =         \ bool
@@ -44,15 +44,6 @@ session-points-disp                     cell+   constant session-previous-points
         drop
         false                       \ f
     then
-;
-
-\ Check TOS for session.
-: is-session? ( tos -- t )
-    dup is-allocated-session?
-    if drop true exit then
-
-    s" Selected arg is not an allocated session"
-    .abort-xt execute
 ;
 
 ' is-session? to is-session?-xt
@@ -3068,7 +3059,7 @@ session-points-disp                     cell+   constant session-previous-points
         then
 
         swap list-get-second-item           \ sess0 reg-lst
-        dup is-allocated-list?              \ sess0 reg-lst bool
+        dup is-list?                        \ sess0 reg-lst bool
         if
         else
             cr ." Did not understand regioncorr string" cr

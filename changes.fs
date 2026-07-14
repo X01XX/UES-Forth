@@ -31,10 +31,9 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
     changes-struct-number-cells swap mma-new to changes-mma
 ;
 
-\ Check instance type.
-
-: is-allocated-changes? ( addr -- bool )
-    dup changes-mma mma-is-item?    \ addr bool
+\ Check if tos is an allocated changes.
+: is-changes? ( tos -- bool )
+    dup changes-mma mma-is-item?    \ tos bool
     if
         struct-get-id
         changes-struct-id =         \ bool
@@ -42,15 +41,6 @@ changes-m01-disp    cell+   constant changes-m10-disp       \ 1->0 mask.
         drop
         false                       \ f
     then
-;
-
-\ Check TOS for change.
-: is-changes? ( tos -- t )
-    dup is-allocated-changes?
-    if drop true exit then
-
-    s" Selected arg is not an allocated changes"
-    .abort-xt execute
 ;
 
 \ Start accessors.

@@ -24,9 +24,9 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
     group-struct-number-cells swap mma-new to group-mma
 ;
 
-\ Check instance type.
-: is-allocated-group? ( addr -- bool )
-    dup group-mma mma-is-item?  \ addr bool
+\ Check if tos is an allocated group.
+: is-group? ( tos -- bool )
+    dup group-mma mma-is-item?  \ tos bool
     if
         struct-get-id
         group-struct-id =       \ bool
@@ -34,15 +34,6 @@ group-squares-disp  cell+   constant group-rules-disp       \ A RuleStore.
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for group.
-: is-group? ( tos -- t )
-    dup is-allocated-group?
-    if drop true exit then
-
-    s" Selected arg is not an allocated group"
-    .abort-xt execute
 ;
 
 ' is-group? to is-group?-xt

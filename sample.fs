@@ -24,9 +24,9 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
     sample-struct-number-cells swap mma-new to sample-mma
 ;
 
-\ Check instance type.
-: is-allocated-sample? ( addr -- bool )
-    dup sample-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated sample.
+: is-sample? ( tos -- bool )
+    dup sample-mma mma-is-item? \ tos bool
     if
         struct-get-id
         sample-struct-id =      \ bool
@@ -34,15 +34,6 @@ sample-initial-disp cell+   constant sample-result-disp     \ Result state.
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for sample.
-: is-sample? ( tos -- t )
-    dup is-allocated-sample?
-    if drop true exit then
-
-    s" Selected arg is not an allocated sample"
-    .abort-xt execute
 ;
 
 \ Start accessors.

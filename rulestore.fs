@@ -18,9 +18,9 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
     rulestore-struct-number-cells swap mma-new to rulestore-mma
 ;
 
-\ Check instance type.
-: is-allocated-rulestore? ( addr -- bool )
-    dup rulestore-mma mma-is-item?  \ addr bool
+\ Check if tos is an allocated rulestore.
+: is-rulestore? ( tos -- bool )
+    dup rulestore-mma mma-is-item?  \ tos bool
     if
         struct-get-id
         rulestore-struct-id =       \ bool
@@ -29,16 +29,6 @@ rulestore-rule-0-disp   cell+   constant rulestore-rule-1-disp  \ Rule 1, or nul
         false                       \ f
     then
 ;
-
-\ Check TOS for rulestore.
-: is-rulestore? ( tos -- t )
-    dup is-allocated-rulestore?
-    if drop true exit then
-
-    s" Selected arg is not an allocated rulestore"
-    .abort-xt execute
-;
-
 
 \ Start accessors.
 

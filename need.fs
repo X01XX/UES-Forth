@@ -37,9 +37,9 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     need-struct-number-cells swap mma-new to need-mma
 ;
 
-\ Check instance type.
-: is-allocated-need? ( addr -- bool )
-    dup need-mma mma-is-item?   \ addr bool
+\ Check if tos is an allocated need.
+: is-need? ( tos -- bool )
+    dup need-mma mma-is-item?   \ tos bool
     if
         struct-get-id
         need-struct-id =        \ bool
@@ -47,24 +47,6 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for need.
-: is-need? ( tos -- t )
-    dup is-allocated-need?
-    if drop true exit then
-
-    s" Selected arg is not an allocated need"
-    .abort-xt execute
-;
-
-\ Check TOS for need-number.
-: is-need-number? ( tos -- t )
-    dup is-need-type?
-    if drop true exit then
-
-    s" Selected arg is not a valid need-number"
-    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -134,7 +116,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
 
 : _need-set-type ( typ1 ned0 -- )
     assert( tos is-need? )
-    assert( nos is-need-number? )
+    assert( nos is-need-type? )
 
     4c!
 ;
@@ -147,7 +129,7 @@ need-action-disp    cell+   constant need-target-disp   \ A state.
     assert( tos is-domain?-xt execute )
     assert( nos is-action?-xt execute )
     assert( 3os is-value? )
-    assert( 4os is-need-number? )
+    assert( 4os is-need-type? )
 
     \ Allocate space.
     need-struct-id need-mma

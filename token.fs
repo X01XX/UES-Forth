@@ -20,25 +20,16 @@ token-header-disp cell+ constant token-string-disp
     token-struct-number-cells swap mma-new to token-mma
 ;
 
-\ Check instance type.
-: is-allocated-token? ( tos -- bool )
-    dup token-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated token.
+: is-token? ( tos -- bool )
+    dup token-mma mma-is-item?  \ tos bool
     if
         struct-get-id           \ id
-        token-struct-id =              \ bool
+        token-struct-id =       \ bool
     else
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for token.
-: is-token? ( tos -- t )
-    dup is-allocated-token?
-    if drop true exit then
-
-    s" Selected arg is not an allocated token"
-    .abort-xt execute
 ;
 
 \ Start accessors.

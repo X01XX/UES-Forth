@@ -17,26 +17,15 @@ link-next-disp      cell+   constant link-data-disp
     link-struct-number-cells swap mma-new to link-mma
 ;
 
-\ Return true if TOS is an allocated link.
-: is-allocated-link? ( link -- bool )
-    dup link-mma mma-is-item?   \ addr bool
+\ Check if tos is an allocated link.
+: is-link? ( tos -- bool )
+    dup link-mma mma-is-item?   \ tos bool
     if
         struct-get-id
         link-struct-id =        \ bool
     else
         drop
         false                   \ f
-    then
-;
-
-\ Check TOS for link.
-: is-link? ( tos -- t )
-    dup is-allocated-link?
-    if
-        drop true
-    else
-        s" Selected arg is not an allocated link."
-       .abort-xt execute
     then
 ;
 

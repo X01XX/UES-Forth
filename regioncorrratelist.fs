@@ -2,17 +2,23 @@
 
 \ Check TOS for regioncorrrate-list.
 : is-regioncorrrate-list? ( tos -- t )
-    assert( tos is-list? )
+   dup is-list?            \ tos bool
+    ifnot
+        drop
+        false
+        exit
+    then
 
-    dup list-is-empty?
+    dup list-is-empty?      \ tos bool
     if
         drop
         true
-    else
-        list-get-links link-get-data
-        assert( is-regioncorrrate? )
-        true
+        exit
     then
+
+    list-get-links          \ link
+    link-get-data           \ data
+    is-regioncorrrate?      \ bool
 ;
 
 \ Deallocate a regioncorrrate list.

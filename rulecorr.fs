@@ -18,9 +18,9 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
     rulecorr-struct-number-cells swap mma-new to rulecorr-mma
 ;
 
-\ Check instance type.
-: is-allocated-rulecorr? ( addr -- bool )
-    dup rulecorr-mma mma-is-item?   \ addr bool
+\ Check if tos is an allocated rulecorr.
+: is-rulecorr? ( tos -- bool )
+    dup rulecorr-mma mma-is-item?   \ tos bool
     if
         struct-get-id
         rulecorr-struct-id =        \ bool
@@ -28,15 +28,6 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
         drop
         false                       \ f
     then
-;
-
-\ Check TOS for rulecorr.
-: is-rulecorr? ( tos -- t )
-    dup is-allocated-rulecorr?
-    if drop true exit then
-
-    s" Selected arg is not an allocated rulecorr"
-    .abort-xt execute
 ;
 
 \ Start accessors.
@@ -426,7 +417,7 @@ rulecorr-header-disp   cell+   constant rulecorr-list-disp      \ Rule list corr
 : rulecorr-from-string ( str-addr str-n -- rulc t | f )
     list-from-string-xt execute             \ lst t | f
     if
-        [ ' is-allocated-rule? ] literal
+        [ ' is-rule? ] literal              \ lst xt
         over list-apply-all-true?           \ lst bool
         if
             dup rule-list-corresponding?  \ lst bool

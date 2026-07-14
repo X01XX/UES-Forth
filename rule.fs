@@ -22,10 +22,9 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
     rule-struct-number-cells swap mma-new to rule-mma
 ;
 
-\ Check instance type.
-
-: is-allocated-rule? ( addr -- bool )    \ Check if an address is within the rule array.
-    dup rule-mma mma-is-item?   \ addr bool
+\ Check if tos is an allocated rule.
+: is-rule? ( tos -- bool )
+    dup rule-mma mma-is-item?   \ tos bool
     if
         struct-get-id
         rule-struct-id =        \ bool
@@ -33,15 +32,6 @@ rule-m11-disp    cell+  constant rule-m10-disp      \ 1->0 mask.
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for rule.
-: is-rule? ( tos -- t )
-    dup is-allocated-rule?
-    if drop true exit then
-
-    s" Selected arg is not an allocated rule"
-    .abort-xt execute
 ;
 
 \ Start accessors.

@@ -19,9 +19,9 @@
     rate-struct-number-cells swap mma-new to rate-mma
 ;
 
-\ Check instance type.
-: is-allocated-rate? ( addr -- flag )
-    dup rate-mma mma-is-item?   \ addr bool
+\ Check if tos is an allocated rate.
+: is-rate? ( tos -- flag )
+    dup rate-mma mma-is-item?   \ tos bool
     if
         struct-get-id
         rate-struct-id =        \ bool
@@ -29,15 +29,6 @@
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for rate.
-: is-rate? ( tos -- t )
-    dup is-allocated-rate?
-    if drop true exit then
-
-    s" Selected arg is not an allocated rate"
-    .abort-xt execute
 ;
 
 \ Start accessors.

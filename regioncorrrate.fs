@@ -24,8 +24,8 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
     regioncorrrate-struct-number-cells swap mma-new to regioncorrrate-mma
 ;
 
-\ Check instance type.
-: is-allocated-regioncorrrate? ( addr -- bool )
+\ Check if tos is an allocated regioncorrrate.
+: is-regioncorrrate? ( tos -- bool )
     dup regioncorrrate-mma mma-is-item? \ addr bool
     if
         struct-get-id
@@ -34,15 +34,6 @@ regioncorrrate-rate-disp    cell+  constant regioncorrrate-regioncorr-disp  \ A 
         drop
         false                           \ f
     then
-;
-
-\ Check TOS for regioncorrrate.
-: is-regioncorrrate? ( tos -- t )
-    dup is-allocated-regioncorrrate?
-    if drop true exit then
-
-    s" Selected arg is not an allocated regioncorrrate"
-    .abort-xt execute
 ;
 
 \ Start accessors.

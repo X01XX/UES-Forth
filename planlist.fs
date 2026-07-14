@@ -2,17 +2,23 @@
 
 \ Check TOS for plan-list.
 : is-plan-list? ( tos -- t )
-    assert( tos is-list? )
+   dup is-list?            \ tos bool
+    ifnot
+        drop
+        false
+        exit
+    then
 
-    dup list-is-empty?
+    dup list-is-empty?      \ tos bool
     if
         drop
         true
-    else
-        list-get-links link-get-data
-        assert( is-plan? )
-        true
+        exit
     then
+
+    list-get-links          \ link
+    link-get-data           \ data
+    is-plan?                \ bool
 ;
 
 \ Deallocate a plan list.

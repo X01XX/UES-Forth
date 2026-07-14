@@ -19,8 +19,8 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     regioncorr-struct-number-cells swap mma-new to regioncorr-mma
 ;
 
-\ Check instance type.
-: is-allocated-regioncorr? ( addr -- bool )
+\ Check if tos is an allocated regioncorr.
+: is-regioncorr? ( addr -- bool )
     dup regioncorr-mma mma-is-item? \ addr bool
     if
         struct-get-id
@@ -29,15 +29,6 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
         drop
         false                       \ f
     then
-;
-
-\ Check TOS for regioncorr.
-: is-regioncorr? ( tos -- t )
-    dup is-allocated-regioncorr?
-    if drop true exit then
-
-    s" Selected arg is not an allocated regioncorr"
-    .abort-xt execute
 ;
 
 ' is-regioncorr? to is-regioncorr?-xt
@@ -355,7 +346,7 @@ regioncorr-header-disp    cell+     constant regioncorr-list-disp   \ Region lis
     \ cr ." regioncorr-from-string: start: " 2dup type cr
     list-from-string-xt execute             \ lst t | f
     if
-        [ ' is-allocated-region? ] literal
+        [ ' is-region? ] literal            \ lst xt
         over list-apply-all-true?           \ lst bool
         if
             dup region-list-corresponding?  \ lst bool

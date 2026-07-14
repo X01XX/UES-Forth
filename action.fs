@@ -26,9 +26,9 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     action-struct-number-cells swap mma-new to action-mma
 ;
 
-\ Check instance type.
-: is-allocated-action? ( addr -- bool )
-    dup action-mma mma-is-item? \ addr bool
+\ Check if tos is an allocated action.
+: is-action? ( tos -- bool )
+    dup action-mma mma-is-item? \ tos bool
     if
         struct-get-id
         action-struct-id =      \ bool
@@ -36,15 +36,6 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
         drop
         false                   \ f
     then
-;
-
-\ Check TOS for action.
-: is-action? ( tos -- t )
-    is-allocated-action?
-    if true exit then
-
-    s" Selected arg is not an allocated action"
-    .abort-xt execute
 ;
 
 ' is-action? to is-action?-xt
@@ -1765,7 +1756,7 @@ action-defining-regions-disp    cell+ constant action-corners-disp              
     \ Check args.
     assert( tos is-action? )
     assert( nos is-value? )
-    assert( 3os is-need-number? )
+    assert( 3os is-need-type? )
 
     2dup                    \ typ2 sta1 act0 sta1 act0
     action-find-square      \ typ2 sta1 act0, sqr t | f

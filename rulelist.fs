@@ -2,17 +2,23 @@
 
 \ Check TOS for rule-list.
 : is-rule-list? ( tos -- t )
-    assert( tos is-list? )
+   dup is-list?            \ tos bool
+    ifnot
+        drop
+        false
+        exit
+    then
 
-    dup list-is-empty?
+    dup list-is-empty?      \ tos bool
     if
         drop
         true
-    else
-        list-get-links link-get-data
-        assert( is-rule? )
-        true
+        exit
     then
+
+    list-get-links          \ link
+    link-get-data           \ data
+    is-rule?                \ bool
 ;
 
 \ Deallocate a rule list.
@@ -75,7 +81,7 @@
     then
 
     \ Check all items in the list are rules.
-    [ ' is-allocated-rule? ] literal over   \ rul-lst0 xt rul-lst0
+    [ ' is-rule? ] literal over             \ rul-lst0 xt rul-lst0
     list-apply-all-true?                    \ rul-lst0 bool
     if
     else

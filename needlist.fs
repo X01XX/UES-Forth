@@ -2,17 +2,23 @@
 
 \ Check TOS for need-list.
 : is-need-list? ( tos -- t )
-    assert( tos is-list? )
+   dup is-list?            \ tos bool
+    ifnot
+        drop
+        false
+        exit
+    then
 
-    dup list-is-empty?
+    dup list-is-empty?      \ tos bool
     if
         drop
         true
-    else
-        list-get-links link-get-data
-        assert( is-need? )
-        true
+        exit
     then
+
+    list-get-links          \ link
+    link-get-data           \ data
+    is-need?                \ bool
 ;
 
 \ Deallocate a need list.
@@ -126,7 +132,7 @@
 : need-list-find-all-match-type ( typ1 ned-lst0 -- ned-lst t | f )
     \ Check args.
     assert( tos is-need-list? )
-    assert( nos is-need-number? )
+    assert( nos is-need-type? )
 
     \ Init return list.
     list-new -rot               \ ret-lst typ1 ned-lst0
