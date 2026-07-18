@@ -73,7 +73,7 @@ Each defining region will have a corner.  Having more than one corner is likely,
 
 One of a region's corners may be better to keep than another, to be part of a corner cluster.
 Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor
-cannot be in more than one region.
+cannot be in more than one region. Regions of similar things can also overlap, causing the same effect.
 
 After corners are established and tested, accumulated data, not part of the final corners,
 can be deleted.
