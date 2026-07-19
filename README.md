@@ -24,7 +24,8 @@ It turns out UES-Forth does literally Millions of struct Allocation/Deallocation
 At end, everything is accounted for, no memory leaks, nothing left on the Forth stack.
 
 After rules are discovered, the "to" command can be used to change the current state.  The program will attempt
-to form a plan that avoids negative states, then execute it.
+to form a plan that avoids negative states, then execute it.  In a negative state, it will try to move to a non-negative
+state.  In a non-negative state, it will try to move to a more positive state.  See session.fs:session-behavior.
 
 <pre>
 Understanding = ~A + ~B
