@@ -83,6 +83,9 @@ list-header-disp    cell+   constant list-links-disp
     list-links-disp + @
 ;
 
+\ Make simple loops, with next word, using less typing.
+: foreach ( list -- next-link | end loop ) postpone list-get-links postpone begin postpone ?dup postpone while ; immediate
+
 \ Set list links, use only in this file.
 : _list-set-links ( links-value list-addr -- )
     list-links-disp + !

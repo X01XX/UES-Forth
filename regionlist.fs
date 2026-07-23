@@ -454,7 +454,7 @@
 ;
 
 \ Return true if a region-list contains a subset, or equal, region.
-: region-list-any-subset-of ( reg1 list0 -- flag )
+: region-list-any-subset-of? ( reg1 list0 -- flag )
     \ Check args.
     assert( tos is-region-list? )
     assert( nos is-region? )
@@ -463,7 +463,7 @@
 ;
 
 \ Return true if a region-list contains a intersection of a region.
-: region-list-any-intersection-of ( reg1 list0 -- flag )
+: region-list-any-intersection-of? ( reg1 list0 -- flag )
     \ Check args.
     assert( tos is-region-list? )
     assert( nos is-region? )
@@ -1224,14 +1224,21 @@
     then
 ;
 
-\ Return true if tos is a region-list lol.
-: is-region-lol? ( lst0 -- )
-    assert( tos is-list? )
-    dup list-is-not-empty?
+\ Return true if tos is a region list of lists.
+: is-region-lol? ( tos --  bool )
+    dup is-list?
     if
-        dup list-get-links link-get-data
-        assert( tos is-region-list? )
+        dup list-is-empty?
+        if
+            drop
+            true
+        else
+            list-get-links link-get-data
+            is-region-list?
+        then
+    else
         drop
+        false
     then
 ;
 

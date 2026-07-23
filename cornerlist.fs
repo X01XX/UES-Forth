@@ -233,20 +233,21 @@
     true
 ;
 
-\ Return true if tos is a corner-lst lol.
-: is-corner-lol? ( crn-lol0 -- t )
-    \ Check arg.
-    assert( tos is-list? )
-
-    dup list-is-not-empty?
+\ Return true if tos is a corner list of lists.
+: is-corner-lol? ( tos --  bool )
+    dup is-list?
     if
-        list-get-links link-get-data
-        assert( tos is-corner-list? )
-        drop
-        true
+        dup list-is-empty?
+        if
+            drop
+            true
+        else
+            list-get-links link-get-data
+            is-corner-list?
+        then
     else
-        cr ." Selected arg is not a corner lol"
-        abort
+        drop
+        false
     then
 ;
 
