@@ -65,8 +65,8 @@ the region the anchor is in.
 
 In the results, regions not completely overlapped by other regions are <i>Defining</i> regions,
 others are <i>Placeholders</i>.
-Placeholder regions are caused by adjacent, similar, regions, not to be confused with the
-overlaps mentioned above.
+Placeholder regions are caused by adjacent, or overlapping, similar, regions, not to be confused with the
+dissimilar overlaps, mentioned above.
 
 When a corner is well developed, all adjacent dissimilar samples tested, the anchor
 will be in only one region, a defining region, else it will not be a valid corner.
@@ -74,7 +74,7 @@ Each defining region will have a corner.  Having more than one corner is likely,
 
 One of a region's corners may be better to keep than another, to be part of a corner cluster.
 Placeholder regions suppress anchors in overlapped parts of defining regions, since an anchor
-cannot be in more than one region. Regions of similar things can also overlap, causing the same effect.
+cannot be in more than one region.
 
 After corners are established and tested, accumulated data, not part of the final corners,
 can be deleted.
