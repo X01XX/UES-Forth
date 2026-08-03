@@ -63,7 +63,7 @@ Note that I added a corner by adding a single term, ~D. Corner clusters share da
 The number of adjacent, dissimilar, terms used for a corner, equals the number of edges of
 the region the anchor is in.  
 
-In the results, regions not completely overlapped by other regions are <i>Defining</i> regions,
+In the final results, regions not completely overlapped by other regions are <i>Defining</i> regions,
 others are <i>Placeholders</i>.
 Placeholder regions are caused by adjacent, or overlapping, similar, regions, not to be confused with the
 dissimilar overlaps, mentioned above.
