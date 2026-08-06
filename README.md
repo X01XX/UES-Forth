@@ -78,10 +78,14 @@ cannot be in more than one region.
 
 After corners are established and tested, accumulated data, not part of the final corners,
 can be deleted.
+
 Corner clusters are the most data-efficient way to describe the regions, based on my experience.
-There may be an opportunity for a mathematical proof here, but I don't have that talent.
 Corner clusters, sharing data, can go as low as one term per defining region, depending on how
 regularly the regions are found to be arranged.
+
+Will exactly one corner cluster suffice to describe the regions?
+
+There may be an opportunity for mathematical proofs here, but I don't have that talent.
 
 Understanding is tenuous at first, then improves with more data, selected to find/test corners,
 like IRL.
