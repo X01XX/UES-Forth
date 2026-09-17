@@ -34,7 +34,7 @@ A is different from B in some way.
   
 ~A + ~B covers everything, with regions containing A, regions containing B,
 regions containing neither, NO regions containing A and B.
-A region containing neither seems very odd, a part of ~A equals a part of ~B.
+A region containing neither seems very odd, a part of ~A equals a part of ~B, so ~A and ~B.
 Avoiding regions that contain dissimilar things, forms regions that contain similar things.
 
 Your initial thought may be that this just creates sets of similar things.
